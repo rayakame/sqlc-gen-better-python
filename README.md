@@ -1,0 +1,1 @@
+# sqlc-gen-better-python
