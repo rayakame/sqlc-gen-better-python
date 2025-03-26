@@ -8,7 +8,7 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
-func SqliteTypeToPython(req *plugin.GenerateRequest, col *plugin.Column) string {
+func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column) string {
 	columnType := strings.ToLower(sdk.DataType(col.Type))
 
 	// see: https://github.com/sqlc-dev/sqlc/blob/main/internal/codegen/golang/sqlite_type.go

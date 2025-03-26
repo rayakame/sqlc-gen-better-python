@@ -50,7 +50,7 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	return &plugin.GenerateResponse{Files: outputFiles}, nil
 }
 
-func Generate(ctx context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
+func Generate(_ context.Context, req *plugin.GenerateRequest) (*plugin.GenerateResponse, error) {
 	pythonGenerator, err := NewPythonGenerator(req)
 	if err != nil {
 		return nil, err
