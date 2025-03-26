@@ -32,6 +32,6 @@ func IsReserved(s string) bool {
             return false
     }
 }
-    """)
+""")
 
     print("Go file 'reserved.go' has been generated.")
