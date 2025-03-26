@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"log"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
-func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column) string {
+func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, conf *core.Config) string {
 	columnType := strings.ToLower(sdk.DataType(col.Type))
 
 	// see: https://github.com/sqlc-dev/sqlc/blob/main/internal/codegen/golang/sqlite_type.go
