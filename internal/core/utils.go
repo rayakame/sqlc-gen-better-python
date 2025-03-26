@@ -6,9 +6,12 @@ import (
 	"strings"
 )
 
-func ModelName(name string) string {
+func ModelName(enumName string, schemaName string) string {
+	if schemaName != "" {
+		enumName = schemaName + "_" + enumName
+	}
 	out := ""
-	for _, p := range strings.Split(name, "_") {
+	for _, p := range strings.Split(enumName, "_") {
 		out += cases.Title(language.Und, cases.NoLower).String(p)
 	}
 	return out

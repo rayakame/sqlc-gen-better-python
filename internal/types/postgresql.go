@@ -51,9 +51,9 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, col *plugin.Column) strin
 			for _, enum := range schema.Enums {
 				if columnType == enum.Name {
 					if schema.Name == req.Catalog.DefaultSchema {
-						return "models." + core.ModelName(enum.Name)
+						return "models." + core.ModelName(enum.Name, "")
 					}
-					return "models." + core.ModelName(schema.Name+"_"+enum.Name)
+					return "models." + core.ModelName(enum.Name, schema.Name)
 				}
 			}
 		}
