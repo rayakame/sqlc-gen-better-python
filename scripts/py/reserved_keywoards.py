@@ -18,7 +18,7 @@ class IndentWriter:
         self.lines.append((text + "\n", indent_depth))
 
     def write_blank(self):
-        self.lines.append(("", 0))
+        self.lines.append(("\n", 0))
 
     def write_file(self):
         with open(self.file_path, "w") as file:
