@@ -2,10 +2,12 @@
 setlocal
 
 :: Set environment variables
+echo Set the ENV-Vars
 set GOOS=wasip1
 set GOARCH=wasm
 
 :: Build the Go plugin
+echo Building the wasm
 go build -o sqlc-gen-better-python.wasm plugin/main.go
 
 :: Generate SHA-256 hash
