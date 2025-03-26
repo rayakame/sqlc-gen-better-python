@@ -7,6 +7,9 @@ type Logger struct {
 func (logger *Logger) Log(message string) {
 	logger.messages = append(logger.messages, message)
 }
+func (logger *Logger) LogByte(message []byte) {
+	logger.messages = append(logger.messages, string(message))
+}
 
 func (logger *Logger) Print() (string, []byte) {
 	var loggedMessages string
