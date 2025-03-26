@@ -5,7 +5,6 @@ go 1.24.1
 require github.com/sqlc-dev/plugin-sdk-go v1.23.0
 
 require (
-	github.com/golang/protobuf v1.5.3 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
