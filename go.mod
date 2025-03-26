@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/sqlc-dev/plugin-sdk-go v1.23.0
-	golang.org/x/text v0.12.0
+	golang.org/x/text v0.23.0
 )
 
 require (
