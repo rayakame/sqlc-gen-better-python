@@ -42,6 +42,16 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	outputFiles := make([]*plugin.File, 0)
 	log.GlobalLogger.Log(pg.req.String())
 	log.GlobalLogger.LogByte(pg.req.PluginOptions)
+	enums := pg.buildEnums()
+	tables := pg.buildTables()
+	queries, err := pg.buildQueries(structs)
+	if err != nil {
+		return nil, err
+	}
+
+	if pg.config.OmitUnusedStructs {
+		enums, tables = filterUnusedStructs(enums, structs, queries)
+	}
 	fileName, fileContent := log.GlobalLogger.Print()
 	outputFiles = append(outputFiles, &plugin.File{
 		Name:     fileName,
