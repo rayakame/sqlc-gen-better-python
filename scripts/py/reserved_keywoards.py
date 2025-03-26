@@ -9,9 +9,9 @@ if __name__ == "__main__":
 
     with open(path, "w") as go_file:
         # Write the function header for escape
-        go_file.write(f"""package core
-// Auto-generated using python; DO NOT EDIT
-// py {sys.version}""")
+        go_file.write(f"""// Package core Auto-generated using python; DO NOT EDIT
+// py {sys.version}
+package core""")
         go_file.write("""
 func Escape(s string) string {
     if IsReserved(s) {
