@@ -8,3 +8,80 @@ func Escape(s string) string {
 	}
 	return s
 }
+
+func IsReserved(s string) bool {
+	switch s {
+	case "False":
+		return true
+	case "None":
+		return true
+	case "True":
+		return true
+	case "and":
+		return true
+	case "as":
+		return true
+	case "assert":
+		return true
+	case "async":
+		return true
+	case "await":
+		return true
+	case "break":
+		return true
+	case "class":
+		return true
+	case "continue":
+		return true
+	case "def":
+		return true
+	case "del":
+		return true
+	case "elif":
+		return true
+	case "else":
+		return true
+	case "except":
+		return true
+	case "finally":
+		return true
+	case "for":
+		return true
+	case "from":
+		return true
+	case "global":
+		return true
+	case "if":
+		return true
+	case "import":
+		return true
+	case "in":
+		return true
+	case "is":
+		return true
+	case "lambda":
+		return true
+	case "nonlocal":
+		return true
+	case "not":
+		return true
+	case "or":
+		return true
+	case "pass":
+		return true
+	case "raise":
+		return true
+	case "return":
+		return true
+	case "try":
+		return true
+	case "while":
+		return true
+	case "with":
+		return true
+	case "yield":
+		return true
+	default:
+		return false
+	}
+}
