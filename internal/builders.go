@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/inflection"
+	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 	"sort"
@@ -108,6 +109,63 @@ func (gen *PythonGenerator) buildEnums() []core.Enum {
 	return enums
 }
 
+type goColumn struct {
+	id int
+	*plugin.Column
+	embed *goEmbed
+}
+
+type goEmbed struct {
+	modelType string
+	modelName string
+	fields    []core.Column
+}
+
+var cmdReturnsData = map[string]struct{}{
+	metadata.CmdBatchMany: {},
+	metadata.CmdBatchOne:  {},
+	metadata.CmdMany:      {},
+	metadata.CmdOne:       {},
+}
+
+func putOutColumns(query *plugin.Query) bool {
+	_, found := cmdReturnsData[query.Cmd]
+	return found
+}
+
+// look through all the structs and attempt to find a matching one to embed
+// We need the name of the struct and its field names.
+func newGoEmbed(embed *plugin.Identifier, structs []core.Table, defaultSchema string) *goEmbed {
+	if embed == nil {
+		return nil
+	}
+
+	for _, s := range structs {
+		embedSchema := defaultSchema
+		if embed.Schema != "" {
+			embedSchema = embed.Schema
+		}
+
+		// compare the other attributes
+		if embed.Catalog != s.Table.Catalog || embed.Name != s.Table.Name || embedSchema != s.Table.Schema {
+			continue
+		}
+
+		fields := make([]core.Column, len(s.Columns))
+		for i, f := range s.Columns {
+			fields[i] = f
+		}
+
+		return &goEmbed{
+			modelType: s.Name,
+			modelName: s.Name,
+			fields:    fields,
+		}
+	}
+
+	return nil
+}
+
 func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, error) {
 	qs := make([]core.Query, 0, len(gen.req.Queries))
 	for _, query := range gen.req.Queries {
@@ -152,16 +210,15 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 					Column: p.Column,
 				})
 			}
-			s, err := columnsToStruct(req, options, gq.MethodName+"Params", cols, false)
+			s, err := gen.columnsToStruct(gq.MethodName+"Params", cols, false)
 			if err != nil {
 				return nil, err
 			}
-			gq.Arg = QueryValue{
-				Emit:        true,
-				Name:        "arg",
-				Struct:      s,
-				SQLDriver:   sqlpkg,
-				EmitPointer: options.EmitParamsStructPointers,
+			gq.Arg = core.QueryValue{
+				Emit:      true,
+				Name:      "arg",
+				Table:     s,
+				SQLDriver: gen.config.SqlDriver,
 			}
 
 			// if query params is 2, and query params limit is 4 AND this is a copyfrom, we still want to emit the query's model
@@ -173,28 +230,28 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 
 		if len(query.Columns) == 1 && query.Columns[0].EmbedTable == nil {
 			c := query.Columns[0]
-			name := columnName(c, 0)
+			name := core.ColumnName(c, 0)
 			name = strings.Replace(name, "$", "_", -1)
-			gq.Ret = QueryValue{
-				Name:      escape(name),
+			gq.Ret = core.QueryValue{
+				Name:      core.Escape(name),
 				DBName:    name,
-				Typ:       goType(req, options, c),
-				SQLDriver: sqlpkg,
+				Typ:       gen.makePythonType(c),
+				SQLDriver: gen.config.SqlDriver,
 			}
 		} else if putOutColumns(query) {
-			var gs *Struct
+			var gs *core.Table
 			var emit bool
 
-			for _, s := range structs {
-				if len(s.Fields) != len(query.Columns) {
+			for _, s := range tables {
+				if len(s.Columns) != len(query.Columns) {
 					continue
 				}
 				same := true
-				for i, f := range s.Fields {
+				for i, f := range s.Columns {
 					c := query.Columns[i]
-					sameName := f.Name == StructName(columnName(c, i), options)
-					sameType := f.Type == goType(req, options, c)
-					sameTable := sdk.SameTableName(c.Table, s.Table, req.Catalog.DefaultSchema)
+					sameName := f.Name == core.SnakeToCamel(core.ColumnName(c, i), gen.config)
+					sameType := f.Type == gen.makePythonType(c)
+					sameTable := sdk.SameTableName(c.Table, s.Table, gen.req.Catalog.DefaultSchema)
 					if !sameName || !sameType || !sameTable {
 						same = false
 					}
@@ -211,22 +268,21 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 					columns = append(columns, goColumn{
 						id:     i,
 						Column: c,
-						embed:  newGoEmbed(c.EmbedTable, structs, req.Catalog.DefaultSchema),
+						embed:  newGoEmbed(c.EmbedTable, tables, gen.req.Catalog.DefaultSchema),
 					})
 				}
 				var err error
-				gs, err = columnsToStruct(req, options, gq.MethodName+"Row", columns, true)
+				gs, err = gen.columnsToStruct(gq.MethodName+"Row", columns, true)
 				if err != nil {
 					return nil, err
 				}
 				emit = true
 			}
-			gq.Ret = QueryValue{
-				Emit:        emit,
-				Name:        "i",
-				Struct:      gs,
-				SQLDriver:   sqlpkg,
-				EmitPointer: options.EmitResultStructPointers,
+			gq.Ret = core.QueryValue{
+				Emit:      emit,
+				Name:      "i",
+				Table:     gs,
+				SQLDriver: gen.config.SqlDriver,
 			}
 		}
 
@@ -234,4 +290,96 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 	}
 	sort.Slice(qs, func(i, j int) bool { return qs[i].MethodName < qs[j].MethodName })
 	return qs, nil
+}
+
+func (gen *PythonGenerator) columnsToStruct(name string, columns []goColumn, useID bool) (*core.Table, error) {
+	gs := core.Table{
+		Name: name,
+	}
+	seen := map[string][]int{}
+	suffixes := map[int]int{}
+	for i, c := range columns {
+		colName := core.ColumnName(c.Column, i)
+
+		// override col/tag with expected model name
+		if c.embed != nil {
+			colName = c.embed.modelName
+		}
+
+		fieldName := core.SnakeToCamel(colName, gen.config)
+		baseFieldName := fieldName
+		// Track suffixes by the ID of the column, so that columns referring to the same numbered parameter can be
+		// reused.
+		suffix := 0
+		if o, ok := suffixes[c.id]; ok && useID {
+			suffix = o
+		} else if v := len(seen[fieldName]); v > 0 && !c.IsNamedParam {
+			suffix = v + 1
+		}
+		suffixes[c.id] = suffix
+		if suffix > 0 {
+			fieldName = fmt.Sprintf("%s_%d", fieldName, suffix)
+		}
+		f := core.Column{
+			Name:   fieldName,
+			DBName: colName,
+			Column: c.Column,
+		}
+		if c.embed == nil {
+			f.Type = gen.makePythonType(c.Column)
+		} else {
+			f.Type = core.PyType{
+				SqlType:    c.embed.modelType,
+				Type:       c.embed.modelType,
+				IsList:     false,
+				IsNullable: false,
+				IsEnum:     false,
+			}
+			f.EmbedFields = c.embed.fields
+		}
+
+		gs.Columns = append(gs.Columns, f)
+		if _, found := seen[baseFieldName]; !found {
+			seen[baseFieldName] = []int{i}
+		} else {
+			seen[baseFieldName] = append(seen[baseFieldName], i)
+		}
+	}
+
+	// If a field does not have a known type, but another
+	// field with the same name has a known type, assign
+	// the known type to the field without a known type
+	/*for i, field := range gs.Columns {
+		if len(seen[field.Name]) > 1 && field.Type.Type == "interface{}" {
+			for _, j := range seen[field.Name] {
+				if i == j {
+					continue
+				}
+				otherField := gs.Fields[j]
+				if otherField.Type != field.Type {
+					field.Type = otherField.Type
+				}
+				gs.Fields[i] = field
+			}
+		}
+	}*/
+
+	err := checkIncompatibleFieldTypes(gs.Columns)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gs, nil
+}
+
+func checkIncompatibleFieldTypes(fields []core.Column) error {
+	fieldTypes := map[string]string{}
+	for _, field := range fields {
+		if fieldType, found := fieldTypes[field.Name]; !found {
+			fieldTypes[field.Name] = field.Type.Type
+		} else if field.Type.Type != fieldType {
+			return fmt.Errorf("named param %s has incompatible types: %s, %s", field.Name, field.Type.Type, fieldType)
+		}
+	}
+	return nil
 }
