@@ -66,7 +66,7 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	if pg.config.OmitUnusedStructs {
 		enums, tables = filterUnusedStructs(enums, tables, queries)
 	}
-	if err := pg.validate(enums, tables, queries); err != nil {
+	if err := pg.validate(enums, tables); err != nil {
 		return nil, err
 	}
 	fileName, fileContent := log.GlobalLogger.Print()
@@ -90,7 +90,7 @@ func Generate(_ context.Context, req *plugin.GenerateRequest) (*plugin.GenerateR
 	return pythonGenerator.Run()
 }
 
-func (gen *PythonGenerator) validate(enums []core.Enum, structs []core.Table, queries []core.Query) error {
+func (gen *PythonGenerator) validate(enums []core.Enum, structs []core.Table) error {
 	enumNames := make(map[string]struct{})
 	for _, enum := range enums {
 		enumNames[enum.Name] = struct{}{}
