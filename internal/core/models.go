@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"strings"
 )
@@ -63,6 +64,32 @@ type QueryValue struct {
 	Column *plugin.Column
 }
 
+func (v QueryValue) EmitStruct() bool {
+	return v.Emit
+}
+
+func (v QueryValue) IsStruct() bool {
+	return v.Table != nil
+}
+
+func (v QueryValue) IsPointer() bool {
+	return v.EmitPointer && v.Table != nil
+}
+
+func (v QueryValue) IsEmpty() bool {
+	return v.Typ.Type == "" && v.Name == "" && v.Table == nil
+}
+
+func (v QueryValue) Type() string {
+	if v.Typ.Type != "" {
+		return v.Typ.Type
+	}
+	if v.Table != nil {
+		return v.Table.Name
+	}
+	panic("no type for QueryValue: " + v.Name)
+}
+
 type Query struct {
 	Cmd          string
 	Comments     []string
@@ -75,4 +102,10 @@ type Query struct {
 	Arg          QueryValue
 	// Used for :copyfrom
 	Table *plugin.Identifier
+}
+
+func (q Query) HasRetType() bool {
+	scanned := q.Cmd == metadata.CmdOne || q.Cmd == metadata.CmdMany ||
+		q.Cmd == metadata.CmdBatchMany || q.Cmd == metadata.CmdBatchOne
+	return scanned && !q.Ret.IsEmpty()
 }
