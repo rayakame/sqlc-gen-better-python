@@ -8,4 +8,6 @@ type Column struct {
 	Type    PyType
 	Comment string
 	Column  *plugin.Column
+	// EmbedFields contains the embedded fields that require scanning.
+	EmbedFields []Column
 }
