@@ -6,6 +6,8 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
+const PluginVersion = "0.0.1"
+
 type Config struct {
 	SqlDriver                   string    `json:"sql_driver" yaml:"sql_driver"`
 	ModelType                   string    `json:"model_type" yaml:"model_type"`
@@ -14,6 +16,9 @@ type Config struct {
 	InflectionExcludeTableNames []string  `json:"inflection_exclude_table_names,omitempty" yaml:"inflection_exclude_table_names"`
 	OmitUnusedStructs           bool      `json:"omit_unused_structs,omitempty" yaml:"omit_unused_structs"`
 	QueryParameterLimit         *int32    `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
+
+	IndentChar          string `json:"indent_char" yaml:"indent_char"`
+	CharsPerIndentLevel int    `json:"chars_per_indent_level" yaml:"chars_per_indent_level"`
 
 	InitialismsMap map[string]struct{} `json:"-" yaml:"-"`
 	Async          bool
@@ -38,12 +43,19 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 	if config.ModelType == "" {
 		config.ModelType = ModelTypeDataclass
 	}
-	if err := isModelTypeValid(config.ModelType); err != nil {
-		return nil, fmt.Errorf("invalid options: %s", err)
+	if config.QueryParameterLimit == nil {
+		config.QueryParameterLimit = new(int32)
+		*config.QueryParameterLimit = 1
 	}
 	if config.Initialisms == nil {
 		config.Initialisms = new([]string)
 		*config.Initialisms = []string{"id"}
+	}
+	if config.IndentChar == "" {
+		config.IndentChar = " "
+	}
+	if config.CharsPerIndentLevel == 0 {
+		config.CharsPerIndentLevel = 4
 	}
 
 	config.InitialismsMap = map[string]struct{}{}
@@ -51,4 +63,16 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 		config.InitialismsMap[initial] = struct{}{}
 	}
 	return &config, nil
+}
+func ValidateConf(conf *Config) error {
+	if *conf.QueryParameterLimit < 0 {
+		return fmt.Errorf("invalid options: query parameter limit must not be negative")
+	}
+
+	if err := isModelTypeValid(conf.ModelType); err != nil {
+
+		return fmt.Errorf("invalid options: %s", err)
+	}
+
+	return nil
 }
