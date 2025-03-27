@@ -21,7 +21,7 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, col *plugin.Column, conf 
 	case "boolean", "bool", "pg_catalog.bool":
 		return "bool"
 	case "json", "jsonb":
-		return "Any"
+		return "typing.Any"
 	case "bytea", "blob", "pg_catalog.bytea":
 		return "memoryview"
 	case "date":
@@ -58,6 +58,6 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, col *plugin.Column, conf 
 			}
 		}
 		log.Printf("unknown PostgreSQL type: %s\n", columnType)
-		return "Any"
+		return "typing.Any"
 	}
 }

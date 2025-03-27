@@ -27,7 +27,7 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, conf *cor
 	case "datetime", "timestamp":
 		return "datetime.datetime"
 	case "any":
-		return "Any"
+		return "typing.Any"
 	}
 
 	switch {
@@ -46,6 +46,6 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, conf *cor
 
 	default:
 		log.Printf("unknown SQLite type: %s\n", columnType)
-		return "Any"
+		return "typing.Any"
 	}
 }
