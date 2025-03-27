@@ -23,6 +23,9 @@ func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err = core.ValidateConf(config); err != nil {
+		return nil, err
+	}
 	var typeConversionFunc types.TypeConversionFunc
 	switch req.Settings.Engine {
 	case "postgresql":
