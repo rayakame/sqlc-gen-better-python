@@ -20,8 +20,8 @@ func NewIndentStringBuilder(indentChar string, charsPerIndentLevel int) *IndentS
 	}
 }
 
-func (b *IndentStringBuilder) WriteIndentedString(level int, s string) int {
-	count, _ := b.WriteString(strings.Repeat(b.indentChar, level*b.charsPerIndentLevel) + s)
+func (b *IndentStringBuilder) WriteIndentedString(level int, txt string) int {
+	count, _ := b.WriteString(strings.Repeat(b.indentChar, level*b.charsPerIndentLevel) + txt)
 	return count
 }
 
@@ -36,5 +36,10 @@ func (b *IndentStringBuilder) WriteSqlcHeader() {
 
 func (b *IndentStringBuilder) WriteLine(txt string) {
 	b.WriteString(txt)
+	b.WriteString("\n")
+}
+
+func (b *IndentStringBuilder) WriteIndentedLine(level int, txt string) {
+	b.WriteIndentedString(level, txt)
 	b.WriteString("\n")
 }
