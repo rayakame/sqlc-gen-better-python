@@ -32,7 +32,7 @@ func (gen *PythonGenerator) buildTable(schema *plugin.Schema, table *plugin.Tabl
 	}
 	for _, column := range table.Columns {
 		t.Columns = append(t.Columns, core.Column{
-			Name:    core.SnakeToCamel(column.Name, gen.config),
+			Name:    column.Name,
 			Type:    gen.makePythonType(column),
 			Comment: column.Comment,
 		})
