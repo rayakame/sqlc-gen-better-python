@@ -33,30 +33,30 @@ func BuildModelFile(config *core.Config, tables []core.Table) (string, []byte, e
 	for _, table := range tables {
 		body.WriteString("\n")
 		body.WriteString("\n")
-		buildModelHeader(config, table, body)
-		for _, col := range table.Columns {
-			type_ := col.Type.Type
-			if col.Type.IsList {
-				type_ = "typing.List[" + type_ + "]"
-			}
-			if col.Type.IsNullable {
-				type_ = "typing.Optional[" + type_ + "]"
-			}
-			body.WriteIndentedString(1, col.Name+": "+type_)
-			if config.ModelType == core.ModelTypeAttrs {
-				body.WriteString(" = attrs.field()")
-			}
-			body.WriteString("\n")
-		}
+		BuildModel(config, table, body)
 	}
 	return "models.py", []byte(body.String()), nil
 }
 
-func buildModelHeader(config *core.Config, table core.Table, body *IndentStringBuilder) {
+func BuildModel(config *core.Config, table core.Table, body *IndentStringBuilder) {
 	if config.ModelType == core.ModelTypeDataclass {
 		body.WriteLine("@dataclass()")
 	} else if config.ModelType == core.ModelTypeAttrs {
 		body.WriteLine("@attrs.define()")
 	}
 	body.WriteLine("class " + table.Name + ":")
+	for _, col := range table.Columns {
+		type_ := col.Type.Type
+		if col.Type.IsList {
+			type_ = "typing.List[" + type_ + "]"
+		}
+		if col.Type.IsNullable {
+			type_ = "typing.Optional[" + type_ + "]"
+		}
+		body.WriteIndentedString(1, col.Name+": "+type_)
+		if config.ModelType == core.ModelTypeAttrs {
+			body.WriteString(" = attrs.field()")
+		}
+		body.WriteString("\n")
+	}
 }
