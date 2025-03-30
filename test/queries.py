@@ -4,6 +4,14 @@
 #   sqlc-gen-better-python 0.0.1
 from __future__ import annotations
 
+__all__: typing.Sequence[str] = (
+    "create_author",
+    "delete_author",
+    "get_author",
+    "list_authors",
+    "update_author",
+)
+
 import dataclasses
 import typing
 
