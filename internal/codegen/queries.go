@@ -120,20 +120,29 @@ func BuildQueriesFile(imp *core.Importer, queries []core.Query, tables []core.Ta
 	body := NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
 	body.WriteImportAnnotations()
+
+	funcNames := make([]string, 0)
+	queryBody := NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	for i, query := range queries {
+		funcNames = append(funcNames, query.FuncName)
+		if i != 0 {
+			queryBody.WriteString("\n\n")
+		}
+		buildQueryHeader(&query, queryBody)
+		queryBody.WriteString("\n\n")
+
+		buildAioSQLiteFunction(imp, &query, queryBody)
+	}
+	body.WriteLine("__all__: typing.Sequence[str] = (")
+	for _, n := range funcNames {
+		body.WriteIndentedLine(1, fmt.Sprintf("\"%s\",", n))
+	}
+	body.WriteLine(")")
+	body.WriteString("\n")
 	for _, imp := range imp.Imports(fileName) {
 		body.WriteLine(imp)
 	}
 	body.WriteString("\n")
 
-	for i, query := range queries {
-		if i != 0 {
-			body.WriteString("\n\n")
-		}
-		buildQueryHeader(&query, body)
-		body.WriteString("\n\n")
-
-		buildAioSQLiteFunction(imp, &query, body)
-	}
-
-	return fileName, []byte(body.String()), nil
+	return fileName, []byte(body.String() + queryBody.String()), nil
 }
