@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/inflection"
+	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
@@ -30,9 +31,9 @@ func (gen *PythonGenerator) buildTable(schema *plugin.Schema, table *plugin.Tabl
 		Name:    core.SnakeToCamel(structName, gen.config),
 		Comment: table.Comment,
 	}
-	for _, column := range table.Columns {
+	for i, column := range table.Columns {
 		t.Columns = append(t.Columns, core.Column{
-			Name:    column.Name,
+			Name:    core.ColumnName(column, i),
 			Type:    gen.makePythonType(column),
 			Comment: column.Comment,
 		})
@@ -176,13 +177,14 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 			continue
 		}
 
-		constantName := sdk.LowerTitle(query.Name)
+		constantName := core.UpperSnakeCase(query.Name)
 
 		comments := query.Comments
 
 		gq := core.Query{
 			Cmd:          query.Cmd,
 			ConstantName: constantName,
+			FuncName:     strings.ToLower(constantName),
 			FieldName:    sdk.LowerTitle(query.Name) + "Stmt",
 			MethodName:   query.Name,
 			SourceName:   query.Filename,
@@ -249,9 +251,18 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 				same := true
 				for i, f := range s.Columns {
 					c := query.Columns[i]
-					sameName := f.Name == core.SnakeToCamel(core.ColumnName(c, i), gen.config)
+					sameName := f.Name == core.ColumnName(c, i)
 					sameType := f.Type == gen.makePythonType(c)
 					sameTable := sdk.SameTableName(c.Table, s.Table, gen.req.Catalog.DefaultSchema)
+					if gq.MethodName == "ListAuthors" {
+						log.GlobalLogger.Log(core.SnakeToCamel(core.ColumnName(c, i), gen.config))
+						if !sameType {
+							log.GlobalLogger.Log("TypeError")
+						}
+						if !sameTable {
+							log.GlobalLogger.Log("TableError")
+						}
+					}
 					if !sameName || !sameType || !sameTable {
 						same = false
 					}
@@ -321,7 +332,7 @@ func (gen *PythonGenerator) columnsToStruct(name string, columns []goColumn, use
 			fieldName = fmt.Sprintf("%s_%d", fieldName, suffix)
 		}
 		f := core.Column{
-			Name:   fieldName,
+			Name:   core.ColumnName(c.Column, i),
 			DBName: colName,
 			Column: c.Column,
 		}
