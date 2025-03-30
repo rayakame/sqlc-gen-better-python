@@ -9,6 +9,8 @@ A WASM plugin for SQLC allowing the generation of Python code.
 ## Feature Support
 > Every `:batch*` command is not supported by this plugin and probably will never be.
 
+> Prepared Queries are not planned for the near future, but will be implemented sooner or later
+
 |           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
 | --------- | ------- | ------------- | ----------- | ------------- | ------- | ------ | ----------- |
 | AioSqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
