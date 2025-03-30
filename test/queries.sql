@@ -1,5 +1,5 @@
 -- name: GetAuthor :one
-SELECT * FROM authors
+SELECT id, name FROM authors
 WHERE id = ? LIMIT 1;
 
 -- name: ListAuthors :many
