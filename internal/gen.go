@@ -76,17 +76,25 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 		Enums:   enums,
 		C:       pg.config,
 	}
-	fileName, fileContent, _ := codegen.BuildModelFile(&importer, tables)
+	fileName, fileContent, err := codegen.BuildModelFile(&importer, tables)
+	if err != nil {
+		return nil, err
+	}
 	outputFiles = append(outputFiles, &plugin.File{
 		Name:     fileName,
 		Contents: fileContent,
 	})
-	fileName, fileContent, _ = codegen.BuildQueriesFile(&importer, queries, tables)
+	fileName, fileContent, err = codegen.BuildQueriesFile(&importer, queries, tables)
+	if err != nil {
+		return nil, err
+	}
 	outputFiles = append(outputFiles, &plugin.File{
 		Name:     fileName,
 		Contents: fileContent,
 	})
 	outputFiles = append(outputFiles, codegen.BuildInitFile(&importer))
+	jsonData, _ = json.Marshal(outputFiles)
+	log.GlobalLogger.LogByte(jsonData)
 	fileName, fileContent = log.GlobalLogger.Print()
 	outputFiles = append(outputFiles, &plugin.File{
 		Name:     fileName,

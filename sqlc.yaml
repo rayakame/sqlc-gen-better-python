@@ -3,16 +3,11 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: a5146e7e7cad4e4b8894cfb7c0d1157cd365744083f3384f3666af34897e6bde
+      sha256: 3fcbe940bd60ad77dd4e28837d7e466dc9d799f9e8e6cef21b4147189ee4a49b
 sql:
   - schema: test/schema.sql
     queries: test/queries.sql
     engine: sqlite
-    gen:
-      go:
-        out: test
-        package: test
-        emit_db_tags: true
     codegen:
       - out: test
         plugin: python

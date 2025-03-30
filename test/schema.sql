@@ -1,5 +1,5 @@
 CREATE TABLE authors (
                          id   INTEGER PRIMARY KEY,
-                         name text  ,
+                         name text  NOT NULL ,
                          bio  text
 );

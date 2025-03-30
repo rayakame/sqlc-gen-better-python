@@ -64,7 +64,7 @@ func (gen *PythonGenerator) makePythonType(col *plugin.Column) core.PyType {
 		SqlType:    sdk.DataType(col.Type),
 		Type:       strType,
 		IsNullable: !col.NotNull,
-		IsList:     col.IsArray,
+		IsList:     col.GetIsArray() || col.GetIsSqlcSlice(),
 		IsEnum:     false,
 	}
 }

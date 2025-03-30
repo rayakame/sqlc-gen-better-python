@@ -1,0 +1,862 @@
+[
+  {
+    "Cmd": ":one",
+    "Comments": null,
+    "MethodName": "CreateAuthor",
+    "FuncName": "create_author",
+    "FieldName": "createAuthorStmt",
+    "ConstantName": "CREATE_AUTHOR",
+    "SQL": "INSERT INTO authors (\n    name, bio\n) VALUES (\n             ?, ?\n         )\n    RETURNING id, name, bio",
+    "SourceName": "queries.sql",
+    "Ret": {
+      "Emit": false,
+      "EmitPointer": false,
+      "Name": "i",
+      "DBName": "",
+      "Table": {
+        "Table": {
+          "schema": "main",
+          "name": "authors"
+        },
+        "Name": "Author",
+        "Columns": [
+          {
+            "Name": "id",
+            "DBName": "",
+            "Type": {
+              "SqlType": "INTEGER",
+              "Type": "int",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": null,
+            "EmbedFields": null
+          },
+          {
+            "Name": "name",
+            "DBName": "",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": null,
+            "EmbedFields": null
+          },
+          {
+            "Name": "bio",
+            "DBName": "",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": null,
+            "EmbedFields": null
+          }
+        ],
+        "Comment": ""
+      },
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "aiosqlite",
+      "Column": null
+    },
+    "Arg": {
+      "Emit": true,
+      "EmitPointer": false,
+      "Name": "arg",
+      "DBName": "",
+      "Table": {
+        "Table": null,
+        "Name": "CreateAuthorParams",
+        "Columns": [
+          {
+            "Name": "name",
+            "DBName": "name",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "name",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "name"
+            },
+            "EmbedFields": null
+          },
+          {
+            "Name": "bio",
+            "DBName": "bio",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "bio",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "bio"
+            },
+            "EmbedFields": null
+          }
+        ],
+        "Comment": ""
+      },
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "aiosqlite",
+      "Column": null
+    },
+    "Table": {
+      "name": "authors"
+    }
+  },
+  {
+    "Cmd": ":exec",
+    "Comments": null,
+    "MethodName": "DeleteAuthor",
+    "FuncName": "delete_author",
+    "FieldName": "deleteAuthorStmt",
+    "ConstantName": "DELETE_AUTHOR",
+    "SQL": "DELETE FROM authors\nWHERE id = ?",
+    "SourceName": "queries.sql",
+    "Ret": {
+      "Emit": false,
+      "EmitPointer": false,
+      "Name": "",
+      "DBName": "",
+      "Table": null,
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "",
+      "Column": null
+    },
+    "Arg": {
+      "Emit": false,
+      "EmitPointer": false,
+      "Name": "id",
+      "DBName": "id",
+      "Table": null,
+      "Typ": {
+        "SqlType": "INTEGER",
+        "Type": "int",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "aiosqlite",
+      "Column": {
+        "name": "id",
+        "not_null": true,
+        "length": -1,
+        "table": {
+          "name": "authors"
+        },
+        "type": {
+          "name": "INTEGER"
+        },
+        "original_name": "id"
+      }
+    },
+    "Table": null
+  },
+  {
+    "Cmd": ":one",
+    "Comments": null,
+    "MethodName": "GetAuthor",
+    "FuncName": "get_author",
+    "FieldName": "getAuthorStmt",
+    "ConstantName": "GET_AUTHOR",
+    "SQL": "SELECT id, name FROM authors\nWHERE id = ? LIMIT 1",
+    "SourceName": "queries.sql",
+    "Ret": {
+      "Emit": true,
+      "EmitPointer": false,
+      "Name": "i",
+      "DBName": "",
+      "Table": {
+        "Table": null,
+        "Name": "GetAuthorRow",
+        "Columns": [
+          {
+            "Name": "id",
+            "DBName": "id",
+            "Type": {
+              "SqlType": "INTEGER",
+              "Type": "int",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "id",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "authors"
+              },
+              "type": {
+                "name": "INTEGER"
+              },
+              "original_name": "id"
+            },
+            "EmbedFields": null
+          },
+          {
+            "Name": "name",
+            "DBName": "name",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "name",
+              "length": -1,
+              "table": {
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "name"
+            },
+            "EmbedFields": null
+          }
+        ],
+        "Comment": ""
+      },
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "aiosqlite",
+      "Column": null
+    },
+    "Arg": {
+      "Emit": false,
+      "EmitPointer": false,
+      "Name": "id",
+      "DBName": "id",
+      "Table": null,
+      "Typ": {
+        "SqlType": "INTEGER",
+        "Type": "int",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "aiosqlite",
+      "Column": {
+        "name": "id",
+        "not_null": true,
+        "length": -1,
+        "table": {
+          "name": "authors"
+        },
+        "type": {
+          "name": "INTEGER"
+        },
+        "original_name": "id"
+      }
+    },
+    "Table": null
+  },
+  {
+    "Cmd": ":many",
+    "Comments": null,
+    "MethodName": "ListAuthors",
+    "FuncName": "list_authors",
+    "FieldName": "listAuthorsStmt",
+    "ConstantName": "LIST_AUTHORS",
+    "SQL": "SELECT id, name, bio FROM authors\nORDER BY name",
+    "SourceName": "queries.sql",
+    "Ret": {
+      "Emit": false,
+      "EmitPointer": false,
+      "Name": "i",
+      "DBName": "",
+      "Table": {
+        "Table": {
+          "schema": "main",
+          "name": "authors"
+        },
+        "Name": "Author",
+        "Columns": [
+          {
+            "Name": "id",
+            "DBName": "",
+            "Type": {
+              "SqlType": "INTEGER",
+              "Type": "int",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": null,
+            "EmbedFields": null
+          },
+          {
+            "Name": "name",
+            "DBName": "",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": null,
+            "EmbedFields": null
+          },
+          {
+            "Name": "bio",
+            "DBName": "",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": null,
+            "EmbedFields": null
+          }
+        ],
+        "Comment": ""
+      },
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "aiosqlite",
+      "Column": null
+    },
+    "Arg": {
+      "Emit": false,
+      "EmitPointer": false,
+      "Name": "",
+      "DBName": "",
+      "Table": null,
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "",
+      "Column": null
+    },
+    "Table": null
+  },
+  {
+    "Cmd": ":exec",
+    "Comments": null,
+    "MethodName": "UpdateAuthor",
+    "FuncName": "update_author",
+    "FieldName": "updateAuthorStmt",
+    "ConstantName": "UPDATE_AUTHOR",
+    "SQL": "UPDATE authors\nset name = ?,\n    bio = ?\nWHERE id = ?",
+    "SourceName": "queries.sql",
+    "Ret": {
+      "Emit": false,
+      "EmitPointer": false,
+      "Name": "",
+      "DBName": "",
+      "Table": null,
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "",
+      "Column": null
+    },
+    "Arg": {
+      "Emit": true,
+      "EmitPointer": false,
+      "Name": "arg",
+      "DBName": "",
+      "Table": {
+        "Table": null,
+        "Name": "UpdateAuthorParams",
+        "Columns": [
+          {
+            "Name": "name",
+            "DBName": "name",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "name",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "name"
+            },
+            "EmbedFields": null
+          },
+          {
+            "Name": "bio",
+            "DBName": "bio",
+            "Type": {
+              "SqlType": "text",
+              "Type": "str",
+              "IsList": false,
+              "IsNullable": true,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "bio",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "bio"
+            },
+            "EmbedFields": null
+          },
+          {
+            "Name": "id",
+            "DBName": "id",
+            "Type": {
+              "SqlType": "INTEGER",
+              "Type": "int",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "id",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "authors"
+              },
+              "type": {
+                "name": "INTEGER"
+              },
+              "original_name": "id"
+            },
+            "EmbedFields": null
+          }
+        ],
+        "Comment": ""
+      },
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "SQLDriver": "aiosqlite",
+      "Column": null
+    },
+    "Table": null
+  },
+  {
+    "settings": {
+      "version": "2",
+      "engine": "sqlite",
+      "schema": [
+        "test/schema.sql"
+      ],
+      "queries": [
+        "test/queries.sql"
+      ],
+      "codegen": {
+        "out": "test",
+        "plugin": "python",
+        "options": "eyJtb2RlbF90eXBlIjoiZGF0YWNsYXNzIiwicGFja2FnZSI6InRlc3QiLCJzcWxfZHJpdmVyIjoiYWlvc3FsaXRlIn0=",
+        "wasm": {
+          "url": "file://sqlc-gen-better-python.wasm",
+          "sha256": "52e6eb8b75814b810e2509b034731d4a5ae275dc636f40e4226a8f7a9eb6a706"
+        }
+      }
+    },
+    "catalog": {
+      "default_schema": "main",
+      "schemas": [
+        {
+          "name": "main",
+          "tables": [
+            {
+              "rel": {
+                "name": "authors"
+              },
+              "columns": [
+                {
+                  "name": "id",
+                  "not_null": true,
+                  "length": -1,
+                  "table": {
+                    "name": "authors"
+                  },
+                  "type": {
+                    "name": "INTEGER"
+                  }
+                },
+                {
+                  "name": "name",
+                  "length": -1,
+                  "table": {
+                    "name": "authors"
+                  },
+                  "type": {
+                    "name": "text"
+                  }
+                },
+                {
+                  "name": "bio",
+                  "length": -1,
+                  "table": {
+                    "name": "authors"
+                  },
+                  "type": {
+                    "name": "text"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "queries": [
+      {
+        "text": "SELECT id, name, bio FROM authors\nWHERE id = ? LIMIT 1",
+        "name": "GetAuthor",
+        "cmd": ":one",
+        "columns": [
+          {
+            "name": "id",
+            "not_null": true,
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "INTEGER"
+            },
+            "original_name": "id"
+          },
+          {
+            "name": "name",
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "text"
+            },
+            "original_name": "name"
+          },
+          {
+            "name": "bio",
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "text"
+            },
+            "original_name": "bio"
+          }
+        ],
+        "params": [
+          {
+            "number": 1,
+            "column": {
+              "name": "id",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "authors"
+              },
+              "type": {
+                "name": "INTEGER"
+              },
+              "original_name": "id"
+            }
+          }
+        ],
+        "filename": "queries.sql"
+      },
+      {
+        "text": "SELECT id, name, bio FROM authors\nORDER BY name",
+        "name": "ListAuthors",
+        "cmd": ":many",
+        "columns": [
+          {
+            "name": "id",
+            "not_null": true,
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "INTEGER"
+            },
+            "original_name": "id"
+          },
+          {
+            "name": "name",
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "text"
+            },
+            "original_name": "name"
+          },
+          {
+            "name": "bio",
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "text"
+            },
+            "original_name": "bio"
+          }
+        ],
+        "filename": "queries.sql"
+      },
+      {
+        "text": "INSERT INTO authors (\n    name, bio\n) VALUES (\n             ?, ?\n         )\n    RETURNING id, name, bio",
+        "name": "CreateAuthor",
+        "cmd": ":one",
+        "columns": [
+          {
+            "name": "id",
+            "not_null": true,
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "INTEGER"
+            },
+            "original_name": "id"
+          },
+          {
+            "name": "name",
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "text"
+            },
+            "original_name": "name"
+          },
+          {
+            "name": "bio",
+            "length": -1,
+            "table": {
+              "name": "authors"
+            },
+            "type": {
+              "name": "text"
+            },
+            "original_name": "bio"
+          }
+        ],
+        "params": [
+          {
+            "number": 1,
+            "column": {
+              "name": "name",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "name"
+            }
+          },
+          {
+            "number": 2,
+            "column": {
+              "name": "bio",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "bio"
+            }
+          }
+        ],
+        "filename": "queries.sql",
+        "insert_into_table": {
+          "name": "authors"
+        }
+      },
+      {
+        "text": "UPDATE authors\nset name = ?,\n    bio = ?\nWHERE id = ?",
+        "name": "UpdateAuthor",
+        "cmd": ":exec",
+        "params": [
+          {
+            "number": 1,
+            "column": {
+              "name": "name",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "name"
+            }
+          },
+          {
+            "number": 2,
+            "column": {
+              "name": "bio",
+              "length": -1,
+              "table": {
+                "schema": "main",
+                "name": "authors"
+              },
+              "type": {
+                "name": "text"
+              },
+              "original_name": "bio"
+            }
+          },
+          {
+            "number": 3,
+            "column": {
+              "name": "id",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "authors"
+              },
+              "type": {
+                "name": "INTEGER"
+              },
+              "original_name": "id"
+            }
+          }
+        ],
+        "filename": "queries.sql"
+      },
+      {
+        "text": "DELETE FROM authors\nWHERE id = ?",
+        "name": "DeleteAuthor",
+        "cmd": ":exec",
+        "params": [
+          {
+            "number": 1,
+            "column": {
+              "name": "id",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "authors"
+              },
+              "type": {
+                "name": "INTEGER"
+              },
+              "original_name": "id"
+            }
+          }
+        ],
+        "filename": "queries.sql"
+      }
+    ],
+    "sqlc_version": "v1.28.0",
+    "plugin_options": "eyJtb2RlbF90eXBlIjoiZGF0YWNsYXNzIiwicGFja2FnZSI6InRlc3QiLCJzcWxfZHJpdmVyIjoiYWlvc3FsaXRlIn0="
+  }
+]
