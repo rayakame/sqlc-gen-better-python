@@ -65,16 +65,17 @@ func ArgName(name string) string {
 	return out
 }
 
-func ExtractImport(pyType PyType) []string {
-	imports := make([]string, 0)
-	if pyType.IsNullable {
-		imports = append(imports, "import typing")
+func UpperSnakeCase(s string) string {
+	result := ""
+	for i, r := range s {
+		if unicode.IsUpper(r) && i != 0 {
+			result += "_" + string(r)
+		} else {
+			result += string(r)
+		}
 	}
-	parts := strings.Split(pyType.Type, ".")
-	if len(parts) == 1 {
-		return imports
-	}
-	return append(imports, "import "+parts[0])
+	result = strings.ToUpper(result)
+	return result
 }
 
 func AppendUniqueString(list []string, newItems []string) []string {
