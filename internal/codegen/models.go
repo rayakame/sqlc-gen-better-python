@@ -5,42 +5,31 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 )
 
-func BuildModelFile(config *core.Config, tables []core.Table) (string, []byte, error) {
-	imports := make([]string, 0)
-
-	for _, table := range tables {
-		for _, col := range table.Columns {
-			if imp := core.ExtractImport(col.Type); len(imp) != 0 {
-				imports = core.AppendUniqueString(imports, imp)
-			}
-		}
-	}
-
-	switch config.ModelType {
-	case core.ModelTypeDataclass:
-		imports = append(imports, "from dataclasses import dataclass")
-	case core.ModelTypeAttrs:
-		imports = append(imports, "import attrs")
-	default:
-		return "", nil, fmt.Errorf("unsupported model type: %s", config.ModelType)
-	}
-
-	body := NewIndentStringBuilder(config.IndentChar, config.CharsPerIndentLevel)
+func BuildModelFile(imp *core.Importer, tables []core.Table) (string, []byte, error) {
+	fileName := "models.py"
+	body := NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
-	for _, imp := range imports {
+	body.WriteImportAnnotations()
+	body.WriteLine("__all__: typing.Sequence[str] = (")
+	for _, table := range tables {
+		body.WriteIndentedLine(1, fmt.Sprintf("\"%s\",", table.Name))
+	}
+	body.WriteLine(")")
+	body.WriteString("\n")
+	for _, imp := range imp.Imports(fileName) {
 		body.WriteLine(imp)
 	}
 	for _, table := range tables {
 		body.WriteString("\n")
 		body.WriteString("\n")
-		BuildModel(config, table, body)
+		BuildModel(imp.C, &table, body)
 	}
-	return "models.py", []byte(body.String()), nil
+	return fileName, []byte(body.String()), nil
 }
 
-func BuildModel(config *core.Config, table core.Table, body *IndentStringBuilder) {
+func BuildModel(config *core.Config, table *core.Table, body *IndentStringBuilder) {
 	if config.ModelType == core.ModelTypeDataclass {
-		body.WriteLine("@dataclass()")
+		body.WriteLine("@dataclasses.dataclass()")
 	} else if config.ModelType == core.ModelTypeAttrs {
 		body.WriteLine("@attrs.define()")
 	}
