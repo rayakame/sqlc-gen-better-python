@@ -94,6 +94,7 @@ type Query struct {
 	Cmd          string
 	Comments     []string
 	MethodName   string
+	FuncName     string
 	FieldName    string
 	ConstantName string
 	SQL          string
