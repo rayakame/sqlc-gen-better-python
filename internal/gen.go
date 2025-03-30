@@ -45,7 +45,6 @@ func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
 
 func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	outputFiles := make([]*plugin.File, 0)
-	log.GlobalLogger.Log(pg.req.String())
 	log.GlobalLogger.LogByte(pg.req.PluginOptions)
 	enums := pg.buildEnums()
 	tables := pg.buildTables()
@@ -54,7 +53,9 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 		return nil, err
 	}
 
-	jsonData, _ := json.Marshal(pg.config)
+	jsonData, _ := json.Marshal(pg.req)
+	log.GlobalLogger.LogByte(jsonData)
+	jsonData, _ = json.Marshal(pg.config)
 	log.GlobalLogger.LogByte(jsonData)
 	jsonData, _ = json.Marshal(enums)
 	log.GlobalLogger.LogByte(jsonData)
@@ -69,12 +70,24 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	if err := pg.validate(enums, tables); err != nil {
 		return nil, err
 	}
-	fileName, fileContent := log.GlobalLogger.Print()
+	importer := core.Importer{
+		Tables:  tables,
+		Queries: queries,
+		Enums:   enums,
+		C:       pg.config,
+	}
+	fileName, fileContent, _ := codegen.BuildModelFile(&importer, tables)
 	outputFiles = append(outputFiles, &plugin.File{
 		Name:     fileName,
 		Contents: fileContent,
 	})
-	fileName, fileContent, _ = codegen.BuildModelFile(pg.config, tables)
+	fileName, fileContent, _ = codegen.BuildQueriesFile(&importer, queries, tables)
+	outputFiles = append(outputFiles, &plugin.File{
+		Name:     fileName,
+		Contents: fileContent,
+	})
+	outputFiles = append(outputFiles, codegen.BuildInitFile(&importer))
+	fileName, fileContent = log.GlobalLogger.Print()
 	outputFiles = append(outputFiles, &plugin.File{
 		Name:     fileName,
 		Contents: fileContent,
