@@ -9,6 +9,7 @@ import (
 const PluginVersion = "0.0.1"
 
 type Config struct {
+	Package                     string    `json:"package" yaml:"package"`
 	SqlDriver                   string    `json:"sql_driver" yaml:"sql_driver"`
 	ModelType                   string    `json:"model_type" yaml:"model_type"`
 	Initialisms                 *[]string `json:"initialisms,omitempty" yaml:"initialisms"`
@@ -67,6 +68,10 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 func ValidateConf(conf *Config) error {
 	if *conf.QueryParameterLimit < 0 {
 		return fmt.Errorf("invalid options: query parameter limit must not be negative")
+	}
+
+	if conf.Package == "" {
+		return fmt.Errorf("invalid options: package must not be empty")
 	}
 
 	if err := isModelTypeValid(conf.ModelType); err != nil {
