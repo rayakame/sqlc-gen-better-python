@@ -9,10 +9,10 @@ A WASM plugin for SQLC allowing the generation of Python code.
 ## Feature Support
 
 
-|           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` | `:batch*`           |
-| --------- | ------- | ------------- | ----------- | ------------- | ------- | ------ | ----------- |---------------------|
-| AioSqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          | not supported by py |
-|           |         |               |             |               |         |        |             | not supported by py |
+|           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
+| --------- | ------- | ------------- | ----------- | ------------- | ------- | ------ | ----------- |
+| AioSqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
+|           |         |               |             |               |         |        |             |
 
 
 ## Development
