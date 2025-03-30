@@ -7,7 +7,7 @@ A WASM plugin for SQLC allowing the generation of Python code.
 > Please wait for the first GitHub release; before that, this plugin is likely to not work.
 
 ## Feature Support
-
+> Every `:batch*` command is not supported by this plugin and probably will never be.
 
 |           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
 | --------- | ------- | ------------- | ----------- | ------------- | ------- | ------ | ----------- |
