@@ -11,9 +11,12 @@ jobs:
     if: github.event.pull_request.user.type != 'Bot' && !contains(github.event.pull_request.labels.*.name, 'skip-fragment-check')
     runs-on: ubuntu-latest
 
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
 
       - name: Check if linked to the correct pull request
         run: |
