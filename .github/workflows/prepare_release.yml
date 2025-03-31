@@ -15,7 +15,7 @@ on:
 jobs:
   generate-pr:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout
