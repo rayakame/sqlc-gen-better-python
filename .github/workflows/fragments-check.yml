@@ -18,6 +18,7 @@ jobs:
       - name: Check if linked to the correct pull request
         run: |
           git remote -v
+          git branch -r
           diff=$(git diff origin/${{ github.base_ref }} HEAD --name-only)
           changelog_fragments=$(echo "$diff" | grep "^.changes/unreleased/")
           echo changelog_fragments
