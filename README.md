@@ -21,3 +21,5 @@ A WASM plugin for SQLC allowing the generation of Python code.
 
 ## Development
 A roadmap of what is planned & worked on can be found [here](https://github.com/users/rayakame/projects/1/)
+### Changelog
+Can be found [here](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CHANGELOG.md)
