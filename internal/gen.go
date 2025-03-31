@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
+	"github.com/rayakame/sqlc-gen-better-python/internal/driver"
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -16,6 +17,7 @@ type PythonGenerator struct {
 	config *core.Config
 
 	typeConversionFunc types.TypeConversionFunc
+	sqlDriver          *driver.Driver
 }
 
 func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
@@ -23,7 +25,7 @@ func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = core.ValidateConf(config); err != nil {
+	if err = core.ValidateConf(config, req.Settings.Engine); err != nil {
 		return nil, err
 	}
 	var typeConversionFunc types.TypeConversionFunc
@@ -36,10 +38,16 @@ func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
 		return nil, fmt.Errorf("engine %q is not supported", req.Settings.Engine)
 	}
 
+	sqlDriver, err := driver.NewDriver(config.SqlDriver)
+	if err != nil {
+		return nil, err
+	}
+
 	return &PythonGenerator{
 		req:                req,
 		config:             config,
 		typeConversionFunc: typeConversionFunc,
+		sqlDriver:          sqlDriver,
 	}, nil
 }
 
@@ -84,7 +92,7 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 		Name:     fileName,
 		Contents: fileContent,
 	})
-	fileName, fileContent, err = codegen.BuildQueriesFile(&importer, queries, tables)
+	fileName, fileContent, err = codegen.BuildQueriesFile(&importer, queries)
 	if err != nil {
 		return nil, err
 	}
