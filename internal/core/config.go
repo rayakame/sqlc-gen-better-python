@@ -9,14 +9,14 @@ import (
 const PluginVersion = "0.0.1"
 
 type Config struct {
-	Package                     string    `json:"package" yaml:"package"`
-	SqlDriver                   string    `json:"sql_driver" yaml:"sql_driver"`
-	ModelType                   string    `json:"model_type" yaml:"model_type"`
-	Initialisms                 *[]string `json:"initialisms,omitempty" yaml:"initialisms"`
-	EmitExactTableNames         bool      `json:"emit_exact_table_names,omitempty" yaml:"emit_exact_table_names"`
-	InflectionExcludeTableNames []string  `json:"inflection_exclude_table_names,omitempty" yaml:"inflection_exclude_table_names"`
-	OmitUnusedStructs           bool      `json:"omit_unused_structs,omitempty" yaml:"omit_unused_structs"`
-	QueryParameterLimit         *int32    `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
+	Package                     string        `json:"package" yaml:"package"`
+	SqlDriver                   SQLDriverType `json:"sql_driver" yaml:"sql_driver"`
+	ModelType                   string        `json:"model_type" yaml:"model_type"`
+	Initialisms                 *[]string     `json:"initialisms,omitempty" yaml:"initialisms"`
+	EmitExactTableNames         bool          `json:"emit_exact_table_names,omitempty" yaml:"emit_exact_table_names"`
+	InflectionExcludeTableNames []string      `json:"inflection_exclude_table_names,omitempty" yaml:"inflection_exclude_table_names"`
+	OmitUnusedStructs           bool          `json:"omit_unused_structs,omitempty" yaml:"omit_unused_structs"`
+	QueryParameterLimit         *int32        `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
 
 	IndentChar          string `json:"indent_char" yaml:"indent_char"`
 	CharsPerIndentLevel int    `json:"chars_per_indent_level" yaml:"chars_per_indent_level"`
@@ -65,13 +65,17 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 	}
 	return &config, nil
 }
-func ValidateConf(conf *Config) error {
+func ValidateConf(conf *Config, engine string) error {
 	if *conf.QueryParameterLimit < 0 {
 		return fmt.Errorf("invalid options: query parameter limit must not be negative")
 	}
 
 	if conf.Package == "" {
 		return fmt.Errorf("invalid options: package must not be empty")
+	}
+
+	if err := isDriverValid(conf.SqlDriver, engine); err != nil {
+		return err
 	}
 
 	if err := isModelTypeValid(conf.ModelType); err != nil {
