@@ -10,7 +10,7 @@ import (
 
 const AioSQLiteConn = "aiosqlite.Connection"
 
-func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, argType string, retType string, isClass bool) error {
+func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, argType string, retType string, isClass bool) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", AioSQLiteConn)
 	conn := "conn"
@@ -132,7 +132,7 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 	return nil
 }
 
-func AcceptedDriverCMDs() []string {
+func AioSQLiteAcceptedDriverCMDs() []string {
 	return []string{
 		metadata.CmdExec,
 		metadata.CmdExecResult,
