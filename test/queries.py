@@ -62,18 +62,15 @@ INSERT INTO authors (
     RETURNING id, name, bio
 """
 
-
 DELETE_AUTHOR: typing.Final[str] = """-- name: DeleteAuthor :exec
 DELETE FROM authors
 WHERE id = ?
 """
 
-
 GET_AUTHOR: typing.Final[str] = """-- name: GetAuthor :one
 SELECT id, name FROM authors
 WHERE id = ? LIMIT 1
 """
-
 
 LIST_AUTHORS: typing.Final[str] = """-- name: ListAuthors :many
 SELECT id, name, bio FROM authors
@@ -81,14 +78,12 @@ WHERE id IN (/*SLICE:ids*/?)
 ORDER BY name
 """
 
-
 UPDATE_AUTHOR: typing.Final[str] = """-- name: UpdateAuthor :exec
 UPDATE authors
 set name = ?,
     bio = ?
 WHERE id = ?
 """
-
 
 UPDATE_AUTHOR_T: typing.Final[str] = """-- name: UpdateAuthorT :one
 UPDATE authors
@@ -98,7 +93,6 @@ SET
 WHERE id = ?3
     RETURNING id, name, bio
 """
-
 
 UPSERT_AUTHOR_NAME: typing.Final[str] = """-- name: UpsertAuthorName :one
 UPDATE authors
@@ -147,4 +141,3 @@ class Queries:
         if row is None:
             return None
         return models.Author(id=row[0], name=row[1], bio=row[2])
-
