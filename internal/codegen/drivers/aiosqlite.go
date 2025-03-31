@@ -8,8 +8,10 @@ import (
 	"strconv"
 )
 
+const AioSQLiteConn = "aiosqlite.Connection"
+
 func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, argType string, retType string) error {
-	body.WriteString(fmt.Sprintf("async def %s(conn: aiosqlite.Connection", query.FuncName))
+	body.WriteString(fmt.Sprintf("async def %s(conn: %s", query.FuncName, AioSQLiteConn))
 	if argType != "" {
 		body.WriteString(fmt.Sprintf(", %s: %s", query.Arg.Name, argType))
 	}
