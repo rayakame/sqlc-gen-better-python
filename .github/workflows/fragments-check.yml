@@ -20,9 +20,21 @@ jobs:
 
       - name: Check if linked to the correct pull request
         run: |
-          git remote -v
-          git branch -r
           diff=$(git diff origin/${{ github.base_ref }} HEAD --name-only)
-          changelog_fragments=$(echo "$diff" | grep "^.changes/unreleased/")
-          echo $changelog_fragments
+          changelog_fragments=$(echo "$diff" | grep "^.changes/unreleased/.*\.yaml$")
+          pr_number=${{ github.event.pull_request.number }}
+          found_match=false
+          
+          for file in $changelog_fragments; do
+            if grep -qE "PR: *\"?$pr_number\"?" "$file"; then
+              echo "✅ Found PR number $pr_number in $file"
+              found_match=true
+            fi
+          done
+          
+          if [ "$found_match" = false ]; then
+            echo "❌ No matching PR number found in changelog fragments."
+            exit 1
+          fi
 
+          
