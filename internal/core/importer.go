@@ -33,7 +33,7 @@ type Importer struct {
 }
 
 func (i *Importer) Imports(fileName string) []string {
-	if fileName == "models.py" {
+	if fileName == "models.sql" {
 		return i.modelImports()
 	}
 	return i.queryImports(fileName)
@@ -127,7 +127,7 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 
 	pkg := make(map[string]importSpec)
 	loc := make(map[string]importSpec)
-	pkg[i.C.SqlDriver] = importSpec{Module: i.C.SqlDriver}
+	pkg[i.C.SqlDriver.String()] = importSpec{Module: i.C.SqlDriver.String()}
 
 	queryValueModelImports := func(qv QueryValue) {
 		if qv.IsStruct() && qv.EmitStruct() {
