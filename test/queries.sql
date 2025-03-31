@@ -20,7 +20,7 @@ UPDATE authors
 SET name = CASE WHEN sqlc.arg(set_name) THEN ? ELSE name END
     RETURNING *;
 
--- name: UpdateAuthor :batchexec
+-- name: UpdateAuthor :exec
 UPDATE authors
 set name = ?,
     bio = ?
