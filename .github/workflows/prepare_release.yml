@@ -13,7 +13,7 @@ on:
           - patch
 
 jobs:
-  generate-pr:
+  prepare-release:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -48,7 +48,7 @@ jobs:
 
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v7
         with:
           title: Release ${{ steps.latest.outputs.output }}
           branch: release/${{ steps.latest.outputs.output }}
