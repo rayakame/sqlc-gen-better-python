@@ -6,6 +6,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
+	"strings"
 )
 
 func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) (string, string) {
@@ -72,6 +73,15 @@ func (dr *Driver) buildQueryHeader(query *core.Query, body *builders.IndentStrin
 	body.WriteLine(`"""`)
 }
 
+func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStringBuilder) {
+	className := core.SnakeToCamel(strings.ReplaceAll(sourceName, ".sql", ""), dr.conf)
+	body.WriteLine(fmt.Sprintf("class %s:", className))
+	body.WriteIndentedLine(1, `__slots__ = ("_conn",)`)
+	body.NewLine()
+	body.WriteIndentedLine(1, fmt.Sprintf(`def __init__(self, conn: %s):`, dr.connType))
+	body.WriteIndentedLine(2, "self._conn = conn")
+}
+
 func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, sourceName string) ([]byte, error) {
 	body := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
@@ -102,6 +112,7 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 		body.WriteLine(imp)
 	}
 	body.WriteString("\n")
+	dr.buildClassTemplate(sourceName, body)
 
 	return []byte(body.String() + queryBody.String()), nil
 }
