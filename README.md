@@ -14,7 +14,7 @@ A WASM plugin for SQLC allowing the generation of Python code.
 |           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
 | --------- | ------- | ------------- | ----------- | ------------- | ------- | ------ | ----------- |
 | aiosqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
-| sqlite3   | no      | no            | no          | no            | no      | no     | no          |
+| sqlite3   | yes      | yes            | yes          | yes            | yes      | yes     | no          |
 | asyncpg   | no      | no            | no          | no            | no      | no     | no          |
 | psycopg2  | no      | no            | no          | no            | no      | no     | no          |
 | mysql     | no      | no            | no          | no            | no      | no     | no          |
