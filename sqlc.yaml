@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 67389a6e3bfdaf7e78ff7e85a4c497beb849aff7de9d4e283feda44ffe3f22a3
+      sha256: be2dfe3e1b9afa91b81212ed983fc1e2b507c58c6ed9c757e902756dd1de1de9
 sql:
   - schema: test/schema.sql
     queries: test/queries.sql
@@ -13,7 +13,7 @@ sql:
         plugin: python
         options:
           package: test
-          sql_driver: aiosqlite
+          sql_driver: sqlite3
           model_type: dataclass
-          emit_classes: true
+          emit_classes: false
 
