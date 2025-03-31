@@ -176,7 +176,7 @@ func prepareFunctionHeader(imp *core.Importer, query *core.Query, body *IndentSt
 	return argType, retType
 }
 
-func BuildQueriesFile(imp *core.Importer, queries []core.Query, tables []core.Table) (string, []byte, error) {
+func BuildQueriesFile(imp *core.Importer, queries []core.Query) (string, []byte, error) {
 	fileName := "queries.py"
 	body := NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
