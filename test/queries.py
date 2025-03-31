@@ -7,16 +7,10 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "CreateAuthorParams",
     "GetAuthorRow",
+    "Queries",
     "UpdateAuthorParams",
     "UpdateAuthorTParams",
     "UpsertAuthorNameParams",
-    "create_author",
-    "delete_author",
-    "get_author",
-    "list_authors",
-    "update_author",
-    "update_author_t",
-    "upsert_author_name",
 )
 
 import dataclasses
@@ -110,6 +104,8 @@ UPDATE authors
 SET name = CASE WHEN ?2 THEN ? ELSE name END
     RETURNING id, name, bio
 """
+
+
 class Queries:
     __slots__ = ("_conn",)
 
@@ -122,10 +118,8 @@ class Queries:
             return None
         return models.Author(id=row[0], name=row[1], bio=row[2])
 
-
     async def delete_author(self, id: int) -> None:
         await self._conn.execute(DELETE_AUTHOR, id)
-
 
     async def get_author(self, id: int) -> typing.Optional[GetAuthorRow]:
         row = await (await self._conn.execute(GET_AUTHOR, id)).fetchone()
@@ -133,16 +127,13 @@ class Queries:
             return None
         return GetAuthorRow(id=row[0], name=row[1])
 
-
     async def list_authors(self, ids: typing.Sequence[int]) -> typing.AsyncIterator[models.Author]:
         stream = await self._conn.execute(LIST_AUTHORS, ids)
         async for row in stream:
             yield models.Author(id=row[0], name=row[1], bio=row[2])
 
-
     async def update_author(self, arg: UpdateAuthorParams) -> None:
         await self._conn.execute(UPDATE_AUTHOR, arg.name, arg.bio, arg.id)
-
 
     async def update_author_t(self, arg: UpdateAuthorTParams) -> typing.Optional[models.Author]:
         row = await (await self._conn.execute(UPDATE_AUTHOR_T, arg.name, arg.bio, arg.id)).fetchone()
@@ -150,11 +141,9 @@ class Queries:
             return None
         return models.Author(id=row[0], name=row[1], bio=row[2])
 
-
     async def upsert_author_name(self, arg: UpsertAuthorNameParams) -> typing.Optional[models.Author]:
         row = await (await self._conn.execute(UPSERT_AUTHOR_NAME, arg.set_name, arg.name)).fetchone()
         if row is None:
             return None
         return models.Author(id=row[0], name=row[1], bio=row[2])
-
 
