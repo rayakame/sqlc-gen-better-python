@@ -13,6 +13,7 @@ __all__: typing.Sequence[str] = (
     "UpsertAuthorNameParams",
 )
 
+
 import dataclasses
 import typing
 
