@@ -1,14 +1,14 @@
-package driver
+package codegen
 
 import (
 	"fmt"
-	"github.com/rayakame/sqlc-gen-better-python/internal/codegen"
+	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
-func (dr *Driver) prepareFunctionHeader(query *core.Query, body *codegen.IndentStringBuilder) (string, string) {
+func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) (string, string) {
 	argType := ""
 	if query.Arg.EmitStruct() && query.Arg.IsStruct() {
 		BuildPyTabel(dr.conf.ModelType, query.Arg.Table, body)
@@ -66,19 +66,19 @@ func (dr *Driver) BuildPyQueriesFiles(imp *core.Importer, queries []core.Query) 
 	return files, nil
 }
 
-func (dr *Driver) buildQueryHeader(query *core.Query, body *codegen.IndentStringBuilder) {
+func (dr *Driver) buildQueryHeader(query *core.Query, body *builders.IndentStringBuilder) {
 	body.WriteLine(fmt.Sprintf(`%s = """-- name: %s %s`, query.ConstantName, query.MethodName, query.Cmd))
 	body.WriteLine(query.SQL)
 	body.WriteLine(`"""`)
 }
 
 func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, sourceName string) ([]byte, error) {
-	body := codegen.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	body := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
 	body.WriteImportAnnotations()
 
 	funcNames := make([]string, 0)
-	queryBody := codegen.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	queryBody := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	for i, query := range queries {
 		funcNames = append(funcNames, query.FuncName)
 		if i != 0 {

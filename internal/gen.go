@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/rayakame/sqlc-gen-better-python/internal/codegen"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
-	"github.com/rayakame/sqlc-gen-better-python/internal/driver"
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -16,7 +16,7 @@ type PythonGenerator struct {
 	config *core.Config
 
 	typeConversionFunc types.TypeConversionFunc
-	sqlDriver          *driver.Driver
+	sqlDriver          *codegen.Driver
 }
 
 func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
@@ -37,7 +37,7 @@ func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
 		return nil, fmt.Errorf("engine %q is not supported", req.Settings.Engine)
 	}
 
-	sqlDriver, err := driver.NewDriver(config)
+	sqlDriver, err := codegen.NewDriver(config)
 	if err != nil {
 		return nil, err
 	}

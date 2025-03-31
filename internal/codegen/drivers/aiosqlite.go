@@ -2,13 +2,13 @@ package drivers
 
 import (
 	"fmt"
-	"github.com/rayakame/sqlc-gen-better-python/internal/codegen"
+	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"strconv"
 )
 
-func BuildPyQueryFunc(query *core.Query, body *codegen.IndentStringBuilder, argType string, retType string) error {
+func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, argType string, retType string) error {
 	body.WriteString(fmt.Sprintf("async def %s(conn: aiosqlite.Connection", query.FuncName))
 	if argType != "" {
 		body.WriteString(fmt.Sprintf(", %s: %s", query.Arg.Name, argType))
