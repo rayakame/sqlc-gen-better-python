@@ -1,0 +1,55 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version to prepare the release for'
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  generate-pr:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Batch changes
+        uses: miniscruff/changie-action@v2
+        with:
+          version: latest
+          args: batch ${{ github.event.inputs.version }}
+
+      - name: Merge changes
+        uses: miniscruff/changie-action@v2
+        with:
+          version: latest
+          args: merge
+
+      - name: Get the latest version
+        id: latest
+        uses: miniscruff/changie-action@v2
+        with:
+          version: latest
+          args: latest
+
+      - name: Set version
+        run: |
+          sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"${{ steps.latest.outputs.output }}"'"/' internal/core/config.go
+          
+          echo "✅ Updated PluginVersion to $new_version"
+
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: Release ${{ steps.latest.outputs.output }}
+          branch: release/${{ steps.latest.outputs.output }}
+          commit-message: Release ${{ steps.latest.outputs.output }}
