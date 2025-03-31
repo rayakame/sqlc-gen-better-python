@@ -16,4 +16,5 @@ sql:
           sql_driver: sqlite3
           model_type: dataclass
           emit_classes: false
+          omit_unused_structs: true
 

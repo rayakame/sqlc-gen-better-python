@@ -60,26 +60,25 @@ class UpsertAuthorNameParams:
 
 
 CREATE_AUTHOR: typing.Final[str] = """-- name: CreateAuthor :one
-INSERT INTO authors (
-    name, bio
-) VALUES (
-             ?, ?
-         )
-    RETURNING id, name, bio
+INSERT INTO authors (name, bio)
+VALUES (?, ?) RETURNING id, name, bio
 """
 
 DELETE_AUTHOR: typing.Final[str] = """-- name: DeleteAuthor :exec
-DELETE FROM authors
+DELETE
+FROM authors
 WHERE id = ?
 """
 
 GET_AUTHOR: typing.Final[str] = """-- name: GetAuthor :one
-SELECT id, name FROM authors
+SELECT id, name
+FROM authors
 WHERE id = ? LIMIT 1
 """
 
 LIST_AUTHORS: typing.Final[str] = """-- name: ListAuthors :many
-SELECT id, name, bio FROM authors
+SELECT id, name, bio
+FROM authors
 WHERE id IN (/*SLICE:ids*/?)
 ORDER BY name
 """
@@ -87,23 +86,20 @@ ORDER BY name
 UPDATE_AUTHOR: typing.Final[str] = """-- name: UpdateAuthor :exec
 UPDATE authors
 set name = ?,
-    bio = ?
+    bio  = ?
 WHERE id = ?
 """
 
 UPDATE_AUTHOR_T: typing.Final[str] = """-- name: UpdateAuthorT :one
 UPDATE authors
-SET
-    name = coalesce(?1, name),
-    bio = coalesce(?2, bio)
-WHERE id = ?3
-    RETURNING id, name, bio
+SET name = coalesce(?1, name),
+    bio  = coalesce(?2, bio)
+WHERE id = ?3 RETURNING id, name, bio
 """
 
 UPSERT_AUTHOR_NAME: typing.Final[str] = """-- name: UpsertAuthorName :one
 UPDATE authors
-SET name = CASE WHEN ?2 THEN ? ELSE name END
-    RETURNING id, name, bio
+SET name = CASE WHEN ?2 THEN ? ELSE name END RETURNING id, name, bio
 """
 
 
