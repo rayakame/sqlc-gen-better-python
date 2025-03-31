@@ -26,10 +26,13 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 	var connType string
 	switch conf.SqlDriver {
 	case core.SQLDriverAioSQLite:
-		buildPyQueryFunc = drivers.BuildPyQueryFunc
-		acceptedDriverCMDs = drivers.AcceptedDriverCMDs
+		buildPyQueryFunc = drivers.AioSQLiteBuildPyQueryFunc
+		acceptedDriverCMDs = drivers.AioSQLiteAcceptedDriverCMDs
 		connType = drivers.AioSQLiteConn
-
+	case core.SQLDriverSQLite:
+		buildPyQueryFunc = drivers.SQLite3BuildPyQueryFunc
+		acceptedDriverCMDs = drivers.SQLite3AcceptedDriverCMDs
+		connType = drivers.SQLite3Conn
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
