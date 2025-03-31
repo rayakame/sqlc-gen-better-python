@@ -21,6 +21,11 @@ import aiosqlite
 
 from test import models
 
+class Queries:
+    __slots__ = ("_conn",)
+
+    def __init__(self, conn: aiosqlite.Connection):
+        self._conn = conn
 CREATE_AUTHOR = """-- name: CreateAuthor :one
 INSERT INTO authors (
     name, bio
