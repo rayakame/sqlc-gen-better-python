@@ -13,13 +13,13 @@ __all__: typing.Sequence[str] = (
     "UpsertAuthorNameParams",
 )
 
-
 import dataclasses
 import typing
 
 import aiosqlite
 
 from test import models
+
 
 @dataclasses.dataclass()
 class CreateAuthorParams:
