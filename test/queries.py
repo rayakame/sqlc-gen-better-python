@@ -5,13 +5,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "create_author",
-    "delete_author",
-    "get_author",
-    "list_authors",
-    "update_author",
-    "update_author_t",
-    "upsert_author_name",
+    "CreateAuthorParams",
+    "GetAuthorRow",
+    "Queries",
+    "UpdateAuthorParams",
+    "UpdateAuthorTParams",
+    "UpsertAuthorNameParams",
 )
 
 import dataclasses
@@ -21,15 +20,6 @@ import aiosqlite
 
 from test import models
 
-CREATE_AUTHOR = """-- name: CreateAuthor :one
-INSERT INTO authors (
-    name, bio
-) VALUES (
-             ?, ?
-         )
-    RETURNING id, name, bio
-"""
-
 
 @dataclasses.dataclass()
 class CreateAuthorParams:
@@ -37,61 +27,10 @@ class CreateAuthorParams:
     bio: typing.Optional[str]
 
 
-async def create_author(conn: aiosqlite.Connection, arg: CreateAuthorParams) -> typing.Optional[models.Author]:
-    row = await (await conn.execute(CREATE_AUTHOR, arg.name, arg.bio)).fetchone()
-    if row is None:
-        return None
-    return models.Author(id=row[0], name=row[1], bio=row[2])
-
-
-DELETE_AUTHOR = """-- name: DeleteAuthor :exec
-DELETE FROM authors
-WHERE id = ?
-"""
-
-
-async def delete_author(conn: aiosqlite.Connection, id: int) -> None:
-    await conn.execute(DELETE_AUTHOR, id)
-
-
-GET_AUTHOR = """-- name: GetAuthor :one
-SELECT id, name FROM authors
-WHERE id = ? LIMIT 1
-"""
-
-
 @dataclasses.dataclass()
 class GetAuthorRow:
     id: int
     name: str
-
-
-async def get_author(conn: aiosqlite.Connection, id: int) -> typing.Optional[GetAuthorRow]:
-    row = await (await conn.execute(GET_AUTHOR, id)).fetchone()
-    if row is None:
-        return None
-    return GetAuthorRow(id=row[0], name=row[1])
-
-
-LIST_AUTHORS = """-- name: ListAuthors :many
-SELECT id, name, bio FROM authors
-WHERE id IN (/*SLICE:ids*/?)
-ORDER BY name
-"""
-
-
-async def list_authors(conn: aiosqlite.Connection, ids: typing.Sequence[int]) -> typing.AsyncIterator[models.Author]:
-    stream = await conn.execute(LIST_AUTHORS, ids)
-    async for row in stream:
-        yield models.Author(id=row[0], name=row[1], bio=row[2])
-
-
-UPDATE_AUTHOR = """-- name: UpdateAuthor :exec
-UPDATE authors
-set name = ?,
-    bio = ?
-WHERE id = ?
-"""
 
 
 @dataclasses.dataclass()
@@ -101,39 +40,11 @@ class UpdateAuthorParams:
     id: int
 
 
-async def update_author(conn: aiosqlite.Connection, arg: UpdateAuthorParams) -> None:
-    await conn.execute(UPDATE_AUTHOR, arg.name, arg.bio, arg.id)
-
-
-UPDATE_AUTHOR_T = """-- name: UpdateAuthorT :one
-UPDATE authors
-SET
-    name = coalesce(?1, name),
-    bio = coalesce(?2, bio)
-WHERE id = ?3
-    RETURNING id, name, bio
-"""
-
-
 @dataclasses.dataclass()
 class UpdateAuthorTParams:
     name: typing.Optional[str]
     bio: typing.Optional[str]
     id: int
-
-
-async def update_author_t(conn: aiosqlite.Connection, arg: UpdateAuthorTParams) -> typing.Optional[models.Author]:
-    row = await (await conn.execute(UPDATE_AUTHOR_T, arg.name, arg.bio, arg.id)).fetchone()
-    if row is None:
-        return None
-    return models.Author(id=row[0], name=row[1], bio=row[2])
-
-
-UPSERT_AUTHOR_NAME = """-- name: UpsertAuthorName :one
-UPDATE authors
-SET name = CASE WHEN ?2 THEN ? ELSE name END
-    RETURNING id, name, bio
-"""
 
 
 @dataclasses.dataclass()
@@ -142,8 +53,91 @@ class UpsertAuthorNameParams:
     name: str
 
 
-async def upsert_author_name(conn: aiosqlite.Connection, arg: UpsertAuthorNameParams) -> typing.Optional[models.Author]:
-    row = await (await conn.execute(UPSERT_AUTHOR_NAME, arg.set_name, arg.name)).fetchone()
-    if row is None:
-        return None
-    return models.Author(id=row[0], name=row[1], bio=row[2])
+CREATE_AUTHOR: typing.Final[str] = """-- name: CreateAuthor :one
+INSERT INTO authors (
+    name, bio
+) VALUES (
+             ?, ?
+         )
+    RETURNING id, name, bio
+"""
+
+DELETE_AUTHOR: typing.Final[str] = """-- name: DeleteAuthor :exec
+DELETE FROM authors
+WHERE id = ?
+"""
+
+GET_AUTHOR: typing.Final[str] = """-- name: GetAuthor :one
+SELECT id, name FROM authors
+WHERE id = ? LIMIT 1
+"""
+
+LIST_AUTHORS: typing.Final[str] = """-- name: ListAuthors :many
+SELECT id, name, bio FROM authors
+WHERE id IN (/*SLICE:ids*/?)
+ORDER BY name
+"""
+
+UPDATE_AUTHOR: typing.Final[str] = """-- name: UpdateAuthor :exec
+UPDATE authors
+set name = ?,
+    bio = ?
+WHERE id = ?
+"""
+
+UPDATE_AUTHOR_T: typing.Final[str] = """-- name: UpdateAuthorT :one
+UPDATE authors
+SET
+    name = coalesce(?1, name),
+    bio = coalesce(?2, bio)
+WHERE id = ?3
+    RETURNING id, name, bio
+"""
+
+UPSERT_AUTHOR_NAME: typing.Final[str] = """-- name: UpsertAuthorName :one
+UPDATE authors
+SET name = CASE WHEN ?2 THEN ? ELSE name END
+    RETURNING id, name, bio
+"""
+
+
+class Queries:
+    __slots__ = ("_conn",)
+
+    def __init__(self, conn: aiosqlite.Connection):
+        self._conn = conn
+
+    async def create_author(self, arg: CreateAuthorParams) -> typing.Optional[models.Author]:
+        row = await (await self._conn.execute(CREATE_AUTHOR, arg.name, arg.bio)).fetchone()
+        if row is None:
+            return None
+        return models.Author(id=row[0], name=row[1], bio=row[2])
+
+    async def delete_author(self, id: int) -> None:
+        await self._conn.execute(DELETE_AUTHOR, id)
+
+    async def get_author(self, id: int) -> typing.Optional[GetAuthorRow]:
+        row = await (await self._conn.execute(GET_AUTHOR, id)).fetchone()
+        if row is None:
+            return None
+        return GetAuthorRow(id=row[0], name=row[1])
+
+    async def list_authors(self, ids: typing.Sequence[int]) -> typing.AsyncIterator[models.Author]:
+        stream = await self._conn.execute(LIST_AUTHORS, ids)
+        async for row in stream:
+            yield models.Author(id=row[0], name=row[1], bio=row[2])
+
+    async def update_author(self, arg: UpdateAuthorParams) -> None:
+        await self._conn.execute(UPDATE_AUTHOR, arg.name, arg.bio, arg.id)
+
+    async def update_author_t(self, arg: UpdateAuthorTParams) -> typing.Optional[models.Author]:
+        row = await (await self._conn.execute(UPDATE_AUTHOR_T, arg.name, arg.bio, arg.id)).fetchone()
+        if row is None:
+            return None
+        return models.Author(id=row[0], name=row[1], bio=row[2])
+
+    async def upsert_author_name(self, arg: UpsertAuthorNameParams) -> typing.Optional[models.Author]:
+        row = await (await self._conn.execute(UPSERT_AUTHOR_NAME, arg.set_name, arg.name)).fetchone()
+        if row is None:
+            return None
+        return models.Author(id=row[0], name=row[1], bio=row[2])

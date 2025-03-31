@@ -7,12 +7,13 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 )
 
-type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, string, string) error
+type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, string, string, bool) error
 type TypeAcceptedDriverCMDs func() []string
 
 type Driver struct {
 	conf *core.Config
 
+	connType           string
 	buildPyQueryFunc   TypeBuildPyQueryFunc
 	acceptedDriverCMDs TypeAcceptedDriverCMDs
 
@@ -22,15 +23,18 @@ type Driver struct {
 func NewDriver(conf *core.Config) (*Driver, error) {
 	var buildPyQueryFunc TypeBuildPyQueryFunc
 	var acceptedDriverCMDs TypeAcceptedDriverCMDs
+	var connType string
 	switch conf.SqlDriver {
 	case core.SQLDriverAioSQLite:
 		buildPyQueryFunc = drivers.BuildPyQueryFunc
 		acceptedDriverCMDs = drivers.AcceptedDriverCMDs
+		connType = drivers.AioSQLiteConn
+
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
 
-	return &Driver{buildPyQueryFunc: buildPyQueryFunc, acceptedDriverCMDs: acceptedDriverCMDs, conf: conf}, nil
+	return &Driver{buildPyQueryFunc: buildPyQueryFunc, acceptedDriverCMDs: acceptedDriverCMDs, conf: conf, connType: connType}, nil
 }
 
 func (dr *Driver) supportedCMD(command string) error {

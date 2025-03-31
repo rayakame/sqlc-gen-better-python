@@ -48,3 +48,13 @@ func (b *IndentStringBuilder) WriteImportAnnotations() {
 	b.WriteLine("from __future__ import annotations")
 	b.WriteString("\n")
 }
+
+func (b *IndentStringBuilder) NewLine() {
+	b.WriteString("\n")
+}
+
+func (b *IndentStringBuilder) NNewLine(n int) {
+	for range n {
+		b.WriteString("\n")
+	}
+}
