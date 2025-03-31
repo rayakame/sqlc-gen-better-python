@@ -198,11 +198,10 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 		if len(query.Params) == 1 && qpl != 0 {
 			p := query.Params[0]
 			gq.Arg = core.QueryValue{
-				Name:      core.Escape(core.ParamName(p)),
-				DBName:    p.Column.GetName(),
-				Typ:       gen.makePythonType(p.Column),
-				SQLDriver: gen.config.SqlDriver,
-				Column:    p.Column,
+				Name:   core.Escape(core.ParamName(p)),
+				DBName: p.Column.GetName(),
+				Typ:    gen.makePythonType(p.Column),
+				Column: p.Column,
 			}
 		} else if len(query.Params) >= 1 {
 			var cols []goColumn
@@ -217,10 +216,9 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 				return nil, err
 			}
 			gq.Arg = core.QueryValue{
-				Emit:      true,
-				Name:      "arg",
-				Table:     s,
-				SQLDriver: gen.config.SqlDriver,
+				Emit:  true,
+				Name:  "arg",
+				Table: s,
 			}
 
 			// if query params is 2, and query params limit is 4 AND this is a copyfrom, we still want to emit the query's model
@@ -235,10 +233,9 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 			name := core.ColumnName(c, 0)
 			name = strings.Replace(name, "$", "_", -1)
 			gq.Ret = core.QueryValue{
-				Name:      core.Escape(name),
-				DBName:    name,
-				Typ:       gen.makePythonType(c),
-				SQLDriver: gen.config.SqlDriver,
+				Name:   core.Escape(name),
+				DBName: name,
+				Typ:    gen.makePythonType(c),
 			}
 		} else if putOutColumns(query) {
 			var gs *core.Table
@@ -290,10 +287,9 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 				emit = true
 			}
 			gq.Ret = core.QueryValue{
-				Emit:      emit,
-				Name:      "i",
-				Table:     gs,
-				SQLDriver: gen.config.SqlDriver,
+				Emit:  emit,
+				Name:  "i",
+				Table: gs,
 			}
 		}
 
