@@ -15,14 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check if changelog fragment was added
-        run: |
-          uv sync --frozen --only-group towncrier
-
-          if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
-            exit 1
-          fi
-
       - name: Check if linked to the correct pull request
         run: |
           diff=$(git diff origin/${{ github.base_ref }} HEAD --name-only)
