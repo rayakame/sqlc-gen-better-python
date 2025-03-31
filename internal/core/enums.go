@@ -9,7 +9,7 @@ func (dr *SQLDriverType) String() string {
 }
 
 const (
-	SQLDriverSQLite    SQLDriverType = "sqlite"
+	SQLDriverSQLite    SQLDriverType = "sqlite3"
 	SQLDriverAioSQLite SQLDriverType = "aiosqlite"
 )
 

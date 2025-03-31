@@ -2,7 +2,6 @@ package codegen
 
 import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
-	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"os"
 	"strings"
 )
@@ -43,15 +42,6 @@ func (b *IndentStringBuilder) WriteLine(txt string) {
 func (b *IndentStringBuilder) WriteIndentedLine(level int, txt string) {
 	b.WriteIndentedString(level, txt)
 	b.WriteString("\n")
-}
-
-func BuildInitFile(imp *core.Importer) *plugin.File {
-	body := NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
-	body.WriteSqlcHeader()
-	return &plugin.File{
-		Name:     "__init__.py",
-		Contents: []byte(body.String()),
-	}
 }
 
 func (b *IndentStringBuilder) WriteImportAnnotations() {

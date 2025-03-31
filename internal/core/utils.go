@@ -78,20 +78,6 @@ func UpperSnakeCase(s string) string {
 	return result
 }
 
-func AppendUniqueString(list []string, newItems []string) []string {
-	seen := make(map[string]struct{}, len(list))
-
-	// Bestehende Elemente merken
-	for _, item := range list {
-		seen[item] = struct{}{}
-	}
-
-	// Neue Elemente nur hinzufügen, wenn sie nicht existieren
-	for _, item := range newItems {
-		if _, exists := seen[item]; !exists {
-			list = append(list, item)
-			seen[item] = struct{}{}
-		}
-	}
-	return list
+func SQLToPyFileName(s string) string {
+	return strings.ReplaceAll(s, ".sql", ".py")
 }

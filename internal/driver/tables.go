@@ -4,7 +4,19 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
+	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
+
+func (dr *Driver) BuildPyTablesFile(imp *core.Importer, tables []core.Table) (*plugin.File, error) {
+	fileName, fileContent, err := dr.buildPyTables(imp, tables)
+	if err != nil {
+		return nil, err
+	}
+	return &plugin.File{
+		Name:     core.SQLToPyFileName(fileName),
+		Contents: fileContent,
+	}, nil
+}
 
 func BuildPyTabel(modelType string, table *core.Table, body *codegen.IndentStringBuilder) {
 	if modelType == core.ModelTypeDataclass {

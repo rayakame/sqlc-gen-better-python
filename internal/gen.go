@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rayakame/sqlc-gen-better-python/internal/codegen"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/driver"
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
@@ -38,7 +37,7 @@ func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
 		return nil, fmt.Errorf("engine %q is not supported", req.Settings.Engine)
 	}
 
-	sqlDriver, err := driver.NewDriver(config.SqlDriver)
+	sqlDriver, err := driver.NewDriver(config)
 	if err != nil {
 		return nil, err
 	}
@@ -51,19 +50,19 @@ func NewPythonGenerator(req *plugin.GenerateRequest) (*PythonGenerator, error) {
 	}, nil
 }
 
-func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
+func (gen *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	outputFiles := make([]*plugin.File, 0)
-	log.GlobalLogger.LogByte(pg.req.PluginOptions)
-	enums := pg.buildEnums()
-	tables := pg.buildTables()
-	queries, err := pg.buildQueries(tables)
+	log.GlobalLogger.LogByte(gen.req.PluginOptions)
+	enums := gen.buildEnums()
+	tables := gen.buildTables()
+	queries, err := gen.buildQueries(tables)
 	if err != nil {
 		return nil, err
 	}
 
-	jsonData, _ := json.Marshal(pg.req)
+	jsonData, _ := json.Marshal(gen.req)
 	log.GlobalLogger.LogByte(jsonData)
-	jsonData, _ = json.Marshal(pg.config)
+	jsonData, _ = json.Marshal(gen.config)
 	log.GlobalLogger.LogByte(jsonData)
 	jsonData, _ = json.Marshal(enums)
 	log.GlobalLogger.LogByte(jsonData)
@@ -72,38 +71,32 @@ func (pg *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	jsonData, _ = json.Marshal(queries)
 	log.GlobalLogger.LogByte(jsonData)
 
-	if pg.config.OmitUnusedStructs {
+	if gen.config.OmitUnusedStructs {
 		enums, tables = filterUnusedStructs(enums, tables, queries)
 	}
-	if err := pg.validate(enums, tables); err != nil {
+	if err := gen.validate(enums, tables); err != nil {
 		return nil, err
 	}
 	importer := core.Importer{
 		Tables:  tables,
 		Queries: queries,
 		Enums:   enums,
-		C:       pg.config,
+		C:       gen.config,
 	}
-	fileName, fileContent, err := codegen.BuildModelFile(&importer, tables)
-	if err != nil {
+	if file, err := gen.sqlDriver.BuildPyTablesFile(&importer, tables); err != nil {
 		return nil, err
+	} else {
+		outputFiles = append(outputFiles, file)
 	}
-	outputFiles = append(outputFiles, &plugin.File{
-		Name:     fileName,
-		Contents: fileContent,
-	})
-	fileName, fileContent, err = codegen.BuildQueriesFile(&importer, queries)
-	if err != nil {
+	if files, err := gen.sqlDriver.BuildPyQueriesFiles(&importer, queries); err != nil {
 		return nil, err
+	} else {
+		outputFiles = append(outputFiles, files...)
 	}
-	outputFiles = append(outputFiles, &plugin.File{
-		Name:     fileName,
-		Contents: fileContent,
-	})
-	outputFiles = append(outputFiles, codegen.BuildInitFile(&importer))
+	outputFiles = append(outputFiles, gen.sqlDriver.BuildInitFile())
 	jsonData, _ = json.Marshal(outputFiles)
 	log.GlobalLogger.LogByte(jsonData)
-	fileName, fileContent = log.GlobalLogger.Print()
+	fileName, fileContent := log.GlobalLogger.Print()
 	outputFiles = append(outputFiles, &plugin.File{
 		Name:     fileName,
 		Contents: fileContent,
