@@ -6,15 +6,18 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
+	"sort"
 	"strings"
 )
 
-func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) (string, string) {
+func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) (string, string, []string) {
+	pyTableNames := make([]string, 0)
 	argType := ""
 	if query.Arg.EmitStruct() && query.Arg.IsStruct() {
 		BuildPyTabel(dr.conf.ModelType, query.Arg.Table, body)
 		body.WriteString("\n\n")
 		argType = query.Arg.Table.Name
+		pyTableNames = append(pyTableNames, query.Arg.Table.Name)
 	} else if !query.Arg.IsEmpty() {
 		argType = query.Arg.Typ.Type
 		if query.Arg.Typ.IsList {
@@ -26,6 +29,7 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 		BuildPyTabel(dr.conf.ModelType, query.Ret.Table, body)
 		body.WriteString("\n\n")
 		retType = query.Ret.Table.Name
+		pyTableNames = append(pyTableNames, query.Ret.Table.Name)
 	} else if !query.Ret.IsEmpty() {
 		if query.Ret.IsStruct() {
 			retType = fmt.Sprintf("models.%s", query.Ret.Table.Name)
@@ -36,7 +40,7 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 	if query.Cmd == metadata.CmdExecLastId || query.Cmd == metadata.CmdExecRows {
 		retType = "int"
 	}
-	return argType, retType
+	return argType, retType, pyTableNames
 }
 
 func (dr *Driver) BuildPyQueriesFiles(imp *core.Importer, queries []core.Query) ([]*plugin.File, error) {
@@ -68,18 +72,20 @@ func (dr *Driver) BuildPyQueriesFiles(imp *core.Importer, queries []core.Query) 
 }
 
 func (dr *Driver) buildQueryHeader(query *core.Query, body *builders.IndentStringBuilder) {
-	body.WriteLine(fmt.Sprintf(`%s = """-- name: %s %s`, query.ConstantName, query.MethodName, query.Cmd))
+	body.WriteLine(fmt.Sprintf(`%s: typing.Final[str] = """-- name: %s %s`, query.ConstantName, query.MethodName, query.Cmd))
 	body.WriteLine(query.SQL)
 	body.WriteLine(`"""`)
 }
 
-func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStringBuilder) {
+func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStringBuilder) string {
 	className := core.SnakeToCamel(strings.ReplaceAll(sourceName, ".sql", ""), dr.conf)
 	body.WriteLine(fmt.Sprintf("class %s:", className))
 	body.WriteIndentedLine(1, `__slots__ = ("_conn",)`)
 	body.NewLine()
 	body.WriteIndentedLine(1, fmt.Sprintf(`def __init__(self, conn: %s):`, dr.connType))
 	body.WriteIndentedLine(2, "self._conn = conn")
+	body.NewLine()
+	return className
 }
 
 func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, sourceName string) ([]byte, error) {
@@ -87,32 +93,48 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 	body.WriteSqlcHeader()
 	body.WriteImportAnnotations()
 
-	funcNames := make([]string, 0)
-	queryBody := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
-	for i, query := range queries {
-		funcNames = append(funcNames, query.FuncName)
-		if i != 0 {
-			queryBody.WriteString("\n\n")
+	newLines := 2
+	if dr.conf.EmitClasses {
+		newLines = 1
+	}
+
+	allNames := make([]string, 0)
+	funcBody := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	pyTableBody := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	for _, query := range queries {
+		if !dr.conf.EmitClasses {
+			allNames = append(allNames, query.FuncName)
 		}
-		dr.buildQueryHeader(&query, queryBody)
-		queryBody.WriteString("\n\n")
-		argType, retType := dr.prepareFunctionHeader(&query, queryBody)
-		err := dr.buildPyQueryFunc(&query, queryBody, argType, retType)
+		dr.buildQueryHeader(&query, funcBody)
+		funcBody.NewLine()
+	}
+	funcBody.NewLine()
+	if dr.conf.EmitClasses {
+		allNames = append(allNames, dr.buildClassTemplate(sourceName, funcBody))
+	}
+	for i, query := range queries {
+		argType, retType, addedPyTableNames := dr.prepareFunctionHeader(&query, pyTableBody)
+		allNames = append(allNames, addedPyTableNames...)
+		err := dr.buildPyQueryFunc(&query, funcBody, argType, retType, dr.conf.EmitClasses)
 		if err != nil {
 			return nil, err
 		}
+		if i != len(queries)-1 {
+			funcBody.NNewLine(newLines)
+		}
 	}
 	body.WriteLine("__all__: typing.Sequence[str] = (")
-	for _, n := range funcNames {
+	if len(allNames) > 0 {
+		sort.Slice(allNames, func(i, j int) bool { return allNames[i] < allNames[j] })
+	}
+	for _, n := range allNames {
 		body.WriteIndentedLine(1, fmt.Sprintf("\"%s\",", n))
 	}
 	body.WriteLine(")")
-	body.WriteString("\n")
+	body.NewLine()
 	for _, imp := range imp.Imports(sourceName) {
 		body.WriteLine(imp)
 	}
-	body.WriteString("\n")
-	dr.buildClassTemplate(sourceName, body)
-
-	return []byte(body.String() + queryBody.String()), nil
+	body.NNewLine(2)
+	return []byte(body.String() + pyTableBody.String() + funcBody.String()), nil
 }
