@@ -57,7 +57,6 @@ type QueryValue struct {
 	DBName      string // The name of the field in the database. Only set if Struct==nil.
 	Table       *Table
 	Typ         PyType
-	SQLDriver   string
 
 	// Column is kept so late in the generation process around to differentiate
 	// between mysql slices and pg arrays
