@@ -1,6 +1,0 @@
-kind: Added
-body: Added `emit_classes` config option that, if enabled, puts all the queries into classes
-time: 2025-04-01T00:35:45.5676193+02:00
-custom:
-    Author: rayakame
-    PR: "13"

@@ -6,7 +6,7 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
-const PluginVersion = "0.0.1"
+const PluginVersion = "v0.0.1"
 
 type Config struct {
 	Package                     string        `json:"package" yaml:"package"`
