@@ -10,14 +10,22 @@ import (
 
 const AioSQLiteConn = "aiosqlite.Connection"
 
-func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, argType string, retType string) error {
-	body.WriteString(fmt.Sprintf("async def %s(conn: %s", query.FuncName, AioSQLiteConn))
+func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, argType string, retType string, isClass bool) error {
+	indentLevel := 0
+	params := fmt.Sprintf("conn: %s", AioSQLiteConn)
+	conn := "conn"
+	if isClass {
+		params = "self"
+		conn = "self._conn"
+		indentLevel = 1
+	}
+	body.WriteIndentedString(indentLevel, fmt.Sprintf("async def %s(%s", query.FuncName, params))
 	if argType != "" {
 		body.WriteString(fmt.Sprintf(", %s: %s", query.Arg.Name, argType))
 	}
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
-		body.WriteIndentedString(1, fmt.Sprintf("await conn.execute(%s", query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
 		if argType != "" {
 			if query.Arg.IsStruct() {
 				for _, col := range query.Arg.Table.Columns {
@@ -30,7 +38,7 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdExecResult {
 		body.WriteLine(fmt.Sprintf(") -> %s:", "aiosqlite.Cursor"))
-		body.WriteIndentedString(1, fmt.Sprintf("return await conn.execute(%s", query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
 		if argType != "" {
 			if query.Arg.IsStruct() {
 				for _, col := range query.Arg.Table.Columns {
@@ -43,7 +51,7 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdExecRows {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
-		body.WriteIndentedString(1, fmt.Sprintf("return await conn.execute(%s", query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
 		if argType != "" {
 			if query.Arg.IsStruct() {
 				for _, col := range query.Arg.Table.Columns {
@@ -56,7 +64,7 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 		body.WriteLine(").rowcount")
 	} else if query.Cmd == metadata.CmdExecLastId {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
-		body.WriteIndentedString(1, fmt.Sprintf("return await conn.execute(%s", query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
 		if argType != "" {
 			if query.Arg.IsStruct() {
 				for _, col := range query.Arg.Table.Columns {
@@ -69,7 +77,7 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 		body.WriteLine(").lastrowid")
 	} else if query.Cmd == metadata.CmdOne {
 		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType))
-		body.WriteIndentedString(1, fmt.Sprintf("row = await (await conn.execute(%s", query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = await (await %s.execute(%s", conn, query.ConstantName))
 		if argType != "" {
 			if query.Arg.IsStruct() {
 				for _, col := range query.Arg.Table.Columns {
@@ -80,10 +88,10 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 			}
 		}
 		body.WriteLine(")).fetchone()")
-		body.WriteIndentedLine(1, "if row is None:")
-		body.WriteIndentedLine(2, "return None")
+		body.WriteIndentedLine(indentLevel+1, "if row is None:")
+		body.WriteIndentedLine(indentLevel+2, "return None")
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(1, fmt.Sprintf("return %s(", retType))
+			body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s(", retType))
 			for i, col := range query.Ret.Table.Columns {
 				if i != 0 {
 					body.WriteString(", ")
@@ -92,11 +100,11 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 			}
 			body.WriteLine(")")
 		} else {
-			body.WriteIndentedLine(1, fmt.Sprintf("return %s(row[0])", retType))
+			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return %s(row[0])", retType))
 		}
 	} else if query.Cmd == metadata.CmdMany {
 		body.WriteLine(fmt.Sprintf(") -> typing.AsyncIterator[%s]:", retType))
-		body.WriteIndentedString(1, fmt.Sprintf("stream = await conn.execute(%s", query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("stream = await %s.execute(%s", conn, query.ConstantName))
 		if argType != "" {
 			if query.Arg.IsStruct() {
 				for _, col := range query.Arg.Table.Columns {
@@ -107,9 +115,9 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 			}
 		}
 		body.WriteLine(")")
-		body.WriteIndentedLine(1, "async for row in stream:")
+		body.WriteIndentedLine(indentLevel+1, "async for row in stream:")
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(2, fmt.Sprintf("yield %s(", retType))
+			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("yield %s(", retType))
 			for i, col := range query.Ret.Table.Columns {
 				if i != 0 {
 					body.WriteString(", ")
@@ -118,7 +126,7 @@ func BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, arg
 			}
 			body.WriteLine(")")
 		} else {
-			body.WriteIndentedLine(2, fmt.Sprintf("yield %s(row[0])", retType))
+			body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("yield %s(row[0])", retType))
 		}
 	}
 	return nil
