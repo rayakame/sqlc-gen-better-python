@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 * [#17](https://github.com/rayakame/sqlc-gen-better-python/pull/17) Added support for driver `sqlite3` (rayakame)
 * [#21](https://github.com/rayakame/sqlc-gen-better-python/pull/21) Added support for `sqlc.embed()` (rayakame)
 ### Changed
-* [#20](https://github.com/rayakame/sqlc-gen-better-python/pull/20) Query functions now dont take param-structs (rayakame)
+* [#20](https://github.com/rayakame/sqlc-gen-better-python/pull/20) Query functions now don't take param-structs (rayakame)
 
 ## v0.0.1 - 2025-03-31
 ### Added
