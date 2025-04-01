@@ -7,7 +7,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 )
 
-type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, string, string, bool) error
+type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, []string, string, bool) error
 type TypeAcceptedDriverCMDs func() []string
 
 type Driver struct {
