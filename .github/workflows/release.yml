@@ -51,7 +51,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          name: "${{ steps.update-version.outputs.VERSION }}"
-          tag_name: "refs/tags/${{ steps.update-version.outputs.VERSION }}"
+          name: "${{ steps.latest.outputs.output }}"
+          tag_name: "refs/tags/${{ steps.latest.outputs.output }}"
           body_path: release_body.md
-          files: sqlc-gen-java.wasm
+          files: sqlc-gen-better-python.wasm
