@@ -5,11 +5,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "CreateAuthorParams",
     "GetAuthorRow",
-    "UpdateAuthorParams",
-    "UpdateAuthorTParams",
-    "UpsertAuthorNameParams",
     "create_author",
     "delete_author",
     "get_author",
@@ -28,34 +24,8 @@ from test import models
 
 
 @dataclasses.dataclass()
-class CreateAuthorParams:
-    name: str
-    bio: typing.Optional[str]
-
-
-@dataclasses.dataclass()
 class GetAuthorRow:
     id: int
-    name: str
-
-
-@dataclasses.dataclass()
-class UpdateAuthorParams:
-    name: str
-    bio: typing.Optional[str]
-    id: int
-
-
-@dataclasses.dataclass()
-class UpdateAuthorTParams:
-    name: typing.Optional[str]
-    bio: typing.Optional[str]
-    id: int
-
-
-@dataclasses.dataclass()
-class UpsertAuthorNameParams:
-    set_name: str
     name: str
 
 
@@ -103,44 +73,44 @@ SET name = CASE WHEN ?2 THEN ? ELSE name END RETURNING id, name, bio
 """
 
 
-def create_author(conn: sqlite3.Connection, arg: CreateAuthorParams) -> typing.Optional[models.Author]:
-    row = conn.execute(CREATE_AUTHOR,(arg.name, arg.bio, )).fetchone()
+def create_author(conn: sqlite3.Connection, *, name: str, bio: str) -> typing.Optional[models.Author]:
+    row = conn.execute(CREATE_AUTHOR,(name, bio)).fetchone()
     if row is None:
         return None
     return models.Author(id=row[0], name=row[1], bio=row[2])
 
 
-def delete_author(conn: sqlite3.Connection, id: int) -> None:
+def delete_author(conn: sqlite3.Connection, *, id: int) -> None:
     conn.execute(DELETE_AUTHOR,(id, ))
 
 
-def get_author(conn: sqlite3.Connection, id: int) -> typing.Optional[GetAuthorRow]:
+def get_author(conn: sqlite3.Connection, *, id: int) -> typing.Optional[GetAuthorRow]:
     row = conn.execute(GET_AUTHOR,(id, )).fetchone()
     if row is None:
         return None
     return GetAuthorRow(id=row[0], name=row[1])
 
 
-def list_authors(conn: sqlite3.Connection, ids: typing.Sequence[int]) -> typing.List[models.Author]:
+def list_authors(conn: sqlite3.Connection, *, ids: typing.Sequence[int]) -> typing.List[models.Author]:
     rows: typing.List[models.Author] = []
     for row in conn.execute(LIST_AUTHORS,(ids, )).fetchall():
         rows.append(models.Author(id=row[0], name=row[1], bio=row[2]))
     return rows
 
 
-def update_author(conn: sqlite3.Connection, arg: UpdateAuthorParams) -> None:
-    conn.execute(UPDATE_AUTHOR,(arg.name, arg.bio, arg.id, ))
+def update_author(conn: sqlite3.Connection, *, name: str, bio: str, id: int) -> None:
+    conn.execute(UPDATE_AUTHOR,(name, bio, id))
 
 
-def update_author_t(conn: sqlite3.Connection, arg: UpdateAuthorTParams) -> typing.Optional[models.Author]:
-    row = conn.execute(UPDATE_AUTHOR_T,(arg.name, arg.bio, arg.id, )).fetchone()
+def update_author_t(conn: sqlite3.Connection, *, name: str, bio: str, id: int) -> typing.Optional[models.Author]:
+    row = conn.execute(UPDATE_AUTHOR_T,(name, bio, id)).fetchone()
     if row is None:
         return None
     return models.Author(id=row[0], name=row[1], bio=row[2])
 
 
-def upsert_author_name(conn: sqlite3.Connection, arg: UpsertAuthorNameParams) -> typing.Optional[models.Author]:
-    row = conn.execute(UPSERT_AUTHOR_NAME,(arg.set_name, arg.name, )).fetchone()
+def upsert_author_name(conn: sqlite3.Connection, *, set_name: str, name: str) -> typing.Optional[models.Author]:
+    row = conn.execute(UPSERT_AUTHOR_NAME,(set_name, name)).fetchone()
     if row is None:
         return None
     return models.Author(id=row[0], name=row[1], bio=row[2])

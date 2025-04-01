@@ -116,8 +116,10 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 			if queryValueUses(name, q.Ret) {
 				return true
 			}
-			if queryValueUses(name, q.Arg) {
-				return true
+			for _, arg := range q.Args {
+				if queryValueUses(name, arg) {
+					return true
+				}
 			}
 		}
 		return false
@@ -143,7 +145,6 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 		//	continue
 		//}
 		queryValueModelImports(q.Ret)
-		queryValueModelImports(q.Arg)
 	}
 
 	loc["models"] = importSpec{Module: i.C.Package, Name: "models"}

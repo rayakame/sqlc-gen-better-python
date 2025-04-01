@@ -52,17 +52,9 @@ func ColumnName(c *plugin.Column, pos int) string {
 
 func ParamName(p *plugin.Parameter) string {
 	if p.Column.Name != "" {
-		return ArgName(p.Column.Name)
+		return p.Column.Name
 	}
 	return fmt.Sprintf("dollar_%d", p.Number)
-}
-
-func ArgName(name string) string {
-	out := ""
-	for _, p := range strings.Split(name, "_") {
-		out += strings.ToLower(p)
-	}
-	return out
 }
 
 func UpperSnakeCase(s string) string {

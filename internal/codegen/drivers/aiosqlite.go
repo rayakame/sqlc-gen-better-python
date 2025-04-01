@@ -10,7 +10,7 @@ import (
 
 const AioSQLiteConn = "aiosqlite.Connection"
 
-func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, argType string, retType string, isClass bool) error {
+func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []string, retType string, isClass bool) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", AioSQLiteConn)
 	conn := "conn"
@@ -20,73 +20,36 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 		indentLevel = 1
 	}
 	body.WriteIndentedString(indentLevel, fmt.Sprintf("async def %s(%s", query.FuncName, params))
-	if argType != "" {
-		body.WriteString(fmt.Sprintf(", %s: %s", query.Arg.Name, argType))
+	for i, arg := range args {
+		if i == 0 {
+			body.WriteString(", *")
+		}
+		body.WriteString(fmt.Sprintf(", %s", arg))
 	}
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
-		if argType != "" {
-			if query.Arg.IsStruct() {
-				for _, col := range query.Arg.Table.Columns {
-					body.WriteString(fmt.Sprintf(", %s.%s", query.Arg.Name, col.Name))
-				}
-			} else {
-				body.WriteString(fmt.Sprintf(", %s", query.Arg.Name))
-			}
-		}
+		aiosqliteWriteParams(query, body)
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdExecResult {
 		body.WriteLine(fmt.Sprintf(") -> %s:", "aiosqlite.Cursor"))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
-		if argType != "" {
-			if query.Arg.IsStruct() {
-				for _, col := range query.Arg.Table.Columns {
-					body.WriteString(fmt.Sprintf(", %s.%s", query.Arg.Name, col.Name))
-				}
-			} else {
-				body.WriteString(fmt.Sprintf(", %s", query.Arg.Name))
-			}
-		}
+		aiosqliteWriteParams(query, body)
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdExecRows {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
-		if argType != "" {
-			if query.Arg.IsStruct() {
-				for _, col := range query.Arg.Table.Columns {
-					body.WriteString(fmt.Sprintf(", %s.%s", query.Arg.Name, col.Name))
-				}
-			} else {
-				body.WriteString(fmt.Sprintf(", %s", query.Arg.Name))
-			}
-		}
+		aiosqliteWriteParams(query, body)
 		body.WriteLine(").rowcount")
 	} else if query.Cmd == metadata.CmdExecLastId {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
-		if argType != "" {
-			if query.Arg.IsStruct() {
-				for _, col := range query.Arg.Table.Columns {
-					body.WriteString(fmt.Sprintf(", %s.%s", query.Arg.Name, col.Name))
-				}
-			} else {
-				body.WriteString(fmt.Sprintf(", %s", query.Arg.Name))
-			}
-		}
+		aiosqliteWriteParams(query, body)
 		body.WriteLine(").lastrowid")
 	} else if query.Cmd == metadata.CmdOne {
 		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = await (await %s.execute(%s", conn, query.ConstantName))
-		if argType != "" {
-			if query.Arg.IsStruct() {
-				for _, col := range query.Arg.Table.Columns {
-					body.WriteString(fmt.Sprintf(", %s.%s", query.Arg.Name, col.Name))
-				}
-			} else {
-				body.WriteString(fmt.Sprintf(", %s", query.Arg.Name))
-			}
-		}
+		aiosqliteWriteParams(query, body)
 		body.WriteLine(")).fetchone()")
 		body.WriteIndentedLine(indentLevel+1, "if row is None:")
 		body.WriteIndentedLine(indentLevel+2, "return None")
@@ -105,15 +68,7 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 	} else if query.Cmd == metadata.CmdMany {
 		body.WriteLine(fmt.Sprintf(") -> typing.AsyncIterator[%s]:", retType))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("stream = await %s.execute(%s", conn, query.ConstantName))
-		if argType != "" {
-			if query.Arg.IsStruct() {
-				for _, col := range query.Arg.Table.Columns {
-					body.WriteString(fmt.Sprintf(", %s.%s", query.Arg.Name, col.Name))
-				}
-			} else {
-				body.WriteString(fmt.Sprintf(", %s", query.Arg.Name))
-			}
-		}
+		aiosqliteWriteParams(query, body)
 		body.WriteLine(")")
 		body.WriteIndentedLine(indentLevel+1, "async for row in stream:")
 		if query.Ret.IsStruct() {
@@ -141,4 +96,17 @@ func AioSQLiteAcceptedDriverCMDs() []string {
 		metadata.CmdOne,
 		metadata.CmdMany,
 	}
+}
+
+func aiosqliteWriteParams(query *core.Query, body *builders.IndentStringBuilder) {
+	if len(query.Args) == 0 {
+		return
+	}
+	params := "("
+	for _, arg := range query.Args {
+		if !arg.IsEmpty() {
+			params += fmt.Sprintf("%s, ", arg.Name)
+		}
+	}
+	body.WriteString("," + params + ")")
 }
