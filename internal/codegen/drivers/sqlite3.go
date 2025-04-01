@@ -6,6 +6,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"strconv"
+	"strings"
 )
 
 const SQLite3Conn = "sqlite3.Connection"
@@ -55,11 +56,23 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteIndentedLine(indentLevel+2, "return None")
 		if query.Ret.IsStruct() {
 			body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s(", retType))
-			for i, col := range query.Ret.Table.Columns {
+			i := 0
+			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
 					body.WriteString(", ")
 				}
-				body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+				if len(col.EmbedFields) != 0 {
+					var inner []string
+					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
+					for _, embedCol := range col.EmbedFields {
+						inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
+						i++
+					}
+					body.WriteString(strings.Join(inner, ", ") + ")")
+				} else {
+					body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					i++
+				}
 			}
 			body.WriteLine(")")
 		} else {
@@ -73,11 +86,23 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteLine(").fetchall():")
 		if query.Ret.IsStruct() {
 			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("rows.append(%s(", retType))
-			for i, col := range query.Ret.Table.Columns {
+			i := 0
+			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
 					body.WriteString(", ")
 				}
-				body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+				if len(col.EmbedFields) != 0 {
+					var inner []string
+					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
+					for _, embedCol := range col.EmbedFields {
+						inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
+						i++
+					}
+					body.WriteString(strings.Join(inner, ", ") + ")")
+				} else {
+					body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					i++
+				}
 			}
 			body.WriteLine("))")
 		} else {

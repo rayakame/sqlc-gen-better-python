@@ -1,0 +1,6 @@
+kind: Added
+body: Added support for `sqlc.embed()`
+time: 2025-04-01T03:29:27.9306375+02:00
+custom:
+    Author: rayakame
+    PR: "21"

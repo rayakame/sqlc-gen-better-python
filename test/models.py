@@ -6,6 +6,8 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Author",
+    "Student",
+    "TestScore",
 )
 
 import dataclasses
@@ -17,3 +19,17 @@ class Author:
     id: int
     name: str
     bio: typing.Optional[str]
+
+
+@dataclasses.dataclass()
+class Student:
+    id: int
+    name: typing.Optional[str]
+    age: typing.Optional[int]
+
+
+@dataclasses.dataclass()
+class TestScore:
+    student_id: typing.Optional[int]
+    score: typing.Optional[int]
+    grade: typing.Optional[str]

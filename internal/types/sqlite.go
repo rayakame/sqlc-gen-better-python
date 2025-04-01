@@ -14,7 +14,7 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 
 	// see: https://github.com/sqlc-dev/sqlc/blob/main/internal/codegen/golang/sqlite_type.go
 	switch columnType {
-	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8":
+	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":
 		return "int"
 	case "blob":
 		return "bytes"

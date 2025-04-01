@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/inflection"
-	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
@@ -156,7 +155,6 @@ func newGoEmbed(embed *plugin.Identifier, structs []core.Table, defaultSchema st
 		for i, f := range s.Columns {
 			fields[i] = f
 		}
-
 		return &goEmbed{
 			modelType: s.Name,
 			modelName: s.Name,
@@ -245,15 +243,6 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 					sameName := f.Name == core.ColumnName(c, i)
 					sameType := f.Type == gen.makePythonType(c)
 					sameTable := sdk.SameTableName(c.Table, s.Table, gen.req.Catalog.DefaultSchema)
-					if gq.MethodName == "ListAuthors" {
-						log.GlobalLogger.Log(core.SnakeToCamel(core.ColumnName(c, i), gen.config))
-						if !sameType {
-							log.GlobalLogger.Log("TypeError")
-						}
-						if !sameTable {
-							log.GlobalLogger.Log("TableError")
-						}
-					}
 					if !sameName || !sameType || !sameTable {
 						same = false
 					}
@@ -321,17 +310,22 @@ func (gen *PythonGenerator) columnsToStruct(name string, columns []goColumn, use
 		if suffix > 0 {
 			fieldName = fmt.Sprintf("%s_%d", fieldName, suffix)
 		}
+
 		f := core.Column{
-			Name:   core.ColumnName(c.Column, i),
+			Name: inflection.Singular(inflection.SingularParams{
+				Name:       core.ColumnName(c.Column, i),
+				Exclusions: gen.config.InflectionExcludeTableNames,
+			}),
 			DBName: colName,
 			Column: c.Column,
 		}
+
 		if c.embed == nil {
 			f.Type = gen.makePythonType(c.Column)
 		} else {
 			f.Type = core.PyType{
 				SqlType:    c.embed.modelType,
-				Type:       c.embed.modelType,
+				Type:       "models." + c.embed.modelType,
 				IsList:     false,
 				IsNullable: false,
 				IsEnum:     false,

@@ -9,6 +9,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
+	"strings"
 )
 
 type PythonGenerator struct {
@@ -141,9 +142,9 @@ func filterUnusedStructs(enums []core.Enum, tables []core.Table, queries []core.
 			keepTypes[query.Ret.Type()] = struct{}{}
 			if query.Ret.IsStruct() {
 				for _, field := range query.Ret.Table.Columns {
-					keepTypes[field.Type.Type] = struct{}{}
+					keepTypes[strings.ReplaceAll(field.Type.Type, "models.", "")] = struct{}{}
 					for _, embedField := range field.EmbedFields {
-						keepTypes[embedField.Type.Type] = struct{}{}
+						keepTypes[strings.ReplaceAll(embedField.Type.Type, "models.", "")] = struct{}{}
 					}
 				}
 			}
