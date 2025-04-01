@@ -10,18 +10,16 @@ import (
 	"strings"
 )
 
-func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) (string, string, []string) {
+func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) ([]string, string, []string) {
 	pyTableNames := make([]string, 0)
-	argType := ""
-	if query.Arg.EmitStruct() && query.Arg.IsStruct() {
-		BuildPyTabel(dr.conf.ModelType, query.Arg.Table, body)
-		body.WriteString("\n\n")
-		argType = query.Arg.Table.Name
-		pyTableNames = append(pyTableNames, query.Arg.Table.Name)
-	} else if !query.Arg.IsEmpty() {
-		argType = query.Arg.Typ.Type
-		if query.Arg.Typ.IsList {
-			argType = fmt.Sprintf("typing.Sequence[%s]", argType)
+	args := make([]string, 0)
+	for _, arg := range query.Args {
+		if !arg.IsEmpty() {
+			argType := arg.Typ.Type
+			if arg.Typ.IsList {
+				argType = fmt.Sprintf("typing.Sequence[%s]", argType)
+			}
+			args = append(args, fmt.Sprintf("%s: %s", arg.Name, argType))
 		}
 	}
 	retType := "None"
@@ -40,7 +38,7 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 	if query.Cmd == metadata.CmdExecLastId || query.Cmd == metadata.CmdExecRows {
 		retType = "int"
 	}
-	return argType, retType, pyTableNames
+	return args, retType, pyTableNames
 }
 
 func (dr *Driver) BuildPyQueriesFiles(imp *core.Importer, queries []core.Query) ([]*plugin.File, error) {
@@ -113,9 +111,9 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 		allNames = append(allNames, dr.buildClassTemplate(sourceName, funcBody))
 	}
 	for i, query := range queries {
-		argType, retType, addedPyTableNames := dr.prepareFunctionHeader(&query, pyTableBody)
+		args, retType, addedPyTableNames := dr.prepareFunctionHeader(&query, pyTableBody)
 		allNames = append(allNames, addedPyTableNames...)
-		err := dr.buildPyQueryFunc(&query, funcBody, argType, retType, dr.conf.EmitClasses)
+		err := dr.buildPyQueryFunc(&query, funcBody, args, retType, dr.conf.EmitClasses)
 		if err != nil {
 			return nil, err
 		}
