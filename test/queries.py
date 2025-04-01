@@ -7,10 +7,12 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "GetAuthorRow",
     "GetStudentAndScoreRow",
+    "GetStudentAndScoresRow",
     "create_author",
     "delete_author",
     "get_author",
     "get_student_and_score",
+    "get_student_and_scores",
     "list_authors",
     "update_author",
     "update_author_t",
@@ -37,6 +39,12 @@ class GetStudentAndScoreRow:
     test_score: models.TestScore
 
 
+@dataclasses.dataclass()
+class GetStudentAndScoresRow:
+    student: models.Student
+    test_score: models.TestScore
+
+
 CREATE_AUTHOR: typing.Final[str] = """-- name: CreateAuthor :one
 INSERT INTO authors (name, bio)
 VALUES (?, ?) RETURNING id, name, bio
@@ -59,6 +67,12 @@ SELECT students.id, students.name, students.age, test_scores.student_id, test_sc
 FROM students
          JOIN test_scores ON test_scores.student_id = students.id
 WHERE students.id = ?
+"""
+
+GET_STUDENT_AND_SCORES: typing.Final[str] = """-- name: GetStudentAndScores :many
+SELECT students.id, students.name, students.age, test_scores.student_id, test_scores.score, test_scores.grade
+FROM students
+         JOIN test_scores ON test_scores.student_id = students.id
 """
 
 LIST_AUTHORS: typing.Final[str] = """-- name: ListAuthors :many
@@ -110,7 +124,14 @@ def get_student_and_score(conn: sqlite3.Connection, *, id: int) -> typing.Option
     row = conn.execute(GET_STUDENT_AND_SCORE,(id, )).fetchone()
     if row is None:
         return None
-    return GetStudentAndScoreRow(student=row[0], test_score=row[1])
+    return GetStudentAndScoreRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5]))
+
+
+def get_student_and_scores(conn: sqlite3.Connection) -> typing.List[GetStudentAndScoresRow]:
+    rows: typing.List[GetStudentAndScoresRow] = []
+    for row in conn.execute(GET_STUDENT_AND_SCORES).fetchall():
+        rows.append(GetStudentAndScoresRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5])))
+    return rows
 
 
 def list_authors(conn: sqlite3.Connection, *, ids: typing.Sequence[int]) -> typing.List[models.Author]:
