@@ -197,35 +197,29 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 
 		if len(query.Params) == 1 && qpl != 0 {
 			p := query.Params[0]
-			gq.Arg = core.QueryValue{
+			gq.Args = []core.QueryValue{{
 				Name:   core.Escape(core.ParamName(p)),
 				DBName: p.Column.GetName(),
 				Typ:    gen.makePythonType(p.Column),
 				Column: p.Column,
-			}
+			}}
 		} else if len(query.Params) >= 1 {
-			var cols []goColumn
+			var values []core.QueryValue
 			for _, p := range query.Params {
-				cols = append(cols, goColumn{
-					id:     int(p.Number),
+				values = append(values, core.QueryValue{
+					Name:   core.Escape(core.ParamName(p)),
+					DBName: p.Column.GetName(),
+					Typ:    gen.makePythonType(p.Column),
 					Column: p.Column,
 				})
 			}
-			s, err := gen.columnsToStruct(gq.MethodName+"Params", cols, false)
-			if err != nil {
-				return nil, err
-			}
-			gq.Arg = core.QueryValue{
-				Emit:  true,
-				Name:  "arg",
-				Table: s,
-			}
+			gq.Args = values
 
 			// if query params is 2, and query params limit is 4 AND this is a copyfrom, we still want to emit the query's model
 			// otherwise we end up with a copyfrom using a struct without the struct definition
-			if len(query.Params) <= qpl && query.Cmd != ":copyfrom" {
-				gq.Arg.Emit = false
-			}
+			//if len(query.Params) <= qpl && query.Cmd != ":copyfrom" {
+			//	gq.Args.Emit = false
+			//}
 		}
 
 		if len(query.Columns) == 1 && query.Columns[0].EmbedTable == nil {
