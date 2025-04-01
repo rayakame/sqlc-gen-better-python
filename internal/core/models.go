@@ -7,11 +7,10 @@ import (
 )
 
 type Table struct {
-	Table      *plugin.Identifier
-	Name       string
-	Columns    []Column
-	Comment    string
-	SourceName string
+	Table   *plugin.Identifier
+	Name    string
+	Columns []Column
+	Comment string
 }
 
 type PyType struct {
