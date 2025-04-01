@@ -51,12 +51,11 @@ func EnumReplace(value string) string {
 }
 
 type QueryValue struct {
-	Emit        bool
-	EmitPointer bool
-	Name        string
-	DBName      string // The name of the field in the database. Only set if Struct==nil.
-	Table       *Table
-	Typ         PyType
+	Emit   bool
+	Name   string
+	DBName string // The name of the field in the database. Only set if Struct==nil.
+	Table  *Table
+	Typ    PyType
 
 	// Column is kept so late in the generation process around to differentiate
 	// between mysql slices and pg arrays
@@ -69,10 +68,6 @@ func (v QueryValue) EmitStruct() bool {
 
 func (v QueryValue) IsStruct() bool {
 	return v.Table != nil
-}
-
-func (v QueryValue) IsPointer() bool {
-	return v.EmitPointer && v.Table != nil
 }
 
 func (v QueryValue) IsEmpty() bool {
@@ -99,7 +94,8 @@ type Query struct {
 	SQL          string
 	SourceName   string
 	Ret          QueryValue
-	Arg          QueryValue
+	Args         []QueryValue
+
 	// Used for :copyfrom
 	Table *plugin.Identifier
 }
