@@ -25,3 +25,11 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 A roadmap of what is planned & worked on can be found [here](https://github.com/users/rayakame/projects/1/)
 ### Changelog
 Can be found [here](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CHANGELOG.md)
+
+## Credits
+Because of missing documentation about creating these plugins, this work is heavily 
+inspired by:
+- [sqlc-gen-go](https://github.com/sqlc-dev/sqlc-gen-go)
+- [sqlc-gen-java](https://github.com/tandemdude/sqlc-gen-java)
+
+Special thanks to [tandemdude](https://github.com/tandemdude) for anwsering my questions on discord.
