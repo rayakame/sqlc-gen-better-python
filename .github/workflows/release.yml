@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+
+permissions: write-all
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: './go.mod'
+
+      - name: Build plugin
+        working-directory: plugin
+        run: GOOS=wasip1 GOARCH=wasm go build -o ../sqlc-gen-better-python.wasm
+
+      - name: Get the latest version
+        id: latest
+        uses: miniscruff/changie-action@v2
+        with:
+          version: latest
+          args: latest
+
+      - name: Create tag
+        run: |
+          git tag ${{ steps.latest.outputs.output }}
+          git push origin ${{ steps.latest.outputs.output }}
+
+      - name: Generate release description
+        run: |
+          export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
+          export download_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${{ steps.latest.outputs.output }}/sqlc-gen-better-python.wasm"
+          
+          yq -i '.plugins[0].wasm.url = env(download_url)' .github/release_output_template.yaml
+          yq -i '.plugins[0].wasm.sha256 = env(checksum)' .github/release_output_template.yaml
+          
+          echo "\`\`\`yaml" > release_body.md
+          cat .github/release_output_template.yaml >> release_body.md
+          echo "\`\`\`" >> release_body.md
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "${{ steps.update-version.outputs.VERSION }}"
+          tag_name: "refs/tags/${{ steps.update-version.outputs.VERSION }}"
+          body_path: release_body.md
+          files: sqlc-gen-java.wasm

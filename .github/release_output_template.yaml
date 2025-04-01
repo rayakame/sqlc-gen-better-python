@@ -1,0 +1,5 @@
+plugins:
+  - name: python
+    wasm:
+      url: TODO
+      sha256: TODO
