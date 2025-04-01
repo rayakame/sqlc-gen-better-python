@@ -4,11 +4,11 @@ A WASM plugin for SQLC allowing the generation of Python code.
 
 > [!NOTE]  
 > This is currently being worked on. It is far from being ready for any kind of release, let alone a stable one.  
-> Please wait for the first GitHub release; before that, this plugin is likely to not work.
+> Please wait for the v1 release; before that, this plugin is likely to not work.
 
 ## Feature Support
-Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is supported. 
-The supported Query commands depend on the SQL driver you are using, supported commands are listed below.
+Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is supported.
+The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-annotations.html) depend on the SQL driver you are using, supported commands are listed below.
 > Every `:batch*` command is not supported by this plugin and probably will never be.
 
 > Prepared Queries are not planned for the near future, but will be implemented sooner or later
