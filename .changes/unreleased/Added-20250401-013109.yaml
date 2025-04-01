@@ -1,6 +1,0 @@
-kind: Added
-body: Added support for driver `sqlite3`
-time: 2025-04-01T01:31:09.0893687+02:00
-custom:
-    Author: rayakame
-    PR: "17"
