@@ -132,12 +132,9 @@ func filterUnusedStructs(enums []core.Enum, tables []core.Table, queries []core.
 	keepTypes := make(map[string]struct{})
 
 	for _, query := range queries {
-		if !query.Arg.IsEmpty() {
-			keepTypes[query.Arg.Type()] = struct{}{}
-			if query.Arg.IsStruct() {
-				for _, field := range query.Arg.Table.Columns {
-					keepTypes[field.Type.Type] = struct{}{}
-				}
+		for _, arg := range query.Args {
+			if !arg.IsEmpty() {
+				keepTypes[arg.Type()] = struct{}{}
 			}
 		}
 		if query.HasRetType() {
