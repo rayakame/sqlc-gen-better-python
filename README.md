@@ -6,6 +6,20 @@ A WASM plugin for SQLC allowing the generation of Python code.
 > This is currently being worked on. It is far from being ready for any kind of release, let alone a stable one.  
 > Please wait for the v1 release; before that, this plugin is likely to not work.
 
+## Configuration Options
+| Name                             | Type         | Required | Description                                                                                                                                                              |
+|----------------------------------|--------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `package`                        | string       | yes      | The name of the package where the generated files will be located                                                                                                        |
+| `sql_driver`                     | string       | no       | The name of the sql driver you want to use. Defaults to `aiosqlite`. Valid options are listed [here](#feature-support)                                                   |
+| `model_type`                     | string       | no       | The model type you want to use. This can be one of `dataclass` or `attrs`. Defaults to `dataclass`                                                                       |
+| `initialisms`                    | list[string] | no       | An array of [initialisms](https://google.github.io/styleguide/go/decisions.html#initialisms) to upper-case. For example, `app_id` becomes `AppID`. Defaults to `["id"]`. |
+| `emit_exact_table_names`         | bool         | no       | If `true`, model names will mirror table names. Otherwise sqlc attempts to singularize plural table names.                                                               |
+| `emit_classes`                   | bool         | no       | If `true`, every query function will be put into a class called `Querier`. Otherwise every function will be a standalone function.                                       |
+| `inflection_exclude_table_names` | list[string] | no       | An array of table names that should not be turned singular. Only applies if `emit_exact_table_names` is `false`.                                                         |
+| `omit_unused_models`             | bool         | no       | If set to `true` and there are models/tables that are not used in any query, they wont be turned into models.                                                            |
+| `query_parameter_limit`          | integer      | no       | Not yet implemented.                                                                                                                                                     |                                                                                                                                                            
+| `debug`                          | bool         | no       | If set to `true`, there will be debug logs generated into a `log.txt` file when executing `sqlc generate`. Defaults to `false`                                           |
+
 ## Feature Support
 Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is supported.
 The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-annotations.html) depend on the SQL driver you are using, supported commands are listed below.

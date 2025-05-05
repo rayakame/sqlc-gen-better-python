@@ -72,7 +72,7 @@ func (gen *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	jsonData, _ = json.Marshal(queries)
 	log.GlobalLogger.LogByte(jsonData)
 
-	if gen.config.OmitUnusedStructs {
+	if gen.config.OmitUnusedModels {
 		enums, tables = filterUnusedStructs(enums, tables, queries)
 	}
 	if err := gen.validate(enums, tables); err != nil {
