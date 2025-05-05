@@ -11,6 +11,7 @@ func (dr *SQLDriverType) String() string {
 const (
 	SQLDriverSQLite    SQLDriverType = "sqlite3"
 	SQLDriverAioSQLite SQLDriverType = "aiosqlite"
+	SQLDriverAsyncpg   SQLDriverType = "asyncpg"
 )
 
 const (
@@ -21,11 +22,13 @@ const (
 var asyncDrivers = map[SQLDriverType]bool{
 	SQLDriverSQLite:    false,
 	SQLDriverAioSQLite: true,
+	SQLDriverAsyncpg:   true,
 }
 
 var driversEngine = map[SQLDriverType]string{
 	SQLDriverSQLite:    "sqlite",
 	SQLDriverAioSQLite: "sqlite",
+	SQLDriverAsyncpg:   "postgresql",
 }
 
 var validModelTypes = map[string]struct{}{

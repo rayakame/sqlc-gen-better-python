@@ -1,0 +1,6 @@
+kind: Added
+body: Added early driver support for `asyncpg`. Only has support for `exec`, `many` and `one`
+time: 2025-05-05T21:56:23.6920401+02:00
+custom:
+    Author: rayakame
+    PR: "29"

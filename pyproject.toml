@@ -3,4 +3,6 @@ name = "sqlc-gen-better-python"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "asyncpg>=0.30.0",
+]
