@@ -41,13 +41,15 @@ jobs:
           export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
           export download_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${{ steps.latest.outputs.output }}/sqlc-gen-better-python.wasm"
           
-          yq -i '.plugins[0].wasm.url = env(download_url)' .github/release_output_template.yaml
-          yq -i '.plugins[0].wasm.sha256 = env(checksum)' .github/release_output_template.yaml
-          
-          cat .changes/${{ steps.latest.outputs.output }}.md > release_body.md
+          # Create the release body with the warning message at the top
+          echo "> [!WARNING] \n> Every Release before \`v1.0.0\`, including this one is an **early alpha release**. Currently, there is 0% test coverage and these versions are only released for interested people who want to test this plugin and help make it better." > release_body.md
+        
+          # Add the release changelog and YAML content below the warning message
+          cat .changes/${{ steps.latest.outputs.output }}.md >> release_body.md
           echo "\`\`\`yaml" >> release_body.md
           cat .github/release_output_template.yaml >> release_body.md
           echo "\`\`\`" >> release_body.md
+
 
       - name: Create release
         uses: softprops/action-gh-release@v2
