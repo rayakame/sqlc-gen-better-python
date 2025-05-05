@@ -2,15 +2,6 @@
 All notable changes to this project will be documented in this file.
 
 
-## v0.3.0 - 2025-05-05
-### Added
-* [#37](https://github.com/rayakame/sqlc-gen-better-python/pull/37) Added `debug` config option to enable debug output. (rayakame)
-* [#38](https://github.com/rayakame/sqlc-gen-better-python/pull/38) Added documentation for every configuration option in the `README`. (rayakame)
-* [#39](https://github.com/rayakame/sqlc-gen-better-python/pull/39) Added `emit_init_file` configuration option to control `__init__.py` creation. (rayakame)
-* [#40](https://github.com/rayakame/sqlc-gen-better-python/pull/40) Added support for `msgspec` model type. (rayakame)
-### Fixed
-* [#41](https://github.com/rayakame/sqlc-gen-better-python/pull/41) Fixed missing empty lines when using `asyncpg` driver. (rayakame)
-
 ## v0.2.0 - 2025-05-05
 ### Added
 * [#29](https://github.com/rayakame/sqlc-gen-better-python/pull/29) Added early driver support for `asyncpg`. Only has support for `exec`, `many` and `one` (rayakame)
