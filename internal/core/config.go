@@ -18,7 +18,7 @@ type Config struct {
 	InflectionExcludeTableNames []string      `json:"inflection_exclude_table_names,omitempty" yaml:"inflection_exclude_table_names,omitempty"`
 	OmitUnusedModels            bool          `json:"omit_unused_models" yaml:"omit_unused_models"`
 	QueryParameterLimit         *int32        `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
-	EmitInitFile                bool          `json:"emit_init_file" yaml:"emit_init_file"`
+	EmitInitFile                *bool         `json:"emit_init_file" yaml:"emit_init_file"`
 	Debug                       bool          `json:"debug" yaml:"debug"`
 
 	IndentChar          string `json:"indent_char" yaml:"indent_char"`
@@ -71,6 +71,10 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 func ValidateConf(conf *Config, engine string) error {
 	if *conf.QueryParameterLimit < 0 {
 		return fmt.Errorf("invalid options: query parameter limit must not be negative")
+	}
+
+	if conf.EmitInitFile == nil {
+		return fmt.Errorf("invalid options: you need to specify emit_init_file")
 	}
 
 	if conf.Package == "" {
