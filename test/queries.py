@@ -7,10 +7,15 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "GetStudentAndScoreRow",
     "GetStudentAndScoresRow",
-    "Queries",
+    "delete_author",
+    "get_student_and_score",
+    "get_student_and_scores",
+    "list_authors",
+    "list_authors2",
+    "update_author",
 )
 
-import dataclasses
+import msgspec
 import typing
 
 import asyncpg
@@ -18,16 +23,14 @@ import asyncpg
 from test import models
 
 
-@dataclasses.dataclass()
-class GetStudentAndScoreRow:
-    student: models.Student
-    test_score: models.TestScore
+class GetStudentAndScoreRow(msgspec.Struct):
+    student: models.Student = msgspec.field()
+    test_score: models.TestScore = msgspec.field()
 
 
-@dataclasses.dataclass()
-class GetStudentAndScoresRow:
-    student: models.Student
-    test_score: models.TestScore
+class GetStudentAndScoresRow(msgspec.Struct):
+    student: models.Student = msgspec.field()
+    test_score: models.TestScore = msgspec.field()
 
 
 DELETE_AUTHOR: typing.Final[str] = """-- name: DeleteAuthor :exec
@@ -71,38 +74,37 @@ WHERE id = $3
 """
 
 
-class Queries:
-    __slots__ = ("_conn",)
+async def delete_author(conn: asyncpg.Connection, *, id: int) -> None:
+    await conn.execute(DELETE_AUTHOR, id)
 
-    def __init__(self, conn: asyncpg.Connection):
-        self._conn = conn
 
-    async def delete_author(self, *, id: int) -> None:
-        await self._conn.execute(DELETE_AUTHOR, id)
+async def get_student_and_score(conn: asyncpg.Connection, *, id: int) -> typing.Optional[GetStudentAndScoreRow]:
+    row = await conn.fetchrow(GET_STUDENT_AND_SCORE, id)
+    if row is None:
+        return None
+    return GetStudentAndScoreRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5]))
 
-    async def get_student_and_score(self, *, id: int) -> typing.Optional[GetStudentAndScoreRow]:
-        row = await self._conn.fetchrow(GET_STUDENT_AND_SCORE, id)
-        if row is None:
-            return None
-        return GetStudentAndScoreRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5]))
 
-    async def get_student_and_scores(self) -> typing.Sequence[GetStudentAndScoresRow]:
-        rows = await self._conn.fetch(GET_STUDENT_AND_SCORES)
-        return_rows: typing.List[GetStudentAndScoresRow] = []
-        for row in rows:
-            return_rows.append(GetStudentAndScoresRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5])))
-        return return_rows
-    async def list_authors(self, *, ids: typing.Sequence[int]) -> typing.Sequence[int]:
-        rows = await self._conn.fetch(LIST_AUTHORS, ids)
-        return_rows: typing.List[int] = []
-        for row in rows:
-            return_rows.append(int(row[0]))
-        return return_rows
-    async def list_authors2(self, *, id: int) -> typing.Sequence[int]:
-        rows = await self._conn.fetch(LIST_AUTHORS2, id)
-        return_rows: typing.List[int] = []
-        for row in rows:
-            return_rows.append(int(row[0]))
-        return return_rows
-    async def update_author(self, *, name: str, bio: str, id: int) -> None:
-        await self._conn.execute(UPDATE_AUTHOR, name, bio, id)
+async def get_student_and_scores(conn: asyncpg.Connection) -> typing.Sequence[GetStudentAndScoresRow]:
+    rows = await conn.fetch(GET_STUDENT_AND_SCORES)
+    return_rows: typing.List[GetStudentAndScoresRow] = []
+    for row in rows:
+        return_rows.append(GetStudentAndScoresRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5])))
+    return return_rows
+
+async def list_authors(conn: asyncpg.Connection, *, ids: typing.Sequence[int]) -> typing.Sequence[int]:
+    rows = await conn.fetch(LIST_AUTHORS, ids)
+    return_rows: typing.List[int] = []
+    for row in rows:
+        return_rows.append(int(row[0]))
+    return return_rows
+
+async def list_authors2(conn: asyncpg.Connection, *, id: int) -> typing.Sequence[int]:
+    rows = await conn.fetch(LIST_AUTHORS2, id)
+    return_rows: typing.List[int] = []
+    for row in rows:
+        return_rows.append(int(row[0]))
+    return return_rows
+
+async def update_author(conn: asyncpg.Connection, *, name: str, bio: str, id: int) -> None:
+    await conn.execute(UPDATE_AUTHOR, name, bio, id)

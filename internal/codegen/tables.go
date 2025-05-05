@@ -24,7 +24,11 @@ func BuildPyTabel(modelType string, table *core.Table, body *builders.IndentStri
 	} else if modelType == core.ModelTypeAttrs {
 		body.WriteLine("@attrs.define()")
 	}
-	body.WriteLine("class " + table.Name + ":")
+	inheritance := ""
+	if modelType == core.ModelTypeMsgspec {
+		inheritance = "(msgspec.Struct)"
+	}
+	body.WriteLine(fmt.Sprintf("class %s%s:", table.Name, inheritance))
 	for _, col := range table.Columns {
 		type_ := col.Type.Type
 		if col.Type.IsList {
@@ -36,6 +40,8 @@ func BuildPyTabel(modelType string, table *core.Table, body *builders.IndentStri
 		body.WriteIndentedString(1, col.Name+": "+type_)
 		if modelType == core.ModelTypeAttrs {
 			body.WriteString(" = attrs.field()")
+		} else if modelType == core.ModelTypeMsgspec {
+			body.WriteString(" = msgspec.field()")
 		}
 		body.WriteString("\n")
 	}

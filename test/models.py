@@ -9,19 +9,17 @@ __all__: typing.Sequence[str] = (
     "TestScore",
 )
 
-import dataclasses
+import msgspec
 import typing
 
 
-@dataclasses.dataclass()
-class Student:
-    id: int
-    name: typing.Optional[str]
-    age: typing.Optional[int]
+class Student(msgspec.Struct):
+    id: int = msgspec.field()
+    name: typing.Optional[str] = msgspec.field()
+    age: typing.Optional[int] = msgspec.field()
 
 
-@dataclasses.dataclass()
-class TestScore:
-    student_id: typing.Optional[int]
-    score: typing.Optional[int]
-    grade: typing.Optional[str]
+class TestScore(msgspec.Struct):
+    student_id: typing.Optional[int] = msgspec.field()
+    score: typing.Optional[int] = msgspec.field()
+    grade: typing.Optional[str] = msgspec.field()

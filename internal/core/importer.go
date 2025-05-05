@@ -57,6 +57,8 @@ func (i *Importer) getModelImportSpec() (string, importSpec, error) {
 		return "attrs", importSpec{Module: "attrs"}, nil
 	case ModelTypeDataclass:
 		return "dataclasses", importSpec{Module: "dataclasses"}, nil
+	case ModelTypeMsgspec:
+		return "msgspec", importSpec{Module: "msgspec"}, nil
 	default:
 		return "", importSpec{}, fmt.Errorf("unknown model type: %s", i.C.ModelType)
 	}

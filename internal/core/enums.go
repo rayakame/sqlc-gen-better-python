@@ -17,6 +17,7 @@ const (
 const (
 	ModelTypeDataclass = "dataclass"
 	ModelTypeAttrs     = "attrs"
+	ModelTypeMsgspec   = "msgspec"
 )
 
 var asyncDrivers = map[SQLDriverType]bool{
@@ -34,6 +35,7 @@ var driversEngine = map[SQLDriverType]string{
 var validModelTypes = map[string]struct{}{
 	string(ModelTypeDataclass): {},
 	string(ModelTypeAttrs):     {},
+	string(ModelTypeMsgspec):   {},
 }
 
 func isDriverAsync(sqlDriver SQLDriverType) (bool, error) {
