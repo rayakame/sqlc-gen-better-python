@@ -1,6 +1,0 @@
-kind: Added
-body: Added `debug` config option to enable debug output.
-time: 2025-05-05T22:47:22.9588363+02:00
-custom:
-    Author: rayakame
-    PR: "37"
