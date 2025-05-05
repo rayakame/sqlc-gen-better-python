@@ -42,8 +42,9 @@ jobs:
           export download_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${{ steps.latest.outputs.output }}/sqlc-gen-better-python.wasm"
           
           # Create the release body with the warning message at the top
-          echo "> [!WARNING] \n> Every Release before \`v1.0.0\`, including this one is an **early alpha release**. Currently, there is 0% test coverage and these versions are only released for interested people who want to test this plugin and help make it better." > release_body.md
-        
+          echo "> [!WARNING]" > release_body.md
+          echo "> Every Release before \`v1.0.0\`, including this one is an **early alpha release**. Currently, there is 0% test coverage and these versions are only released for interested people who want to test this plugin and help make it better." >> release_body.md
+          
           # Add the release changelog and YAML content below the warning message
           cat .changes/${{ steps.latest.outputs.output }}.md >> release_body.md
           echo "\`\`\`yaml" >> release_body.md
