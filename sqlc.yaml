@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: beb883283e1e6fbe0f807a5294c4418f7674aa3cb23c89b28807fa8cd78c58ee
+      sha256: e5f90e5f52b4847a35d9c60a2828134bcd2a89f798793899fed7a0738aefed1a
 sql:
   - schema: test/schema.sql
     queries: test/queries.sql
@@ -15,7 +15,7 @@ sql:
           package: test
           sql_driver: asyncpg
           model_type: msgspec
-          emit_classes: false
+          emit_classes: true
           omit_unused_models: true
           emit_init_file: true
 
