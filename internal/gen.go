@@ -97,11 +97,13 @@ func (gen *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	outputFiles = append(outputFiles, gen.sqlDriver.BuildInitFile())
 	jsonData, _ = json.Marshal(outputFiles)
 	log.GlobalLogger.LogByte(jsonData)
-	fileName, fileContent := log.GlobalLogger.Print()
-	outputFiles = append(outputFiles, &plugin.File{
-		Name:     fileName,
-		Contents: fileContent,
-	})
+	if gen.config.Debug {
+		fileName, fileContent := log.GlobalLogger.Print()
+		outputFiles = append(outputFiles, &plugin.File{
+			Name:     fileName,
+			Contents: fileContent,
+		})
+	}
 	return &plugin.GenerateResponse{Files: outputFiles}, nil
 }
 
