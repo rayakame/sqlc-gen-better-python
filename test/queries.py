@@ -5,32 +5,22 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "GetAuthorRow",
     "GetStudentAndScoreRow",
     "GetStudentAndScoresRow",
-    "create_author",
     "delete_author",
-    "get_author",
     "get_student_and_score",
     "get_student_and_scores",
     "list_authors",
+    "list_authors2",
     "update_author",
-    "update_author_t",
-    "upsert_author_name",
 )
 
 import dataclasses
 import typing
 
-import sqlite3
+import asyncpg
 
 from test import models
-
-
-@dataclasses.dataclass()
-class GetAuthorRow:
-    id: int
-    name: str
 
 
 @dataclasses.dataclass()
@@ -45,28 +35,17 @@ class GetStudentAndScoresRow:
     test_score: models.TestScore
 
 
-CREATE_AUTHOR: typing.Final[str] = """-- name: CreateAuthor :one
-INSERT INTO authors (name, bio)
-VALUES (?, ?) RETURNING id, name, bio
-"""
-
 DELETE_AUTHOR: typing.Final[str] = """-- name: DeleteAuthor :exec
 DELETE
 FROM authors
-WHERE id = ?
-"""
-
-GET_AUTHOR: typing.Final[str] = """-- name: GetAuthor :one
-SELECT id, name
-FROM authors
-WHERE id = ? LIMIT 1
+WHERE id = $1
 """
 
 GET_STUDENT_AND_SCORE: typing.Final[str] = """-- name: GetStudentAndScore :one
 SELECT students.id, students.name, students.age, test_scores.student_id, test_scores.score, test_scores.grade
 FROM students
          JOIN test_scores ON test_scores.student_id = students.id
-WHERE students.id = ?
+WHERE students.id = $1
 """
 
 GET_STUDENT_AND_SCORES: typing.Final[str] = """-- name: GetStudentAndScores :many
@@ -76,84 +55,58 @@ FROM students
 """
 
 LIST_AUTHORS: typing.Final[str] = """-- name: ListAuthors :many
-SELECT id, name, bio
+SELECT authors.id
 FROM authors
-WHERE id IN (/*SLICE:ids*/?)
+WHERE id IN ($1)
+ORDER BY name
+"""
+
+LIST_AUTHORS2: typing.Final[str] = """-- name: ListAuthors2 :many
+SELECT authors.id
+FROM authors
+WHERE id = $1
 ORDER BY name
 """
 
 UPDATE_AUTHOR: typing.Final[str] = """-- name: UpdateAuthor :exec
 UPDATE authors
-set name = ?,
-    bio  = ?
-WHERE id = ?
-"""
-
-UPDATE_AUTHOR_T: typing.Final[str] = """-- name: UpdateAuthorT :one
-UPDATE authors
-SET name = coalesce(?1, name),
-    bio  = coalesce(?2, bio)
-WHERE id = ?3 RETURNING id, name, bio
-"""
-
-UPSERT_AUTHOR_NAME: typing.Final[str] = """-- name: UpsertAuthorName :one
-UPDATE authors
-SET name = CASE WHEN ?2 THEN ? ELSE name END RETURNING id, name, bio
+set name = $1,
+    bio  = $2
+WHERE id = $3
 """
 
 
-def create_author(conn: sqlite3.Connection, *, name: str, bio: str) -> typing.Optional[models.Author]:
-    row = conn.execute(CREATE_AUTHOR,(name, bio)).fetchone()
-    if row is None:
-        return None
-    return models.Author(id=row[0], name=row[1], bio=row[2])
+async def delete_author(conn: asyncpg.Connection, *, id: int) -> None:
+    await conn.execute(DELETE_AUTHOR, id)
 
 
-def delete_author(conn: sqlite3.Connection, *, id: int) -> None:
-    conn.execute(DELETE_AUTHOR,(id, ))
-
-
-def get_author(conn: sqlite3.Connection, *, id: int) -> typing.Optional[GetAuthorRow]:
-    row = conn.execute(GET_AUTHOR,(id, )).fetchone()
-    if row is None:
-        return None
-    return GetAuthorRow(id=row[0], name=row[1])
-
-
-def get_student_and_score(conn: sqlite3.Connection, *, id: int) -> typing.Optional[GetStudentAndScoreRow]:
-    row = conn.execute(GET_STUDENT_AND_SCORE,(id, )).fetchone()
+async def get_student_and_score(conn: asyncpg.Connection, *, id: int) -> typing.Optional[GetStudentAndScoreRow]:
+    row = await conn.fetchrow(GET_STUDENT_AND_SCORE, id)
     if row is None:
         return None
     return GetStudentAndScoreRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5]))
 
 
-def get_student_and_scores(conn: sqlite3.Connection) -> typing.List[GetStudentAndScoresRow]:
-    rows: typing.List[GetStudentAndScoresRow] = []
-    for row in conn.execute(GET_STUDENT_AND_SCORES).fetchall():
+async def get_student_and_scores(conn: asyncpg.Connection) -> typing.Sequence[GetStudentAndScoresRow]:
+    rows = await conn.fetch(GET_STUDENT_AND_SCORES)
+    return_rows: typing.List[GetStudentAndScoresRow] = []
+    for row in rows:
         rows.append(GetStudentAndScoresRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5])))
-    return rows
+    return return_rows
 
+async def list_authors(conn: asyncpg.Connection, *, ids: typing.Sequence[int]) -> typing.Sequence[int]:
+    rows = await conn.fetch(LIST_AUTHORS, ids)
+    return_rows: typing.List[int] = []
+    for row in rows:
+        return_rows.append(int(row[0]))
+    return return_rows
 
-def list_authors(conn: sqlite3.Connection, *, ids: typing.Sequence[int]) -> typing.List[models.Author]:
-    rows: typing.List[models.Author] = []
-    for row in conn.execute(LIST_AUTHORS,(ids, )).fetchall():
-        rows.append(models.Author(id=row[0], name=row[1], bio=row[2]))
-    return rows
+async def list_authors2(conn: asyncpg.Connection, *, id: int) -> typing.Sequence[int]:
+    rows = await conn.fetch(LIST_AUTHORS2, id)
+    return_rows: typing.List[int] = []
+    for row in rows:
+        return_rows.append(int(row[0]))
+    return return_rows
 
-
-def update_author(conn: sqlite3.Connection, *, name: str, bio: str, id: int) -> None:
-    conn.execute(UPDATE_AUTHOR,(name, bio, id))
-
-
-def update_author_t(conn: sqlite3.Connection, *, name: str, bio: str, id: int) -> typing.Optional[models.Author]:
-    row = conn.execute(UPDATE_AUTHOR_T,(name, bio, id)).fetchone()
-    if row is None:
-        return None
-    return models.Author(id=row[0], name=row[1], bio=row[2])
-
-
-def upsert_author_name(conn: sqlite3.Connection, *, set_name: str, name: str) -> typing.Optional[models.Author]:
-    row = conn.execute(UPSERT_AUTHOR_NAME,(set_name, name)).fetchone()
-    if row is None:
-        return None
-    return models.Author(id=row[0], name=row[1], bio=row[2])
+async def update_author(conn: asyncpg.Connection, *, name: str, bio: str, id: int) -> None:
+    await conn.execute(UPDATE_AUTHOR, name, bio, id)

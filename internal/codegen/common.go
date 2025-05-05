@@ -33,6 +33,10 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 		buildPyQueryFunc = drivers.SQLite3BuildPyQueryFunc
 		acceptedDriverCMDs = drivers.SQLite3AcceptedDriverCMDs
 		connType = drivers.SQLite3Conn
+	case core.SQLDriverAsyncpg:
+		buildPyQueryFunc = drivers.AsyncpgBuildPyQueryFunc
+		acceptedDriverCMDs = drivers.AsyncpgAcceptedDriverCMDs
+		connType = drivers.AsyncpgConn
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}

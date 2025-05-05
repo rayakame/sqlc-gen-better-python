@@ -13,11 +13,14 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 
 > Prepared Queries are not planned for the near future, but will be implemented sooner or later
 
+> [!NOTE]  
+> Asyncpg only has very bad support until now. It doesn't support `:execresult`, `:execrows` and `:execlastid`
+
 |           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
-| --------- | ------- | ------------- | ----------- | ------------- | ------- | ------ | ----------- |
+| --------- |---------| ------------- | ----------- | ------------- |---------|--------| ----------- |
 | aiosqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
 | sqlite3   | yes     | yes           | yes         | yes           | yes     | yes    | no          |
-| asyncpg   | no      | no            | no          | no            | no      | no     | no          |
+| asyncpg   | yes     | no            | no          | no            | yes     | yes    | no          |
 | psycopg2  | no      | no            | no          | no            | no      | no     | no          |
 | mysql     | no      | no            | no          | no            | no      | no     | no          |
 
