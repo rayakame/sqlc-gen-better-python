@@ -10,7 +10,7 @@ __all__: typing.Sequence[str] = (
     "Queries",
 )
 
-import dataclasses
+import msgspec
 import typing
 
 import asyncpg
@@ -18,16 +18,14 @@ import asyncpg
 from test import models
 
 
-@dataclasses.dataclass()
-class GetStudentAndScoreRow:
-    student: models.Student
-    test_score: models.TestScore
+class GetStudentAndScoreRow(msgspec.Struct):
+    student: models.Student = msgspec.field()
+    test_score: models.TestScore = msgspec.field()
 
 
-@dataclasses.dataclass()
-class GetStudentAndScoresRow:
-    student: models.Student
-    test_score: models.TestScore
+class GetStudentAndScoresRow(msgspec.Struct):
+    student: models.Student = msgspec.field()
+    test_score: models.TestScore = msgspec.field()
 
 
 DELETE_AUTHOR: typing.Final[str] = """-- name: DeleteAuthor :exec
