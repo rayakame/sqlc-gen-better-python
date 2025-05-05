@@ -15,7 +15,7 @@ sql:
           package: test
           sql_driver: asyncpg
           model_type: msgspec
-          emit_classes: true
+          emit_classes: false
           omit_unused_models: true
           emit_init_file: true
 
