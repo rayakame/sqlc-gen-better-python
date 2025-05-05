@@ -1,6 +1,0 @@
-kind: Fixed
-body: Missing return statements for `:execresult`, `:execrows` and `:execlastid` for `aiosqlite` and `sqlite3`
-time: 2025-05-05T22:21:54.7215073+02:00
-custom:
-    Author: rayakame
-    PR: "31"

@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.2.0 - 2025-05-05
+### Added
+* [#29](https://github.com/rayakame/sqlc-gen-better-python/pull/29) Added early driver support for `asyncpg`. Only has support for `exec`, `many` and `one` (rayakame)
+### Fixed
+* [#31](https://github.com/rayakame/sqlc-gen-better-python/pull/31) Missing return statements for `:execresult`, `:execrows` and `:execlastid` for `aiosqlite` and `sqlite3` (rayakame)
+
 ## v0.1.0 - 2025-04-01
 ### Added
 * [#17](https://github.com/rayakame/sqlc-gen-better-python/pull/17) Added support for driver `sqlite3` (rayakame)
