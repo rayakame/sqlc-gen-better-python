@@ -3,17 +3,17 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 9a83b2a13344cebb64f33b3deacbab37a098409bd8027b996e32f041aead9267
+      sha256: 634c6c7781c02e621a3c4ddaaac634774c071c7b9e8b48fa00f81f7123151d42
 sql:
   - schema: test/schema.sql
     queries: test/queries.sql
-    engine: sqlite
+    engine: postgresql
     codegen:
       - out: test
         plugin: python
         options:
           package: test
-          sql_driver: sqlite3
+          sql_driver: asyncpg
           model_type: dataclass
           emit_classes: false
           omit_unused_structs: true

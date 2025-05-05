@@ -5,20 +5,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "Author",
     "Student",
     "TestScore",
 )
 
 import dataclasses
 import typing
-
-
-@dataclasses.dataclass()
-class Author:
-    id: int
-    name: str
-    bio: typing.Optional[str]
 
 
 @dataclasses.dataclass()
