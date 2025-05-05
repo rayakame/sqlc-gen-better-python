@@ -1,6 +1,0 @@
-kind: Added
-body: Added support for `msgspec` model type.
-time: 2025-05-06T00:06:39.0400912+02:00
-custom:
-    Author: rayakame
-    PR: "40"
