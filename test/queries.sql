@@ -25,3 +25,10 @@ SELECT authors.id
 FROM authors
 WHERE id IN (sqlc.slice('ids'))
 ORDER BY name;
+
+
+-- name: ListAuthors2 :many
+SELECT authors.id
+FROM authors
+WHERE id = $1
+ORDER BY name;

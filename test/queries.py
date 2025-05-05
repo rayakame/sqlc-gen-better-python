@@ -11,6 +11,7 @@ __all__: typing.Sequence[str] = (
     "get_student_and_score",
     "get_student_and_scores",
     "list_authors",
+    "list_authors2",
     "update_author",
 )
 
@@ -60,6 +61,13 @@ WHERE id IN ($1)
 ORDER BY name
 """
 
+LIST_AUTHORS2: typing.Final[str] = """-- name: ListAuthors2 :many
+SELECT authors.id
+FROM authors
+WHERE id = $1
+ORDER BY name
+"""
+
 UPDATE_AUTHOR: typing.Final[str] = """-- name: UpdateAuthor :exec
 UPDATE authors
 set name = $1,
@@ -73,7 +81,7 @@ async def delete_author(conn: asyncpg.Connection, *, id: int) -> None:
 
 
 async def get_student_and_score(conn: asyncpg.Connection, *, id: int) -> typing.Optional[GetStudentAndScoreRow]:
-    row = await conn.fetchrow(GET_STUDENT_AND_SCORE,(id, ))
+    row = await conn.fetchrow(GET_STUDENT_AND_SCORE, id)
     if row is None:
         return None
     return GetStudentAndScoreRow(student=models.Student(id=row[0], name=row[1], age=row[2]), test_score=models.TestScore(student_id=row[3], score=row[4], grade=row[5]))
@@ -88,6 +96,13 @@ async def get_student_and_scores(conn: asyncpg.Connection) -> typing.Sequence[Ge
 
 async def list_authors(conn: asyncpg.Connection, *, ids: typing.Sequence[int]) -> typing.Sequence[int]:
     rows = await conn.fetch(LIST_AUTHORS, ids)
+    return_rows: typing.List[int] = []
+    for row in rows:
+        return_rows.append(int(row[0]))
+    return return_rows
+
+async def list_authors2(conn: asyncpg.Connection, *, id: int) -> typing.Sequence[int]:
+    rows = await conn.fetch(LIST_AUTHORS2, id)
     return_rows: typing.List[int] = []
     for row in rows:
         return_rows.append(int(row[0]))

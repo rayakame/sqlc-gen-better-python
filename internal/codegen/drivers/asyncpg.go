@@ -35,7 +35,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 	} else if query.Cmd == metadata.CmdOne {
 		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = await %s.fetchrow(%s", conn, query.ConstantName))
-		aiosqliteWriteParams(query, body)
+		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
 		body.WriteIndentedLine(indentLevel+1, "if row is None:")
 		body.WriteIndentedLine(indentLevel+2, "return None")
