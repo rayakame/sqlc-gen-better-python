@@ -18,6 +18,7 @@ type Config struct {
 	InflectionExcludeTableNames []string      `json:"inflection_exclude_table_names,omitempty" yaml:"inflection_exclude_table_names"`
 	OmitUnusedStructs           bool          `json:"omit_unused_structs,omitempty" yaml:"omit_unused_structs"`
 	QueryParameterLimit         *int32        `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
+	Debug                       bool          `json:"debug" yaml:"debug"`
 
 	IndentChar          string `json:"indent_char" yaml:"indent_char"`
 	CharsPerIndentLevel int    `json:"chars_per_indent_level" yaml:"chars_per_indent_level"`
