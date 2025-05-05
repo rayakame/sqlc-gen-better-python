@@ -16,5 +16,5 @@ sql:
           sql_driver: asyncpg
           model_type: dataclass
           emit_classes: true
-          omit_unused_structs: true
+          omit_unused_models: true
 

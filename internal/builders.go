@@ -191,9 +191,10 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 			Table:        query.InsertIntoTable,
 		}
 
-		qpl := int(*gen.config.QueryParameterLimit)
+		//qpl := int(*gen.config.QueryParameterLimit) TODO maybe?
 
-		if len(query.Params) == 1 && qpl != 0 {
+		//if len(query.Params) == 1 && qpl != 0 {
+		if len(query.Params) == 1 {
 			p := query.Params[0]
 			gq.Args = []core.QueryValue{{
 				Name:   core.Escape(core.ParamName(p)),
