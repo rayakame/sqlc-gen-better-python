@@ -17,7 +17,7 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 > Asyncpg only has very bad support until now. It doesn't support `:execresult`, `:execrows` and `:execlastid`
 
 |           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
-| --------- |---------| ------------- | ----------- | ------------- |---------|--------| ----------- |
+|-----------|---------|---------------|-------------|---------------|---------|--------|-------------|
 | aiosqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
 | sqlite3   | yes     | yes           | yes         | yes           | yes     | yes    | no          |
 | asyncpg   | yes     | no            | no          | no            | yes     | yes    | no          |
@@ -35,4 +35,4 @@ inspired by:
 - [sqlc-gen-go](https://github.com/sqlc-dev/sqlc-gen-go)
 - [sqlc-gen-java](https://github.com/tandemdude/sqlc-gen-java)
 
-Special thanks to [tandemdude](https://github.com/tandemdude) for anwsering my questions on discord.
+Special thanks to [tandemdude](https://github.com/tandemdude) for answering my questions on discord.
