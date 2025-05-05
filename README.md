@@ -14,8 +14,7 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 > Prepared Queries are not planned for the near future, but will be implemented sooner or later
 
 > [!NOTE]  
-> Asyncpg only has very bad support until now. It doesn't support `:execresult`, `:execrows` and `:execlastid`,
-> `sqlc.slice()` is also not supported yet.
+> Asyncpg only has very bad support until now. It doesn't support `:execresult`, `:execrows` and `:execlastid`
 
 |           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
 | --------- |---------| ------------- | ----------- | ------------- |---------|--------| ----------- |
