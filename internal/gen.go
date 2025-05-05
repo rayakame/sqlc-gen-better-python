@@ -94,7 +94,9 @@ func (gen *PythonGenerator) Run() (*plugin.GenerateResponse, error) {
 	} else {
 		outputFiles = append(outputFiles, files...)
 	}
-	outputFiles = append(outputFiles, gen.sqlDriver.BuildInitFile())
+	if *gen.config.EmitInitFile {
+		outputFiles = append(outputFiles, gen.sqlDriver.BuildInitFile())
+	}
 	jsonData, _ = json.Marshal(outputFiles)
 	log.GlobalLogger.LogByte(jsonData)
 	if gen.config.Debug {

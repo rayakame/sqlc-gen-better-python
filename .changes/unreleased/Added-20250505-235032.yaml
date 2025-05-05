@@ -1,0 +1,6 @@
+kind: Added
+body: Added `emit_init_file` configuration option to control `__init__.py` creation.
+time: 2025-05-05T23:50:32.5661057+02:00
+custom:
+    Author: rayakame
+    PR: "39"
