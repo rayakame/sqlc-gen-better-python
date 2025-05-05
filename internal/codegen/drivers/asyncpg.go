@@ -91,10 +91,10 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 				}
 			}
 			body.WriteLine("))")
-			body.WriteIndentedString(indentLevel+1, "return return_rows")
+			body.WriteIndentedLine(indentLevel+1, "return return_rows")
 		} else {
 			body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("return_rows.append(%s(row[0]))", retType))
-			body.WriteIndentedString(indentLevel+1, "return return_rows")
+			body.WriteIndentedLine(indentLevel+1, "return return_rows")
 		}
 	}
 	return nil

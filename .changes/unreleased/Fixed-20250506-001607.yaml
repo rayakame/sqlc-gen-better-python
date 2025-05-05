@@ -1,0 +1,6 @@
+kind: Fixed
+body: Fixed missing empty lines when using `asyncpg` driver.
+time: 2025-05-06T00:16:07.0299503+02:00
+custom:
+    Author: rayakame
+    PR: "41"
