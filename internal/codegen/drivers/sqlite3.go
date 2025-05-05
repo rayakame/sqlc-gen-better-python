@@ -34,17 +34,17 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdExecResult {
 		body.WriteLine(fmt.Sprintf(") -> %s:", "sqlite3.Cursor"))
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("%s.execute(%s", conn, query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdExecRows {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("%s.execute(%s", conn, query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(").rowcount")
 	} else if query.Cmd == metadata.CmdExecLastId {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("%s.execute(%s", conn, query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(").lastrowid")
 	} else if query.Cmd == metadata.CmdOne {
