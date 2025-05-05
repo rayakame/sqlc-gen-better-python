@@ -40,6 +40,9 @@ jobs:
         run: |
           export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
           export download_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${{ steps.latest.outputs.output }}/sqlc-gen-better-python.wasm"
+
+          yq -i '.plugins[0].wasm.url = env(download_url)' .github/release_output_template.yaml
+          yq -i '.plugins[0].wasm.sha256 = env(checksum)' .github/release_output_template.yaml
           
           # Create the release body with the warning message at the top
           echo "> [!WARNING]" > release_body.md
