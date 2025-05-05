@@ -71,7 +71,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return_rows: typing.List[%s] = []", retType))
 		body.WriteIndentedLine(indentLevel+1, "for row in rows:")
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("rows.append(%s(", retType))
+			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return_rows.append(%s(", retType))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
