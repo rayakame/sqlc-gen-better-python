@@ -124,6 +124,10 @@ func SQLite3AcceptedDriverCMDs() []string {
 	}
 }
 
+func SQLite3SkipTypeConversion() []string {
+	return []string{}
+}
+
 func sqlite3WriteParams(query *core.Query, body *builders.IndentStringBuilder) {
 	if len(query.Args) == 0 {
 		return

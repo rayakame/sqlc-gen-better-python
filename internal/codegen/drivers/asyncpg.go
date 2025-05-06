@@ -70,6 +70,10 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteLine(")")
 		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return_rows: typing.List[%s] = []", retType))
 		body.WriteIndentedLine(indentLevel+1, "for row in rows:")
+		retTypeConv := retType + "(%s)"
+		if _, found := AsyncpgSkipTypeConversion()[retType]; found {
+			retTypeConv = "%s"
+		}
 		if query.Ret.IsStruct() {
 			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return_rows.append(%s(", retType))
 			i := 0
@@ -105,6 +109,14 @@ func AsyncpgAcceptedDriverCMDs() []string {
 		metadata.CmdExec,
 		metadata.CmdOne,
 		metadata.CmdMany,
+	}
+}
+
+func AsyncpgSkipTypeConversion() map[string]struct{} {
+	return map[string]struct{}{
+		"datetime.date":     {},
+		"datetime.time":     {},
+		"datetime.datetime": {},
 	}
 }
 

@@ -123,6 +123,10 @@ func AioSQLiteAcceptedDriverCMDs() []string {
 	}
 }
 
+func AioSQLiteSkipTypeConversion() map[string]struct{} {
+	return map[string]struct{}{}
+}
+
 func aiosqliteWriteParams(query *core.Query, body *builders.IndentStringBuilder) {
 	if len(query.Args) == 0 {
 		return
