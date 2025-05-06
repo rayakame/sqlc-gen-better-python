@@ -80,7 +80,7 @@ func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStr
 	body.WriteLine(fmt.Sprintf("class %s:", className))
 	body.WriteIndentedLine(1, `__slots__ = ("_conn",)`)
 	body.NewLine()
-	body.WriteIndentedLine(1, fmt.Sprintf(`def __init__(self, conn: %s):`, dr.connType))
+	body.WriteIndentedLine(1, fmt.Sprintf(`def __init__(self, conn: %s) -> None:`, dr.connType))
 	body.WriteIndentedLine(2, "self._conn = conn")
 	body.NewLine()
 	return className

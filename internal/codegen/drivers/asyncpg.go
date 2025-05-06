@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const AsyncpgConn = "asyncpg.Connection"
+const AsyncpgConn = "asyncpg.Connection[asyncpg.Record]"
 
 func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []string, retType string, isClass bool) error {
 	indentLevel := 0
