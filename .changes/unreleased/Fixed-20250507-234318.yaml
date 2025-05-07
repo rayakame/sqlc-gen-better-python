@@ -1,6 +1,0 @@
-kind: Fixed
-body: Fixed unnecessary type conversion when returning data from queries using `asyncpg`
-time: 2025-05-07T23:43:18.6210029+02:00
-custom:
-    Author: rayakame
-    PR: "53"

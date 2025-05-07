@@ -1,6 +1,0 @@
-kind: Fixed
-body: Fixed missing `__init__` return type annotation and connection parameter type when using `asyncpg` driver.
-time: 2025-05-06T09:54:00.0000000+01:00
-custom:
-  Author: tandemdude
-  PR: "50"

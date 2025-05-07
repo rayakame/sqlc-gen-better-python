@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.3.1 - 2025-05-07
+### Fixed
+* [#50](https://github.com/rayakame/sqlc-gen-better-python/pull/50) Fixed missing `__init__` return type annotation and connection parameter type when using `asyncpg` driver. (tandemdude)
+* [#53](https://github.com/rayakame/sqlc-gen-better-python/pull/53) Wrong deserialization of `datetime.datetime` when using `asyncpg` (rayakame)
+* [#53](https://github.com/rayakame/sqlc-gen-better-python/pull/53) Fixed unnecessary type conversion when returning data from queries using `asyncpg` (rayakame)
+
 ## v0.3.0 - 2025-05-05
 ### Added
 * [#37](https://github.com/rayakame/sqlc-gen-better-python/pull/37) Added `debug` config option to enable debug output. (rayakame)
