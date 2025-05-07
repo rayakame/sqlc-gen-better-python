@@ -112,8 +112,12 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 	}
 	for i, query := range queries {
 		args, retType, addedPyTableNames := dr.prepareFunctionHeader(&query, pyTableBody)
+		returnType := core.PyType{
+			SqlType: query.Ret.Typ.SqlType,
+			Type:    retType,
+		}
 		allNames = append(allNames, addedPyTableNames...)
-		err := dr.buildPyQueryFunc(&query, funcBody, args, retType, dr.conf.EmitClasses)
+		err := dr.buildPyQueryFunc(&query, funcBody, args, returnType, dr.conf.EmitClasses)
 		if err != nil {
 			return nil, err
 		}
