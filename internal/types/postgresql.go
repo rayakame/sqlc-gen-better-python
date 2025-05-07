@@ -16,23 +16,25 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, col *plugin.Column, conf 
 		return "int"
 	case "float", "double precision", "float8", "pg_catalog.float8", "real", "float4", "pg_catalog.float4":
 		return "float"
-	case "numeric", "pg_catalog.numeric", "money":
+	case "numeric", "pg_catalog.numeric":
 		return "decimal.Decimal"
+	case "money":
+		return "str"
 	case "boolean", "bool", "pg_catalog.bool":
 		return "bool"
-	case "json", "jsonb":
-		return "typing.Any"
+	case "pg_catalog.json", "json", "jsonb":
+		return "str"
 	case "bytea", "blob", "pg_catalog.bytea":
 		return "memoryview"
 	case "date":
 		return "datetime.date"
-	case "pg_catalog.time", "pg_catalog.timetz":
+	case "pg_catalog.time", "pg_catalog.timetz", "timetz":
 		return "datetime.time"
 	case "pg_catalog.timestamp", "pg_catalog.timestamptz", "timestamptz":
 		return "datetime.datetime"
 	case "interval", "pg_catalog.interval":
 		return "datetime.timedelta"
-	case "text", "pg_catalog.varchar", "pg_catalog.bpchar", "string", "citext":
+	case "text", "pg_catalog.varchar", "bpchar", "pg_catalog.bpchar", "char", "string", "citext":
 		return "str"
 	case "uuid":
 		return "uuid.UUID"

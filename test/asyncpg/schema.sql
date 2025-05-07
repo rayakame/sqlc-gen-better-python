@@ -1,28 +1,3 @@
-CREATE TABLE authors
-(
-    id   INTEGER PRIMARY KEY,
-    name text NOT NULL,
-    bio  text
-);
-
-CREATE TABLE students (
-      id   bigserial PRIMARY KEY,
-      name text,
-      age  integer
-);
-
-CREATE TABLE test_scores (
-     student_id bigint,
-     score integer,
-     grade text
-);
-
-CREATE TABLE datetime_test (
-   id   bigserial PRIMARY KEY,
-   hi   timestamp NOT NULL ,
-   test text
-);
-
 CREATE TABLE test_postgres_types
 (
     /* ───────────── Integer family ───────────── */
@@ -87,7 +62,7 @@ CREATE TABLE test_postgres_types
 CREATE TABLE test_inner_postgres_types
 (
     /* ───────────── Integer family ───────────── */
-    table_id              int              NOT NULL,
+    table_id              int        NOT NULL,
     serial_test           serial           NOT NULL,
     serial4_test          serial4          NOT NULL,
     bigserial_test        bigserial        NOT NULL,

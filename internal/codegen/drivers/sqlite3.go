@@ -11,7 +11,7 @@ import (
 
 const SQLite3Conn = "sqlite3.Connection"
 
-func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []string, retType string, isClass bool) error {
+func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []string, retType core.PyType, isClass bool) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", SQLite3Conn)
 	conn := "conn"
@@ -28,7 +28,7 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteString(fmt.Sprintf(", %s", arg))
 	}
 	if query.Cmd == metadata.CmdExec {
-		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
+		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("%s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(")")
@@ -38,24 +38,24 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		sqlite3WriteParams(query, body)
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdExecRows {
-		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
+		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(").rowcount")
 	} else if query.Cmd == metadata.CmdExecLastId {
-		body.WriteLine(fmt.Sprintf(") -> %s:", retType))
+		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(").lastrowid")
 	} else if query.Cmd == metadata.CmdOne {
-		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType))
+		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = %s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(").fetchone()")
 		body.WriteIndentedLine(indentLevel+1, "if row is None:")
 		body.WriteIndentedLine(indentLevel+2, "return None")
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s(", retType))
+			body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return %s(", retType.Type))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
@@ -76,16 +76,16 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 			}
 			body.WriteLine(")")
 		} else {
-			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return %s(row[0])", retType))
+			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return %s(row[0])", retType.Type))
 		}
 	} else if query.Cmd == metadata.CmdMany {
-		body.WriteLine(fmt.Sprintf(") -> typing.List[%s]:", retType))
-		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("rows: typing.List[%s] = []", retType))
+		body.WriteLine(fmt.Sprintf(") -> typing.List[%s]:", retType.Type))
+		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("rows: typing.List[%s] = []", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("for row in %s.execute(%s", conn, query.ConstantName))
 		sqlite3WriteParams(query, body)
 		body.WriteLine(").fetchall():")
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("rows.append(%s(", retType))
+			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("rows.append(%s(", retType.Type))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
@@ -106,7 +106,7 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 			}
 			body.WriteLine("))")
 		} else {
-			body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("rows.append(%s(row[0]))", retType))
+			body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("rows.append(%s(row[0]))", retType.Type))
 		}
 		body.WriteIndentedLine(indentLevel+1, "return rows")
 	}
@@ -123,6 +123,11 @@ func SQLite3AcceptedDriverCMDs() []string {
 		metadata.CmdMany,
 	}
 }
+
+/*
+func SQLite3SkipTypeConversion() []string {
+	return []string{}
+}*/
 
 func sqlite3WriteParams(query *core.Query, body *builders.IndentStringBuilder) {
 	if len(query.Args) == 0 {
