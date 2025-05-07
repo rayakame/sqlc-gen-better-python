@@ -1,57 +1,38 @@
--- name: UpdateAuthor :exec
-UPDATE authors
-set name = $1,
-    bio  = $2
-WHERE id = $3;
-
--- name: DeleteAuthor :exec
-DELETE
-FROM authors
-WHERE id = $1;
-
--- name: GetStudentAndScore :one
-SELECT sqlc.embed(students), sqlc.embed(test_scores)
-FROM students
-         JOIN test_scores ON test_scores.student_id = students.id
-WHERE students.id = $1;
-
--- name: GetStudentAndScores :many
-SELECT sqlc.embed(students), sqlc.embed(test_scores)
-FROM students
-         JOIN test_scores ON test_scores.student_id = students.id;
-
--- name: ListAuthors :many
-SELECT authors.id
-FROM authors
-WHERE id IN (sqlc.slice('ids'))
-ORDER BY name;
-
-
--- name: ListAuthors2 :many
-SELECT authors.id
-FROM authors
-WHERE id = $1
-ORDER BY name;
-
--- name: ListDatetime :many
-SELECT datetime_test.hi
-FROM datetime_test;
-
--- name: GetOneDatetime :one
-SELECT datetime_test.hi
-FROM datetime_test
-LIMIT 1;
-
 -- name: GetOneTestPostgresType :one
 SELECT *
 FROM test_postgres_types
          LIMIT 1;
 
--- name: GetEmbeddedTestPostgresType :one
+-- name: GetOneTestTimestampPostgresType :one
+SELECT timestamp_test
+FROM test_postgres_types
+         LIMIT 1;
+
+-- name: GetOneTestByteaPostgresType :one
+SELECT bytea_test
+FROM test_postgres_types
+         LIMIT 1;
+
+-- name: GetManyTestPostgresType :many
+SELECT *
+FROM test_postgres_types
+         LIMIT 2;
+
+-- name: GetManyTestTimestampPostgresType :many
+SELECT timestamp_test
+FROM test_postgres_types
+         LIMIT 2;
+
+-- name: GetManyTestByteaPostgresType :many
+SELECT bytea_test
+FROM test_postgres_types
+         LIMIT 2;
+
+-- name: GetEmbeddedTestPostgresType :many
 SELECT sqlc.embed(test_postgres_types), sqlc.embed(test_inner_postgres_types)
 FROM test_postgres_types
-         JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
-    LIMIT 1;
+JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id;
+
 
 -- name: CreateOneTestPostgresType :exec
 INSERT INTO test_postgres_types (
@@ -144,27 +125,3 @@ INSERT INTO test_inner_postgres_types (
              $25, $26, $27, $28, $29, $30, $31, $32,
              $33, $34, $35, $36
          );
--- name: GetOneTestTimestampPostgresType :one
-SELECT timestamp_test
-FROM test_postgres_types
-         LIMIT 1;
-
--- name: GetOneTestByteaPostgresType :one
-SELECT bytea_test
-FROM test_postgres_types
-         LIMIT 1;
-
--- name: GetManyTestPostgresType :many
-SELECT *
-FROM test_postgres_types
-         LIMIT 2;
-
--- name: GetManyTestTimestampPostgresType :many
-SELECT timestamp_test
-FROM test_postgres_types
-         LIMIT 2;
-
--- name: GetManyTestByteaPostgresType :many
-SELECT bytea_test
-FROM test_postgres_types
-         LIMIT 2;
