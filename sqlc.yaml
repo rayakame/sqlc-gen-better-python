@@ -3,11 +3,16 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 0f10a820ea8fc7d969eef3c7a552b799591fb437585a638d0eca8f9d19dedde9
+      sha256: c2909b2d442430bd7357b68aa389c7351bc51153a3eda8614f75f98e59cbdc6f
 sql:
   - schema: test/schema.sql
     queries: test/queries.sql
     engine: postgresql
+    gen:
+      go:
+        package: "test"
+        out: "test"
+        sql_package: "pgx/v5"
     codegen:
       - out: test
         plugin: python

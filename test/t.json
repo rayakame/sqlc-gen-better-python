@@ -2,232 +2,25 @@
   {
     "Cmd": ":one",
     "Comments": null,
-    "MethodName": "CreateAuthor",
-    "FuncName": "create_author",
-    "FieldName": "createAuthorStmt",
-    "ConstantName": "CREATE_AUTHOR",
-    "SQL": "INSERT INTO authors (\n    name, bio\n) VALUES (\n             ?, ?\n         )\n    RETURNING id, name, bio",
-    "SourceName": "queries.sql",
-    "Ret": {
-      "Emit": false,
-      "EmitPointer": false,
-      "Name": "i",
-      "DBName": "",
-      "Table": {
-        "Table": {
-          "schema": "main",
-          "name": "authors"
-        },
-        "Name": "Author",
-        "Columns": [
-          {
-            "Name": "id",
-            "DBName": "",
-            "Type": {
-              "SqlType": "INTEGER",
-              "Type": "int",
-              "IsList": false,
-              "IsNullable": false,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": null,
-            "EmbedFields": null
-          },
-          {
-            "Name": "name",
-            "DBName": "",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": null,
-            "EmbedFields": null
-          },
-          {
-            "Name": "bio",
-            "DBName": "",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": null,
-            "EmbedFields": null
-          }
-        ],
-        "Comment": ""
-      },
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "aiosqlite",
-      "Column": null
-    },
-    "Arg": {
-      "Emit": true,
-      "EmitPointer": false,
-      "Name": "arg",
-      "DBName": "",
-      "Table": {
-        "Table": null,
-        "Name": "CreateAuthorParams",
-        "Columns": [
-          {
-            "Name": "name",
-            "DBName": "name",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": {
-              "name": "name",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "name"
-            },
-            "EmbedFields": null
-          },
-          {
-            "Name": "bio",
-            "DBName": "bio",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": {
-              "name": "bio",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "bio"
-            },
-            "EmbedFields": null
-          }
-        ],
-        "Comment": ""
-      },
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "aiosqlite",
-      "Column": null
-    },
-    "Table": {
-      "name": "authors"
-    }
-  },
-  {
-    "Cmd": ":exec",
-    "Comments": null,
-    "MethodName": "DeleteAuthor",
-    "FuncName": "delete_author",
-    "FieldName": "deleteAuthorStmt",
-    "ConstantName": "DELETE_AUTHOR",
-    "SQL": "DELETE FROM authors\nWHERE id = ?",
-    "SourceName": "queries.sql",
-    "Ret": {
-      "Emit": false,
-      "EmitPointer": false,
-      "Name": "",
-      "DBName": "",
-      "Table": null,
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "",
-      "Column": null
-    },
-    "Arg": {
-      "Emit": false,
-      "EmitPointer": false,
-      "Name": "id",
-      "DBName": "id",
-      "Table": null,
-      "Typ": {
-        "SqlType": "INTEGER",
-        "Type": "int",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "aiosqlite",
-      "Column": {
-        "name": "id",
-        "not_null": true,
-        "length": -1,
-        "table": {
-          "name": "authors"
-        },
-        "type": {
-          "name": "INTEGER"
-        },
-        "original_name": "id"
-      }
-    },
-    "Table": null
-  },
-  {
-    "Cmd": ":one",
-    "Comments": null,
-    "MethodName": "GetAuthor",
-    "FuncName": "get_author",
-    "FieldName": "getAuthorStmt",
-    "ConstantName": "GET_AUTHOR",
-    "SQL": "SELECT id, name FROM authors\nWHERE id = ? LIMIT 1",
+    "MethodName": "GetEmbeddedTestPostgresType",
+    "FuncName": "get_embedded_test_postgres_type",
+    "FieldName": "getEmbeddedTestPostgresTypeStmt",
+    "ConstantName": "GET_EMBEDDED_TEST_POSTGRES_TYPE",
+    "SQL": "SELECT id, serial_test, table_id, bool_test, test_inner_postgres_types.table_id, test_inner_postgres_types.bool_test, test_inner_postgres_types.bool_test\nFROM test_postgres_types\n         JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id\n    LIMIT 1",
     "SourceName": "queries.sql",
     "Ret": {
       "Emit": true,
-      "EmitPointer": false,
       "Name": "i",
       "DBName": "",
       "Table": {
         "Table": null,
-        "Name": "GetAuthorRow",
+        "Name": "GetEmbeddedTestPostgresTypeRow",
         "Columns": [
           {
             "Name": "id",
             "DBName": "id",
             "Type": {
-              "SqlType": "INTEGER",
+              "SqlType": "pg_catalog.int4",
               "Type": "int",
               "IsList": false,
               "IsNullable": false,
@@ -239,264 +32,21 @@
               "not_null": true,
               "length": -1,
               "table": {
-                "name": "authors"
+                "name": "test_postgres_types"
               },
               "type": {
-                "name": "INTEGER"
+                "schema": "pg_catalog",
+                "name": "int4"
               },
               "original_name": "id"
             },
             "EmbedFields": null
           },
           {
-            "Name": "name",
-            "DBName": "name",
+            "Name": "serial_test",
+            "DBName": "serial_test",
             "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": {
-              "name": "name",
-              "length": -1,
-              "table": {
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "name"
-            },
-            "EmbedFields": null
-          }
-        ],
-        "Comment": ""
-      },
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "aiosqlite",
-      "Column": null
-    },
-    "Arg": {
-      "Emit": false,
-      "EmitPointer": false,
-      "Name": "id",
-      "DBName": "id",
-      "Table": null,
-      "Typ": {
-        "SqlType": "INTEGER",
-        "Type": "int",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "aiosqlite",
-      "Column": {
-        "name": "id",
-        "not_null": true,
-        "length": -1,
-        "table": {
-          "name": "authors"
-        },
-        "type": {
-          "name": "INTEGER"
-        },
-        "original_name": "id"
-      }
-    },
-    "Table": null
-  },
-  {
-    "Cmd": ":many",
-    "Comments": null,
-    "MethodName": "ListAuthors",
-    "FuncName": "list_authors",
-    "FieldName": "listAuthorsStmt",
-    "ConstantName": "LIST_AUTHORS",
-    "SQL": "SELECT id, name, bio FROM authors\nORDER BY name",
-    "SourceName": "queries.sql",
-    "Ret": {
-      "Emit": false,
-      "EmitPointer": false,
-      "Name": "i",
-      "DBName": "",
-      "Table": {
-        "Table": {
-          "schema": "main",
-          "name": "authors"
-        },
-        "Name": "Author",
-        "Columns": [
-          {
-            "Name": "id",
-            "DBName": "",
-            "Type": {
-              "SqlType": "INTEGER",
-              "Type": "int",
-              "IsList": false,
-              "IsNullable": false,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": null,
-            "EmbedFields": null
-          },
-          {
-            "Name": "name",
-            "DBName": "",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": null,
-            "EmbedFields": null
-          },
-          {
-            "Name": "bio",
-            "DBName": "",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": null,
-            "EmbedFields": null
-          }
-        ],
-        "Comment": ""
-      },
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "aiosqlite",
-      "Column": null
-    },
-    "Arg": {
-      "Emit": false,
-      "EmitPointer": false,
-      "Name": "",
-      "DBName": "",
-      "Table": null,
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "",
-      "Column": null
-    },
-    "Table": null
-  },
-  {
-    "Cmd": ":exec",
-    "Comments": null,
-    "MethodName": "UpdateAuthor",
-    "FuncName": "update_author",
-    "FieldName": "updateAuthorStmt",
-    "ConstantName": "UPDATE_AUTHOR",
-    "SQL": "UPDATE authors\nset name = ?,\n    bio = ?\nWHERE id = ?",
-    "SourceName": "queries.sql",
-    "Ret": {
-      "Emit": false,
-      "EmitPointer": false,
-      "Name": "",
-      "DBName": "",
-      "Table": null,
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "",
-      "Column": null
-    },
-    "Arg": {
-      "Emit": true,
-      "EmitPointer": false,
-      "Name": "arg",
-      "DBName": "",
-      "Table": {
-        "Table": null,
-        "Name": "UpdateAuthorParams",
-        "Columns": [
-          {
-            "Name": "name",
-            "DBName": "name",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": {
-              "name": "name",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "name"
-            },
-            "EmbedFields": null
-          },
-          {
-            "Name": "bio",
-            "DBName": "bio",
-            "Type": {
-              "SqlType": "text",
-              "Type": "str",
-              "IsList": false,
-              "IsNullable": true,
-              "IsEnum": false
-            },
-            "Comment": "",
-            "Column": {
-              "name": "bio",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "bio"
-            },
-            "EmbedFields": null
-          },
-          {
-            "Name": "id",
-            "DBName": "id",
-            "Type": {
-              "SqlType": "INTEGER",
+              "SqlType": "serial",
               "Type": "int",
               "IsList": false,
               "IsNullable": false,
@@ -504,359 +54,160 @@
             },
             "Comment": "",
             "Column": {
-              "name": "id",
+              "name": "serial_test",
               "not_null": true,
               "length": -1,
               "table": {
-                "name": "authors"
+                "name": "test_postgres_types"
               },
               "type": {
-                "name": "INTEGER"
+                "name": "serial"
               },
-              "original_name": "id"
+              "original_name": "serial_test"
             },
             "EmbedFields": null
-          }
-        ],
-        "Comment": ""
-      },
-      "Typ": {
-        "SqlType": "",
-        "Type": "",
-        "IsList": false,
-        "IsNullable": false,
-        "IsEnum": false
-      },
-      "SQLDriver": "aiosqlite",
-      "Column": null
-    },
-    "Table": null
-  },
-  {
-    "settings": {
-      "version": "2",
-      "engine": "sqlite",
-      "schema": [
-        "test/schema.sql"
-      ],
-      "queries": [
-        "test/queries.sql"
-      ],
-      "codegen": {
-        "out": "test",
-        "plugin": "python",
-        "options": "eyJtb2RlbF90eXBlIjoiZGF0YWNsYXNzIiwicGFja2FnZSI6InRlc3QiLCJzcWxfZHJpdmVyIjoiYWlvc3FsaXRlIn0=",
-        "wasm": {
-          "url": "file://sqlc-gen-better-python.wasm",
-          "sha256": "52e6eb8b75814b810e2509b034731d4a5ae275dc636f40e4226a8f7a9eb6a706"
-        }
-      }
-    },
-    "catalog": {
-      "default_schema": "main",
-      "schemas": [
-        {
-          "name": "main",
-          "tables": [
-            {
-              "rel": {
-                "name": "authors"
+          },
+          {
+            "Name": "table_id",
+            "DBName": "table_id",
+            "Type": {
+              "SqlType": "pg_catalog.int4",
+              "Type": "int",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "table_id",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "test_inner_postgres_types"
               },
-              "columns": [
-                {
-                  "name": "id",
-                  "not_null": true,
-                  "length": -1,
-                  "table": {
-                    "name": "authors"
-                  },
-                  "type": {
-                    "name": "INTEGER"
-                  }
+              "type": {
+                "schema": "pg_catalog",
+                "name": "int4"
+              },
+              "original_name": "table_id"
+            },
+            "EmbedFields": null
+          },
+          {
+            "Name": "bool_test",
+            "DBName": "bool_test",
+            "Type": {
+              "SqlType": "pg_catalog.bool",
+              "Type": "bool",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "bool_test",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "test_inner_postgres_types"
+              },
+              "type": {
+                "schema": "pg_catalog",
+                "name": "bool"
+              },
+              "original_name": "bool_test"
+            },
+            "EmbedFields": null
+          },
+          {
+            "Name": "test_inner_postgres_type",
+            "DBName": "TestInnerPostgresType",
+            "Type": {
+              "SqlType": "TestInnerPostgresType",
+              "Type": "models.TestInnerPostgresType",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "test_inner_postgres_types",
+              "length": -1,
+              "type": {},
+              "embed_table": {
+                "name": "test_inner_postgres_types"
+              }
+            },
+            "EmbedFields": [
+              {
+                "Name": "table_id",
+                "DBName": "",
+                "Type": {
+                  "SqlType": "pg_catalog.int4",
+                  "Type": "int",
+                  "IsList": false,
+                  "IsNullable": false,
+                  "IsEnum": false
                 },
-                {
-                  "name": "name",
-                  "length": -1,
-                  "table": {
-                    "name": "authors"
-                  },
-                  "type": {
-                    "name": "text"
-                  }
+                "Comment": "",
+                "Column": null,
+                "EmbedFields": null
+              },
+              {
+                "Name": "bool_test",
+                "DBName": "",
+                "Type": {
+                  "SqlType": "pg_catalog.bool",
+                  "Type": "bool",
+                  "IsList": false,
+                  "IsNullable": false,
+                  "IsEnum": false
                 },
-                {
-                  "name": "bio",
-                  "length": -1,
-                  "table": {
-                    "name": "authors"
-                  },
-                  "type": {
-                    "name": "text"
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                "Comment": "",
+                "Column": null,
+                "EmbedFields": null
+              }
+            ]
+          },
+          {
+            "Name": "bool_test",
+            "DBName": "bool_test",
+            "Type": {
+              "SqlType": "pg_catalog.bool",
+              "Type": "bool",
+              "IsList": false,
+              "IsNullable": false,
+              "IsEnum": false
+            },
+            "Comment": "",
+            "Column": {
+              "name": "bool_test",
+              "not_null": true,
+              "length": -1,
+              "table": {
+                "name": "test_inner_postgres_types"
+              },
+              "type": {
+                "schema": "pg_catalog",
+                "name": "bool"
+              },
+              "original_name": "bool_test"
+            },
+            "EmbedFields": null
+          }
+        ],
+        "Comment": ""
+      },
+      "Typ": {
+        "SqlType": "",
+        "Type": "",
+        "IsList": false,
+        "IsNullable": false,
+        "IsEnum": false
+      },
+      "Column": null
     },
-    "queries": [
-      {
-        "text": "SELECT id, name, bio FROM authors\nWHERE id = ? LIMIT 1",
-        "name": "GetAuthor",
-        "cmd": ":one",
-        "columns": [
-          {
-            "name": "id",
-            "not_null": true,
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "INTEGER"
-            },
-            "original_name": "id"
-          },
-          {
-            "name": "name",
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "text"
-            },
-            "original_name": "name"
-          },
-          {
-            "name": "bio",
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "text"
-            },
-            "original_name": "bio"
-          }
-        ],
-        "params": [
-          {
-            "number": 1,
-            "column": {
-              "name": "id",
-              "not_null": true,
-              "length": -1,
-              "table": {
-                "name": "authors"
-              },
-              "type": {
-                "name": "INTEGER"
-              },
-              "original_name": "id"
-            }
-          }
-        ],
-        "filename": "queries.sql"
-      },
-      {
-        "text": "SELECT id, name, bio FROM authors\nORDER BY name",
-        "name": "ListAuthors",
-        "cmd": ":many",
-        "columns": [
-          {
-            "name": "id",
-            "not_null": true,
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "INTEGER"
-            },
-            "original_name": "id"
-          },
-          {
-            "name": "name",
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "text"
-            },
-            "original_name": "name"
-          },
-          {
-            "name": "bio",
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "text"
-            },
-            "original_name": "bio"
-          }
-        ],
-        "filename": "queries.sql"
-      },
-      {
-        "text": "INSERT INTO authors (\n    name, bio\n) VALUES (\n             ?, ?\n         )\n    RETURNING id, name, bio",
-        "name": "CreateAuthor",
-        "cmd": ":one",
-        "columns": [
-          {
-            "name": "id",
-            "not_null": true,
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "INTEGER"
-            },
-            "original_name": "id"
-          },
-          {
-            "name": "name",
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "text"
-            },
-            "original_name": "name"
-          },
-          {
-            "name": "bio",
-            "length": -1,
-            "table": {
-              "name": "authors"
-            },
-            "type": {
-              "name": "text"
-            },
-            "original_name": "bio"
-          }
-        ],
-        "params": [
-          {
-            "number": 1,
-            "column": {
-              "name": "name",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "name"
-            }
-          },
-          {
-            "number": 2,
-            "column": {
-              "name": "bio",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "bio"
-            }
-          }
-        ],
-        "filename": "queries.sql",
-        "insert_into_table": {
-          "name": "authors"
-        }
-      },
-      {
-        "text": "UPDATE authors\nset name = ?,\n    bio = ?\nWHERE id = ?",
-        "name": "UpdateAuthor",
-        "cmd": ":exec",
-        "params": [
-          {
-            "number": 1,
-            "column": {
-              "name": "name",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "name"
-            }
-          },
-          {
-            "number": 2,
-            "column": {
-              "name": "bio",
-              "length": -1,
-              "table": {
-                "schema": "main",
-                "name": "authors"
-              },
-              "type": {
-                "name": "text"
-              },
-              "original_name": "bio"
-            }
-          },
-          {
-            "number": 3,
-            "column": {
-              "name": "id",
-              "not_null": true,
-              "length": -1,
-              "table": {
-                "name": "authors"
-              },
-              "type": {
-                "name": "INTEGER"
-              },
-              "original_name": "id"
-            }
-          }
-        ],
-        "filename": "queries.sql"
-      },
-      {
-        "text": "DELETE FROM authors\nWHERE id = ?",
-        "name": "DeleteAuthor",
-        "cmd": ":exec",
-        "params": [
-          {
-            "number": 1,
-            "column": {
-              "name": "id",
-              "not_null": true,
-              "length": -1,
-              "table": {
-                "name": "authors"
-              },
-              "type": {
-                "name": "INTEGER"
-              },
-              "original_name": "id"
-            }
-          }
-        ],
-        "filename": "queries.sql"
-      }
-    ],
-    "sqlc_version": "v1.28.0",
-    "plugin_options": "eyJtb2RlbF90eXBlIjoiZGF0YWNsYXNzIiwicGFja2FnZSI6InRlc3QiLCJzcWxfZHJpdmVyIjoiYWlvc3FsaXRlIn0="
+    "Args": null,
+    "Table": null
   }
 ]

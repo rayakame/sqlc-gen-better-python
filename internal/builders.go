@@ -116,6 +116,7 @@ type goColumn struct {
 }
 
 type goEmbed struct {
+	tableName string
 	modelType string
 	modelName string
 	fields    []core.Column
@@ -156,6 +157,7 @@ func newGoEmbed(embed *plugin.Identifier, structs []core.Table, defaultSchema st
 			fields[i] = f
 		}
 		return &goEmbed{
+			tableName: embed.Name,
 			modelType: s.Name,
 			modelName: s.Name,
 			fields:    fields,
@@ -263,6 +265,29 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 						embed:  newGoEmbed(c.EmbedTable, tables, gen.req.Catalog.DefaultSchema),
 					})
 				}
+				/*columns := make([]goColumn, 0)
+				embedFields := make(map[string]bool)
+				for _, c := range tempColums {
+					if c.embed == nil {
+						continue
+					}
+					for _, embed_c := range c.embed.fields {
+						embedFields[c.embed.tableName+"_"+embed_c.Name] = true
+					}
+				}
+				for _, colum := range tempColums {
+					if colum.Table == nil {
+						columns = append(columns, colum)
+						continue
+					}
+					if val, found := embedFields[colum.Table.Name+"_"+colum.Name]; found {
+						if val == true {
+							embedFields[colum.Table.Name+"_"+colum.Name] = false
+							continue
+						}
+					}
+					columns = append(columns, colum)
+				}*/
 				var err error
 				gs, err = gen.columnsToStruct(gq.MethodName+"Row", columns, true)
 				if err != nil {

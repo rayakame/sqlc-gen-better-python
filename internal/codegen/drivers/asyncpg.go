@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
-	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"strconv"
 	"strings"
@@ -51,9 +50,6 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					var inner []string
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
-						if embedCol.Name == "age" || embedCol.Name == "id" {
-							log.GlobalLogger.LogByte([]byte(embedCol.Type.SqlType))
-						}
 						if _, found := AsyncpgDoTypeConversion()[embedCol.Type.SqlType]; found {
 							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
 						} else {
