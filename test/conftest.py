@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import typing
+
 import asyncpg
-import pytest
+
+if typing.TYPE_CHECKING:
+    import pytest
 import pytest_asyncio
 
 
@@ -18,5 +22,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 async def asyncpg_conn(request: pytest.FixtureRequest) -> asyncpg.Connection[asyncpg.Record]:
     dsn = request.config.getoption("--db")
     if dsn is None or not isinstance(dsn, str):
-        raise ValueError("--db option is missing")
+        msg = "--db option is missing"
+        raise ValueError(msg)
     return await asyncpg.connect(dsn)

@@ -19,6 +19,7 @@ ignore = [
     "I001", # Import block is un-sorted or un-formatted
     "D", # Docstrings
     "S101", # Use of assert detected
+    "PLR0915", # Too many statements
 ]
 "noxfile.py" = [
     "D"
