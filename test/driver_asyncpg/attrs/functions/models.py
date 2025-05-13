@@ -4,16 +4,21 @@
 #   sqlc-gen-better-python v0.3.1
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
+__all__: collections.abc.Sequence[str] = (
     "TestInnerPostgresType",
     "TestPostgresType",
 )
 
-import attrs
-import datetime
-import decimal
 import typing
-import uuid
+
+import attrs
+
+if typing.TYPE_CHECKING:
+    import collections.abc
+    import datetime
+    import decimal
+    import uuid
+
 
 
 @attrs.define()
