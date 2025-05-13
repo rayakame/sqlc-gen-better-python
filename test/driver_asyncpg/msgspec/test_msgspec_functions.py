@@ -5,20 +5,20 @@ import datetime
 import decimal
 import random
 import uuid
+
 import typing
 
 if typing.TYPE_CHECKING:
     import asyncpg
 
 import pytest
-import pytest_asyncio
 
-from test.driver_asyncpg.dataclass.classes import models
-from test.driver_asyncpg.dataclass.classes import queries
+from test.driver_asyncpg.msgspec.functions import models
+from test.driver_asyncpg.msgspec.functions import queries
 
 
 @pytest.mark.asyncio(loop_scope="session")
-class TestDataclassClasses:
+class TestMsgspecFunctions:
     @pytest.fixture(scope="session")
     def model(self) -> models.TestPostgresType:
         return models.TestPostgresType(
@@ -101,14 +101,15 @@ class TestDataclassClasses:
             ltxtquery_test="Astro* & Stars",
         )
 
-    @pytest_asyncio.fixture(scope="session", loop_scope="session")
-    async def queries_obj(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> queries.Queries:
-        return queries.Queries(conn=asyncpg_conn)
-
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(name="TestDataclassClasses::create")
-    async def test_create(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        await queries_obj.create_one_test_postgres_type(
+    @pytest.mark.dependency(name="TestMsgspecFunctions::create")
+    async def test_create(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        await queries.create_one_test_postgres_type(
+            conn=asyncpg_conn,
             id_=model.id,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
@@ -148,9 +149,14 @@ class TestDataclassClasses:
         )
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(name="TestDataclassClasses::create_inner", depends=["TestDataclassClasses::create"])
-    async def test_create_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerPostgresType) -> None:
-        await queries_obj.create_one_test_postgres_inner_type(
+    @pytest.mark.dependency(name="TestMsgspecFunctions::create2", depends=["TestMsgspecFunctions::create"])
+    async def test_create_inner(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        inner_model: models.TestInnerPostgresType,
+    ) -> None:
+        await queries.create_one_test_postgres_inner_type(
+            conn=asyncpg_conn,
             table_id=inner_model.table_id,
             serial_test=inner_model.serial_test,
             serial4_test=inner_model.serial4_test,
@@ -190,9 +196,13 @@ class TestDataclassClasses:
         )
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::create_inner"], name="TestDataclassClasses::get_one")
-    async def test_get_one(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_one_test_postgres_type(id_=model.id)
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::create2"], name="TestMsgspecFunctions::get_one")
+    async def test_get_one(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.get_one_test_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, models.TestPostgresType)
@@ -235,9 +245,13 @@ class TestDataclassClasses:
         assert result.ltxtquery_test == model.ltxtquery_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::get_one"], name="TestDataclassClasses::get_one_inner")
-    async def test_get_one_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerPostgresType) -> None:
-        result = await queries_obj.get_one_inner_test_postgres_type(table_id=inner_model.table_id)
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_one"], name="TestMsgspecFunctions::get_one_inner")
+    async def test_get_one_inner(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        inner_model: models.TestInnerPostgresType,
+    ) -> None:
+        result = await queries.get_one_inner_test_postgres_type(conn=asyncpg_conn, table_id=inner_model.table_id)
 
         assert result is not None
         assert isinstance(result, models.TestInnerPostgresType)
@@ -281,11 +295,15 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_one_inner"],
-        name="TestDataclassClasses::get_one_timestamp",
+        depends=["TestMsgspecFunctions::get_one_inner"],
+        name="TestMsgspecFunctions::get_one_timestamp",
     )
-    async def test_get_one_timestamp(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_one_test_timestamp_postgres_type(id_=model.id)
+    async def test_get_one_timestamp(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.get_one_test_timestamp_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, datetime.datetime)
@@ -293,20 +311,28 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_one_timestamp"],
-        name="TestDataclassClasses::get_one_bytea",
+        depends=["TestMsgspecFunctions::get_one_timestamp"],
+        name="TestMsgspecFunctions::get_one_bytea",
     )
-    async def test_get_one_bytea(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_one_test_bytea_postgres_type(id_=model.id)
+    async def test_get_one_bytea(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.get_one_test_bytea_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, memoryview)
         assert result == model.bytea_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::get_one_bytea"], name="TestDataclassClasses::get_many")
-    async def test_get_many(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_many_test_postgres_type(id_=model.id)
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_one_bytea"], name="TestMsgspecFunctions::get_many")
+    async def test_get_many(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.get_many_test_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -351,9 +377,16 @@ class TestDataclassClasses:
         assert first_result.ltxtquery_test == model.ltxtquery_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::get_many"], name="TestDataclassClasses::get_many_timestamp")
-    async def test_get_many_timestamp(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_many_test_timestamp_postgres_type(id_=model.id)
+    @pytest.mark.dependency(
+        depends=["TestMsgspecFunctions::get_many"],
+        name="TestMsgspecFunctions::get_many_timestamp",
+    )
+    async def test_get_many_timestamp(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.get_many_test_timestamp_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -363,11 +396,15 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_many_timestamp"],
-        name="TestDataclassClasses::get_many_bytea",
+        depends=["TestMsgspecFunctions::get_many_timestamp"],
+        name="TestMsgspecFunctions::get_many_bytea",
     )
-    async def test_get_many_bytea(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_many_test_bytea_postgres_type(id_=model.id)
+    async def test_get_many_bytea(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.get_many_test_bytea_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -376,14 +413,17 @@ class TestDataclassClasses:
         assert result[0] == model.bytea_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::get_many_bytea"], name="TestDataclassClasses::get_embedded")
+    @pytest.mark.dependency(
+        depends=["TestMsgspecFunctions::get_many_bytea"],
+        name="TestMsgspecFunctions::get_embedded",
+    )
     async def test_get_embedded(
         self,
-        queries_obj: queries.Queries,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
         inner_model: models.TestInnerPostgresType,
     ) -> None:
-        result = await queries_obj.get_embedded_test_postgres_type(id_=model.id)
+        result = await queries.get_embedded_test_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, queries.GetEmbeddedTestPostgresTypeRow)
@@ -465,16 +505,16 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_embedded"],
-        name="TestDataclassClasses::get_all_embedded",
+        depends=["TestMsgspecFunctions::get_embedded"],
+        name="TestMsgspecFunctions::get_all_embedded",
     )
     async def test_get_all_embedded(
         self,
-        queries_obj: queries.Queries,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
         inner_model: models.TestInnerPostgresType,
     ) -> None:
-        result = await queries_obj.get_all_embedded_test_postgres_type(id_=model.id)
+        result = await queries.get_all_embedded_test_postgres_type(conn=asyncpg_conn, id_=model.id)
 
         assert result is not None
         assert isinstance(result, queries.GetAllEmbeddedTestPostgresTypeRow)
@@ -556,19 +596,19 @@ class TestDataclassClasses:
         assert result.test_inner_postgres_type.ltxtquery_test == inner_model.ltxtquery_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::get_embedded"], name="TestDataclassClasses::delete")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_embedded"], name="TestMsgspecFunctions::delete")
     async def test_delete(
         self,
-        queries_obj: queries.Queries,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        await queries_obj.delete_one_test_postgres_type(id_=model.id)
+        await queries.delete_one_test_postgres_type(conn=asyncpg_conn, id_=model.id)
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::delete"], name="TestDataclassClasses::delete_inner")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::delete"], name="TestMsgspecFunctions::delete_inner")
     async def test_delete_inner(
         self,
-        queries_obj: queries.Queries,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         inner_model: models.TestInnerPostgresType,
     ) -> None:
-        await queries_obj.delete_one_test_postgres_inner_type(table_id=inner_model.table_id)
+        await queries.delete_one_test_postgres_inner_type(conn=asyncpg_conn, table_id=inner_model.table_id)
