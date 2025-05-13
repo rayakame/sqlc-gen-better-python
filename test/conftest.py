@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import pathlib
 import typing
 
 import asyncpg
@@ -8,6 +9,8 @@ import asyncpg
 if typing.TYPE_CHECKING:
     import pytest
 import pytest_asyncio
+
+ASYNCPG_PATH = pathlib.Path(__file__).parent / "driver_asyncpg"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -30,7 +33,9 @@ def get_dsn(config: pytest.Config) -> str:
 @pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def asyncpg_conn(request: pytest.FixtureRequest) -> asyncpg.Connection[asyncpg.Record]:
     dsn = get_dsn(request.config)
-    return await asyncpg.connect(dsn)
+    conn = await asyncpg.connect(dsn)
+    await conn.execute((ASYNCPG_PATH / "schema.sql").read_text())
+    return conn
 
 
 async def asyncpg_delete_all(dsn: str) -> None:

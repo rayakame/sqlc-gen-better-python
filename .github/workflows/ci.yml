@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+
+  test:
+    name: "Run tests via nox"
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        ports:
+          - 5432/tcp              # host‑port is picked automatically
+        options: >-
+          --health-cmd="pg_isready -U postgres -d testdb"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12", "3.13" ]
+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.9"
+          activate-environment: true
+          python-version: ${{ matrix.python-version }}
+          prune-cache: true
+
+      - name: Run tests via nox
+        env:
+          # GitHub tells you which host‑port was assigned via the `job.services` context
+          POSTGRES_URI: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports['5432'] }}/testdb
+        run: |
+          uv run nox -s pytest
+
+  ruff:
+    runs-on: ubuntu-latest
+    name: "Run ruff via nox"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.9"
+          python-version: "3.13"
+
+      - name: Run ruff via nox
+        run: |
+          uv run nox -s ruff_check
+  pyright:
+    runs-on: ubuntu-latest
+    name: "Run pyright via nox"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.9"
+          python-version: "3.13"
+      - name: Run pyright via nox
+        run: |
+          uv run nox -s pyright
+  asyncpg:
+    runs-on: ubuntu-latest
+    name: "Run asyncpg check via nox"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.9"
+          python-version: "3.13"
+
+      - name: Install sqlc
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.28.0'
+
+      - name: Run sqlc verify via nox
+        run: |
+          uv run nox -s asyncpg_check
