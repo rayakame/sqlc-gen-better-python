@@ -7,7 +7,7 @@ import nox
 from nox import options
 
 PATH_TO_PROJECT = pathlib.Path(__name__).parent
-SCRIPT_PATHS = ["noxfile.py", PATH_TO_PROJECT / "scripts"]
+SCRIPT_PATHS = ["noxfile.py", PATH_TO_PROJECT / "scripts", PATH_TO_PROJECT / "test"]
 
 DRIVER_PATHS = {"asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg"}
 
@@ -15,6 +15,8 @@ SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
 options.sessions = ["pyright", "ruff"]
+
+DEFAULT_POSTGRES_URI = "postgresql://root:187187@localhost:5432/root"
 
 
 # uv_sync taken from: https://github.com/hikari-py/hikari/blob/master/pipelines/nox.py#L48
@@ -86,5 +88,12 @@ def pyright(session: nox.Session) -> None:
 def ruff(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["ruff"])
 
-    session.run("ruff", "format", *SCRIPT_PATHS)
+    session.run("ruff", "format")
     session.run("ruff", "check")
+
+
+@nox.session()
+def pytest(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pytest"])
+
+    session.run("pytest", "-rsx", f"--db={DEFAULT_POSTGRES_URI}")

@@ -3,6 +3,11 @@ SELECT *
 FROM test_postgres_types
          LIMIT 1;
 
+-- name: GetOneInnerTestPostgresType :one
+SELECT *
+FROM test_inner_postgres_types
+         LIMIT 1;
+
 -- name: GetOneTestTimestampPostgresType :one
 SELECT timestamp_test
 FROM test_postgres_types
@@ -28,11 +33,15 @@ SELECT bytea_test
 FROM test_postgres_types
          LIMIT 2;
 
--- name: GetEmbeddedTestPostgresType :many
-SELECT sqlc.embed(test_postgres_types), sqlc.embed(test_inner_postgres_types)
+-- name: GetEmbeddedTestPostgresType :one
+SELECT test_postgres_types.*, sqlc.embed(test_inner_postgres_types)
 FROM test_postgres_types
 JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id;
 
+-- name: GetAllEmbeddedTestPostgresType :one
+SELECT sqlc.embed(test_postgres_types), sqlc.embed(test_inner_postgres_types)
+FROM test_postgres_types
+         JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id;
 
 -- name: CreateOneTestPostgresType :exec
 INSERT INTO test_postgres_types (
@@ -125,3 +134,6 @@ INSERT INTO test_inner_postgres_types (
              $25, $26, $27, $28, $29, $30, $31, $32,
              $33, $34, $35, $36
          );
+
+-- name: DeleteOneTestPostgresType :exec
+DELETE FROM test_postgres_types WHERE test_postgres_types.id = $1;

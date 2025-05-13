@@ -5,36 +5,78 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "GetAllEmbeddedTestPostgresTypeRow",
     "GetEmbeddedTestPostgresTypeRow",
     "create_one_test_postgres_inner_type",
     "create_one_test_postgres_type",
+    "delete_one_test_postgres_type",
+    "get_all_embedded_test_postgres_type",
     "get_embedded_test_postgres_type",
     "get_many_test_bytea_postgres_type",
     "get_many_test_postgres_type",
     "get_many_test_timestamp_postgres_type",
+    "get_one_inner_test_postgres_type",
     "get_one_test_bytea_postgres_type",
     "get_one_test_postgres_type",
     "get_one_test_timestamp_postgres_type",
 )
 
-import typing
-
 import attrs
-
+import typing
 if typing.TYPE_CHECKING:
+    import asyncpg
     import collections.abc
     import datetime
     import decimal
     import uuid
 
-    import asyncpg
-
 from test.driver_asyncpg.attrs.functions import models
 
 
 @attrs.define()
-class GetEmbeddedTestPostgresTypeRow:
+class GetAllEmbeddedTestPostgresTypeRow:
     test_postgres_type: models.TestPostgresType = attrs.field()
+    test_inner_postgres_type: models.TestInnerPostgresType = attrs.field()
+
+
+@attrs.define()
+class GetEmbeddedTestPostgresTypeRow:
+    id: int = attrs.field()
+    serial_test: int = attrs.field()
+    serial4_test: int = attrs.field()
+    bigserial_test: int = attrs.field()
+    smallserial_test: int = attrs.field()
+    int_test: int = attrs.field()
+    bigint_test: int = attrs.field()
+    smallint_test: int = attrs.field()
+    float_test: float = attrs.field()
+    double_precision_test: float = attrs.field()
+    real_test: float = attrs.field()
+    numeric_test: decimal.Decimal = attrs.field()
+    money_test: str = attrs.field()
+    bool_test: bool = attrs.field()
+    json_test: str = attrs.field()
+    jsonb_test: str = attrs.field()
+    bytea_test: memoryview = attrs.field()
+    date_test: datetime.date = attrs.field()
+    time_test: datetime.time = attrs.field()
+    timetz_test: datetime.time = attrs.field()
+    timestamp_test: datetime.datetime = attrs.field()
+    timestamptz_test: datetime.datetime = attrs.field()
+    interval_test: datetime.timedelta = attrs.field()
+    text_test: str = attrs.field()
+    varchar_test: str = attrs.field()
+    bpchar_test: str = attrs.field()
+    char_test: str = attrs.field()
+    citext_test: str = attrs.field()
+    uuid_test: uuid.UUID = attrs.field()
+    inet_test: str = attrs.field()
+    cidr_test: str = attrs.field()
+    macaddr_test: str = attrs.field()
+    macaddr8_test: str = attrs.field()
+    ltree_test: str = attrs.field()
+    lquery_test: str = attrs.field()
+    ltxtquery_test: str = attrs.field()
     test_inner_postgres_type: models.TestInnerPostgresType = attrs.field()
 
 
@@ -132,7 +174,17 @@ INSERT INTO test_postgres_types (
          )
 """
 
-GET_EMBEDDED_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetEmbeddedTestPostgresType :many
+DELETE_ONE_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: DeleteOneTestPostgresType :exec
+DELETE FROM test_postgres_types WHERE test_postgres_types.id = $1
+"""
+
+GET_ALL_EMBEDDED_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetAllEmbeddedTestPostgresType :one
+SELECT test_postgres_types.id, test_postgres_types.serial_test, test_postgres_types.serial4_test, test_postgres_types.bigserial_test, test_postgres_types.smallserial_test, test_postgres_types.int_test, test_postgres_types.bigint_test, test_postgres_types.smallint_test, test_postgres_types.float_test, test_postgres_types.double_precision_test, test_postgres_types.real_test, test_postgres_types.numeric_test, test_postgres_types.money_test, test_postgres_types.bool_test, test_postgres_types.json_test, test_postgres_types.jsonb_test, test_postgres_types.bytea_test, test_postgres_types.date_test, test_postgres_types.time_test, test_postgres_types.timetz_test, test_postgres_types.timestamp_test, test_postgres_types.timestamptz_test, test_postgres_types.interval_test, test_postgres_types.text_test, test_postgres_types.varchar_test, test_postgres_types.bpchar_test, test_postgres_types.char_test, test_postgres_types.citext_test, test_postgres_types.uuid_test, test_postgres_types.inet_test, test_postgres_types.cidr_test, test_postgres_types.macaddr_test, test_postgres_types.macaddr8_test, test_postgres_types.ltree_test, test_postgres_types.lquery_test, test_postgres_types.ltxtquery_test, test_inner_postgres_types.table_id, test_inner_postgres_types.serial_test, test_inner_postgres_types.serial4_test, test_inner_postgres_types.bigserial_test, test_inner_postgres_types.smallserial_test, test_inner_postgres_types.int_test, test_inner_postgres_types.bigint_test, test_inner_postgres_types.smallint_test, test_inner_postgres_types.float_test, test_inner_postgres_types.double_precision_test, test_inner_postgres_types.real_test, test_inner_postgres_types.numeric_test, test_inner_postgres_types.money_test, test_inner_postgres_types.bool_test, test_inner_postgres_types.json_test, test_inner_postgres_types.jsonb_test, test_inner_postgres_types.bytea_test, test_inner_postgres_types.date_test, test_inner_postgres_types.time_test, test_inner_postgres_types.timetz_test, test_inner_postgres_types.timestamp_test, test_inner_postgres_types.timestamptz_test, test_inner_postgres_types.interval_test, test_inner_postgres_types.text_test, test_inner_postgres_types.varchar_test, test_inner_postgres_types.bpchar_test, test_inner_postgres_types.char_test, test_inner_postgres_types.citext_test, test_inner_postgres_types.uuid_test, test_inner_postgres_types.inet_test, test_inner_postgres_types.cidr_test, test_inner_postgres_types.macaddr_test, test_inner_postgres_types.macaddr8_test, test_inner_postgres_types.ltree_test, test_inner_postgres_types.lquery_test, test_inner_postgres_types.ltxtquery_test
+FROM test_postgres_types
+         JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
+"""
+
+GET_EMBEDDED_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetEmbeddedTestPostgresType :one
 SELECT test_postgres_types.id, test_postgres_types.serial_test, test_postgres_types.serial4_test, test_postgres_types.bigserial_test, test_postgres_types.smallserial_test, test_postgres_types.int_test, test_postgres_types.bigint_test, test_postgres_types.smallint_test, test_postgres_types.float_test, test_postgres_types.double_precision_test, test_postgres_types.real_test, test_postgres_types.numeric_test, test_postgres_types.money_test, test_postgres_types.bool_test, test_postgres_types.json_test, test_postgres_types.jsonb_test, test_postgres_types.bytea_test, test_postgres_types.date_test, test_postgres_types.time_test, test_postgres_types.timetz_test, test_postgres_types.timestamp_test, test_postgres_types.timestamptz_test, test_postgres_types.interval_test, test_postgres_types.text_test, test_postgres_types.varchar_test, test_postgres_types.bpchar_test, test_postgres_types.char_test, test_postgres_types.citext_test, test_postgres_types.uuid_test, test_postgres_types.inet_test, test_postgres_types.cidr_test, test_postgres_types.macaddr_test, test_postgres_types.macaddr8_test, test_postgres_types.ltree_test, test_postgres_types.lquery_test, test_postgres_types.ltxtquery_test, test_inner_postgres_types.table_id, test_inner_postgres_types.serial_test, test_inner_postgres_types.serial4_test, test_inner_postgres_types.bigserial_test, test_inner_postgres_types.smallserial_test, test_inner_postgres_types.int_test, test_inner_postgres_types.bigint_test, test_inner_postgres_types.smallint_test, test_inner_postgres_types.float_test, test_inner_postgres_types.double_precision_test, test_inner_postgres_types.real_test, test_inner_postgres_types.numeric_test, test_inner_postgres_types.money_test, test_inner_postgres_types.bool_test, test_inner_postgres_types.json_test, test_inner_postgres_types.jsonb_test, test_inner_postgres_types.bytea_test, test_inner_postgres_types.date_test, test_inner_postgres_types.time_test, test_inner_postgres_types.timetz_test, test_inner_postgres_types.timestamp_test, test_inner_postgres_types.timestamptz_test, test_inner_postgres_types.interval_test, test_inner_postgres_types.text_test, test_inner_postgres_types.varchar_test, test_inner_postgres_types.bpchar_test, test_inner_postgres_types.char_test, test_inner_postgres_types.citext_test, test_inner_postgres_types.uuid_test, test_inner_postgres_types.inet_test, test_inner_postgres_types.cidr_test, test_inner_postgres_types.macaddr_test, test_inner_postgres_types.macaddr8_test, test_inner_postgres_types.ltree_test, test_inner_postgres_types.lquery_test, test_inner_postgres_types.ltxtquery_test
 FROM test_postgres_types
 JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
@@ -154,6 +206,12 @@ GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE: typing.Final[str] = """-- name: GetManyTe
 SELECT timestamp_test
 FROM test_postgres_types
          LIMIT 2
+"""
+
+GET_ONE_INNER_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneInnerTestPostgresType :one
+SELECT table_id, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test
+FROM test_inner_postgres_types
+         LIMIT 1
 """
 
 GET_ONE_TEST_BYTEA_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneTestByteaPostgresType :one
@@ -183,12 +241,22 @@ async def create_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]
     await conn.execute(CREATE_ONE_TEST_POSTGRES_TYPE, id_, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
 
 
-async def get_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]) -> collections.abc.Sequence[GetEmbeddedTestPostgresTypeRow]:
-    rows = await conn.fetch(GET_EMBEDDED_TEST_POSTGRES_TYPE)
-    return [
-        GetEmbeddedTestPostgresTypeRow(test_postgres_type=models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]), test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]), date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]), cidr_test=str(row[66]), macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71]))
-        for row in rows
-    ]
+async def delete_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> None:
+    await conn.execute(DELETE_ONE_TEST_POSTGRES_TYPE, id_)
+
+
+async def get_all_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]) -> GetAllEmbeddedTestPostgresTypeRow | None:
+    row = await conn.fetchrow(GET_ALL_EMBEDDED_TEST_POSTGRES_TYPE)
+    if row is None:
+        return None
+    return GetAllEmbeddedTestPostgresTypeRow(test_postgres_type=models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]), test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]), date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]), cidr_test=str(row[66]), macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
+
+
+async def get_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]) -> GetEmbeddedTestPostgresTypeRow | None:
+    row = await conn.fetchrow(GET_EMBEDDED_TEST_POSTGRES_TYPE)
+    if row is None:
+        return None
+    return GetEmbeddedTestPostgresTypeRow(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35], test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]), date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]), cidr_test=str(row[66]), macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
 
 
 async def get_many_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Record]) -> collections.abc.Sequence[memoryview]:
@@ -202,7 +270,7 @@ async def get_many_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Rec
 async def get_many_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]) -> collections.abc.Sequence[models.TestPostgresType]:
     rows = await conn.fetch(GET_MANY_TEST_POSTGRES_TYPE)
     return [
-        models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=row[16], date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=row[29], cidr_test=row[30], macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35])
+        models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35])
         for row in rows
     ]
 
@@ -213,6 +281,13 @@ async def get_many_test_timestamp_postgres_type(conn: asyncpg.Connection[asyncpg
         row[0]
         for row in rows
     ]
+
+
+async def get_one_inner_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]) -> models.TestInnerPostgresType | None:
+    row = await conn.fetchrow(GET_ONE_INNER_TEST_POSTGRES_TYPE)
+    if row is None:
+        return None
+    return models.TestInnerPostgresType(table_id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]   )
 
 
 async def get_one_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Record]) -> memoryview | None:

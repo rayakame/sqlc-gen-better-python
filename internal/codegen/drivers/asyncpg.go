@@ -103,7 +103,11 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					}
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
-					body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					if _, found := typeConversion.AsyncpgDoTypeConversion()[col.Type.SqlType]; found {
+						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+					} else {
+						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					}
 					i++
 				}
 			}

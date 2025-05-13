@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: b06eb08a42913613e1a739636dbca8c33a31edc320a1cdbc06ede3b534a48d2d
+      sha256: 4bda81bd2e3bbc57c29d2a426ad1cc9422f797f54eeff90792dde941da90b704
 sql:
   - schema: schema.sql
     queries: queries.sql
