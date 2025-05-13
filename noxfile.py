@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import pathlib
 import typing as t
 
@@ -14,9 +15,9 @@ DRIVER_PATHS = {"asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg"}
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["pyright", "ruff"]
+options.sessions = ["pyright", "ruff", "pytest"]
 
-DEFAULT_POSTGRES_URI = "postgresql://root:187187@localhost:5432/root"
+DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
 
 
 # uv_sync taken from: https://github.com/hikari-py/hikari/blob/master/pipelines/nox.py#L48
@@ -69,7 +70,7 @@ def sqlc_generate(session: nox.Session, driver: str) -> None:
             session.run("sqlc", "generate", "-f", config, external=True)
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def asyncpg(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright"])
 
@@ -77,14 +78,14 @@ def asyncpg(session: nox.Session) -> None:
     session.run("pyright", DRIVER_PATHS["asyncpg"])
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def pyright(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright"])
 
     session.run("pyright", *SCRIPT_PATHS)
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def ruff(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["ruff"])
 
@@ -92,8 +93,8 @@ def ruff(session: nox.Session) -> None:
     session.run("ruff", "check", *session.posargs)
 
 
-@nox.session()
+@nox.session(reuse_venv=True)
 def pytest(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pytest"])
 
-    session.run("pytest", "-rsx", f"--db={DEFAULT_POSTGRES_URI}")
+    session.run("pytest", "--show-capture", "all", f"--db={DEFAULT_POSTGRES_URI}")
