@@ -78,7 +78,7 @@ def sqlc_check(session: nox.Session, driver: str) -> None:
 
 @nox.session(reuse_venv=True)
 def asyncpg(session: nox.Session) -> None:
-    uv_sync(session, include_self=True, groups=["pyright"])
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
     sqlc_generate(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
@@ -87,7 +87,7 @@ def asyncpg(session: nox.Session) -> None:
 
 @nox.session(reuse_venv=True)
 def asyncpg_check(session: nox.Session) -> None:
-    uv_sync(session, include_self=True, groups=["pyright"])
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
     sqlc_check(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
