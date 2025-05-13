@@ -1,0 +1,6 @@
+kind: Added
+body: Added strict output tests & ci to prevent bugs from happening
+time: 2025-05-14T00:48:32.620618+02:00
+custom:
+    Author: rayakame
+    PR: "63"
