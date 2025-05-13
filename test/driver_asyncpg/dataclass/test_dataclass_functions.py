@@ -99,7 +99,7 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestDataclassFunctions::create")
     async def test_create(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
     ) -> None:
         await queries.create_one_test_postgres_type(
             conn=asyncpg_conn,
@@ -144,7 +144,7 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestDataclassFunctions::create2", depends=["TestDataclassFunctions::create"])
     async def test_create_inner(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], inner_model: models.TestInnerPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], inner_model: models.TestInnerPostgresType,
     ) -> None:
         await queries.create_one_test_postgres_inner_type(
             conn=asyncpg_conn,
@@ -189,7 +189,7 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::create2"], name="TestDataclassFunctions::get_one")
     async def test_get_one(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
     ) -> None:
         result = await queries.get_one_test_postgres_type(conn=asyncpg_conn)
 
@@ -236,7 +236,7 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::get_one"], name="TestDataclassFunctions::get_one_inner")
     async def test_get_one_inner(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], inner_model: models.TestInnerPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], inner_model: models.TestInnerPostgresType,
     ) -> None:
         result = await queries.get_one_inner_test_postgres_type(conn=asyncpg_conn)
 
@@ -282,10 +282,10 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassFunctions::get_one_inner"], name="TestDataclassFunctions::get_one_timestamp"
+        depends=["TestDataclassFunctions::get_one_inner"], name="TestDataclassFunctions::get_one_timestamp",
     )
     async def test_get_one_timestamp(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
     ) -> None:
         result = await queries.get_one_test_timestamp_postgres_type(conn=asyncpg_conn)
 
@@ -295,10 +295,10 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassFunctions::get_one_timestamp"], name="TestDataclassFunctions::get_one_bytea"
+        depends=["TestDataclassFunctions::get_one_timestamp"], name="TestDataclassFunctions::get_one_bytea",
     )
     async def test_get_one_bytea(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
     ) -> None:
         result = await queries.get_one_test_bytea_postgres_type(conn=asyncpg_conn)
 
@@ -309,7 +309,7 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::get_one_bytea"], name="TestDataclassFunctions::get_many")
     async def test_get_many(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
     ) -> None:
         result = await queries.get_many_test_postgres_type(conn=asyncpg_conn)
 
@@ -357,10 +357,10 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassFunctions::get_many"], name="TestDataclassFunctions::get_many_timestamp"
+        depends=["TestDataclassFunctions::get_many"], name="TestDataclassFunctions::get_many_timestamp",
     )
     async def test_get_many_timestamp(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
     ) -> None:
         result = await queries.get_many_test_timestamp_postgres_type(conn=asyncpg_conn)
 
@@ -372,10 +372,10 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassFunctions::get_many_timestamp"], name="TestDataclassFunctions::get_many_bytea"
+        depends=["TestDataclassFunctions::get_many_timestamp"], name="TestDataclassFunctions::get_many_bytea",
     )
     async def test_get_many_bytea(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
     ) -> None:
         result = await queries.get_many_test_bytea_postgres_type(conn=asyncpg_conn)
 
@@ -387,7 +387,7 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassFunctions::get_many_bytea"], name="TestDataclassFunctions::get_embedded"
+        depends=["TestDataclassFunctions::get_many_bytea"], name="TestDataclassFunctions::get_embedded",
     )
     async def test_get_embedded(
         self,
@@ -411,7 +411,7 @@ class TestDataclassFunctions:
         assert result.smallint_test == model.smallint_test
         assert result.float_test == model.float_test
         assert result.double_precision_test == model.double_precision_test
-        assert result.real_test, 4 == model.real_test
+        assert result.real_test == model.real_test
         assert result.numeric_test == model.numeric_test
         assert result.money_test == model.money_test
         assert result.bool_test == model.bool_test
@@ -477,7 +477,7 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassFunctions::get_embedded"], name="TestDataclassFunctions::get_all_embedded"
+        depends=["TestDataclassFunctions::get_embedded"], name="TestDataclassFunctions::get_all_embedded",
     )
     async def test_get_all_embedded(
         self,
@@ -502,7 +502,7 @@ class TestDataclassFunctions:
         assert result.test_postgres_type.smallint_test == model.smallint_test
         assert result.test_postgres_type.float_test == model.float_test
         assert result.test_postgres_type.double_precision_test == model.double_precision_test
-        assert result.test_postgres_type.real_test, 4 == model.real_test
+        assert result.test_postgres_type.real_test == model.real_test
         assert result.test_postgres_type.numeric_test == model.numeric_test
         assert result.test_postgres_type.money_test == model.money_test
         assert result.test_postgres_type.bool_test == model.bool_test
@@ -569,6 +569,8 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::get_embedded"])
     async def test_delete(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], model: models.TestPostgresType,
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
     ) -> None:
         await queries.delete_one_test_postgres_type(conn=asyncpg_conn, id_=model.id)

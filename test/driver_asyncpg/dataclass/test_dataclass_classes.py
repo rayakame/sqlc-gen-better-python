@@ -277,7 +277,7 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_one_inner"], name="TestDataclassClasses::get_one_timestamp"
+        depends=["TestDataclassClasses::get_one_inner"], name="TestDataclassClasses::get_one_timestamp",
     )
     async def test_get_one_timestamp(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
         result = await queries_obj.get_one_test_timestamp_postgres_type()
@@ -288,7 +288,7 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_one_timestamp"], name="TestDataclassClasses::get_one_bytea"
+        depends=["TestDataclassClasses::get_one_timestamp"], name="TestDataclassClasses::get_one_bytea",
     )
     async def test_get_one_bytea(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
         result = await queries_obj.get_one_test_bytea_postgres_type()
@@ -357,7 +357,7 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_many_timestamp"], name="TestDataclassClasses::get_many_bytea"
+        depends=["TestDataclassClasses::get_many_timestamp"], name="TestDataclassClasses::get_many_bytea",
     )
     async def test_get_many_bytea(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
         result = await queries_obj.get_many_test_bytea_postgres_type()
@@ -371,7 +371,7 @@ class TestDataclassClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassClasses::get_many_bytea"], name="TestDataclassClasses::get_embedded")
     async def test_get_embedded(
-        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType
+        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType,
     ) -> None:
         result = await queries_obj.get_embedded_test_postgres_type()
 
@@ -389,7 +389,7 @@ class TestDataclassClasses:
         assert result.smallint_test == model.smallint_test
         assert result.float_test == model.float_test
         assert result.double_precision_test == model.double_precision_test
-        assert result.real_test, 4 == model.real_test
+        assert result.real_test == model.real_test
         assert result.numeric_test == model.numeric_test
         assert result.money_test == model.money_test
         assert result.bool_test == model.bool_test
@@ -455,10 +455,10 @@ class TestDataclassClasses:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestDataclassClasses::get_embedded"], name="TestDataclassClasses::get_all_embedded"
+        depends=["TestDataclassClasses::get_embedded"], name="TestDataclassClasses::get_all_embedded",
     )
     async def test_get_all_embedded(
-        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType
+        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType,
     ) -> None:
         result = await queries_obj.get_all_embedded_test_postgres_type()
 
@@ -477,7 +477,7 @@ class TestDataclassClasses:
         assert result.test_postgres_type.smallint_test == model.smallint_test
         assert result.test_postgres_type.float_test == model.float_test
         assert result.test_postgres_type.double_precision_test == model.double_precision_test
-        assert result.test_postgres_type.real_test, 4 == model.real_test
+        assert result.test_postgres_type.real_test == model.real_test
         assert result.test_postgres_type.numeric_test == model.numeric_test
         assert result.test_postgres_type.money_test == model.money_test
         assert result.test_postgres_type.bool_test == model.bool_test

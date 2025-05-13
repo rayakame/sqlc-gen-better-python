@@ -89,7 +89,7 @@ def ruff(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["ruff"])
 
     session.run("ruff", "format")
-    session.run("ruff", "check")
+    session.run("ruff", "check", *session.posargs)
 
 
 @nox.session()

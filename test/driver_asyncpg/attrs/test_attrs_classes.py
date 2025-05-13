@@ -365,7 +365,7 @@ class TestAttrsClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsClasses::get_many_bytea"], name="TestAttrsClasses::get_embedded")
     async def test_get_embedded(
-        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType
+        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType,
     ) -> None:
         result = await queries_obj.get_embedded_test_postgres_type()
 
@@ -383,7 +383,7 @@ class TestAttrsClasses:
         assert result.smallint_test == model.smallint_test
         assert result.float_test == model.float_test
         assert result.double_precision_test == model.double_precision_test
-        assert result.real_test, 4 == model.real_test
+        assert result.real_test == model.real_test
         assert result.numeric_test == model.numeric_test
         assert result.money_test == model.money_test
         assert result.bool_test == model.bool_test
@@ -450,7 +450,7 @@ class TestAttrsClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsClasses::get_embedded"], name="TestAttrsClasses::get_all_embedded")
     async def test_get_all_embedded(
-        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType
+        self, queries_obj: queries.Queries, model: models.TestPostgresType, inner_model: models.TestInnerPostgresType,
     ) -> None:
         result = await queries_obj.get_all_embedded_test_postgres_type()
 
@@ -469,7 +469,7 @@ class TestAttrsClasses:
         assert result.test_postgres_type.smallint_test == model.smallint_test
         assert result.test_postgres_type.float_test == model.float_test
         assert result.test_postgres_type.double_precision_test == model.double_precision_test
-        assert result.test_postgres_type.real_test, 4 == model.real_test
+        assert result.test_postgres_type.real_test == model.real_test
         assert result.test_postgres_type.numeric_test == model.numeric_test
         assert result.test_postgres_type.money_test == model.money_test
         assert result.test_postgres_type.bool_test == model.bool_test
