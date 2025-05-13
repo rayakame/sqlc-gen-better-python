@@ -37,13 +37,7 @@ func BuildPyTabel(modelType string, table *core.Table, body *builders.IndentStri
 		if col.Type.IsNullable {
 			type_ = "typing.Optional[" + type_ + "]"
 		}
-		body.WriteIndentedString(1, col.Name+": "+type_)
-		if modelType == core.ModelTypeAttrs {
-			body.WriteString(" = attrs.field()")
-		} else if modelType == core.ModelTypeMsgspec {
-			body.WriteString(" = msgspec.field()")
-		}
-		body.WriteString("\n")
+		body.WriteIndentedLine(1, col.Name+": "+type_)
 	}
 }
 

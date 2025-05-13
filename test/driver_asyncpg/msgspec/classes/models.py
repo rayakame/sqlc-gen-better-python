@@ -20,78 +20,78 @@ if typing.TYPE_CHECKING:
 
 
 class TestInnerPostgresType(msgspec.Struct):
-    table_id: int = msgspec.field()
-    serial_test: int = msgspec.field()
-    serial4_test: int = msgspec.field()
-    bigserial_test: int = msgspec.field()
-    smallserial_test: int = msgspec.field()
-    int_test: int = msgspec.field()
-    bigint_test: int = msgspec.field()
-    smallint_test: int = msgspec.field()
-    float_test: float = msgspec.field()
-    double_precision_test: float = msgspec.field()
-    real_test: float = msgspec.field()
-    numeric_test: decimal.Decimal = msgspec.field()
-    money_test: str = msgspec.field()
-    bool_test: bool = msgspec.field()
-    json_test: str = msgspec.field()
-    jsonb_test: str = msgspec.field()
-    bytea_test: memoryview = msgspec.field()
-    date_test: datetime.date = msgspec.field()
-    time_test: datetime.time = msgspec.field()
-    timetz_test: datetime.time = msgspec.field()
-    timestamp_test: datetime.datetime = msgspec.field()
-    timestamptz_test: datetime.datetime = msgspec.field()
-    interval_test: datetime.timedelta = msgspec.field()
-    text_test: str = msgspec.field()
-    varchar_test: str = msgspec.field()
-    bpchar_test: str = msgspec.field()
-    char_test: str = msgspec.field()
-    citext_test: str = msgspec.field()
-    uuid_test: uuid.UUID = msgspec.field()
-    inet_test: str = msgspec.field()
-    cidr_test: str = msgspec.field()
-    macaddr_test: str = msgspec.field()
-    macaddr8_test: str = msgspec.field()
-    ltree_test: str = msgspec.field()
-    lquery_test: str = msgspec.field()
-    ltxtquery_test: str = msgspec.field()
+    table_id: int
+    serial_test: int
+    serial4_test: int
+    bigserial_test: int
+    smallserial_test: int
+    int_test: int
+    bigint_test: int
+    smallint_test: int
+    float_test: float
+    double_precision_test: float
+    real_test: float
+    numeric_test: decimal.Decimal
+    money_test: str
+    bool_test: bool
+    json_test: str
+    jsonb_test: str
+    bytea_test: memoryview
+    date_test: datetime.date
+    time_test: datetime.time
+    timetz_test: datetime.time
+    timestamp_test: datetime.datetime
+    timestamptz_test: datetime.datetime
+    interval_test: datetime.timedelta
+    text_test: str
+    varchar_test: str
+    bpchar_test: str
+    char_test: str
+    citext_test: str
+    uuid_test: uuid.UUID
+    inet_test: str
+    cidr_test: str
+    macaddr_test: str
+    macaddr8_test: str
+    ltree_test: str
+    lquery_test: str
+    ltxtquery_test: str
 
 
 class TestPostgresType(msgspec.Struct):
-    id: int = msgspec.field()
-    serial_test: int = msgspec.field()
-    serial4_test: int = msgspec.field()
-    bigserial_test: int = msgspec.field()
-    smallserial_test: int = msgspec.field()
-    int_test: int = msgspec.field()
-    bigint_test: int = msgspec.field()
-    smallint_test: int = msgspec.field()
-    float_test: float = msgspec.field()
-    double_precision_test: float = msgspec.field()
-    real_test: float = msgspec.field()
-    numeric_test: decimal.Decimal = msgspec.field()
-    money_test: str = msgspec.field()
-    bool_test: bool = msgspec.field()
-    json_test: str = msgspec.field()
-    jsonb_test: str = msgspec.field()
-    bytea_test: memoryview = msgspec.field()
-    date_test: datetime.date = msgspec.field()
-    time_test: datetime.time = msgspec.field()
-    timetz_test: datetime.time = msgspec.field()
-    timestamp_test: datetime.datetime = msgspec.field()
-    timestamptz_test: datetime.datetime = msgspec.field()
-    interval_test: datetime.timedelta = msgspec.field()
-    text_test: str = msgspec.field()
-    varchar_test: str = msgspec.field()
-    bpchar_test: str = msgspec.field()
-    char_test: str = msgspec.field()
-    citext_test: str = msgspec.field()
-    uuid_test: uuid.UUID = msgspec.field()
-    inet_test: str = msgspec.field()
-    cidr_test: str = msgspec.field()
-    macaddr_test: str = msgspec.field()
-    macaddr8_test: str = msgspec.field()
-    ltree_test: str = msgspec.field()
-    lquery_test: str = msgspec.field()
-    ltxtquery_test: str = msgspec.field()
+    id: int
+    serial_test: int
+    serial4_test: int
+    bigserial_test: int
+    smallserial_test: int
+    int_test: int
+    bigint_test: int
+    smallint_test: int
+    float_test: float
+    double_precision_test: float
+    real_test: float
+    numeric_test: decimal.Decimal
+    money_test: str
+    bool_test: bool
+    json_test: str
+    jsonb_test: str
+    bytea_test: memoryview
+    date_test: datetime.date
+    time_test: datetime.time
+    timetz_test: datetime.time
+    timestamp_test: datetime.datetime
+    timestamptz_test: datetime.datetime
+    interval_test: datetime.timedelta
+    text_test: str
+    varchar_test: str
+    bpchar_test: str
+    char_test: str
+    citext_test: str
+    uuid_test: uuid.UUID
+    inet_test: str
+    cidr_test: str
+    macaddr_test: str
+    macaddr8_test: str
+    ltree_test: str
+    lquery_test: str
+    ltxtquery_test: str

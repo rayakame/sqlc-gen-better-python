@@ -24,49 +24,49 @@ from test.driver_asyncpg.attrs.classes import models
 
 @attrs.define()
 class GetAllEmbeddedTestPostgresTypeRow:
-    test_postgres_type: models.TestPostgresType = attrs.field()
-    test_inner_postgres_type: models.TestInnerPostgresType = attrs.field()
+    test_postgres_type: models.TestPostgresType
+    test_inner_postgres_type: models.TestInnerPostgresType
 
 
 @attrs.define()
 class GetEmbeddedTestPostgresTypeRow:
-    id: int = attrs.field()
-    serial_test: int = attrs.field()
-    serial4_test: int = attrs.field()
-    bigserial_test: int = attrs.field()
-    smallserial_test: int = attrs.field()
-    int_test: int = attrs.field()
-    bigint_test: int = attrs.field()
-    smallint_test: int = attrs.field()
-    float_test: float = attrs.field()
-    double_precision_test: float = attrs.field()
-    real_test: float = attrs.field()
-    numeric_test: decimal.Decimal = attrs.field()
-    money_test: str = attrs.field()
-    bool_test: bool = attrs.field()
-    json_test: str = attrs.field()
-    jsonb_test: str = attrs.field()
-    bytea_test: memoryview = attrs.field()
-    date_test: datetime.date = attrs.field()
-    time_test: datetime.time = attrs.field()
-    timetz_test: datetime.time = attrs.field()
-    timestamp_test: datetime.datetime = attrs.field()
-    timestamptz_test: datetime.datetime = attrs.field()
-    interval_test: datetime.timedelta = attrs.field()
-    text_test: str = attrs.field()
-    varchar_test: str = attrs.field()
-    bpchar_test: str = attrs.field()
-    char_test: str = attrs.field()
-    citext_test: str = attrs.field()
-    uuid_test: uuid.UUID = attrs.field()
-    inet_test: str = attrs.field()
-    cidr_test: str = attrs.field()
-    macaddr_test: str = attrs.field()
-    macaddr8_test: str = attrs.field()
-    ltree_test: str = attrs.field()
-    lquery_test: str = attrs.field()
-    ltxtquery_test: str = attrs.field()
-    test_inner_postgres_type: models.TestInnerPostgresType = attrs.field()
+    id: int
+    serial_test: int
+    serial4_test: int
+    bigserial_test: int
+    smallserial_test: int
+    int_test: int
+    bigint_test: int
+    smallint_test: int
+    float_test: float
+    double_precision_test: float
+    real_test: float
+    numeric_test: decimal.Decimal
+    money_test: str
+    bool_test: bool
+    json_test: str
+    jsonb_test: str
+    bytea_test: memoryview
+    date_test: datetime.date
+    time_test: datetime.time
+    timetz_test: datetime.time
+    timestamp_test: datetime.datetime
+    timestamptz_test: datetime.datetime
+    interval_test: datetime.timedelta
+    text_test: str
+    varchar_test: str
+    bpchar_test: str
+    char_test: str
+    citext_test: str
+    uuid_test: uuid.UUID
+    inet_test: str
+    cidr_test: str
+    macaddr_test: str
+    macaddr8_test: str
+    ltree_test: str
+    lquery_test: str
+    ltxtquery_test: str
+    test_inner_postgres_type: models.TestInnerPostgresType
 
 
 CREATE_ONE_TEST_POSTGRES_INNER_TYPE: typing.Final[str] = """-- name: CreateOneTestPostgresInnerType :exec
