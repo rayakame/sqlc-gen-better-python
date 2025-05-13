@@ -1,4 +1,4 @@
-CREATE TABLE test_postgres_types
+CREATE TABLE IF NOT EXISTS test_postgres_types
 (
     /* ───────────── Integer family ───────────── */
     id                    int PRIMARY KEY  NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE test_postgres_types
     ltxtquery_test        ltxtquery        NOT NULL
 );
 
-CREATE TABLE test_inner_postgres_types
+CREATE TABLE IF NOT EXISTS test_inner_postgres_types
 (
     /* ───────────── Integer family ───────────── */
     table_id              int              NOT NULL,

@@ -70,105 +70,103 @@ class GetEmbeddedTestPostgresTypeRow:
 
 
 CREATE_ONE_TEST_POSTGRES_INNER_TYPE: typing.Final[str] = """-- name: CreateOneTestPostgresInnerType :exec
-INSERT INTO test_inner_postgres_types (
-    table_id,
-    serial_test,
-    serial4_test,
-    bigserial_test,
-    smallserial_test,
-    int_test,
-    bigint_test,
-    smallint_test,
-    float_test,
-    double_precision_test,
-    real_test,
-    numeric_test,
-    money_test,
-    bool_test,
-    json_test,
-    jsonb_test,
-    bytea_test,
-    date_test,
-    time_test,
-    timetz_test,
-    timestamp_test,
-    timestamptz_test,
-    interval_test,
-    text_test,
-    varchar_test,
-    bpchar_test,
-    char_test,
-    citext_test,
-    uuid_test,
-    inet_test,
-    cidr_test,
-    macaddr_test,
-    macaddr8_test,
-    ltree_test,
-    lquery_test,
-    ltxtquery_test
-) VALUES (
-             $1,  $2,  $3,  $4,  $5,  $6,  $7,  $8,
-             $9, $10, $11, $12, $13, $14, $15, $16,
-             $17, $18, $19, $20, $21, $22, $23, $24,
-             $25, $26, $27, $28, $29, $30, $31, $32,
-             $33, $34, $35, $36
-         )
+INSERT INTO test_inner_postgres_types (table_id,
+                                       serial_test,
+                                       serial4_test,
+                                       bigserial_test,
+                                       smallserial_test,
+                                       int_test,
+                                       bigint_test,
+                                       smallint_test,
+                                       float_test,
+                                       double_precision_test,
+                                       real_test,
+                                       numeric_test,
+                                       money_test,
+                                       bool_test,
+                                       json_test,
+                                       jsonb_test,
+                                       bytea_test,
+                                       date_test,
+                                       time_test,
+                                       timetz_test,
+                                       timestamp_test,
+                                       timestamptz_test,
+                                       interval_test,
+                                       text_test,
+                                       varchar_test,
+                                       bpchar_test,
+                                       char_test,
+                                       citext_test,
+                                       uuid_test,
+                                       inet_test,
+                                       cidr_test,
+                                       macaddr_test,
+                                       macaddr8_test,
+                                       ltree_test,
+                                       lquery_test,
+                                       ltxtquery_test)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14, $15, $16,
+        $17, $18, $19, $20, $21, $22, $23, $24,
+        $25, $26, $27, $28, $29, $30, $31, $32,
+        $33, $34, $35, $36)
 """
 
 CREATE_ONE_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: CreateOneTestPostgresType :exec
-INSERT INTO test_postgres_types (
-    id,
-    serial_test,
-    serial4_test,
-    bigserial_test,
-    smallserial_test,
-    int_test,
-    bigint_test,
-    smallint_test,
-    float_test,
-    double_precision_test,
-    real_test,
-    numeric_test,
-    money_test,
-    bool_test,
-    json_test,
-    jsonb_test,
-    bytea_test,
-    date_test,
-    time_test,
-    timetz_test,
-    timestamp_test,
-    timestamptz_test,
-    interval_test,
-    text_test,
-    varchar_test,
-    bpchar_test,
-    char_test,
-    citext_test,
-    uuid_test,
-    inet_test,
-    cidr_test,
-    macaddr_test,
-    macaddr8_test,
-    ltree_test,
-    lquery_test,
-    ltxtquery_test
-) VALUES (
-             $1,  $2,  $3,  $4,  $5,  $6,  $7,  $8,
-             $9, $10, $11, $12, $13, $14, $15, $16,
-             $17, $18, $19, $20, $21, $22, $23, $24,
-             $25, $26, $27, $28, $29, $30, $31, $32,
-             $33, $34, $35, $36
-         )
+INSERT INTO test_postgres_types (id,
+                                 serial_test,
+                                 serial4_test,
+                                 bigserial_test,
+                                 smallserial_test,
+                                 int_test,
+                                 bigint_test,
+                                 smallint_test,
+                                 float_test,
+                                 double_precision_test,
+                                 real_test,
+                                 numeric_test,
+                                 money_test,
+                                 bool_test,
+                                 json_test,
+                                 jsonb_test,
+                                 bytea_test,
+                                 date_test,
+                                 time_test,
+                                 timetz_test,
+                                 timestamp_test,
+                                 timestamptz_test,
+                                 interval_test,
+                                 text_test,
+                                 varchar_test,
+                                 bpchar_test,
+                                 char_test,
+                                 citext_test,
+                                 uuid_test,
+                                 inet_test,
+                                 cidr_test,
+                                 macaddr_test,
+                                 macaddr8_test,
+                                 ltree_test,
+                                 lquery_test,
+                                 ltxtquery_test)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14, $15, $16,
+        $17, $18, $19, $20, $21, $22, $23, $24,
+        $25, $26, $27, $28, $29, $30, $31, $32,
+        $33, $34, $35, $36)
 """
 
 DELETE_ONE_TEST_POSTGRES_INNER_TYPE: typing.Final[str] = """-- name: DeleteOneTestPostgresInnerType :exec
-DELETE FROM test_inner_postgres_types WHERE test_inner_postgres_types.table_id = $1
+DELETE
+FROM test_inner_postgres_types
+WHERE test_inner_postgres_types.table_id = $1
 """
 
 DELETE_ONE_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: DeleteOneTestPostgresType :exec
-DELETE FROM test_postgres_types WHERE test_postgres_types.id = $1
+DELETE
+FROM test_postgres_types
+WHERE test_postgres_types.id = $1
 """
 
 GET_ALL_EMBEDDED_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetAllEmbeddedTestPostgresType :one
@@ -181,57 +179,50 @@ WHERE test_postgres_types.id = $1
 GET_EMBEDDED_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetEmbeddedTestPostgresType :one
 SELECT test_postgres_types.id, test_postgres_types.serial_test, test_postgres_types.serial4_test, test_postgres_types.bigserial_test, test_postgres_types.smallserial_test, test_postgres_types.int_test, test_postgres_types.bigint_test, test_postgres_types.smallint_test, test_postgres_types.float_test, test_postgres_types.double_precision_test, test_postgres_types.real_test, test_postgres_types.numeric_test, test_postgres_types.money_test, test_postgres_types.bool_test, test_postgres_types.json_test, test_postgres_types.jsonb_test, test_postgres_types.bytea_test, test_postgres_types.date_test, test_postgres_types.time_test, test_postgres_types.timetz_test, test_postgres_types.timestamp_test, test_postgres_types.timestamptz_test, test_postgres_types.interval_test, test_postgres_types.text_test, test_postgres_types.varchar_test, test_postgres_types.bpchar_test, test_postgres_types.char_test, test_postgres_types.citext_test, test_postgres_types.uuid_test, test_postgres_types.inet_test, test_postgres_types.cidr_test, test_postgres_types.macaddr_test, test_postgres_types.macaddr8_test, test_postgres_types.ltree_test, test_postgres_types.lquery_test, test_postgres_types.ltxtquery_test, test_inner_postgres_types.table_id, test_inner_postgres_types.serial_test, test_inner_postgres_types.serial4_test, test_inner_postgres_types.bigserial_test, test_inner_postgres_types.smallserial_test, test_inner_postgres_types.int_test, test_inner_postgres_types.bigint_test, test_inner_postgres_types.smallint_test, test_inner_postgres_types.float_test, test_inner_postgres_types.double_precision_test, test_inner_postgres_types.real_test, test_inner_postgres_types.numeric_test, test_inner_postgres_types.money_test, test_inner_postgres_types.bool_test, test_inner_postgres_types.json_test, test_inner_postgres_types.jsonb_test, test_inner_postgres_types.bytea_test, test_inner_postgres_types.date_test, test_inner_postgres_types.time_test, test_inner_postgres_types.timetz_test, test_inner_postgres_types.timestamp_test, test_inner_postgres_types.timestamptz_test, test_inner_postgres_types.interval_test, test_inner_postgres_types.text_test, test_inner_postgres_types.varchar_test, test_inner_postgres_types.bpchar_test, test_inner_postgres_types.char_test, test_inner_postgres_types.citext_test, test_inner_postgres_types.uuid_test, test_inner_postgres_types.inet_test, test_inner_postgres_types.cidr_test, test_inner_postgres_types.macaddr_test, test_inner_postgres_types.macaddr8_test, test_inner_postgres_types.ltree_test, test_inner_postgres_types.lquery_test, test_inner_postgres_types.ltxtquery_test
 FROM test_postgres_types
-JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
+         JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
 WHERE test_postgres_types.id = $1
 """
 
 GET_MANY_TEST_BYTEA_POSTGRES_TYPE: typing.Final[str] = """-- name: GetManyTestByteaPostgresType :many
 SELECT bytea_test
 FROM test_postgres_types
-WHERE id = $1
-         LIMIT 2
+WHERE id = $1 LIMIT 2
 """
 
 GET_MANY_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetManyTestPostgresType :many
 SELECT id, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test
 FROM test_postgres_types
-WHERE id = $1
-         LIMIT 2
+WHERE id = $1 LIMIT 2
 """
 
 GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE: typing.Final[str] = """-- name: GetManyTestTimestampPostgresType :many
 SELECT timestamp_test
 FROM test_postgres_types
-WHERE id = $1
-         LIMIT 2
+WHERE id = $1 LIMIT 2
 """
 
 GET_ONE_INNER_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneInnerTestPostgresType :one
 SELECT table_id, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test
 FROM test_inner_postgres_types
-WHERE table_id = $1
-         LIMIT 1
+WHERE table_id = $1 LIMIT 1
 """
 
 GET_ONE_TEST_BYTEA_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneTestByteaPostgresType :one
 SELECT bytea_test
 FROM test_postgres_types
-WHERE id = $1
-         LIMIT 1
+WHERE id = $1 LIMIT 1
 """
 
 GET_ONE_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneTestPostgresType :one
 SELECT id, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test
 FROM test_postgres_types
-    WHERE id = $1
-         LIMIT 1
+WHERE id = $1 LIMIT 1
 """
 
 GET_ONE_TEST_TIMESTAMP_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneTestTimestampPostgresType :one
 SELECT timestamp_test
 FROM test_postgres_types
-WHERE id = $1
-         LIMIT 1
+WHERE id = $1 LIMIT 1
 """
 
 
