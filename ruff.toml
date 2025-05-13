@@ -20,6 +20,7 @@ ignore = [
     "D", # Docstrings
     "S101", # Use of assert detected
     "PLR0915", # Too many statements
+    "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
 ]
 "noxfile.py" = [
     "D"

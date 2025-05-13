@@ -1,47 +1,56 @@
 -- name: GetOneTestPostgresType :one
 SELECT *
 FROM test_postgres_types
+    WHERE id = $1
          LIMIT 1;
 
 -- name: GetOneInnerTestPostgresType :one
 SELECT *
 FROM test_inner_postgres_types
+WHERE table_id = $1
          LIMIT 1;
 
 -- name: GetOneTestTimestampPostgresType :one
 SELECT timestamp_test
 FROM test_postgres_types
+WHERE id = $1
          LIMIT 1;
 
 -- name: GetOneTestByteaPostgresType :one
 SELECT bytea_test
 FROM test_postgres_types
+WHERE id = $1
          LIMIT 1;
 
 -- name: GetManyTestPostgresType :many
 SELECT *
 FROM test_postgres_types
+WHERE id = $1
          LIMIT 2;
 
 -- name: GetManyTestTimestampPostgresType :many
 SELECT timestamp_test
 FROM test_postgres_types
+WHERE id = $1
          LIMIT 2;
 
 -- name: GetManyTestByteaPostgresType :many
 SELECT bytea_test
 FROM test_postgres_types
+WHERE id = $1
          LIMIT 2;
 
 -- name: GetEmbeddedTestPostgresType :one
 SELECT test_postgres_types.*, sqlc.embed(test_inner_postgres_types)
 FROM test_postgres_types
-JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id;
+JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
+WHERE test_postgres_types.id = $1;
 
 -- name: GetAllEmbeddedTestPostgresType :one
 SELECT sqlc.embed(test_postgres_types), sqlc.embed(test_inner_postgres_types)
 FROM test_postgres_types
-         JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id;
+         JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
+WHERE test_postgres_types.id = $1;
 
 -- name: CreateOneTestPostgresType :exec
 INSERT INTO test_postgres_types (
@@ -137,3 +146,7 @@ INSERT INTO test_inner_postgres_types (
 
 -- name: DeleteOneTestPostgresType :exec
 DELETE FROM test_postgres_types WHERE test_postgres_types.id = $1;
+
+
+-- name: DeleteOneTestPostgresInnerType :exec
+DELETE FROM test_inner_postgres_types WHERE test_inner_postgres_types.table_id = $1;
