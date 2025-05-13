@@ -134,7 +134,18 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 	}
 	body.WriteLine(")")
 	body.NewLine()
-	for _, imp := range imp.Imports(sourceName) {
+	std, tye, pkg := imp.Imports(sourceName)
+	for _, imp := range std {
+		body.WriteLine(imp)
+	}
+	if len(tye) != 0 {
+		body.WriteLine("if typing.TYPE_CHECKING:")
+		for _, imp := range tye {
+			body.WriteIndentedLine(1, imp)
+		}
+	}
+	body.WriteLine("")
+	for _, imp := range pkg {
 		body.WriteLine(imp)
 	}
 	body.NNewLine(2)

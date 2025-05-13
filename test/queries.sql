@@ -21,3 +21,6 @@ SELECT sqlc.embed(test_postgres_types), sqlc.embed(test_inner_postgres_types), t
 FROM test_postgres_types
          JOIN test_inner_postgres_types ON test_inner_postgres_types.table_id = test_postgres_types.id
     LIMIT 1;
+
+-- name: TTTT :one
+SELECT timestamp_test FROM test_postgres_types LIMIT 1;

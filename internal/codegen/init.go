@@ -8,6 +8,7 @@ import (
 func (dr *Driver) BuildInitFile() *plugin.File {
 	body := builders.NewIndentStringBuilder(dr.conf.IndentChar, dr.conf.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
+	body.WriteLine(`"""Package to allow importing."""`)
 	return &plugin.File{
 		Name:     "__init__.py",
 		Contents: []byte(body.String()),

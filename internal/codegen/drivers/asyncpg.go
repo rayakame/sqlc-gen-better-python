@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
+	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"strconv"
 	"strings"
@@ -33,7 +34,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdOne {
-		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType.Type))
+		body.WriteLine(fmt.Sprintf(") -> %s | None:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = await %s.fetchrow(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
@@ -50,7 +51,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					var inner []string
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
-						if _, found := AsyncpgDoTypeConversion()[embedCol.Type.SqlType]; found {
+						if _, found := typeConversion.AsyncpgDoTypeConversion()[embedCol.Type.SqlType]; found {
 							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
 						} else {
 							inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
@@ -59,7 +60,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					}
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
-					if _, found := AsyncpgDoTypeConversion()[col.Type.SqlType]; found {
+					if _, found := typeConversion.AsyncpgDoTypeConversion()[col.Type.SqlType]; found {
 						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
 					} else {
 						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
@@ -67,23 +68,23 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					i++
 				}
 			}
+			body.WriteString("   ")
 			body.WriteLine(")")
 		} else {
-			if _, found := AsyncpgDoTypeConversion()[retType.SqlType]; found {
+			if _, found := typeConversion.AsyncpgDoTypeConversion()[retType.SqlType]; found {
 				body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return %s(row[0])", retType.Type))
 			} else {
 				body.WriteIndentedLine(indentLevel+1, "return row[0]")
 			}
 		}
 	} else if query.Cmd == metadata.CmdMany {
-		body.WriteLine(fmt.Sprintf(") -> typing.Sequence[%s]:", retType.Type))
+		body.WriteLine(fmt.Sprintf(") -> collections.abc.Sequence[%s]:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("rows = await %s.fetch(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
-		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return_rows: typing.List[%s] = []", retType.Type))
-		body.WriteIndentedLine(indentLevel+1, "for row in rows:")
+		body.WriteIndentedLine(indentLevel+1, "return [")
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return_rows.append(%s(", retType.Type))
+			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("%s(", retType.Type))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
@@ -93,7 +94,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					var inner []string
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
-						if _, found := AsyncpgDoTypeConversion()[embedCol.Type.SqlType]; found {
+						if _, found := typeConversion.AsyncpgDoTypeConversion()[embedCol.Type.SqlType]; found {
 							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
 						} else {
 							inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
@@ -102,20 +103,24 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					}
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
-					body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					if _, found := typeConversion.AsyncpgDoTypeConversion()[col.Type.SqlType]; found {
+						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+					} else {
+						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					}
 					i++
 				}
 			}
-			body.WriteLine("))")
-			body.WriteIndentedLine(indentLevel+1, "return return_rows")
+			body.WriteLine(")")
 		} else {
-			if _, found := AsyncpgDoTypeConversion()[retType.SqlType]; found {
-				body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("return_rows.append(%s(row[0]))", retType.Type))
+			if _, found := typeConversion.AsyncpgDoTypeConversion()[retType.SqlType]; found {
+				body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("%s(row[0])", retType.Type))
 			} else {
-				body.WriteIndentedLine(indentLevel+2, "return_rows.append(row[0])")
+				body.WriteIndentedLine(indentLevel+2, "row[0]")
 			}
-			body.WriteIndentedLine(indentLevel+1, "return return_rows")
 		}
+		body.WriteIndentedLine(indentLevel+2, "for row in rows")
+		body.WriteIndentedLine(indentLevel+1, "]")
 	}
 	return nil
 }
@@ -125,16 +130,6 @@ func AsyncpgAcceptedDriverCMDs() []string {
 		metadata.CmdExec,
 		metadata.CmdOne,
 		metadata.CmdMany,
-	}
-}
-
-func AsyncpgDoTypeConversion() map[string]struct{} {
-	return map[string]struct{}{
-		"bytea":            {},
-		"blob":             {},
-		"pg_catalog.bytea": {},
-		"inet":             {},
-		"cidr":             {},
 	}
 }
 

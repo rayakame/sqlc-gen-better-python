@@ -37,13 +37,7 @@ func BuildPyTabel(modelType string, table *core.Table, body *builders.IndentStri
 		if col.Type.IsNullable {
 			type_ = "typing.Optional[" + type_ + "]"
 		}
-		body.WriteIndentedString(1, col.Name+": "+type_)
-		if modelType == core.ModelTypeAttrs {
-			body.WriteString(" = attrs.field()")
-		} else if modelType == core.ModelTypeMsgspec {
-			body.WriteString(" = msgspec.field()")
-		}
-		body.WriteString("\n")
+		body.WriteIndentedLine(1, col.Name+": "+type_)
 	}
 }
 
@@ -52,13 +46,24 @@ func (dr *Driver) buildPyTables(imp *core.Importer, tables []core.Table) (string
 	body := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
 	body.WriteImportAnnotations()
-	body.WriteLine("__all__: typing.Sequence[str] = (")
+	body.WriteLine("__all__: collections.abc.Sequence[str] = (")
 	for _, table := range tables {
 		body.WriteIndentedLine(1, fmt.Sprintf("\"%s\",", table.Name))
 	}
 	body.WriteLine(")")
 	body.WriteString("\n")
-	for _, imp := range imp.Imports(fileName) {
+	std, tye, pkg := imp.Imports(fileName)
+	for _, imp := range std {
+		body.WriteLine(imp)
+	}
+	if len(tye) != 0 {
+		body.WriteLine("if typing.TYPE_CHECKING:")
+		for _, imp := range tye {
+			body.WriteIndentedLine(1, imp)
+		}
+	}
+	body.WriteLine("")
+	for _, imp := range pkg {
 		body.WriteLine(imp)
 	}
 	for _, table := range tables {

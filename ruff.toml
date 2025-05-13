@@ -1,0 +1,48 @@
+target-version = "py310"
+line-length = 120
+
+[lint]
+# https://docs.astral.sh/ruff/rules/
+select = ["ALL"]
+ignore = [
+    "D203",
+    "D213",
+]
+
+
+[lint.per-file-ignores]
+"test/**" = [
+    "E501",    # Line too long
+    "D103",    # Docstring missing
+    "D102",    # Docstring missing
+    "PLR0913",  # Too many arguments in function definition
+    "I001", # Import block is un-sorted or un-formatted
+    "D", # Docstrings
+    "S101", # Use of assert detected
+    "PLR0915", # Too many statements
+    "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+]
+"noxfile.py" = [
+    "D"
+]
+"scripts/**" = [
+    "T201", # Print found
+    "INP001" # File is part of an implicit namespace package. Add an `__init__.py`.
+]
+"**/{attrs,dataclass,msgspec,driver_asyncpg}/*.py" = [
+    "INP001", # File is part of an implicit namespace package. Add an `__init__.py`.
+]
+
+
+[lint.isort]
+required-imports = ["from __future__ import annotations"]
+force-single-line = true
+
+[lint.pydocstyle]
+convention = "numpy"
+
+[format]
+exclude = [
+    "**/classes/*",
+    "**/functions/*",
+]

@@ -81,6 +81,8 @@ func IsReserved(s string) bool {
 		return true
 	case "yield":
 		return true
+	case "id":
+		return true
 	default:
 		return false
 	}
