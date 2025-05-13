@@ -51,4 +51,4 @@ async def asyncpg_delete_all(dsn: str) -> None:
 def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -> None:  # noqa: ARG001
     dsn = get_dsn(session.config)
 
-    #asyncio.run(asyncpg_delete_all(dsn))
+    asyncio.run(asyncpg_delete_all(dsn))
