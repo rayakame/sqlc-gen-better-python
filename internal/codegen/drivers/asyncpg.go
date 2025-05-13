@@ -33,7 +33,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdOne {
-		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType.Type))
+		body.WriteLine(fmt.Sprintf(") -> %s | None:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = await %s.fetchrow(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
@@ -67,6 +67,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					i++
 				}
 			}
+			body.WriteString("   ")
 			body.WriteLine(")")
 		} else {
 			if _, found := AsyncpgDoTypeConversion()[retType.SqlType]; found {
@@ -80,7 +81,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("rows = await %s.fetch(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
-		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return_rows: typing.List[%s] = []", retType.Type))
+		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return_rows: list[%s] = []", retType.Type))
 		body.WriteIndentedLine(indentLevel+1, "for row in rows:")
 		if query.Ret.IsStruct() {
 			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return_rows.append(%s(", retType.Type))

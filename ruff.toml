@@ -1,0 +1,12 @@
+target-version = "py310"
+
+
+[lint]
+# https://docs.astral.sh/ruff/rules/
+select = ["ALL"]
+ignore = [
+    "E501",    # Line too long
+    "D103",    # Docstring missing
+    #"A002",    # Function argument is shadowing a python builtin
+    "PLR0913"  # Too many arguments in function definition
+]

@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 kw_list = keyword.kwlist
+custom_kw_list = ["id"]
 path = Path(__file__).parent.parent.parent / "internal" / "core" / "reserved.go"
 
 class IndentWriter:
@@ -49,6 +50,10 @@ if __name__ == "__main__":
     writer.write_line("switch s {", 1)
 
     for kw in kw_list:
+        writer.write_line(f'case "{kw}":', 2)
+        writer.write_line("return true", 3)
+
+    for kw in custom_kw_list:
         writer.write_line(f'case "{kw}":', 2)
         writer.write_line("return true", 3)
 

@@ -1,0 +1,86 @@
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: file://sqlc-gen-better-python.wasm
+      sha256: bd31a104d7a25eec901c0b970ba6f13360777ae1e35412670c82c2674561b010
+sql:
+  - schema: schema.sql
+    queries: queries.sql
+    engine: postgresql
+    codegen:
+      - out: /attrs/classes
+        plugin: python
+        options:
+          package: test.driver_asyncpg.attrs.classes
+          sql_driver: asyncpg
+          model_type: attrs
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+  - schema: schema.sql
+    queries: queries.sql
+    engine: postgresql
+    codegen:
+      - out: /attrs/functions
+        plugin: python
+        options:
+          package: test.driver_asyncpg.attrs.functions
+          sql_driver: asyncpg
+          model_type: attrs
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+  - schema: schema.sql
+    queries: queries.sql
+    engine: postgresql
+    codegen:
+      - out: /dataclass/classes
+        plugin: python
+        options:
+          package: test.driver_asyncpg.dataclass.classes
+          sql_driver: asyncpg
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+  - schema: schema.sql
+    queries: queries.sql
+    engine: postgresql
+    codegen:
+      - out: /dataclass/functions
+        plugin: python
+        options:
+          package: test.driver_asyncpg.dataclass.functions
+          sql_driver: asyncpg
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+  - schema: schema.sql
+    queries: queries.sql
+    engine: postgresql
+    codegen:
+      - out: /msgspec/classes
+        plugin: python
+        options:
+          package: test.driver_asyncpg.msgspec.classes
+          sql_driver: asyncpg
+          model_type: msgspec
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+  - schema: schema.sql
+    queries: queries.sql
+    engine: postgresql
+    codegen:
+      - out: /msgspec/functions
+        plugin: python
+        options:
+          package: test.driver_asyncpg.msgspec.functions
+          sql_driver: asyncpg
+          model_type: msgspec
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+
