@@ -15,7 +15,7 @@ DRIVER_PATHS = {"asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg"}
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["pyright", "ruff", "pytest"]
+options.sessions = ["asyncpg", "pyright", "ruff", "pytest"]
 
 DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
 
@@ -70,12 +70,28 @@ def sqlc_generate(session: nox.Session, driver: str) -> None:
             session.run("sqlc", "generate", "-f", config, external=True)
 
 
+def sqlc_check(session: nox.Session, driver: str) -> None:
+    with session.chdir(DRIVER_PATHS[driver]):
+        for config in SQLC_CONFIGS:
+            session.run("sqlc", "diff", "-f", config, external=True)
+
+
 @nox.session(reuse_venv=True)
 def asyncpg(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright"])
 
     sqlc_generate(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
+    session.run("ruff", "check", *session.posargs)
+
+
+@nox.session(reuse_venv=True)
+def asyncpg_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright"])
+
+    sqlc_check(session, "asyncpg")
+    session.run("pyright", DRIVER_PATHS["asyncpg"])
+    session.run("ruff", "check", *session.posargs)
 
 
 @nox.session(reuse_venv=True)
@@ -90,6 +106,14 @@ def ruff(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["ruff"])
 
     session.run("ruff", "format")
+    session.run("ruff", "check", *session.posargs)
+
+
+@nox.session(reuse_venv=True)
+def ruff_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["ruff"])
+
+    session.run("ruff", "format", "--check")
     session.run("ruff", "check", *session.posargs)
 
 
