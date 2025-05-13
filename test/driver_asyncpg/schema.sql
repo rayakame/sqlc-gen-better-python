@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS citext;   -- citext
+CREATE EXTENSION IF NOT EXISTS ltree;    -- ltree / lquery / ltxtquery
+
 CREATE TABLE IF NOT EXISTS test_postgres_types
 (
     /* ───────────── Integer family ───────────── */
