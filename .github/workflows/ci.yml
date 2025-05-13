@@ -47,7 +47,6 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.6.9"
-          activate-environment: true
           python-version: ${{ matrix.python-version }}
           prune-cache: true
 
