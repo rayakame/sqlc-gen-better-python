@@ -38,6 +38,18 @@ var validModelTypes = map[string]struct{}{
 	string(ModelTypeMsgspec):   {},
 }
 
+const (
+	DocstringConventionGoogle = "google"
+	DocstringConventionNumpy  = "numpy"
+	DocstringConventionPEP257 = "pep257"
+)
+
+var validDocstringConventions = map[string]struct{}{
+	DocstringConventionGoogle: {},
+	DocstringConventionNumpy:  {},
+	DocstringConventionPEP257: {},
+}
+
 func isDriverAsync(sqlDriver SQLDriverType) (bool, error) {
 	val, found := asyncDrivers[sqlDriver]
 	if !found {
@@ -60,6 +72,16 @@ func isDriverValid(sqlDriver SQLDriverType, engine string) error {
 func isModelTypeValid(modelType string) error {
 	if _, found := validModelTypes[modelType]; !found {
 		return fmt.Errorf("unknown model type: %s", modelType)
+	}
+	return nil
+}
+
+func isDocstringValid(ds *string) error {
+	if ds == nil {
+		return nil
+	}
+	if _, found := validDocstringConventions[*ds]; !found {
+		return fmt.Errorf("unknown docstring convention: %s", ds)
 	}
 	return nil
 }

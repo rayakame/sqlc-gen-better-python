@@ -24,3 +24,6 @@ FROM test_postgres_types
 
 -- name: TTTT :one
 SELECT timestamp_test FROM test_postgres_types LIMIT 1;
+
+-- name: TestExecute :exec
+INSERT INTO test_postgres_types (id, serial_test, timestamp_test) VALUES ($1, $2, $3);

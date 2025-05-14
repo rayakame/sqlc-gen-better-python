@@ -12,24 +12,27 @@ import (
 
 const AsyncpgConn = "asyncpg.Connection[asyncpg.Record]"
 
-func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []string, retType core.PyType, isClass bool) error {
+func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", AsyncpgConn)
 	conn := "conn"
+	docstringConnType := AsyncpgConn
 	if isClass {
 		params = "self"
 		conn = "self._conn"
 		indentLevel = 1
+		docstringConnType = ""
 	}
 	body.WriteIndentedString(indentLevel, fmt.Sprintf("async def %s(%s", query.FuncName, params))
 	for i, arg := range args {
 		if i == 0 {
 			body.WriteString(", *")
 		}
-		body.WriteString(fmt.Sprintf(", %s", arg))
+		body.WriteString(fmt.Sprintf(", %s", arg.FunctionFormat))
 	}
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
+		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args)
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")

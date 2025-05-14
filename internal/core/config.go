@@ -19,6 +19,7 @@ type Config struct {
 	OmitUnusedModels            bool          `json:"omit_unused_models" yaml:"omit_unused_models"`
 	QueryParameterLimit         *int32        `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
 	EmitInitFile                *bool         `json:"emit_init_file" yaml:"emit_init_file"`
+	EmitDocstrings              *string       `json:"docstrings" yaml:"docstrings"`
 	Debug                       bool          `json:"debug" yaml:"debug"`
 
 	IndentChar          string `json:"indent_char" yaml:"indent_char"`
@@ -87,6 +88,10 @@ func ValidateConf(conf *Config, engine string) error {
 
 	if err := isModelTypeValid(conf.ModelType); err != nil {
 
+		return fmt.Errorf("invalid options: %s", err)
+	}
+
+	if err := isDocstringValid(conf.EmitDocstrings); err != nil {
 		return fmt.Errorf("invalid options: %s", err)
 	}
 

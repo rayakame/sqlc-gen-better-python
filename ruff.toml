@@ -46,3 +46,6 @@ exclude = [
     "**/classes/*",
     "**/functions/*",
 ]
+
+[lint.pydocstyle]
+convention = "pep257"
