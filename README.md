@@ -40,7 +40,9 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 | mysql     | no      | no            | no          | no            | no      | no     | no          |
 
 ## Development
-A roadmap of what is planned & worked on can be found [here](https://github.com/users/rayakame/projects/1/)
+A roadmap of what is planned & worked on can be found [here](https://github.com/users/rayakame/projects/1/).
+
+Contributions are very welcome, for more information and help please read the [contribution guidelines](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CONTRIBUTING.md).
 ### Changelog
 Can be found [here](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CHANGELOG.md)
 
