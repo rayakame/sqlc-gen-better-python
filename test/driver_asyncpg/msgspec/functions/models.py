@@ -2,6 +2,7 @@
 # versions:
 #   sqlc v1.28.0
 #   sqlc-gen-better-python v0.3.1
+"""Module containing models."""
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
@@ -20,6 +21,47 @@ if typing.TYPE_CHECKING:
 
 
 class TestInnerPostgresType(msgspec.Struct):
+    """Model representing TestInnerPostgresType.
+
+    Attributes:
+    table_id -- int
+    serial_test -- int
+    serial4_test -- int
+    bigserial_test -- int
+    smallserial_test -- int
+    int_test -- int
+    bigint_test -- int
+    smallint_test -- int
+    float_test -- float
+    double_precision_test -- float
+    real_test -- float
+    numeric_test -- decimal.Decimal
+    money_test -- str
+    bool_test -- bool
+    json_test -- str
+    jsonb_test -- str
+    bytea_test -- memoryview
+    date_test -- datetime.date
+    time_test -- datetime.time
+    timetz_test -- datetime.time
+    timestamp_test -- datetime.datetime
+    timestamptz_test -- datetime.datetime
+    interval_test -- datetime.timedelta
+    text_test -- str
+    varchar_test -- str
+    bpchar_test -- str
+    char_test -- str
+    citext_test -- str
+    uuid_test -- uuid.UUID
+    inet_test -- str
+    cidr_test -- str
+    macaddr_test -- str
+    macaddr8_test -- str
+    ltree_test -- str
+    lquery_test -- str
+    ltxtquery_test -- str
+    """
+
     table_id: int
     serial_test: int
     serial4_test: int
@@ -59,6 +101,47 @@ class TestInnerPostgresType(msgspec.Struct):
 
 
 class TestPostgresType(msgspec.Struct):
+    """Model representing TestPostgresType.
+
+    Attributes:
+    id -- int
+    serial_test -- int
+    serial4_test -- int
+    bigserial_test -- int
+    smallserial_test -- int
+    int_test -- int
+    bigint_test -- int
+    smallint_test -- int
+    float_test -- float
+    double_precision_test -- float
+    real_test -- float
+    numeric_test -- decimal.Decimal
+    money_test -- str
+    bool_test -- bool
+    json_test -- str
+    jsonb_test -- str
+    bytea_test -- memoryview
+    date_test -- datetime.date
+    time_test -- datetime.time
+    timetz_test -- datetime.time
+    timestamp_test -- datetime.datetime
+    timestamptz_test -- datetime.datetime
+    interval_test -- datetime.timedelta
+    text_test -- str
+    varchar_test -- str
+    bpchar_test -- str
+    char_test -- str
+    citext_test -- str
+    uuid_test -- uuid.UUID
+    inet_test -- str
+    cidr_test -- str
+    macaddr_test -- str
+    macaddr8_test -- str
+    ltree_test -- str
+    lquery_test -- str
+    ltxtquery_test -- str
+    """
+
     id: int
     serial_test: int
     serial4_test: int
