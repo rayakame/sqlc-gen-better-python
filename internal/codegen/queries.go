@@ -82,11 +82,11 @@ func (dr *Driver) buildQueryHeader(query *core.Query, body *builders.IndentStrin
 func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStringBuilder) string {
 	className := core.SnakeToCamel(strings.ReplaceAll(sourceName, ".sql", ""), dr.conf)
 	body.WriteLine(fmt.Sprintf("class %s:", className))
-	body.WriteQueryClassDocstring(1, sourceName)
+	body.WriteQueryClassDocstring(1, sourceName, dr.connType)
 	body.WriteIndentedLine(1, `__slots__ = ("_conn",)`)
 	body.NewLine()
 	body.WriteIndentedLine(1, fmt.Sprintf(`def __init__(self, conn: %s) -> None:`, dr.connType))
-	body.WriteQueryClassInitDocstring(2)
+	body.WriteQueryClassInitDocstring(2, dr.connType)
 	body.WriteIndentedLine(2, "self._conn = conn")
 	body.NewLine()
 	return className

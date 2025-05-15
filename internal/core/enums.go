@@ -39,12 +39,14 @@ var validModelTypes = map[string]struct{}{
 }
 
 const (
+	DocstringConventionNone   = "none"
 	DocstringConventionGoogle = "google"
 	DocstringConventionNumpy  = "numpy"
 	DocstringConventionPEP257 = "pep257"
 )
 
 var validDocstringConventions = map[string]struct{}{
+	DocstringConventionNone:   {},
 	DocstringConventionGoogle: {},
 	DocstringConventionNumpy:  {},
 	DocstringConventionPEP257: {},

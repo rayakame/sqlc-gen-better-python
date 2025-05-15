@@ -13,14 +13,15 @@ ignore = [
 [lint.per-file-ignores]
 "test/**" = [
     "E501",    # Line too long
-    "D103",    # Docstring missing
-    "D102",    # Docstring missing
     "PLR0913",  # Too many arguments in function definition
     "I001", # Import block is un-sorted or un-formatted
-    "D", # Docstrings
+    #"D", # Docstrings
     "S101", # Use of assert detected
     "PLR0915", # Too many statements
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+]
+"test/**/*test*.py" = [
+    "D" # ignore docstrings in test files
 ]
 "noxfile.py" = [
     "D"
@@ -46,6 +47,3 @@ exclude = [
     "**/classes/*",
     "**/functions/*",
 ]
-
-[lint.pydocstyle]
-convention = "pep257"

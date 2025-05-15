@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"golang.org/x/text/cases"
@@ -72,4 +73,13 @@ func UpperSnakeCase(s string) string {
 
 func SQLToPyFileName(s string) string {
 	return strings.ReplaceAll(s, ".sql", ".py")
+}
+
+func SplitLines(s string) []string {
+	var lines []string
+	sc := bufio.NewScanner(strings.NewReader(s))
+	for sc.Scan() {
+		lines = append(lines, sc.Text())
+	}
+	return lines
 }

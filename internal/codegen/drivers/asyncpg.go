@@ -32,12 +32,13 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 	}
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
-		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args)
+		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
 	} else if query.Cmd == metadata.CmdOne {
 		body.WriteLine(fmt.Sprintf(") -> %s | None:", retType.Type))
+		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = await %s.fetchrow(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
@@ -82,6 +83,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		}
 	} else if query.Cmd == metadata.CmdMany {
 		body.WriteLine(fmt.Sprintf(") -> collections.abc.Sequence[%s]:", retType.Type))
+		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("rows = await %s.fetch(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")

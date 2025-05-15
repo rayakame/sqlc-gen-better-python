@@ -40,7 +40,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
-	builders.SetDocstringConfig(conf.EmitDocstrings)
+	builders.SetDocstringConfig(conf.EmitDocstrings, conf.EmitDocstringsSQL)
 
 	return &Driver{buildPyQueryFunc: buildPyQueryFunc, acceptedDriverCMDs: acceptedDriverCMDs, conf: conf, connType: connType}, nil
 }
