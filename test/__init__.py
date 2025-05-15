@@ -2,3 +2,4 @@
 # versions:
 #   sqlc v1.28.0
 #   sqlc-gen-better-python v0.3.1
+"""Package containing queries and models automatically generated using sqlc-gen-better-python."""

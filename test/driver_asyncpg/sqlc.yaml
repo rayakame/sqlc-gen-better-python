@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 784f1c438b3333db7eaadda99e5c4bc42153d19dc1883568a4b1816f1ec2b702
+      sha256: 4ab4df07d6164237e741fe51709ad29b924d6f9bfbc94a3d079a5b2f937909f5
 sql:
   - schema: schema.sql
     queries: queries.sql
@@ -18,6 +18,7 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
+          docstrings: numpy
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -31,6 +32,7 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
+          docstrings: numpy
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -44,6 +46,7 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
+          docstrings: google
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -57,6 +60,7 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
+          docstrings: google
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -70,6 +74,7 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
+          docstrings: pep257
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -83,4 +88,5 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
+          docstrings: pep257
 

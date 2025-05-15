@@ -11,7 +11,7 @@ import (
 
 const SQLite3Conn = "sqlite3.Connection"
 
-func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []string, retType core.PyType, isClass bool) error {
+func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", SQLite3Conn)
 	conn := "conn"
@@ -25,7 +25,7 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		if i == 0 {
 			body.WriteString(", *")
 		}
-		body.WriteString(fmt.Sprintf(", %s", arg))
+		body.WriteString(fmt.Sprintf(", %s", arg.FunctionFormat))
 	}
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))

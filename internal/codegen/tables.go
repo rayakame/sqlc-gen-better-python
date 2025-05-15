@@ -29,13 +29,14 @@ func BuildPyTabel(modelType string, table *core.Table, body *builders.IndentStri
 		inheritance = "(msgspec.Struct)"
 	}
 	body.WriteLine(fmt.Sprintf("class %s%s:", table.Name, inheritance))
+	body.WriteModelClassDocstring(table)
 	for _, col := range table.Columns {
 		type_ := col.Type.Type
 		if col.Type.IsList {
-			type_ = "typing.List[" + type_ + "]"
+			type_ = "collections.abc.Sequence[" + type_ + "]"
 		}
 		if col.Type.IsNullable {
-			type_ = "typing.Optional[" + type_ + "]"
+			type_ = type_ + " | None"
 		}
 		body.WriteIndentedLine(1, col.Name+": "+type_)
 	}
@@ -45,6 +46,7 @@ func (dr *Driver) buildPyTables(imp *core.Importer, tables []core.Table) (string
 	fileName := "models.sql"
 	body := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
+	body.WriteModelFileModuleDocstring()
 	body.WriteImportAnnotations()
 	body.WriteLine("__all__: collections.abc.Sequence[str] = (")
 	for _, table := range tables {
