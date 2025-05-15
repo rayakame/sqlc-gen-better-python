@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'Fixed the `uv sync` command in CONTRIBUTING.md and added an example docker command to create a postgres instance for testing. '
+time: 2025-05-14T20:44:00.457211775-04:00
+custom:
+    Author: AlexanderHOtt
+    PR: "70"

@@ -54,6 +54,27 @@ jobs:
           cat .github/release_output_template.yaml >> release_body.md
           echo "\`\`\`" >> release_body.md
 
+      - name: Update README with new version and checksum
+        run: |
+          version=${{ steps.latest.outputs.output }}
+          checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
+          escaped_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${version}/sqlc-gen-better-python.wasm"
+          
+          sed -i -E "s|(url: ).*|(url: ${escaped_url})|" README.md
+          sed -i -E "s|(sha256: )[a-f0-9]+|\1${checksum}|" README.md
+
+      - name: Create PR to update README
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: update README example with v${{ steps.latest.outputs.output }}"
+          branch: "release/update-readme-${{ steps.latest.outputs.output }}"
+          title: "Update README for release ${{ steps.latest.outputs.output }}"
+          body: |
+            This PR updates the README example config with:
+            - WASM plugin version: `${{ steps.latest.outputs.output }}`
+            - SHA256 checksum: `${checksum}`
+
+            Auto-generated during the release workflow.
 
       - name: Create release
         uses: softprops/action-gh-release@v2

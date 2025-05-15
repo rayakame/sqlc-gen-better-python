@@ -11,7 +11,6 @@ A WASM plugin for SQLC allowing the generation of Python code.
 ```yaml
 # filename: sqlc.yaml
 version: "2"
-# Be sure to grab the latest from https://github.com/rayakame/sqlc-gen-better-python/releases
 plugins:
   - name: python
     wasm:
