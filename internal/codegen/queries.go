@@ -10,16 +10,20 @@ import (
 	"strings"
 )
 
-func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) ([]string, string, []string) {
+func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) ([]core.FunctionArg, string, []string) {
 	pyTableNames := make([]string, 0)
-	args := make([]string, 0)
+	args := make([]core.FunctionArg, 0)
 	for _, arg := range query.Args {
 		if !arg.IsEmpty() {
 			argType := arg.Typ.Type
 			if arg.Typ.IsList {
-				argType = fmt.Sprintf("typing.Sequence[%s]", argType)
+				argType = fmt.Sprintf("collections.abc.Sequence[%s]", argType)
 			}
-			args = append(args, fmt.Sprintf("%s: %s", arg.Name, argType))
+			args = append(args, core.FunctionArg{
+				Name:           arg.Name,
+				Type:           argType,
+				FunctionFormat: fmt.Sprintf("%s: %s", arg.Name, argType),
+			})
 		}
 	}
 	retType := "None"
@@ -78,9 +82,11 @@ func (dr *Driver) buildQueryHeader(query *core.Query, body *builders.IndentStrin
 func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStringBuilder) string {
 	className := core.SnakeToCamel(strings.ReplaceAll(sourceName, ".sql", ""), dr.conf)
 	body.WriteLine(fmt.Sprintf("class %s:", className))
+	body.WriteQueryClassDocstring(1, sourceName, dr.connType)
 	body.WriteIndentedLine(1, `__slots__ = ("_conn",)`)
 	body.NewLine()
 	body.WriteIndentedLine(1, fmt.Sprintf(`def __init__(self, conn: %s) -> None:`, dr.connType))
+	body.WriteQueryClassInitDocstring(2, dr.connType)
 	body.WriteIndentedLine(2, "self._conn = conn")
 	body.NewLine()
 	return className
@@ -89,6 +95,7 @@ func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStr
 func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, sourceName string) ([]byte, error) {
 	body := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
 	body.WriteSqlcHeader()
+	body.WriteQueryFileModuleDocstring(sourceName)
 	body.WriteImportAnnotations()
 
 	newLines := 2

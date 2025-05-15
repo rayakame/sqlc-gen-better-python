@@ -41,13 +41,13 @@ func (i *Importer) Imports(fileName string) ([]string, []string, []string) {
 	return i.queryImports(fileName)
 }
 
-func tableUses(name string, s Table) bool {
+func tableUses(name string, s Table) (bool, string) {
 	for _, col := range s.Columns {
 		if col.Type.Type == name {
-			return true
+			return true, col.Type.SqlType
 		}
 	}
-	return false
+	return false, ""
 
 }
 
@@ -80,7 +80,7 @@ func (i *Importer) splitTypeChecking(pks map[string]importSpec) (map[string]impo
 func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importSpec, map[string]importSpec) {
 	modelUses := func(name string) (bool, bool) {
 		for _, table := range i.Tables {
-			if tableUses(name, table) {
+			if val, _ := tableUses(name, table); val {
 				return true, true
 			}
 		}
@@ -108,7 +108,14 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 	if !qv.IsEmpty() {
 		if qv.IsStruct() && qv.EmitStruct() {
-			if tableUses(name, *qv.Table) {
+			if val, sqlType := tableUses(name, *qv.Table); val {
+				if i.C.SqlDriver == SQLDriverAsyncpg {
+					if _, found := typeConversion.AsyncpgDoTypeConversion()[sqlType]; found {
+						return true, false
+					} else {
+						return true, true
+					}
+				}
 				return true, false
 			}
 		} else {

@@ -1,0 +1,6 @@
+kind: Added
+body: Added config option to auto generate docstrings for generated python code.
+time: 2025-05-15T23:02:49.2677768+02:00
+custom:
+    Author: rayakame
+    PR: "69"

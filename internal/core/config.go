@@ -19,6 +19,8 @@ type Config struct {
 	OmitUnusedModels            bool          `json:"omit_unused_models" yaml:"omit_unused_models"`
 	QueryParameterLimit         *int32        `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
 	EmitInitFile                *bool         `json:"emit_init_file" yaml:"emit_init_file"`
+	EmitDocstrings              *string       `json:"docstrings" yaml:"docstrings"`
+	EmitDocstringsSQL           *bool         `json:"docstrings_emit_sql" yaml:"docstrings_emit_sql"`
 	Debug                       bool          `json:"debug" yaml:"debug"`
 
 	IndentChar          string `json:"indent_char" yaml:"indent_char"`
@@ -61,6 +63,14 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 	if config.CharsPerIndentLevel == 0 {
 		config.CharsPerIndentLevel = 4
 	}
+	if config.EmitDocstrings == nil {
+		config.EmitDocstrings = new(string)
+		*config.EmitDocstrings = DocstringConventionNone
+	}
+	if config.EmitDocstringsSQL == nil {
+		config.EmitDocstringsSQL = new(bool)
+		*config.EmitDocstringsSQL = true
+	}
 
 	config.InitialismsMap = map[string]struct{}{}
 	for _, initial := range *config.Initialisms {
@@ -87,6 +97,10 @@ func ValidateConf(conf *Config, engine string) error {
 
 	if err := isModelTypeValid(conf.ModelType); err != nil {
 
+		return fmt.Errorf("invalid options: %s", err)
+	}
+
+	if err := isDocstringValid(conf.EmitDocstrings); err != nil {
 		return fmt.Errorf("invalid options: %s", err)
 	}
 

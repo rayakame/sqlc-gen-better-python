@@ -11,7 +11,7 @@ import (
 
 const AioSQLiteConn = "aiosqlite.Connection"
 
-func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []string, retType core.PyType, isClass bool) error {
+func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", AioSQLiteConn)
 	conn := "conn"
@@ -25,7 +25,7 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 		if i == 0 {
 			body.WriteString(", *")
 		}
-		body.WriteString(fmt.Sprintf(", %s", arg))
+		body.WriteString(fmt.Sprintf(", %s", arg.FunctionFormat))
 	}
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))

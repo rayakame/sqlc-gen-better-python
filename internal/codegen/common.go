@@ -7,7 +7,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 )
 
-type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, []string, core.PyType, bool) error
+type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, []core.FunctionArg, core.PyType, bool) error
 type TypeAcceptedDriverCMDs func() []string
 
 type Driver struct {
@@ -40,6 +40,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
+	builders.SetDocstringConfig(conf.EmitDocstrings, conf.EmitDocstringsSQL)
 
 	return &Driver{buildPyQueryFunc: buildPyQueryFunc, acceptedDriverCMDs: acceptedDriverCMDs, conf: conf, connType: connType}, nil
 }
