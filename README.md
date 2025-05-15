@@ -6,6 +6,34 @@ A WASM plugin for SQLC allowing the generation of Python code.
 > This is currently being worked on. It is far from being ready for any kind of release, let alone a stable one.  
 > Please wait for the v1 release; before that, this plugin is likely to not work.
 
+## Example Config
+
+```yaml
+# filename: sqlc.yaml
+version: "2"
+# Be sure to grab the latest from https://github.com/rayakame/sqlc-gen-better-python/releases
+plugins:
+  - name: python
+    wasm:
+      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.3.1/sqlc-gen-better-python.wasm
+      sha256: 6e2a6d4d4a2320e32ebc25bf718342d97d2de75fc6fd00bf196ca3e5edca6ee8
+sql:
+  - engine: "postgresql"
+    queries: "query.sql"
+    schema: "schema.sql"
+    codegen:
+      - out: "app/db"
+        plugin: python
+        options:
+          package: "db"
+          emit_init_file: true
+          sql_driver: "asyncpg"
+          model_type: "msgspec"
+
+```
+
+More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/reference/config.html)
+
 ## Configuration Options
 | Name                             | Type         | Required | Description                                                                                                                                                                                                               |
 |----------------------------------|--------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
