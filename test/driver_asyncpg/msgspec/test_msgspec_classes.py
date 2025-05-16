@@ -645,9 +645,9 @@ class TestMsgspecClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestMsgspecClasses::create_rows")
     async def test_create_rows(
-            self,
-            queries_obj: queries.Queries,
-            model: models.TestPostgresType,
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.create_rows_one_test_postgres_type(
             id_=model.id + 1,
@@ -693,9 +693,9 @@ class TestMsgspecClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecClasses::create_rows"], name="TestMsgspecClasses::update_rows")
     async def test_update_rows(
-            self,
-            queries_obj: queries.Queries,
-            model: models.TestPostgresType,
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.update_rows_test_postgres_type(id_=model.id + 1)
 
@@ -704,19 +704,19 @@ class TestMsgspecClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecClasses::update_rows"], name="TestMsgspecClasses::delete_rows")
     async def test_delete_rows(
-            self,
-            queries_obj: queries.Queries,
-            model: models.TestPostgresType,
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.delete_one_rows_test_postgres_type(id_=model.id + 1)
 
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
-    async def test_delete_rows(
-            self,
-            queries_obj: queries.Queries,
-            asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    async def test_create_table(
+        self,
+        queries_obj: queries.Queries,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
     ) -> None:
         result = await queries_obj.create_rows_table()
 

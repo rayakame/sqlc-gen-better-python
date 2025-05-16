@@ -693,9 +693,9 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestDataclassFunctions::create_rows")
     async def test_create_rows(
-            self,
-            asyncpg_conn: asyncpg.Connection[asyncpg.Record],
-            model: models.TestPostgresType,
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries.create_rows_one_test_postgres_type(
             conn=asyncpg_conn,
@@ -742,34 +742,32 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::create_rows"], name="TestDataclassFunctions::update_rows")
     async def test_update_rows(
-            self,
-            asyncpg_conn: asyncpg.Connection[asyncpg.Record],
-            model: models.TestPostgresType,
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
     ) -> None:
-        result = await queries.update_rows_test_postgres_type(conn=asyncpg_conn,id_=model.id + 1)
+        result = await queries.update_rows_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
 
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::update_rows"], name="TestDataclassFunctions::delete_rows")
     async def test_delete_rows(
-            self,
-            asyncpg_conn: asyncpg.Connection[asyncpg.Record],
-            model: models.TestPostgresType,
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries.delete_one_rows_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
 
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
-    async def test_delete_rows(
-            self,
-            asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    async def test_create_table(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
     ) -> None:
         result = await queries.create_rows_table(conn=asyncpg_conn)
 
         assert result == 0
 
         await asyncpg_conn.execute("""DROP TABLE test_create_rows_table;""")
-
-

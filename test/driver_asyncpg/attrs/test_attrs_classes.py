@@ -633,9 +633,9 @@ class TestAttrsClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestAttrsClasses::create_rows")
     async def test_create_rows(
-            self,
-            queries_obj: queries.Queries,
-            model: models.TestPostgresType,
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.create_rows_one_test_postgres_type(
             id_=model.id + 1,
@@ -681,9 +681,9 @@ class TestAttrsClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsClasses::create_rows"], name="TestAttrsClasses::update_rows")
     async def test_update_rows(
-            self,
-            queries_obj: queries.Queries,
-            model: models.TestPostgresType,
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.update_rows_test_postgres_type(id_=model.id + 1)
 
@@ -692,24 +692,22 @@ class TestAttrsClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsClasses::update_rows"], name="TestAttrsClasses::delete_rows")
     async def test_delete_rows(
-            self,
-            queries_obj: queries.Queries,
-            model: models.TestPostgresType,
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.delete_one_rows_test_postgres_type(id_=model.id + 1)
 
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
-    async def test_delete_rows(
-            self,
-            queries_obj: queries.Queries,
-            asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    async def test_create_table(
+        self,
+        queries_obj: queries.Queries,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
     ) -> None:
         result = await queries_obj.create_rows_table()
 
         assert result == 0
 
         await asyncpg_conn.execute("""DROP TABLE test_create_rows_table;""")
-
-
