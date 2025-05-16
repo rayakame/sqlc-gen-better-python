@@ -55,7 +55,76 @@ jobs:
           # GitHub tells you which host‑port was assigned via the `job.services` context
           POSTGRES_URI: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports['5432'] }}/testdb
         run: |
-          uv run nox -s pytest
+          uv run nox -s pytest -- --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: .coverage.${{ matrix.python-version }}
+          path: .coverage
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
+  # upload-coverage taken from: https://github.com/hikari-py/hikari/blob/master/.github/workflows/ci.yml#L66
+  #
+  # Copyright (c) 2020 Nekokatt
+  # Copyright (c) 2021-present davfsa
+  #
+  # Permission is hereby granted, free of charge, to any person obtaining a copy
+  # of this software and associated documentation files (the "Software"), to deal
+  # in the Software without restriction, including without limitation the rights
+  # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  # copies of the Software, and to permit persons to whom the Software is
+  # furnished to do so, subject to the following conditions:
+  #
+  # The above copyright notice and this permission notice shall be included in all
+  # copies or substantial portions of the Software.
+  upload-coverage:
+    needs: [ test ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.9"
+          python-version: "3.13"
+          activate-environment: true
+
+      - name: Download coverage
+        uses: actions/download-artifact@v4
+        with:
+          path: coverages/
+
+      - name: Extract individual coverage files
+        run: |
+          cd coverages
+          
+          for coverage_dir in ./.coverage.*; do
+              mv "$coverage_dir/.coverage" "../$coverage_dir"
+              rmdir "$coverage_dir"
+          done
+          
+          cd ..
+
+      - name: Combine coverage
+        run: |
+            uv sync --frozen --only-group coverage
+            
+            coverage combine
+            coverage xml
+            coverage report
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+
+
+
 
   ruff:
     runs-on: ubuntu-latest
@@ -105,7 +174,7 @@ jobs:
           uv run nox -s asyncpg_check
 
   ci-done:
-    needs: [ test, asyncpg, pyright, ruff ]
+    needs: [ test,upload-coverage, asyncpg, pyright, ruff ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest

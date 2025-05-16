@@ -15,7 +15,7 @@ DRIVER_PATHS = {"asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg"}
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["asyncpg", "pyright", "ruff", "pytest"]
+options.sessions = ["ruff_format", "asyncpg", "pyright", "ruff", "pytest"]
 
 DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
 
@@ -102,6 +102,13 @@ def pyright(session: nox.Session) -> None:
 
 
 @nox.session(reuse_venv=True)
+def ruff_format(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["ruff"])
+
+    session.run("ruff", "format")
+
+
+@nox.session(reuse_venv=True)
 def ruff(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["ruff"])
 
@@ -117,8 +124,33 @@ def ruff_check(session: nox.Session) -> None:
     session.run("ruff", "check", *session.posargs)
 
 
+PYTEST_RUN_FLAGS = [
+    "--showlocals",
+    "--show-capture",
+    "all",
+    f"--db={DEFAULT_POSTGRES_URI}",
+]
+PYTESTCOVERAGE_FLAGS = [
+    "--cov",
+    "--cov-config",
+    "pyproject.toml",
+    "--cov-report",
+    "term",
+    "--cov-report",
+    "html:public",
+    "--cov-report",
+    "xml",
+]
+
+
 @nox.session(reuse_venv=True)
 def pytest(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pytest"])
 
-    session.run("pytest", "--show-capture", "all", f"--db={DEFAULT_POSTGRES_URI}")
+    flags = PYTEST_RUN_FLAGS
+
+    if "--coverage" in session.posargs:
+        session.posargs.remove("--coverage")
+        flags.extend(PYTESTCOVERAGE_FLAGS)
+
+    session.run("pytest", *flags, *session.posargs)
