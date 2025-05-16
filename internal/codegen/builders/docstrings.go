@@ -184,7 +184,54 @@ func (b *IndentStringBuilder) WriteQueryFunctionDocstring(lvl int, query *core.Q
 	} else if query.Cmd == metadata.CmdExecRows {
 		// TODO add this here after finishing asyncpg :execrows
 	} else if query.Cmd == metadata.CmdExecResult {
-		// TODO add this here after finishing asyncpg :execresult
+		b.WriteIndentedLine(lvl, `"""`+fmt.Sprintf("Execute and return the result of SQL query with `name: %s %s`.", query.MethodName, query.Cmd))
+		b.NewLine()
+		b.writeQueryFunctionSQL(lvl, query)
+		if len(queryArgs) == 0 && docstringConnType == "" {
+			b.WriteIndentedLine(lvl, `"""`)
+			return
+		}
+		if *docstringConfig == core.DocstringConventionNumpy {
+			b.WriteIndentedLine(lvl, "Parameters")
+			b.WriteIndentedLine(lvl, "----------")
+			if docstringConnType != "" {
+				b.WriteIndentedLine(lvl, fmt.Sprintf("conn : %s", docstringConnType))
+				b.WriteIndentedLine(lvl+1, fmt.Sprintf("Connection object of type `%s` used to execute the query.", docstringConnType))
+			}
+			for _, arg := range queryArgs {
+				b.WriteIndentedLine(lvl, fmt.Sprintf("%s : %s", arg.Name, arg.Type))
+			}
+			b.NewLine()
+			b.WriteIndentedLine(lvl, "Returns")
+			b.WriteIndentedLine(lvl, "-------")
+			b.WriteIndentedLine(lvl, returnType.Type)
+			b.WriteIndentedLine(lvl+1, "The result returned when executing the query.")
+			b.NewLine()
+		} else if *docstringConfig == core.DocstringConventionGoogle {
+			b.WriteIndentedLine(lvl, "Args:")
+			if docstringConnType != "" {
+				b.WriteIndentedLine(lvl+1, "conn:")
+				b.WriteIndentedLine(lvl+2, fmt.Sprintf("Connection object of type `%s` used to execute the query.", docstringConnType))
+			}
+			for _, arg := range queryArgs {
+				b.WriteIndentedLine(lvl+1, fmt.Sprintf("%s: %s.", arg.Name, arg.Type))
+			}
+			b.NewLine()
+			b.WriteIndentedLine(lvl, "Returns:")
+			b.WriteIndentedLine(lvl+1, fmt.Sprintf("The result of type `%s` returned when executing the query.", returnType.Type))
+		} else if *docstringConfig == core.DocstringConventionPEP257 {
+			b.WriteIndentedLine(lvl, "Arguments:")
+			if docstringConnType != "" {
+				b.WriteIndentedLine(lvl, fmt.Sprintf("conn -- Connection object of type `%s` used to execute the query.", docstringConnType))
+			}
+			for _, arg := range queryArgs {
+				b.WriteIndentedLine(lvl, fmt.Sprintf("%s -- %s.", arg.Name, arg.Type))
+			}
+			b.NewLine()
+			b.WriteIndentedLine(lvl, "Returns:")
+			b.WriteIndentedLine(lvl+1, fmt.Sprintf("%s -- The result returned when executing the query.", returnType.Type))
+		}
+		b.WriteIndentedLine(lvl, `"""`)
 	} else if query.Cmd == metadata.CmdExecLastId {
 		// TODO add this here after finishing asyncpg :execlastid
 	} else if query.Cmd == metadata.CmdOne {
