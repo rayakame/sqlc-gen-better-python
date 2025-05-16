@@ -116,9 +116,33 @@ def ruff_check(session: nox.Session) -> None:
     session.run("ruff", "format", "--check")
     session.run("ruff", "check", *session.posargs)
 
+PYTEST_RUN_FLAGS = [
+    "--showlocals",
+    "--show-capture",
+    "all",
+    f"--db={DEFAULT_POSTGRES_URI}"
+]
+PYTESTCOVERAGE_FLAGS = [
+    "--cov",
+    "--cov-config",
+    "pyproject.toml",
+    "--cov-report",
+    "term",
+    "--cov-report",
+    f"html:public",
+    "--cov-report",
+    "xml",
+]
 
 @nox.session(reuse_venv=True)
 def pytest(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pytest"])
 
-    session.run("pytest", "--show-capture", "all", f"--db={DEFAULT_POSTGRES_URI}")
+    flags = PYTEST_RUN_FLAGS
+
+
+    if "--coverage" in session.posargs:
+        session.posargs.remove("--coverage")
+        flags.extend(PYTESTCOVERAGE_FLAGS)
+
+    session.run("pytest", *flags, *session.posargs)

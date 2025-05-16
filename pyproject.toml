@@ -10,6 +10,9 @@ dependencies = [
 ]
 
 [dependency-groups]
+coverage = [
+    "coverage[toml]>=7.8.0",
+]
 dev = [
     "nox>=2025.5.1",
 ]
@@ -21,7 +24,9 @@ pyright = [
 pytest = [
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
+    "pytest-cov>=6.1.1",
     "pytest-dependency>=0.6.0",
+    { include-group = "coverage" },
 ]
 ruff = [
     "ruff>=0.11.9",
@@ -34,4 +39,21 @@ typeCheckingMode = "strict"
 reportUnnecessaryTypeIgnoreComment = "error"
 
 [tool.pytest.ini_options]
+required_plugins = ["pytest-asyncio", "pytest-dependency"]
 asyncio_default_fixture_loop_scope = "session"
+
+[tool.coverage.run]
+relative_files = true
+parallel = true
+branch = true
+omit = ["**/*test*.py"]
+
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "\\#\\s*pragma: no cover$",
+    "^\\s*if typing.TYPE_CHECKING:$",
+]
+
