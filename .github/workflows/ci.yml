@@ -174,7 +174,7 @@ jobs:
           uv run nox -s asyncpg_check
 
   ci-done:
-    needs: [ test, asyncpg, pyright, ruff ]
+    needs: [ test,upload-coverage, asyncpg, pyright, ruff ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest
