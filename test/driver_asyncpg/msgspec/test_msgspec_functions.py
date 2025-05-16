@@ -612,3 +612,74 @@ class TestMsgspecFunctions:
         inner_model: models.TestInnerPostgresType,
     ) -> None:
         await queries.delete_one_test_postgres_inner_type(conn=asyncpg_conn, table_id=inner_model.table_id)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecFunctions::create_result")
+    async def test_create_result(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.create_result_one_test_postgres_type(
+            conn=asyncpg_conn,
+            id_=model.id + 1,
+            serial_test=model.serial_test,
+            serial4_test=model.serial4_test,
+            bigserial_test=model.bigserial_test,
+            smallserial_test=model.smallserial_test,
+            int_test=model.int_test,
+            bigint_test=model.bigint_test,
+            smallint_test=model.smallint_test,
+            float_test=model.float_test,
+            double_precision_test=model.double_precision_test,
+            real_test=model.real_test,
+            numeric_test=model.numeric_test,
+            money_test=model.money_test,
+            bool_test=model.bool_test,
+            json_test=model.json_test,
+            jsonb_test=model.jsonb_test,
+            bytea_test=model.bytea_test,
+            date_test=model.date_test,
+            time_test=model.time_test,
+            timetz_test=model.timetz_test,
+            timestamp_test=model.timestamp_test,
+            timestamptz_test=model.timestamptz_test,
+            interval_test=model.interval_test,
+            text_test=model.text_test,
+            varchar_test=model.varchar_test,
+            bpchar_test=model.bpchar_test,
+            char_test=model.char_test,
+            citext_test=model.citext_test,
+            uuid_test=model.uuid_test,
+            inet_test=model.inet_test,
+            cidr_test=model.cidr_test,
+            macaddr_test=model.macaddr_test,
+            macaddr8_test=model.macaddr8_test,
+            ltree_test=model.ltree_test,
+            lquery_test=model.lquery_test,
+            ltxtquery_test=model.ltxtquery_test,
+        )
+
+        assert result == "INSERT 0 1"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::create_result"], name="TestMsgspecFunctions::update_result")
+    async def test_update_result(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.update_result_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
+
+        assert result == "UPDATE 1"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::update_result"], name="TestMsgspecFunctions::delete_result")
+    async def test_delete_result(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries.delete_one_result_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
+
+        assert result == "DELETE 1"

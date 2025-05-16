@@ -648,9 +648,9 @@ class TestAttrsFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsFunctions::create_result"], name="TestAttrsFunctions::update_result")
     async def test_update_result(
-            self,
-            asyncpg_conn: asyncpg.Connection[asyncpg.Record],
-            model: models.TestPostgresType,
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
     ) -> None:
         result = await queries.update_result_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
 
