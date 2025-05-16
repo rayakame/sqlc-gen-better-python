@@ -205,6 +205,56 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
         $33, $34, $35, $36)
 """
 
+CREATE_RESULT_ONE_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: CreateResultOneTestPostgresType :execresult
+INSERT INTO test_postgres_types (id,
+                                 serial_test,
+                                 serial4_test,
+                                 bigserial_test,
+                                 smallserial_test,
+                                 int_test,
+                                 bigint_test,
+                                 smallint_test,
+                                 float_test,
+                                 double_precision_test,
+                                 real_test,
+                                 numeric_test,
+                                 money_test,
+                                 bool_test,
+                                 json_test,
+                                 jsonb_test,
+                                 bytea_test,
+                                 date_test,
+                                 time_test,
+                                 timetz_test,
+                                 timestamp_test,
+                                 timestamptz_test,
+                                 interval_test,
+                                 text_test,
+                                 varchar_test,
+                                 bpchar_test,
+                                 char_test,
+                                 citext_test,
+                                 uuid_test,
+                                 inet_test,
+                                 cidr_test,
+                                 macaddr_test,
+                                 macaddr8_test,
+                                 ltree_test,
+                                 lquery_test,
+                                 ltxtquery_test)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14, $15, $16,
+        $17, $18, $19, $20, $21, $22, $23, $24,
+        $25, $26, $27, $28, $29, $30, $31, $32,
+        $33, $34, $35, $36)
+"""
+
+DELETE_ONE_RESULT_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: DeleteOneResultTestPostgresType :execresult
+DELETE
+FROM test_postgres_types
+WHERE test_postgres_types.id = $1
+"""
+
 DELETE_ONE_TEST_POSTGRES_INNER_TYPE: typing.Final[str] = """-- name: DeleteOneTestPostgresInnerType :exec
 DELETE
 FROM test_inner_postgres_types
@@ -271,6 +321,10 @@ GET_ONE_TEST_TIMESTAMP_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneTest
 SELECT timestamp_test
 FROM test_postgres_types
 WHERE id = $1 LIMIT 1
+"""
+
+UPDATE_RESULT_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: UpdateResultTestPostgresType :execresult
+UPDATE test_postgres_types SET serial_test = 187 WHERE test_postgres_types.id = $1
 """
 
 
@@ -460,6 +514,113 @@ class Queries:
         ltxtquery_test -- str.
         """
         await self._conn.execute(CREATE_ONE_TEST_POSTGRES_TYPE, id_, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
+
+    async def create_result_one_test_postgres_type(self, *, id_: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> str:
+        """Execute and return the result of SQL query with `name: CreateResultOneTestPostgresType :execresult`.
+
+        ```sql
+        INSERT INTO test_postgres_types (id,
+                                         serial_test,
+                                         serial4_test,
+                                         bigserial_test,
+                                         smallserial_test,
+                                         int_test,
+                                         bigint_test,
+                                         smallint_test,
+                                         float_test,
+                                         double_precision_test,
+                                         real_test,
+                                         numeric_test,
+                                         money_test,
+                                         bool_test,
+                                         json_test,
+                                         jsonb_test,
+                                         bytea_test,
+                                         date_test,
+                                         time_test,
+                                         timetz_test,
+                                         timestamp_test,
+                                         timestamptz_test,
+                                         interval_test,
+                                         text_test,
+                                         varchar_test,
+                                         bpchar_test,
+                                         char_test,
+                                         citext_test,
+                                         uuid_test,
+                                         inet_test,
+                                         cidr_test,
+                                         macaddr_test,
+                                         macaddr8_test,
+                                         ltree_test,
+                                         lquery_test,
+                                         ltxtquery_test)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+                $9, $10, $11, $12, $13, $14, $15, $16,
+                $17, $18, $19, $20, $21, $22, $23, $24,
+                $25, $26, $27, $28, $29, $30, $31, $32,
+                $33, $34, $35, $36)
+        ```
+
+        Arguments:
+        id_ -- int.
+        serial_test -- int.
+        serial4_test -- int.
+        bigserial_test -- int.
+        smallserial_test -- int.
+        int_test -- int.
+        bigint_test -- int.
+        smallint_test -- int.
+        float_test -- float.
+        double_precision_test -- float.
+        real_test -- float.
+        numeric_test -- decimal.Decimal.
+        money_test -- str.
+        bool_test -- bool.
+        json_test -- str.
+        jsonb_test -- str.
+        bytea_test -- memoryview.
+        date_test -- datetime.date.
+        time_test -- datetime.time.
+        timetz_test -- datetime.time.
+        timestamp_test -- datetime.datetime.
+        timestamptz_test -- datetime.datetime.
+        interval_test -- datetime.timedelta.
+        text_test -- str.
+        varchar_test -- str.
+        bpchar_test -- str.
+        char_test -- str.
+        citext_test -- str.
+        uuid_test -- uuid.UUID.
+        inet_test -- str.
+        cidr_test -- str.
+        macaddr_test -- str.
+        macaddr8_test -- str.
+        ltree_test -- str.
+        lquery_test -- str.
+        ltxtquery_test -- str.
+
+        Returns:
+            str -- The result returned when executing the query.
+        """
+        return await self._conn.execute(CREATE_RESULT_ONE_TEST_POSTGRES_TYPE, id_, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
+
+    async def delete_one_result_test_postgres_type(self, *, id_: int) -> str:
+        """Execute and return the result of SQL query with `name: DeleteOneResultTestPostgresType :execresult`.
+
+        ```sql
+        DELETE
+        FROM test_postgres_types
+        WHERE test_postgres_types.id = $1
+        ```
+
+        Arguments:
+        id_ -- int.
+
+        Returns:
+            str -- The result returned when executing the query.
+        """
+        return await self._conn.execute(DELETE_ONE_RESULT_TEST_POSTGRES_TYPE, id_)
 
     async def delete_one_test_postgres_inner_type(self, *, table_id: int) -> None:
         """Execute SQL query with `name: DeleteOneTestPostgresInnerType :exec`.
@@ -673,3 +834,18 @@ class Queries:
         if row is None:
             return None
         return row[0]
+
+    async def update_result_test_postgres_type(self, *, id_: int) -> str:
+        """Execute and return the result of SQL query with `name: UpdateResultTestPostgresType :execresult`.
+
+        ```sql
+        UPDATE test_postgres_types SET serial_test = 187 WHERE test_postgres_types.id = $1
+        ```
+
+        Arguments:
+        id_ -- int.
+
+        Returns:
+            str -- The result returned when executing the query.
+        """
+        return await self._conn.execute(UPDATE_RESULT_TEST_POSTGRES_TYPE, id_)
