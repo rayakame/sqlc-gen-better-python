@@ -42,6 +42,13 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return await %s.execute(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
+	} else if query.Cmd == metadata.CmdExecRows {
+		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
+		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("result = await %s.execute(%s", conn, query.ConstantName))
+		asyncpgWriteParams(query, body)
+		body.WriteLine(")")
+		body.WriteIndentedLine(indentLevel+1, "return int(result.split()[-1]) if result.split()[-1].isdigit() else 0")
 	} else if query.Cmd == metadata.CmdOne {
 		body.WriteLine(fmt.Sprintf(") -> %s | None:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
@@ -140,6 +147,7 @@ func AsyncpgAcceptedDriverCMDs() []string {
 	return []string{
 		metadata.CmdExec,
 		metadata.CmdExecResult,
+		metadata.CmdExecRows,
 		metadata.CmdOne,
 		metadata.CmdMany,
 	}
