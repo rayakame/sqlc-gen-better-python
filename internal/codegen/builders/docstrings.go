@@ -144,20 +144,41 @@ func (b *IndentStringBuilder) WriteQueryResultsClassDocstring(docstringConnType 
 	b.NewLine()
 }
 
-func (b *IndentStringBuilder) WriteQueryClassDocstring(lvl int, sourceName string, docstringConnType string) {
+func (b *IndentStringBuilder) WriteQueryClassConnDocstring(docstringConnType string) {
 	if *docstringConfig == core.DocstringConventionNone {
 		return
 	}
-	b.WriteIndentedString(lvl, fmt.Sprintf(`"""Queries from file %s.`, sourceName))
+	b.WriteIndentedLine(2, `"""Connection object used to make queries.`)
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, docstringConnType)
+		b.NewLine()
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, fmt.Sprintf("Connection object of type `%s` used to make queries.", docstringConnType))
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, fmt.Sprintf("%s -- Connection object used to make queries.", docstringConnType))
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
+func (b *IndentStringBuilder) WriteQueryClassDocstring(sourceName string, docstringConnType string) {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedString(1, fmt.Sprintf(`"""Queries from file %s.`, sourceName))
 	if *docstringConfig == core.DocstringConventionNumpy {
 		b.NewLine()
 		b.NewLine()
-		b.WriteIndentedLine(lvl, "Parameters")
-		b.WriteIndentedLine(lvl, "----------")
-		b.WriteIndentedLine(lvl, fmt.Sprintf("conn : %s", docstringConnType))
-		b.WriteIndentedLine(lvl+1, "The connection object used to execute queries.")
+		b.WriteIndentedLine(1, "Parameters")
+		b.WriteIndentedLine(1, "----------")
+		b.WriteIndentedLine(1, fmt.Sprintf("conn : %s", docstringConnType))
+		b.WriteIndentedLine(2, "The connection object used to execute queries.")
 		b.NewLine()
-		b.WriteIndentedLine(lvl, `"""`)
+		b.WriteIndentedLine(1, `"""`)
 	} else {
 		b.WriteLine(`"""`)
 	}
