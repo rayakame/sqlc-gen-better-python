@@ -13,6 +13,7 @@ __all__: typing.Sequence[str] = (
 
 import dataclasses
 import typing
+
 if typing.TYPE_CHECKING:
     import asyncpg
     import collections.abc
