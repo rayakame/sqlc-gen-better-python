@@ -13,12 +13,15 @@ __all__: typing.Sequence[str] = (
 
 import attrs
 import typing
+
 if typing.TYPE_CHECKING:
     import asyncpg
     import collections.abc
     import datetime
     import decimal
     import uuid
+
+    ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
 from test.driver_asyncpg.attrs.classes import models
 
@@ -405,14 +408,14 @@ class Queries:
 
     Parameters
     ----------
-    conn : asyncpg.Connection[asyncpg.Record]
+    conn : ConnectionLike
         The connection object used to execute queries.
 
     """
 
     __slots__ = ("_conn",)
 
-    def __init__(self, conn: asyncpg.Connection[asyncpg.Record]) -> None:
+    def __init__(self, conn: ConnectionLike) -> None:
         """Initialize the instance using the connection."""
         self._conn = conn
 

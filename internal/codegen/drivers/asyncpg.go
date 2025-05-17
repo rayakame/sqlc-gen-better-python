@@ -10,7 +10,11 @@ import (
 	"strings"
 )
 
-const AsyncpgConn = "asyncpg.Connection[asyncpg.Record]"
+const AsyncpgConn = "ConnectionLike"
+
+func AsyncpgDriverTypeCheckingHook() []string {
+	return []string{"ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]"}
+}
 
 func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
 	indentLevel := 0
