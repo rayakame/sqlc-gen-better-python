@@ -82,12 +82,17 @@ func (dr *Driver) buildQueryHeader(query *core.Query, body *builders.IndentStrin
 func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStringBuilder) string {
 	className := core.SnakeToCamel(strings.ReplaceAll(sourceName, ".sql", ""), dr.conf)
 	body.WriteLine(fmt.Sprintf("class %s:", className))
-	body.WriteQueryClassDocstring(1, sourceName, dr.connType)
+	body.WriteQueryClassDocstring(sourceName, dr.connType)
 	body.WriteIndentedLine(1, `__slots__ = ("_conn",)`)
 	body.NewLine()
 	body.WriteIndentedLine(1, fmt.Sprintf(`def __init__(self, conn: %s) -> None:`, dr.connType))
 	body.WriteQueryClassInitDocstring(2, dr.connType)
 	body.WriteIndentedLine(2, "self._conn = conn")
+	body.NewLine()
+	body.WriteIndentedLine(1, "@property")
+	body.WriteIndentedLine(1, fmt.Sprintf(`def conn(self) -> %s:`, dr.connType))
+	body.WriteQueryClassConnDocstring(dr.connType)
+	body.WriteIndentedLine(2, `return self._conn`)
 	body.NewLine()
 	return className
 }
@@ -113,6 +118,10 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 		dr.buildQueryHeader(&query, funcBody)
 		funcBody.NewLine()
 	}
+	if core.IsAnyQueryMany(queries) {
+		funcBody.NewLine()
+		allNames = append(allNames, dr.driverBuildQueryResults(funcBody))
+	}
 	funcBody.NewLine()
 	if dr.conf.EmitClasses {
 		allNames = append(allNames, dr.buildClassTemplate(sourceName, funcBody))
@@ -132,7 +141,7 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 			funcBody.NNewLine(newLines)
 		}
 	}
-	body.WriteLine("__all__: typing.Sequence[str] = (")
+	body.WriteLine("__all__: collections.abc.Sequence[str] = (")
 	if len(allNames) > 0 {
 		sort.Slice(allNames, func(i, j int) bool { return allNames[i] < allNames[j] })
 	}
@@ -142,12 +151,22 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 	body.WriteLine(")")
 	body.NewLine()
 	std, tye, pkg := imp.Imports(sourceName)
+	tyeHook := dr.driverTypeCheckingHook()
 	for _, imp := range std {
 		body.WriteLine(imp)
 	}
-	if len(tye) != 0 {
+	if len(tye) != 0 || len(tyeHook) != 0 {
+		if len(std) != 0 {
+			body.NewLine()
+		}
 		body.WriteLine("if typing.TYPE_CHECKING:")
 		for _, imp := range tye {
+			body.WriteIndentedLine(1, imp)
+		}
+		for i, imp := range tyeHook {
+			if i == 0 && len(tye) != 0 {
+				body.NewLine()
+			}
 			body.WriteIndentedLine(1, imp)
 		}
 	}

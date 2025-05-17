@@ -105,3 +105,12 @@ func (q Query) HasRetType() bool {
 		q.Cmd == metadata.CmdBatchMany || q.Cmd == metadata.CmdBatchOne
 	return scanned && !q.Ret.IsEmpty()
 }
+
+func IsAnyQueryMany(queries []Query) bool {
+	for _, query := range queries {
+		if query.Cmd == metadata.CmdMany {
+			return true
+		}
+	}
+	return false
+}

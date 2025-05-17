@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import os
 import pathlib
-import typing as t
+import typing
 
 import nox
 from nox import options
+
+if typing.TYPE_CHECKING:
+    import collections.abc
 
 PATH_TO_PROJECT = pathlib.Path(__name__).parent
 SCRIPT_PATHS = ["noxfile.py", PATH_TO_PROJECT / "scripts", PATH_TO_PROJECT / "test"]
@@ -39,8 +42,8 @@ def uv_sync(
     /,
     *,
     include_self: bool = False,
-    extras: t.Sequence[str] = (),
-    groups: t.Sequence[str] = (),
+    extras: collections.abc.Sequence[str] = (),
+    groups: collections.abc.Sequence[str] = (),
 ) -> None:
     if extras and not include_self:
         msg = "When specifying extras, set `include_self=True`."
@@ -82,7 +85,7 @@ def asyncpg(session: nox.Session) -> None:
 
     sqlc_generate(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
-    session.run("ruff", "check", *session.posargs)
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["asyncpg"])
 
 
 @nox.session(reuse_venv=True)
@@ -91,7 +94,7 @@ def asyncpg_check(session: nox.Session) -> None:
 
     sqlc_check(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
-    session.run("ruff", "check", *session.posargs)
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["asyncpg"])
 
 
 @nox.session(reuse_venv=True)

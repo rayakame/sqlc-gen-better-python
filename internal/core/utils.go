@@ -83,3 +83,12 @@ func SplitLines(s string) []string {
 	}
 	return lines
 }
+
+func IsInMultipleMaps[K comparable, V any](search K, maps ...map[K]V) bool {
+	for _, m := range maps {
+		if _, found := m[search]; found {
+			return true
+		}
+	}
+	return false
+}

@@ -556,7 +556,60 @@ class TestDataclassClasses:
         assert result.test_inner_postgres_type.ltxtquery_test == inner_model.ltxtquery_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassClasses::get_embedded"], name="TestDataclassClasses::delete")
+    @pytest.mark.dependency(
+        depends=["TestDataclassClasses::get_all_embedded"],
+        name="TestDataclassClasses::get_many_iterator",
+    )
+    async def test_get_many_iterator(
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
+    ) -> None:
+        results = queries_obj.get_many_test_iterator_postgres_type(id_=model.id)
+        async with queries_obj.conn.transaction():
+            async for result in results:
+                assert result is not None
+                assert isinstance(result, models.TestPostgresType)
+
+                assert result.id == model.id
+                assert result.serial_test == model.serial_test
+                assert result.serial4_test == model.serial4_test
+                assert result.bigserial_test == model.bigserial_test
+                assert result.smallserial_test == model.smallserial_test
+                assert result.int_test == model.int_test
+                assert result.bigint_test == model.bigint_test
+                assert result.smallint_test == model.smallint_test
+                assert result.float_test == model.float_test
+                assert result.double_precision_test == model.double_precision_test
+                assert result.real_test == model.real_test
+                assert result.numeric_test == model.numeric_test
+                assert result.money_test == model.money_test
+                assert result.bool_test == model.bool_test
+                assert result.json_test == model.json_test
+                assert result.jsonb_test == model.jsonb_test
+                assert result.bytea_test == model.bytea_test
+                assert result.date_test == model.date_test
+                assert result.time_test == model.time_test
+                assert result.timetz_test == model.timetz_test
+                assert result.timestamp_test == model.timestamp_test
+                assert result.timestamptz_test == model.timestamptz_test
+                assert result.interval_test == model.interval_test
+                assert result.text_test == model.text_test
+                assert result.varchar_test == model.varchar_test
+                assert result.bpchar_test == model.bpchar_test
+                assert result.char_test == model.char_test
+                assert result.citext_test == model.citext_test
+                assert result.uuid_test == model.uuid_test
+                assert result.inet_test == model.inet_test
+                assert result.cidr_test == model.cidr_test
+                assert result.macaddr_test == model.macaddr_test
+                assert result.macaddr8_test == model.macaddr8_test
+                assert result.ltree_test == model.ltree_test
+                assert result.lquery_test == model.lquery_test
+                assert result.ltxtquery_test == model.ltxtquery_test
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassClasses::get_many_iterator"], name="TestDataclassClasses::delete")
     async def test_delete(
         self,
         queries_obj: queries.Queries,
@@ -572,3 +625,155 @@ class TestDataclassClasses:
         inner_model: models.TestInnerPostgresType,
     ) -> None:
         await queries_obj.delete_one_test_postgres_inner_type(table_id=inner_model.table_id)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassClasses::create_result")
+    async def test_create_result(
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries_obj.create_result_one_test_postgres_type(
+            id_=model.id + 1,
+            serial_test=model.serial_test,
+            serial4_test=model.serial4_test,
+            bigserial_test=model.bigserial_test,
+            smallserial_test=model.smallserial_test,
+            int_test=model.int_test,
+            bigint_test=model.bigint_test,
+            smallint_test=model.smallint_test,
+            float_test=model.float_test,
+            double_precision_test=model.double_precision_test,
+            real_test=model.real_test,
+            numeric_test=model.numeric_test,
+            money_test=model.money_test,
+            bool_test=model.bool_test,
+            json_test=model.json_test,
+            jsonb_test=model.jsonb_test,
+            bytea_test=model.bytea_test,
+            date_test=model.date_test,
+            time_test=model.time_test,
+            timetz_test=model.timetz_test,
+            timestamp_test=model.timestamp_test,
+            timestamptz_test=model.timestamptz_test,
+            interval_test=model.interval_test,
+            text_test=model.text_test,
+            varchar_test=model.varchar_test,
+            bpchar_test=model.bpchar_test,
+            char_test=model.char_test,
+            citext_test=model.citext_test,
+            uuid_test=model.uuid_test,
+            inet_test=model.inet_test,
+            cidr_test=model.cidr_test,
+            macaddr_test=model.macaddr_test,
+            macaddr8_test=model.macaddr8_test,
+            ltree_test=model.ltree_test,
+            lquery_test=model.lquery_test,
+            ltxtquery_test=model.ltxtquery_test,
+        )
+
+        assert result == "INSERT 0 1"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassClasses::create_result"], name="TestDataclassClasses::update_result")
+    async def test_update_result(
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries_obj.update_result_test_postgres_type(id_=model.id + 1)
+
+        assert result == "UPDATE 1"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassClasses::update_result"], name="TestDataclassClasses::delete_result")
+    async def test_delete_result(
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries_obj.delete_one_result_test_postgres_type(id_=model.id + 1)
+
+        assert result == "DELETE 1"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassClasses::create_rows")
+    async def test_create_rows(
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries_obj.create_rows_one_test_postgres_type(
+            id_=model.id + 1,
+            serial_test=model.serial_test,
+            serial4_test=model.serial4_test,
+            bigserial_test=model.bigserial_test,
+            smallserial_test=model.smallserial_test,
+            int_test=model.int_test,
+            bigint_test=model.bigint_test,
+            smallint_test=model.smallint_test,
+            float_test=model.float_test,
+            double_precision_test=model.double_precision_test,
+            real_test=model.real_test,
+            numeric_test=model.numeric_test,
+            money_test=model.money_test,
+            bool_test=model.bool_test,
+            json_test=model.json_test,
+            jsonb_test=model.jsonb_test,
+            bytea_test=model.bytea_test,
+            date_test=model.date_test,
+            time_test=model.time_test,
+            timetz_test=model.timetz_test,
+            timestamp_test=model.timestamp_test,
+            timestamptz_test=model.timestamptz_test,
+            interval_test=model.interval_test,
+            text_test=model.text_test,
+            varchar_test=model.varchar_test,
+            bpchar_test=model.bpchar_test,
+            char_test=model.char_test,
+            citext_test=model.citext_test,
+            uuid_test=model.uuid_test,
+            inet_test=model.inet_test,
+            cidr_test=model.cidr_test,
+            macaddr_test=model.macaddr_test,
+            macaddr8_test=model.macaddr8_test,
+            ltree_test=model.ltree_test,
+            lquery_test=model.lquery_test,
+            ltxtquery_test=model.ltxtquery_test,
+        )
+
+        assert result == 1
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassClasses::create_rows"], name="TestDataclassClasses::update_rows")
+    async def test_update_rows(
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries_obj.update_rows_test_postgres_type(id_=model.id + 1)
+
+        assert result == 1
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassClasses::update_rows"], name="TestDataclassClasses::delete_rows")
+    async def test_delete_rows(
+        self,
+        queries_obj: queries.Queries,
+        model: models.TestPostgresType,
+    ) -> None:
+        result = await queries_obj.delete_one_rows_test_postgres_type(id_=model.id + 1)
+
+        assert result == 1
+
+    @pytest.mark.asyncio(loop_scope="session")
+    async def test_create_table(
+        self,
+        queries_obj: queries.Queries,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    ) -> None:
+        result = await queries_obj.create_rows_table()
+
+        assert result == 0
+
+        await asyncpg_conn.execute("""DROP TABLE test_create_rows_table;""")

@@ -1,0 +1,4 @@
+codecov:
+  bot: "Code Coverage"
+  strict_yaml_branch: "main"
+  max_report_age: 24

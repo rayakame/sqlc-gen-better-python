@@ -37,6 +37,15 @@ pythonVersion = "3.10"
 typeCheckingMode = "strict"
 
 reportUnnecessaryTypeIgnoreComment = "error"
+deprecateTypingAliases = true
+reportCallInDefaultInitializer = true
+reportImplicitOverride = true
+reportImplicitStringConcatenation = true
+reportImportCycles = true
+reportPropertyTypeMismatch = true
+reportShadowedImports = true
+reportUninitializedInstanceVariable = true
+
 
 [tool.pytest.ini_options]
 required_plugins = ["pytest-asyncio", "pytest-dependency"]

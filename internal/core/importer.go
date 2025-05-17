@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
+	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"sort"
 	"strings"
 )
@@ -136,25 +137,48 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 
 func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map[string]importSpec, map[string]importSpec, map[string]importSpec) {
 	queryUses := func(name string) (bool, bool) {
+		var uses *bool = nil
+		var typeChecking *bool = nil
+
+		helper := func(val1, val2 bool) {
+			if uses == nil || typeChecking == nil {
+				uses = new(bool)
+				typeChecking = new(bool)
+				*uses = val1
+				*typeChecking = val2
+			} else if *typeChecking == true {
+				*uses = val1
+				*typeChecking = val2
+			}
+		}
 		for _, q := range i.Queries {
 			//if q.SourceName != fileName { TODO q.SourceName is the name of the sql file
 			//	continue
 			//}
 			if val1, val2 := i.queryValueUses(name, q.Ret); val1 {
-				return val1, val2
+				if q.Cmd == metadata.CmdMany {
+					helper(val1, false)
+				}
+				helper(val1, val2)
 			}
 			for _, arg := range q.Args {
 				if val1, val2 := i.queryValueUses(name, arg); val1 {
-					return val1, val2
+					helper(val1, val2)
 				}
 			}
 		}
-		return false, false
+		if uses == nil || typeChecking == nil {
+			return false, false
+		}
+		return *uses, *typeChecking
 	}
 
 	std := stdImports(queryUses)
 	std, typeChecking := i.splitTypeChecking(std)
 	typeChecking[i.C.SqlDriver.String()] = importSpec{Module: i.C.SqlDriver.String()}
+	if IsAnyQueryMany(i.Queries) && i.C.SqlDriver == SQLDriverAsyncpg {
+		typeChecking[i.C.SqlDriver.String()+".cursor"] = importSpec{Module: i.C.SqlDriver.String() + ".cursor"}
+	}
 	std["typing"] = importSpec{Module: "typing"}
 
 	pkg := make(map[string]importSpec)
@@ -193,6 +217,23 @@ func (i *Importer) queryImports(fileName string) ([]string, []string, []string) 
 	if len(typeCheck) != 0 {
 		typeLines = append(typeLines, buildImportBlock(typeCheck)...)
 	}
+	if IsAnyQueryMany(i.Queries) {
+		if len(typeCheck) != 0 {
+			typeLines[len(typeLines)-1] = typeLines[len(typeLines)-1] + "\n"
+		}
+		queryResultsArgsType := "QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview"
+		if IsInMultipleMaps("decimal", std, typeCheck) {
+			queryResultsArgsType += " | decimal.Decimal"
+		}
+		if IsInMultipleMaps("uuid", std, typeCheck) {
+			queryResultsArgsType += " | uuid.UUID"
+		}
+		if IsInMultipleMaps("datetime", std, typeCheck) {
+			queryResultsArgsType += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
+		}
+		typeLines = append(typeLines, queryResultsArgsType)
+	}
+
 	if len(pkg) != 0 {
 		packageLines = append(packageLines, buildImportBlock(pkg)...)
 	}
@@ -251,26 +292,35 @@ func buildImportBlock(pkgs map[string]importSpec) []string {
 	return importStrings
 }
 
+// typeCheckingOverwriteProtection function that takes in importSpec map and adds/replaced imports.
+// Important here is that importSpec's with TypeChecking set to false have higher priority then
+// type checking imports.
+func typeCheckingOverwriteProtection(std map[string]importSpec, name string, newImport importSpec) {
+	if val, found := std[name]; found {
+		if val.TypeChecking == true {
+			std[name] = newImport
+		}
+	} else {
+		std[name] = newImport
+	}
+}
+
 func stdImports(uses func(name string) (bool, bool)) map[string]importSpec {
 	std := make(map[string]importSpec)
 	std["collections"] = importSpec{Module: "collections.abc", TypeChecking: true}
-	if use, typeChecking := uses("decimal.Decimal"); use {
-		std["decimal"] = importSpec{Module: "decimal", TypeChecking: typeChecking}
+	add := func(name, module string) {
+		if use, typeChecking := uses(name); use {
+			typeCheckingOverwriteProtection(std, module, importSpec{Module: module, TypeChecking: typeChecking})
+		}
 	}
-	if use, typeChecking := uses("datetime.date"); use {
-		std["datetime"] = importSpec{Module: "datetime", TypeChecking: typeChecking}
-	}
-	if use, typeChecking := uses("datetime.time"); use {
-		std["datetime"] = importSpec{Module: "datetime", TypeChecking: typeChecking}
-	}
-	if use, typeChecking := uses("datetime.datetime"); use {
-		std["datetime"] = importSpec{Module: "datetime", TypeChecking: typeChecking}
-	}
-	if use, typeChecking := uses("datetime.timedelta"); use {
-		std["datetime"] = importSpec{Module: "datetime", TypeChecking: typeChecking}
-	}
-	if use, typeChecking := uses("uuid.UUID"); use {
-		std["uuid"] = importSpec{Module: "uuid", TypeChecking: typeChecking}
-	}
+
+	add("decimal.Decimal", "decimal")
+
+	add("datetime.date", "datetime")
+	add("datetime.time", "datetime")
+	add("datetime.datetime", "datetime")
+	add("datetime.timedelta", "datetime")
+
+	add("uuid.UUID", "uuid")
 	return std
 }
