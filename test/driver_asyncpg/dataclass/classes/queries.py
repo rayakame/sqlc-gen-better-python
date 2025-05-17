@@ -20,6 +20,8 @@ if typing.TYPE_CHECKING:
     import decimal
     import uuid
 
+    ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+
 from test.driver_asyncpg.dataclass.classes import models
 
 
@@ -401,12 +403,12 @@ class Queries:
 
     __slots__ = ("_conn",)
 
-    def __init__(self, conn: asyncpg.Connection[asyncpg.Record]) -> None:
+    def __init__(self, conn: ConnectionLike) -> None:
         """Initialize the instance using the connection.
 
         Args:
             conn:
-                Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+                Connection object of type `ConnectionLike` used to execute the query.
         """
         self._conn = conn
 

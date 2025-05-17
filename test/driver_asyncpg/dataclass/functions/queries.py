@@ -39,6 +39,8 @@ if typing.TYPE_CHECKING:
     import decimal
     import uuid
 
+    ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+
 from test.driver_asyncpg.dataclass.functions import models
 
 
@@ -415,7 +417,7 @@ WHERE test_postgres_types.id = $1
 """
 
 
-async def create_one_test_postgres_inner_type(conn: asyncpg.Connection[asyncpg.Record], *, table_id: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> None:
+async def create_one_test_postgres_inner_type(conn: ConnectionLike, *, table_id: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> None:
     """Execute SQL query with `name: CreateOneTestPostgresInnerType :exec`.
 
     ```sql
@@ -464,7 +466,7 @@ async def create_one_test_postgres_inner_type(conn: asyncpg.Connection[asyncpg.R
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         table_id: int.
         serial_test: int.
         serial4_test: int.
@@ -505,7 +507,7 @@ async def create_one_test_postgres_inner_type(conn: asyncpg.Connection[asyncpg.R
     await conn.execute(CREATE_ONE_TEST_POSTGRES_INNER_TYPE, table_id, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
 
 
-async def create_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> None:
+async def create_one_test_postgres_type(conn: ConnectionLike, *, id_: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> None:
     """Execute SQL query with `name: CreateOneTestPostgresType :exec`.
 
     ```sql
@@ -554,7 +556,7 @@ async def create_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
         serial_test: int.
         serial4_test: int.
@@ -595,7 +597,7 @@ async def create_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]
     await conn.execute(CREATE_ONE_TEST_POSTGRES_TYPE, id_, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
 
 
-async def create_result_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> str:
+async def create_result_one_test_postgres_type(conn: ConnectionLike, *, id_: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> str:
     """Execute and return the result of SQL query with `name: CreateResultOneTestPostgresType :execresult`.
 
     ```sql
@@ -644,7 +646,7 @@ async def create_result_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
         serial_test: int.
         serial4_test: int.
@@ -688,7 +690,7 @@ async def create_result_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.
     return await conn.execute(CREATE_RESULT_ONE_TEST_POSTGRES_TYPE, id_, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
 
 
-async def create_rows_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> int:
+async def create_rows_one_test_postgres_type(conn: ConnectionLike, *, id_: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> int:
     """Execute SQL query with `name: CreateRowsOneTestPostgresType :execrows` and return the number of affected rows.
 
     ```sql
@@ -737,7 +739,7 @@ async def create_rows_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Re
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
         serial_test: int.
         serial4_test: int.
@@ -782,7 +784,7 @@ async def create_rows_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Re
     return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
 
 
-async def create_rows_table(conn: asyncpg.Connection[asyncpg.Record]) -> int:
+async def create_rows_table(conn: ConnectionLike) -> int:
     """Execute SQL query with `name: CreateRowsTable :execrows` and return the number of affected rows.
 
     ```sql
@@ -795,7 +797,7 @@ async def create_rows_table(conn: asyncpg.Connection[asyncpg.Record]) -> int:
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
 
     Returns:
         The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
@@ -804,7 +806,7 @@ async def create_rows_table(conn: asyncpg.Connection[asyncpg.Record]) -> int:
     return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
 
 
-async def delete_one_result_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> str:
+async def delete_one_result_test_postgres_type(conn: ConnectionLike, *, id_: int) -> str:
     """Execute and return the result of SQL query with `name: DeleteOneResultTestPostgresType :execresult`.
 
     ```sql
@@ -815,7 +817,7 @@ async def delete_one_result_test_postgres_type(conn: asyncpg.Connection[asyncpg.
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -824,7 +826,7 @@ async def delete_one_result_test_postgres_type(conn: asyncpg.Connection[asyncpg.
     return await conn.execute(DELETE_ONE_RESULT_TEST_POSTGRES_TYPE, id_)
 
 
-async def delete_one_rows_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> int:
+async def delete_one_rows_test_postgres_type(conn: ConnectionLike, *, id_: int) -> int:
     """Execute SQL query with `name: DeleteOneRowsTestPostgresType :execrows` and return the number of affected rows.
 
     ```sql
@@ -835,7 +837,7 @@ async def delete_one_rows_test_postgres_type(conn: asyncpg.Connection[asyncpg.Re
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -845,7 +847,7 @@ async def delete_one_rows_test_postgres_type(conn: asyncpg.Connection[asyncpg.Re
     return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
 
 
-async def delete_one_test_postgres_inner_type(conn: asyncpg.Connection[asyncpg.Record], *, table_id: int) -> None:
+async def delete_one_test_postgres_inner_type(conn: ConnectionLike, *, table_id: int) -> None:
     """Execute SQL query with `name: DeleteOneTestPostgresInnerType :exec`.
 
     ```sql
@@ -856,13 +858,13 @@ async def delete_one_test_postgres_inner_type(conn: asyncpg.Connection[asyncpg.R
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         table_id: int.
     """
     await conn.execute(DELETE_ONE_TEST_POSTGRES_INNER_TYPE, table_id)
 
 
-async def delete_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> None:
+async def delete_one_test_postgres_type(conn: ConnectionLike, *, id_: int) -> None:
     """Execute SQL query with `name: DeleteOneTestPostgresType :exec`.
 
     ```sql
@@ -873,13 +875,13 @@ async def delete_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record]
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
     """
     await conn.execute(DELETE_ONE_TEST_POSTGRES_TYPE, id_)
 
 
-async def get_all_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> GetAllEmbeddedTestPostgresTypeRow | None:
+async def get_all_embedded_test_postgres_type(conn: ConnectionLike, *, id_: int) -> GetAllEmbeddedTestPostgresTypeRow | None:
     """Fetch one from the db using the SQL query with `name: GetAllEmbeddedTestPostgresType :one`.
 
     ```sql
@@ -891,7 +893,7 @@ async def get_all_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.R
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -903,7 +905,7 @@ async def get_all_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.R
     return GetAllEmbeddedTestPostgresTypeRow(test_postgres_type=models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]), test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]), date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]), cidr_test=str(row[66]), macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
 
 
-async def get_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> GetEmbeddedTestPostgresTypeRow | None:
+async def get_embedded_test_postgres_type(conn: ConnectionLike, *, id_: int) -> GetEmbeddedTestPostgresTypeRow | None:
     """Fetch one from the db using the SQL query with `name: GetEmbeddedTestPostgresType :one`.
 
     ```sql
@@ -915,7 +917,7 @@ async def get_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.Recor
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -927,7 +929,7 @@ async def get_embedded_test_postgres_type(conn: asyncpg.Connection[asyncpg.Recor
     return GetEmbeddedTestPostgresTypeRow(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35], test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]), date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]), cidr_test=str(row[66]), macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
 
 
-async def get_many_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> collections.abc.Sequence[memoryview]:
+async def get_many_test_bytea_postgres_type(conn: ConnectionLike, *, id_: int) -> collections.abc.Sequence[memoryview]:
     """Fetch many from the db using the SQL query with `name: GetManyTestByteaPostgresType :many`.
 
     ```sql
@@ -938,7 +940,7 @@ async def get_many_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Rec
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -951,7 +953,7 @@ async def get_many_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Rec
     ]
 
 
-async def get_many_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> collections.abc.Sequence[models.TestPostgresType]:
+async def get_many_test_postgres_type(conn: ConnectionLike, *, id_: int) -> collections.abc.Sequence[models.TestPostgresType]:
     """Fetch many from the db using the SQL query with `name: GetManyTestPostgresType :many`.
 
     ```sql
@@ -962,7 +964,7 @@ async def get_many_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], 
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -975,7 +977,7 @@ async def get_many_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], 
     ]
 
 
-async def get_many_test_timestamp_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> collections.abc.Sequence[datetime.datetime]:
+async def get_many_test_timestamp_postgres_type(conn: ConnectionLike, *, id_: int) -> collections.abc.Sequence[datetime.datetime]:
     """Fetch many from the db using the SQL query with `name: GetManyTestTimestampPostgresType :many`.
 
     ```sql
@@ -986,7 +988,7 @@ async def get_many_test_timestamp_postgres_type(conn: asyncpg.Connection[asyncpg
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -999,7 +1001,7 @@ async def get_many_test_timestamp_postgres_type(conn: asyncpg.Connection[asyncpg
     ]
 
 
-async def get_one_inner_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, table_id: int) -> models.TestInnerPostgresType | None:
+async def get_one_inner_test_postgres_type(conn: ConnectionLike, *, table_id: int) -> models.TestInnerPostgresType | None:
     """Fetch one from the db using the SQL query with `name: GetOneInnerTestPostgresType :one`.
 
     ```sql
@@ -1010,7 +1012,7 @@ async def get_one_inner_test_postgres_type(conn: asyncpg.Connection[asyncpg.Reco
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         table_id: int.
 
     Returns:
@@ -1022,7 +1024,7 @@ async def get_one_inner_test_postgres_type(conn: asyncpg.Connection[asyncpg.Reco
     return models.TestInnerPostgresType(table_id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]   )
 
 
-async def get_one_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> memoryview | None:
+async def get_one_test_bytea_postgres_type(conn: ConnectionLike, *, id_: int) -> memoryview | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestByteaPostgresType :one`.
 
     ```sql
@@ -1033,7 +1035,7 @@ async def get_one_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Reco
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -1045,7 +1047,7 @@ async def get_one_test_bytea_postgres_type(conn: asyncpg.Connection[asyncpg.Reco
     return memoryview(row[0])
 
 
-async def get_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> models.TestPostgresType | None:
+async def get_one_test_postgres_type(conn: ConnectionLike, *, id_: int) -> models.TestPostgresType | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestPostgresType :one`.
 
     ```sql
@@ -1056,7 +1058,7 @@ async def get_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -1068,7 +1070,7 @@ async def get_one_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *
     return models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]   )
 
 
-async def get_one_test_timestamp_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> datetime.datetime | None:
+async def get_one_test_timestamp_postgres_type(conn: ConnectionLike, *, id_: int) -> datetime.datetime | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestTimestampPostgresType :one`.
 
     ```sql
@@ -1079,7 +1081,7 @@ async def get_one_test_timestamp_postgres_type(conn: asyncpg.Connection[asyncpg.
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -1091,7 +1093,7 @@ async def get_one_test_timestamp_postgres_type(conn: asyncpg.Connection[asyncpg.
     return row[0]
 
 
-async def update_result_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> str:
+async def update_result_test_postgres_type(conn: ConnectionLike, *, id_: int) -> str:
     """Execute and return the result of SQL query with `name: UpdateResultTestPostgresType :execresult`.
 
     ```sql
@@ -1102,7 +1104,7 @@ async def update_result_test_postgres_type(conn: asyncpg.Connection[asyncpg.Reco
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
@@ -1111,7 +1113,7 @@ async def update_result_test_postgres_type(conn: asyncpg.Connection[asyncpg.Reco
     return await conn.execute(UPDATE_RESULT_TEST_POSTGRES_TYPE, id_)
 
 
-async def update_rows_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record], *, id_: int) -> int:
+async def update_rows_test_postgres_type(conn: ConnectionLike, *, id_: int) -> int:
     """Execute SQL query with `name: UpdateRowsTestPostgresType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1122,7 +1124,7 @@ async def update_rows_test_postgres_type(conn: asyncpg.Connection[asyncpg.Record
 
     Args:
         conn:
-            Connection object of type `asyncpg.Connection[asyncpg.Record]` used to execute the query.
+            Connection object of type `ConnectionLike` used to execute the query.
         id_: int.
 
     Returns:
