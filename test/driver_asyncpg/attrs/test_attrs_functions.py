@@ -579,7 +579,60 @@ class TestAttrsFunctions:
         assert result.test_inner_postgres_type.ltxtquery_test == inner_model.ltxtquery_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestAttrsFunctions::get_embedded"], name="TestAttrsFunctions::delete")
+    @pytest.mark.dependency(
+        depends=["TestAttrsFunctions::get_all_embedded"],
+        name="TestAttrsFunctions::get_many_iterator",
+    )
+    async def test_get_many_iterator(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        results = queries.get_many_test_iterator_postgres_type(conn=asyncpg_conn, id_=model.id)
+        async with asyncpg_conn.transaction():
+            async for result in results:
+                assert result is not None
+                assert isinstance(result, models.TestPostgresType)
+
+                assert result.id == model.id
+                assert result.serial_test == model.serial_test
+                assert result.serial4_test == model.serial4_test
+                assert result.bigserial_test == model.bigserial_test
+                assert result.smallserial_test == model.smallserial_test
+                assert result.int_test == model.int_test
+                assert result.bigint_test == model.bigint_test
+                assert result.smallint_test == model.smallint_test
+                assert result.float_test == model.float_test
+                assert result.double_precision_test == model.double_precision_test
+                assert result.real_test == model.real_test
+                assert result.numeric_test == model.numeric_test
+                assert result.money_test == model.money_test
+                assert result.bool_test == model.bool_test
+                assert result.json_test == model.json_test
+                assert result.jsonb_test == model.jsonb_test
+                assert result.bytea_test == model.bytea_test
+                assert result.date_test == model.date_test
+                assert result.time_test == model.time_test
+                assert result.timetz_test == model.timetz_test
+                assert result.timestamp_test == model.timestamp_test
+                assert result.timestamptz_test == model.timestamptz_test
+                assert result.interval_test == model.interval_test
+                assert result.text_test == model.text_test
+                assert result.varchar_test == model.varchar_test
+                assert result.bpchar_test == model.bpchar_test
+                assert result.char_test == model.char_test
+                assert result.citext_test == model.citext_test
+                assert result.uuid_test == model.uuid_test
+                assert result.inet_test == model.inet_test
+                assert result.cidr_test == model.cidr_test
+                assert result.macaddr_test == model.macaddr_test
+                assert result.macaddr8_test == model.macaddr8_test
+                assert result.ltree_test == model.ltree_test
+                assert result.lquery_test == model.lquery_test
+                assert result.ltxtquery_test == model.ltxtquery_test
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestAttrsFunctions::get_many_iterator"], name="TestAttrsFunctions::delete")
     async def test_delete(
         self,
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],

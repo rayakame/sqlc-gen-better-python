@@ -21,7 +21,13 @@ WHERE id = $1 LIMIT 1;
 -- name: GetManyTestPostgresType :many
 SELECT *
 FROM test_postgres_types
-WHERE id = $1 LIMIT 2;
+WHERE id = $1;
+
+
+-- name: GetManyTestIteratorPostgresType :many
+SELECT *
+FROM test_postgres_types
+WHERE id = $1;
 
 -- name: GetManyTestTimestampPostgresType :many
 SELECT timestamp_test
@@ -254,3 +260,5 @@ CREATE TABLE test_create_rows_table
     id   int PRIMARY KEY NOT NULL,
     test int             NOT NULL
 );
+
+
