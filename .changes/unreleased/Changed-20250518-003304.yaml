@@ -1,0 +1,6 @@
+kind: Changed
+body: '`:many` queries now return `QueryResults` allowing both iteration over rows and fetching rows.'
+time: 2025-05-18T00:33:04.2388092+02:00
+custom:
+    Author: rayakame
+    PR: "74"

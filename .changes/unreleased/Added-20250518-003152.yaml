@@ -1,0 +1,6 @@
+kind: Added
+body: Added `ConnectionLike` instead of `asyncpg.Connection` which allows also using connection pools
+time: 2025-05-18T00:31:52.6526507+02:00
+custom:
+    Author: AlexanderHott
+    PR: "74"
