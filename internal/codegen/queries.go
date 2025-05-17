@@ -113,6 +113,10 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 		dr.buildQueryHeader(&query, funcBody)
 		funcBody.NewLine()
 	}
+	if core.IsAnyQueryMany(queries) {
+		funcBody.NewLine()
+		allNames = append(allNames, dr.driverBuildQueryResults(funcBody))
+	}
 	funcBody.NewLine()
 	if dr.conf.EmitClasses {
 		allNames = append(allNames, dr.buildClassTemplate(sourceName, funcBody))
@@ -132,7 +136,7 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 			funcBody.NNewLine(newLines)
 		}
 	}
-	body.WriteLine("__all__: typing.Sequence[str] = (")
+	body.WriteLine("__all__: collections.abc.Sequence[str] = (")
 	if len(allNames) > 0 {
 		sort.Slice(allNames, func(i, j int) bool { return allNames[i] < allNames[j] })
 	}

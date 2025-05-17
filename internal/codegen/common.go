@@ -9,11 +9,14 @@ import (
 
 type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, []core.FunctionArg, core.PyType, bool) error
 type TypeAcceptedDriverCMDs func() []string
-
 type TypeDriverTypeCheckingHook func() []string
+type TypeDriverBuildQueryResults func(*builders.IndentStringBuilder) string
 
 func defaultDriverTypeCheckingHook() []string {
 	return nil
+}
+func defaultDriverBuildQueryResults(_ *builders.IndentStringBuilder) string {
+	return ""
 }
 
 type Driver struct {
@@ -23,7 +26,8 @@ type Driver struct {
 	buildPyQueryFunc   TypeBuildPyQueryFunc
 	acceptedDriverCMDs TypeAcceptedDriverCMDs
 
-	driverTypeCheckingHook TypeDriverTypeCheckingHook
+	driverTypeCheckingHook  TypeDriverTypeCheckingHook
+	driverBuildQueryResults TypeDriverBuildQueryResults
 
 	//BuildPyQueriesFiles(*core.Importer, []core.Query) ([]*plugin.File, error)
 }
@@ -33,6 +37,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 	var acceptedDriverCMDs TypeAcceptedDriverCMDs
 	var connType string
 	var driverTypeCheckingHook TypeDriverTypeCheckingHook = defaultDriverTypeCheckingHook
+	var driverBuildQueryResults TypeDriverBuildQueryResults = defaultDriverBuildQueryResults
 	switch conf.SqlDriver {
 	case core.SQLDriverAioSQLite:
 		buildPyQueryFunc = drivers.AioSQLiteBuildPyQueryFunc
@@ -46,13 +51,21 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 		buildPyQueryFunc = drivers.AsyncpgBuildPyQueryFunc
 		acceptedDriverCMDs = drivers.AsyncpgAcceptedDriverCMDs
 		connType = drivers.AsyncpgConn
-		driverTypeCheckingHook = drivers.AsyncpgDriverTypeCheckingHook
+		driverTypeCheckingHook = drivers.AsyncpgTypeCheckingHook
+		driverBuildQueryResults = drivers.AsyncpgBuildQueryResults
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
 	builders.SetDocstringConfig(conf.EmitDocstrings, conf.EmitDocstringsSQL)
 
-	return &Driver{buildPyQueryFunc: buildPyQueryFunc, acceptedDriverCMDs: acceptedDriverCMDs, conf: conf, connType: connType, driverTypeCheckingHook: driverTypeCheckingHook}, nil
+	return &Driver{
+		buildPyQueryFunc:        buildPyQueryFunc,
+		acceptedDriverCMDs:      acceptedDriverCMDs,
+		conf:                    conf,
+		connType:                connType,
+		driverTypeCheckingHook:  driverTypeCheckingHook,
+		driverBuildQueryResults: driverBuildQueryResults,
+	}, nil
 }
 
 func (dr *Driver) supportedCMD(command string) error {

@@ -14,6 +14,136 @@ func SetDocstringConfig(c *string, b *bool) {
 	docstringConfigEmitSQL = b
 }
 
+func (b *IndentStringBuilder) WriteQueryResultsAiterDocstring() {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedLine(2, `"""`+"Initialize iteration support for `async for`.")
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, "QueryResults[T]")
+		b.WriteIndentedLine(3, "Self as an asynchronous iterator.")
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, "Self as an asynchronous iterator.")
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, "Self as an asynchronous iterator.")
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
+func (b *IndentStringBuilder) WriteQueryResultsAnextDocstringAsyncpg() {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedLine(2, `"""Yield the next item in the query result using an asyncpg cursor.`)
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, "T")
+		b.WriteIndentedLine(3, "The next decoded result.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises")
+		b.WriteIndentedLine(2, "------")
+		b.WriteIndentedLine(2, "StopAsyncIteration")
+		b.WriteIndentedLine(3, "When no more records are available.")
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, "The next decoded result of type `T`.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises:")
+		b.WriteIndentedLine(3, "StopAsyncIteration: When no more records are available.")
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, "The next decoded result of type `T`.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises:")
+		b.WriteIndentedLine(2, "StopAsyncIteration -- When no more records are available.")
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
+func (b *IndentStringBuilder) WriteQueryResultsAwaitDocstring() {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedLine(2, `"""`+"Allow `await` on the object to return all rows as a fully decoded sequence.")
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, "collections.abc.Sequence[T]")
+		b.WriteIndentedLine(3, "A sequence of decoded objects of type `T`.")
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, "A sequence of decoded objects of type `T`.")
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, "A sequence of decoded objects of type `T`.")
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
+func (b *IndentStringBuilder) WriteQueryResultsInitDocstring(docstringConnType string, docstringDriverReturnType string) {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedString(2, fmt.Sprintf(`"""Initialize the QueryResults instance.`))
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteLine(`"""`)
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.NNewLine(2)
+		b.WriteIndentedLine(2, "Args:")
+		b.WriteIndentedLine(3, "conn:")
+		b.WriteIndentedLine(4, fmt.Sprintf("The connection object of type `%s` used to execute queries.", docstringConnType))
+		b.WriteIndentedLine(3, "sql:")
+		b.WriteIndentedLine(4, "The SQL statement that will be executed when fetching/iterating.")
+		b.WriteIndentedLine(3, "decode_hook:")
+		b.WriteIndentedLine(4, fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", docstringDriverReturnType))
+		b.WriteIndentedLine(3, "*args:")
+		b.WriteIndentedLine(4, "Arguments that should be sent when executing the sql query.")
+		b.WriteIndentedLine(2, `"""`)
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.NNewLine(2)
+		b.WriteIndentedLine(2, "Arguments:")
+		b.WriteIndentedLine(2, fmt.Sprintf("conn -- The connection object of type `%s` used to execute queries.", docstringConnType))
+		b.WriteIndentedLine(2, "sql -- The SQL statement that will be executed when fetching/iterating.")
+		b.WriteIndentedLine(2, fmt.Sprintf("decode_hook -- A callback that turns an `%s` object into `T` that will be returned.", docstringDriverReturnType))
+		b.WriteIndentedLine(2, "*args -- Arguments that should be sent when executing the sql query.")
+		b.WriteIndentedLine(2, `"""`)
+	}
+}
+
+func (b *IndentStringBuilder) WriteQueryResultsClassDocstring(docstringConnType string, docstringDriverReturnType string) {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedString(1, `"""Helper class that allows both iteration and normal fetching of data from the db.`)
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.NewLine()
+		b.NewLine()
+		b.WriteIndentedLine(1, "Parameters")
+		b.WriteIndentedLine(1, "----------")
+		b.WriteIndentedLine(1, "conn")
+		b.WriteIndentedLine(2, fmt.Sprintf("The connection object of type `%s` used to execute queries.", docstringConnType))
+		b.WriteIndentedLine(1, "sql")
+		b.WriteIndentedLine(2, "The SQL statement that will be executed when fetching/iterating.")
+		b.WriteIndentedLine(1, "decode_hook")
+		b.WriteIndentedLine(2, fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", docstringDriverReturnType))
+		b.WriteIndentedLine(1, "*args")
+		b.WriteIndentedLine(2, "Arguments that should be sent when executing the sql query.")
+		b.NewLine()
+		b.WriteIndentedLine(1, `"""`)
+	} else {
+		b.WriteLine(`"""`)
+	}
+	b.NewLine()
+}
+
 func (b *IndentStringBuilder) WriteQueryClassDocstring(lvl int, sourceName string, docstringConnType string) {
 	if *docstringConfig == core.DocstringConventionNone {
 		return
@@ -229,7 +359,7 @@ func (b *IndentStringBuilder) WriteQueryFunctionDocstring(lvl int, query *core.Q
 				b.NewLine()
 			}
 			b.WriteIndentedLine(lvl, "Returns:")
-			b.WriteIndentedLine(lvl+1, fmt.Sprintf("%s -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.", returnType.Type))
+			b.WriteIndentedLine(lvl, fmt.Sprintf("%s -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.", returnType.Type))
 		}
 		b.WriteIndentedLine(lvl, `"""`)
 	} else if query.Cmd == metadata.CmdExecResult {
@@ -280,7 +410,7 @@ func (b *IndentStringBuilder) WriteQueryFunctionDocstring(lvl int, query *core.Q
 				b.NewLine()
 			}
 			b.WriteIndentedLine(lvl, "Returns:")
-			b.WriteIndentedLine(lvl+1, fmt.Sprintf("%s -- The result returned when executing the query.", returnType.Type))
+			b.WriteIndentedLine(lvl, fmt.Sprintf("%s -- The result returned when executing the query.", returnType.Type))
 		}
 		b.WriteIndentedLine(lvl, `"""`)
 	} else if query.Cmd == metadata.CmdExecLastId {

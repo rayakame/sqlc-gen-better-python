@@ -11,15 +11,46 @@ import (
 )
 
 const AsyncpgConn = "ConnectionLike"
+const AsyncpgResult = "asyncpg.Record"
 
-func AsyncpgDriverTypeCheckingHook() []string {
-	return []string{"ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]"}
+func AsyncpgTypeCheckingHook() []string {
+	return []string{
+		fmt.Sprintf(
+			"ConnectionLike: typing.TypeAlias = asyncpg.Connection[%[1]s] | asyncpg.pool.PoolConnectionProxy[%[1]s]",
+			AsyncpgResult,
+		),
+	}
+}
+
+func AsyncpgBuildQueryResults(body *builders.IndentStringBuilder) string {
+	body.WriteQueryResultsClassHeader(AsyncpgConn, []string{
+		fmt.Sprintf("self._cursor: asyncpg.cursor.CursorFactory[%s] | None = None", AsyncpgResult),
+		fmt.Sprintf("self._iterator: asyncpg.cursor.CursorIterator[%s] | None = None", AsyncpgResult),
+	}, AsyncpgResult)
+	body.WriteIndentedLine(1, "async def __anext__(self) -> T:")
+	body.WriteQueryResultsAnextDocstringAsyncpg()
+	body.WriteIndentedLine(2, "if self._cursor is None or self._iterator is None:")
+	body.WriteIndentedLine(3, "self._cursor = self._conn.cursor(self._sql, *self._args)")
+	body.WriteIndentedLine(3, "self._iterator = self._cursor.__aiter__()")
+	body.WriteIndentedLine(2, "try:")
+	body.WriteIndentedLine(3, "record = await self._iterator.__anext__()")
+	body.WriteIndentedLine(2, "except StopAsyncIteration:")
+	body.WriteIndentedLine(3, "self._cursor = None")
+	body.WriteIndentedLine(3, "self._iterator = None")
+	body.WriteIndentedLine(3, "raise")
+	body.WriteIndentedLine(2, "return self._decode_hook(record)")
+	body.WriteQueryResultsAwaitFunction([]string{
+		"result = await self._conn.fetch(self._sql, *self._args)",
+		"return [self._decode_hook(row) for row in result]",
+	})
+	return "QueryResults"
 }
 
 func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", AsyncpgConn)
 	conn := "conn"
+	asyncFunc := "async "
 	docstringConnType := AsyncpgConn
 	if isClass {
 		params = "self"
@@ -27,7 +58,10 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		indentLevel = 1
 		docstringConnType = ""
 	}
-	body.WriteIndentedString(indentLevel, fmt.Sprintf("async def %s(%s", query.FuncName, params))
+	if query.Cmd == metadata.CmdMany {
+		asyncFunc = ""
+	}
+	body.WriteIndentedString(indentLevel, fmt.Sprintf("%sdef %s(%s", asyncFunc, query.FuncName, params))
 	for i, arg := range args {
 		if i == 0 {
 			body.WriteString(", *")
@@ -99,14 +133,11 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 			}
 		}
 	} else if query.Cmd == metadata.CmdMany {
-		body.WriteLine(fmt.Sprintf(") -> collections.abc.Sequence[%s]:", retType.Type))
+		body.WriteLine(fmt.Sprintf(") -> QueryResults[%s]:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("rows = await %s.fetch(%s", conn, query.ConstantName))
-		asyncpgWriteParams(query, body)
-		body.WriteLine(")")
-		body.WriteIndentedLine(indentLevel+1, "return [")
+		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", AsyncpgResult, retType.Type))
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("%s(", retType.Type))
+			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return %s(", retType.Type))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
@@ -136,13 +167,14 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 			body.WriteLine(")")
 		} else {
 			if _, found := typeConversion.AsyncpgDoTypeConversion()[retType.SqlType]; found {
-				body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("%s(row[0])", retType.Type))
+				body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("return %s(row[0])", retType.Type))
 			} else {
-				body.WriteIndentedLine(indentLevel+2, "row[0]")
+				body.WriteIndentedLine(indentLevel+2, "return row[0]")
 			}
 		}
-		body.WriteIndentedLine(indentLevel+2, "for row in rows")
-		body.WriteIndentedLine(indentLevel+1, "]")
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, _decode_hook", retType.Type, conn, query.ConstantName))
+		asyncpgWriteParams(query, body)
+		body.WriteLine(")")
 	}
 	return nil
 }
