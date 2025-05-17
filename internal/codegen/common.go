@@ -10,12 +10,20 @@ import (
 type TypeBuildPyQueryFunc func(*core.Query, *builders.IndentStringBuilder, []core.FunctionArg, core.PyType, bool) error
 type TypeAcceptedDriverCMDs func() []string
 
+type TypeDriverTypeCheckingHook func() []string
+
+func defaultDriverTypeCheckingHook() []string {
+	return nil
+}
+
 type Driver struct {
 	conf *core.Config
 
 	connType           string
 	buildPyQueryFunc   TypeBuildPyQueryFunc
 	acceptedDriverCMDs TypeAcceptedDriverCMDs
+
+	driverTypeCheckingHook TypeDriverTypeCheckingHook
 
 	//BuildPyQueriesFiles(*core.Importer, []core.Query) ([]*plugin.File, error)
 }
@@ -24,6 +32,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 	var buildPyQueryFunc TypeBuildPyQueryFunc
 	var acceptedDriverCMDs TypeAcceptedDriverCMDs
 	var connType string
+	var driverTypeCheckingHook TypeDriverTypeCheckingHook = defaultDriverTypeCheckingHook
 	switch conf.SqlDriver {
 	case core.SQLDriverAioSQLite:
 		buildPyQueryFunc = drivers.AioSQLiteBuildPyQueryFunc
@@ -37,12 +46,13 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 		buildPyQueryFunc = drivers.AsyncpgBuildPyQueryFunc
 		acceptedDriverCMDs = drivers.AsyncpgAcceptedDriverCMDs
 		connType = drivers.AsyncpgConn
+		driverTypeCheckingHook = drivers.AsyncpgDriverTypeCheckingHook
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
 	builders.SetDocstringConfig(conf.EmitDocstrings, conf.EmitDocstringsSQL)
 
-	return &Driver{buildPyQueryFunc: buildPyQueryFunc, acceptedDriverCMDs: acceptedDriverCMDs, conf: conf, connType: connType}, nil
+	return &Driver{buildPyQueryFunc: buildPyQueryFunc, acceptedDriverCMDs: acceptedDriverCMDs, conf: conf, connType: connType, driverTypeCheckingHook: driverTypeCheckingHook}, nil
 }
 
 func (dr *Driver) supportedCMD(command string) error {

@@ -1,4 +1,6 @@
 # sqlc-gen-better-python
+[![codecov](https://codecov.io/gh/rayakame/sqlc-gen-better-python/graph/badge.svg?token=LROCMXW6MC)](https://codecov.io/gh/rayakame/sqlc-gen-better-python)
+
 A WASM plugin for SQLC allowing the generation of Python code.
 
 
