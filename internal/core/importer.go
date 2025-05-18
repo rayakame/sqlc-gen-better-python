@@ -2,9 +2,11 @@ package core
 
 import (
 	"fmt"
+	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -108,10 +110,17 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 
 func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 	if !qv.IsEmpty() {
+		log.GlobalLogger.Log(strconv.FormatBool(qv.IsStruct()) + " " + strconv.FormatBool(qv.EmitStruct()) + " " + name)
 		if qv.IsStruct() && qv.EmitStruct() {
 			if val, sqlType := tableUses(name, *qv.Table); val {
 				if i.C.SqlDriver == SQLDriverAsyncpg {
-					if _, found := typeConversion.AsyncpgDoTypeConversion()[sqlType]; found {
+					if typeConversion.AsyncpgDoTypeConversion(sqlType) {
+						return true, false
+					} else {
+						return true, true
+					}
+				} else if i.C.SqlDriver == SQLDriverAioSQLite {
+					if typeConversion.SqliteDoTypeConversion(sqlType) {
 						return true, false
 					} else {
 						return true, true
@@ -119,10 +128,22 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 				}
 				return true, false
 			}
+		} else if qv.IsStruct() && i.C.SqlDriver == SQLDriverAioSQLite {
+			if val, sqlType := tableUses(name, *qv.Table); val {
+				if typeConversion.SqliteDoTypeConversion(sqlType) {
+					return true, false
+				}
+			}
 		} else {
 			if qv.Typ.Type == name {
 				if i.C.SqlDriver == SQLDriverAsyncpg {
-					if _, found := typeConversion.AsyncpgDoTypeConversion()[qv.Typ.SqlType]; found {
+					if typeConversion.AsyncpgDoTypeConversion(qv.Typ.SqlType) {
+						return true, false
+					} else {
+						return true, true
+					}
+				} else if i.C.SqlDriver == SQLDriverAioSQLite {
+					if typeConversion.SqliteDoTypeConversion(qv.Typ.SqlType) {
 						return true, false
 					} else {
 						return true, true
@@ -175,11 +196,22 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 
 	std := stdImports(queryUses)
 	std, typeChecking := i.splitTypeChecking(std)
-	typeChecking[i.C.SqlDriver.String()] = importSpec{Module: i.C.SqlDriver.String()}
-	if IsAnyQueryMany(i.Queries) && i.C.SqlDriver == SQLDriverAsyncpg {
-		typeChecking[i.C.SqlDriver.String()+".cursor"] = importSpec{Module: i.C.SqlDriver.String() + ".cursor"}
+	if i.C.SqlDriver == SQLDriverAsyncpg {
+		typeChecking[string(SQLDriverAsyncpg)] = importSpec{Module: string(SQLDriverAsyncpg)}
+
+		if IsAnyQueryMany(i.Queries) {
+			typeChecking[string(SQLDriverAsyncpg)+".cursor"] = importSpec{Module: string(SQLDriverAsyncpg) + ".cursor"}
+		}
+	} else if i.C.SqlDriver == SQLDriverAioSQLite {
+		// if the std mapping has exactly 2 members, these two are collections and typing,
+		// but if they are more than 2, we need to add type conversion and for that we
+		// need the aiosqlite in the normal import block, not in the type checking block
+		if len(std) > 2 {
+			std[string(SQLDriverAioSQLite)] = importSpec{Module: string(SQLDriverAioSQLite)}
+		} else {
+			typeChecking[string(SQLDriverAioSQLite)] = importSpec{Module: string(SQLDriverAioSQLite)}
+		}
 	}
-	std["typing"] = importSpec{Module: "typing"}
 
 	pkg := make(map[string]importSpec)
 	loc := make(map[string]importSpec)
@@ -308,6 +340,7 @@ func typeCheckingOverwriteProtection(std map[string]importSpec, name string, new
 func stdImports(uses func(name string) (bool, bool)) map[string]importSpec {
 	std := make(map[string]importSpec)
 	std["collections"] = importSpec{Module: "collections.abc", TypeChecking: true}
+	std["typing"] = importSpec{Module: "typing", TypeChecking: false}
 	add := func(name, module string) {
 		if use, typeChecking := uses(name); use {
 			typeCheckingOverwriteProtection(std, module, importSpec{Module: module, TypeChecking: typeChecking})

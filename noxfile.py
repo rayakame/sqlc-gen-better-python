@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
 PATH_TO_PROJECT = pathlib.Path(__name__).parent
 SCRIPT_PATHS = ["noxfile.py", PATH_TO_PROJECT / "scripts", PATH_TO_PROJECT / "test"]
 
-DRIVER_PATHS = {"asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg"}
+DRIVER_PATHS = {"asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg","aiosqlite": PATH_TO_PROJECT / "test" / "driver_aiosqlite"}
 
 SQLC_CONFIGS = ["sqlc.yaml"]
 
@@ -77,6 +77,24 @@ def sqlc_check(session: nox.Session, driver: str) -> None:
     with session.chdir(DRIVER_PATHS[driver]):
         for config in SQLC_CONFIGS:
             session.run("sqlc", "diff", "-f", config, external=True)
+
+
+@nox.session(reuse_venv=True)
+def aiosqlite(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_generate(session, "aiosqlite")
+    #session.run("pyright", DRIVER_PATHS["aiosqlite"])
+    #session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
+
+
+@nox.session(reuse_venv=True)
+def aiosqlite_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_check(session, "asyncpg")
+    #session.run("pyright", DRIVER_PATHS["aiosqlite"])
+    #session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
 
 
 @nox.session(reuse_venv=True)

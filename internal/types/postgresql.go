@@ -1,8 +1,9 @@
 package types
 
 import (
+	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
-	"log"
+	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
@@ -59,7 +60,7 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, col *plugin.Column, conf 
 				}
 			}
 		}
-		log.Printf("unknown PostgreSQL type: %s\n", columnType)
+		log.GlobalLogger.Log(fmt.Sprintf("unknown PostgreSQL type: %s", columnType))
 		return "typing.Any"
 	}
 }
