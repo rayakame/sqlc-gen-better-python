@@ -27,6 +27,11 @@ func AsyncpgBuildQueryResults(body *builders.IndentStringBuilder) string {
 		fmt.Sprintf("self._cursor: asyncpg.cursor.CursorFactory[%s] | None = None", AsyncpgResult),
 		fmt.Sprintf("self._iterator: asyncpg.cursor.CursorIterator[%s] | None = None", AsyncpgResult),
 	}, AsyncpgResult)
+	body.WriteQueryResultsAwaitFunction([]string{
+		"result = await self._conn.fetch(self._sql, *self._args)",
+		"return [self._decode_hook(row) for row in result]",
+	})
+	body.NewLine()
 	body.WriteIndentedLine(1, "async def __anext__(self) -> T:")
 	body.WriteQueryResultsAnextDocstringAsyncpg()
 	body.WriteIndentedLine(2, "if self._cursor is None or self._iterator is None:")
@@ -39,10 +44,6 @@ func AsyncpgBuildQueryResults(body *builders.IndentStringBuilder) string {
 	body.WriteIndentedLine(3, "self._iterator = None")
 	body.WriteIndentedLine(3, "raise")
 	body.WriteIndentedLine(2, "return self._decode_hook(record)")
-	body.WriteQueryResultsAwaitFunction([]string{
-		"result = await self._conn.fetch(self._sql, *self._args)",
-		"return [self._decode_hook(row) for row in result]",
-	})
 	return "QueryResults"
 }
 

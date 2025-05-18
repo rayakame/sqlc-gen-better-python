@@ -5,8 +5,7 @@ line-length = 120
 # https://docs.astral.sh/ruff/rules/
 select = ["ALL"]
 ignore = [
-    "D203",
-    "D213",
+    "COM812",  # Missing trailing comma (interferes with the formatter)
 ]
 
 

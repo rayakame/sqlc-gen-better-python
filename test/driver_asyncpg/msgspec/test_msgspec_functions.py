@@ -207,45 +207,20 @@ class TestMsgspecFunctions:
         assert result is not None
         assert isinstance(result, models.TestPostgresType)
 
-        assert result.id == model.id
-        assert result.serial_test == model.serial_test
-        assert result.serial4_test == model.serial4_test
-        assert result.bigserial_test == model.bigserial_test
-        assert result.smallserial_test == model.smallserial_test
-        assert result.int_test == model.int_test
-        assert result.bigint_test == model.bigint_test
-        assert result.smallint_test == model.smallint_test
-        assert result.float_test == model.float_test
-        assert result.double_precision_test == model.double_precision_test
-        assert result.real_test == model.real_test
-        assert result.numeric_test == model.numeric_test
-        assert result.money_test == model.money_test
-        assert result.bool_test == model.bool_test
-        assert result.json_test == model.json_test
-        assert result.jsonb_test == model.jsonb_test
-        assert result.bytea_test == model.bytea_test
-        assert result.date_test == model.date_test
-        assert result.time_test == model.time_test
-        assert result.timetz_test == model.timetz_test
-        assert result.timestamp_test == model.timestamp_test
-        assert result.timestamptz_test == model.timestamptz_test
-        assert result.interval_test == model.interval_test
-        assert result.text_test == model.text_test
-        assert result.varchar_test == model.varchar_test
-        assert result.bpchar_test == model.bpchar_test
-        assert result.char_test == model.char_test
-        assert result.citext_test == model.citext_test
-        assert result.uuid_test == model.uuid_test
-        assert result.inet_test == model.inet_test
-        assert result.cidr_test == model.cidr_test
-        assert result.macaddr_test == model.macaddr_test
-        assert result.macaddr8_test == model.macaddr8_test
-        assert result.ltree_test == model.ltree_test
-        assert result.lquery_test == model.lquery_test
-        assert result.ltxtquery_test == model.ltxtquery_test
+        assert result == model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_one"], name="TestMsgspecFunctions::get_one_inner")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_one"], name="TestMsgspecFunctions::get_one_none")
+    async def test_get_one_none(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    ) -> None:
+        result = await queries.get_one_test_postgres_type(conn=asyncpg_conn, id_=0)
+
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_one_none"], name="TestMsgspecFunctions::get_one_inner")
     async def test_get_one_inner(
         self,
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
@@ -256,46 +231,23 @@ class TestMsgspecFunctions:
         assert result is not None
         assert isinstance(result, models.TestInnerPostgresType)
 
-        assert result.table_id == inner_model.table_id
-        assert result.serial_test == inner_model.serial_test
-        assert result.serial4_test == inner_model.serial4_test
-        assert result.bigserial_test == inner_model.bigserial_test
-        assert result.smallserial_test == inner_model.smallserial_test
-        assert result.int_test == inner_model.int_test
-        assert result.bigint_test == inner_model.bigint_test
-        assert result.smallint_test == inner_model.smallint_test
-        assert result.float_test == inner_model.float_test
-        assert result.double_precision_test == inner_model.double_precision_test
-        assert result.real_test == inner_model.real_test
-        assert result.numeric_test == inner_model.numeric_test
-        assert result.money_test == inner_model.money_test
-        assert result.bool_test == inner_model.bool_test
-        assert result.json_test == inner_model.json_test
-        assert result.jsonb_test == inner_model.jsonb_test
-        assert result.bytea_test == inner_model.bytea_test
-        assert result.date_test == inner_model.date_test
-        assert result.time_test == inner_model.time_test
-        assert result.timetz_test == inner_model.timetz_test
-        assert result.timestamp_test == inner_model.timestamp_test
-        assert result.timestamptz_test == inner_model.timestamptz_test
-        assert result.interval_test == inner_model.interval_test
-        assert result.text_test == inner_model.text_test
-        assert result.varchar_test == inner_model.varchar_test
-        assert result.bpchar_test == inner_model.bpchar_test
-        assert result.char_test == inner_model.char_test
-        assert result.citext_test == inner_model.citext_test
-        assert result.uuid_test == inner_model.uuid_test
-        assert result.inet_test == inner_model.inet_test
-        assert result.cidr_test == inner_model.cidr_test
-        assert result.macaddr_test == inner_model.macaddr_test
-        assert result.macaddr8_test == inner_model.macaddr8_test
-        assert result.ltree_test == inner_model.ltree_test
-        assert result.lquery_test == inner_model.lquery_test
-        assert result.ltxtquery_test == inner_model.ltxtquery_test
+        assert result == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestMsgspecFunctions::get_one_inner"],
+        depends=["TestMsgspecFunctions::get_one_inner"], name="TestMsgspecFunctions::get_one_inner_none"
+    )
+    async def test_get_one_inner_none(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    ) -> None:
+        result = await queries.get_one_inner_test_postgres_type(conn=asyncpg_conn, table_id=0)
+
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        depends=["TestMsgspecFunctions::get_one_inner_none"],
         name="TestMsgspecFunctions::get_one_timestamp",
     )
     async def test_get_one_timestamp(
@@ -311,7 +263,19 @@ class TestMsgspecFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestMsgspecFunctions::get_one_timestamp"],
+        depends=["TestMsgspecFunctions::get_one_timestamp"], name="TestMsgspecFunctions::get_one_timestamp_none"
+    )
+    async def test_get_one_timestamp_none(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    ) -> None:
+        result = await queries.get_one_test_timestamp_postgres_type(conn=asyncpg_conn, id_=0)
+
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        depends=["TestMsgspecFunctions::get_one_timestamp_none"],
         name="TestMsgspecFunctions::get_one_bytea",
     )
     async def test_get_one_bytea(
@@ -326,7 +290,19 @@ class TestMsgspecFunctions:
         assert result == model.bytea_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_one_bytea"], name="TestMsgspecFunctions::get_many")
+    @pytest.mark.dependency(
+        depends=["TestMsgspecFunctions::get_one_bytea"], name="TestMsgspecFunctions::get_one_bytea_none"
+    )
+    async def test_get_one_bytea_none(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    ) -> None:
+        result = await queries.get_one_test_bytea_postgres_type(conn=asyncpg_conn, id_=0)
+
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_one_bytea_none"], name="TestMsgspecFunctions::get_many")
     async def test_get_many(
         self,
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
@@ -339,42 +315,7 @@ class TestMsgspecFunctions:
         assert isinstance(result[0], models.TestPostgresType)
 
         first_result = result[0]
-        assert first_result.id == model.id
-        assert first_result.serial_test == model.serial_test
-        assert first_result.serial4_test == model.serial4_test
-        assert first_result.bigserial_test == model.bigserial_test
-        assert first_result.smallserial_test == model.smallserial_test
-        assert first_result.int_test == model.int_test
-        assert first_result.bigint_test == model.bigint_test
-        assert first_result.smallint_test == model.smallint_test
-        assert first_result.float_test == model.float_test
-        assert first_result.double_precision_test == model.double_precision_test
-        assert first_result.real_test == model.real_test
-        assert first_result.numeric_test == model.numeric_test
-        assert first_result.money_test == model.money_test
-        assert first_result.bool_test == model.bool_test
-        assert first_result.json_test == model.json_test
-        assert first_result.jsonb_test == model.jsonb_test
-        assert first_result.bytea_test == model.bytea_test
-        assert first_result.date_test == model.date_test
-        assert first_result.time_test == model.time_test
-        assert first_result.timetz_test == model.timetz_test
-        assert first_result.timestamp_test == model.timestamp_test
-        assert first_result.timestamptz_test == model.timestamptz_test
-        assert first_result.interval_test == model.interval_test
-        assert first_result.text_test == model.text_test
-        assert first_result.varchar_test == model.varchar_test
-        assert first_result.bpchar_test == model.bpchar_test
-        assert first_result.char_test == model.char_test
-        assert first_result.citext_test == model.citext_test
-        assert first_result.uuid_test == model.uuid_test
-        assert first_result.inet_test == model.inet_test
-        assert first_result.cidr_test == model.cidr_test
-        assert first_result.macaddr_test == model.macaddr_test
-        assert first_result.macaddr8_test == model.macaddr8_test
-        assert first_result.ltree_test == model.ltree_test
-        assert first_result.lquery_test == model.lquery_test
-        assert first_result.ltxtquery_test == model.ltxtquery_test
+        assert first_result == model
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
@@ -466,46 +407,23 @@ class TestMsgspecFunctions:
         assert result.lquery_test == model.lquery_test
         assert result.ltxtquery_test == model.ltxtquery_test
 
-        assert result.test_inner_postgres_type.table_id == inner_model.table_id
-        assert result.test_inner_postgres_type.serial_test == inner_model.serial_test
-        assert result.test_inner_postgres_type.serial4_test == inner_model.serial4_test
-        assert result.test_inner_postgres_type.bigserial_test == inner_model.bigserial_test
-        assert result.test_inner_postgres_type.smallserial_test == inner_model.smallserial_test
-        assert result.test_inner_postgres_type.int_test == inner_model.int_test
-        assert result.test_inner_postgres_type.bigint_test == inner_model.bigint_test
-        assert result.test_inner_postgres_type.smallint_test == inner_model.smallint_test
-        assert result.test_inner_postgres_type.float_test == inner_model.float_test
-        assert result.test_inner_postgres_type.double_precision_test == inner_model.double_precision_test
-        assert result.test_inner_postgres_type.real_test == inner_model.real_test
-        assert result.test_inner_postgres_type.numeric_test == inner_model.numeric_test
-        assert result.test_inner_postgres_type.money_test == inner_model.money_test
-        assert result.test_inner_postgres_type.bool_test == inner_model.bool_test
-        assert result.test_inner_postgres_type.json_test == inner_model.json_test
-        assert result.test_inner_postgres_type.jsonb_test == inner_model.jsonb_test
-        assert result.test_inner_postgres_type.bytea_test == inner_model.bytea_test
-        assert result.test_inner_postgres_type.date_test == inner_model.date_test
-        assert result.test_inner_postgres_type.time_test == inner_model.time_test
-        assert result.test_inner_postgres_type.timetz_test == inner_model.timetz_test
-        assert result.test_inner_postgres_type.timestamp_test == inner_model.timestamp_test
-        assert result.test_inner_postgres_type.timestamptz_test == inner_model.timestamptz_test
-        assert result.test_inner_postgres_type.interval_test == inner_model.interval_test
-        assert result.test_inner_postgres_type.text_test == inner_model.text_test
-        assert result.test_inner_postgres_type.varchar_test == inner_model.varchar_test
-        assert result.test_inner_postgres_type.bpchar_test == inner_model.bpchar_test
-        assert result.test_inner_postgres_type.char_test == inner_model.char_test
-        assert result.test_inner_postgres_type.citext_test == inner_model.citext_test
-        assert result.test_inner_postgres_type.uuid_test == inner_model.uuid_test
-        assert result.test_inner_postgres_type.inet_test == inner_model.inet_test
-        assert result.test_inner_postgres_type.cidr_test == inner_model.cidr_test
-        assert result.test_inner_postgres_type.macaddr_test == inner_model.macaddr_test
-        assert result.test_inner_postgres_type.macaddr8_test == inner_model.macaddr8_test
-        assert result.test_inner_postgres_type.ltree_test == inner_model.ltree_test
-        assert result.test_inner_postgres_type.lquery_test == inner_model.lquery_test
-        assert result.test_inner_postgres_type.ltxtquery_test == inner_model.ltxtquery_test
+        assert result.test_inner_postgres_type == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        depends=["TestMsgspecFunctions::get_embedded"],
+        depends=["TestMsgspecFunctions::get_embedded"], name="TestMsgspecFunctions::get_embedded_none"
+    )
+    async def test_get_embedded_none(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    ) -> None:
+        result = await queries.get_embedded_test_postgres_type(conn=asyncpg_conn, id_=0)
+
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        depends=["TestMsgspecFunctions::get_embedded_none"],
         name="TestMsgspecFunctions::get_all_embedded",
     )
     async def test_get_all_embedded(
@@ -521,83 +439,25 @@ class TestMsgspecFunctions:
         assert isinstance(result.test_postgres_type, models.TestPostgresType)
         assert isinstance(result.test_inner_postgres_type, models.TestInnerPostgresType)
 
-        assert result.test_postgres_type.id == model.id
-        assert result.test_postgres_type.serial_test == model.serial_test
-        assert result.test_postgres_type.serial4_test == model.serial4_test
-        assert result.test_postgres_type.bigserial_test == model.bigserial_test
-        assert result.test_postgres_type.smallserial_test == model.smallserial_test
-        assert result.test_postgres_type.int_test == model.int_test
-        assert result.test_postgres_type.bigint_test == model.bigint_test
-        assert result.test_postgres_type.smallint_test == model.smallint_test
-        assert result.test_postgres_type.float_test == model.float_test
-        assert result.test_postgres_type.double_precision_test == model.double_precision_test
-        assert result.test_postgres_type.real_test == model.real_test
-        assert result.test_postgres_type.numeric_test == model.numeric_test
-        assert result.test_postgres_type.money_test == model.money_test
-        assert result.test_postgres_type.bool_test == model.bool_test
-        assert result.test_postgres_type.json_test == model.json_test
-        assert result.test_postgres_type.jsonb_test == model.jsonb_test
-        assert result.test_postgres_type.bytea_test == model.bytea_test
-        assert result.test_postgres_type.date_test == model.date_test
-        assert result.test_postgres_type.time_test == model.time_test
-        assert result.test_postgres_type.timetz_test == model.timetz_test
-        assert result.test_postgres_type.timestamp_test == model.timestamp_test
-        assert result.test_postgres_type.timestamptz_test == model.timestamptz_test
-        assert result.test_postgres_type.interval_test == model.interval_test
-        assert result.test_postgres_type.text_test == model.text_test
-        assert result.test_postgres_type.varchar_test == model.varchar_test
-        assert result.test_postgres_type.bpchar_test == model.bpchar_test
-        assert result.test_postgres_type.char_test == model.char_test
-        assert result.test_postgres_type.citext_test == model.citext_test
-        assert result.test_postgres_type.uuid_test == model.uuid_test
-        assert result.test_postgres_type.inet_test == model.inet_test
-        assert result.test_postgres_type.cidr_test == model.cidr_test
-        assert result.test_postgres_type.macaddr_test == model.macaddr_test
-        assert result.test_postgres_type.macaddr8_test == model.macaddr8_test
-        assert result.test_postgres_type.ltree_test == model.ltree_test
-        assert result.test_postgres_type.lquery_test == model.lquery_test
-        assert result.test_postgres_type.ltxtquery_test == model.ltxtquery_test
-
-        assert result.test_inner_postgres_type.table_id == inner_model.table_id
-        assert result.test_inner_postgres_type.serial_test == inner_model.serial_test
-        assert result.test_inner_postgres_type.serial4_test == inner_model.serial4_test
-        assert result.test_inner_postgres_type.bigserial_test == inner_model.bigserial_test
-        assert result.test_inner_postgres_type.smallserial_test == inner_model.smallserial_test
-        assert result.test_inner_postgres_type.int_test == inner_model.int_test
-        assert result.test_inner_postgres_type.bigint_test == inner_model.bigint_test
-        assert result.test_inner_postgres_type.smallint_test == inner_model.smallint_test
-        assert result.test_inner_postgres_type.float_test == inner_model.float_test
-        assert result.test_inner_postgres_type.double_precision_test == inner_model.double_precision_test
-        assert result.test_inner_postgres_type.real_test == inner_model.real_test
-        assert result.test_inner_postgres_type.numeric_test == inner_model.numeric_test
-        assert result.test_inner_postgres_type.money_test == inner_model.money_test
-        assert result.test_inner_postgres_type.bool_test == inner_model.bool_test
-        assert result.test_inner_postgres_type.json_test == inner_model.json_test
-        assert result.test_inner_postgres_type.jsonb_test == inner_model.jsonb_test
-        assert result.test_inner_postgres_type.bytea_test == inner_model.bytea_test
-        assert result.test_inner_postgres_type.date_test == inner_model.date_test
-        assert result.test_inner_postgres_type.time_test == inner_model.time_test
-        assert result.test_inner_postgres_type.timetz_test == inner_model.timetz_test
-        assert result.test_inner_postgres_type.timestamp_test == inner_model.timestamp_test
-        assert result.test_inner_postgres_type.timestamptz_test == inner_model.timestamptz_test
-        assert result.test_inner_postgres_type.interval_test == inner_model.interval_test
-        assert result.test_inner_postgres_type.text_test == inner_model.text_test
-        assert result.test_inner_postgres_type.varchar_test == inner_model.varchar_test
-        assert result.test_inner_postgres_type.bpchar_test == inner_model.bpchar_test
-        assert result.test_inner_postgres_type.char_test == inner_model.char_test
-        assert result.test_inner_postgres_type.citext_test == inner_model.citext_test
-        assert result.test_inner_postgres_type.uuid_test == inner_model.uuid_test
-        assert result.test_inner_postgres_type.inet_test == inner_model.inet_test
-        assert result.test_inner_postgres_type.cidr_test == inner_model.cidr_test
-        assert result.test_inner_postgres_type.macaddr_test == inner_model.macaddr_test
-        assert result.test_inner_postgres_type.macaddr8_test == inner_model.macaddr8_test
-        assert result.test_inner_postgres_type.ltree_test == inner_model.ltree_test
-        assert result.test_inner_postgres_type.lquery_test == inner_model.lquery_test
-        assert result.test_inner_postgres_type.ltxtquery_test == inner_model.ltxtquery_test
+        assert result.test_postgres_type == model
+        assert result.test_inner_postgres_type == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         depends=["TestMsgspecFunctions::get_all_embedded"],
+        name="TestMsgspecFunctions::get_all_embedded_none",
+    )
+    async def test_get_all_embedded_none(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+    ) -> None:
+        result = await queries.get_all_embedded_test_postgres_type(conn=asyncpg_conn, id_=0)
+
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        depends=["TestMsgspecFunctions::get_all_embedded_none"],
         name="TestMsgspecFunctions::get_many_iterator",
     )
     async def test_get_many_iterator(
@@ -611,42 +471,7 @@ class TestMsgspecFunctions:
                 assert result is not None
                 assert isinstance(result, models.TestPostgresType)
 
-                assert result.id == model.id
-                assert result.serial_test == model.serial_test
-                assert result.serial4_test == model.serial4_test
-                assert result.bigserial_test == model.bigserial_test
-                assert result.smallserial_test == model.smallserial_test
-                assert result.int_test == model.int_test
-                assert result.bigint_test == model.bigint_test
-                assert result.smallint_test == model.smallint_test
-                assert result.float_test == model.float_test
-                assert result.double_precision_test == model.double_precision_test
-                assert result.real_test == model.real_test
-                assert result.numeric_test == model.numeric_test
-                assert result.money_test == model.money_test
-                assert result.bool_test == model.bool_test
-                assert result.json_test == model.json_test
-                assert result.jsonb_test == model.jsonb_test
-                assert result.bytea_test == model.bytea_test
-                assert result.date_test == model.date_test
-                assert result.time_test == model.time_test
-                assert result.timetz_test == model.timetz_test
-                assert result.timestamp_test == model.timestamp_test
-                assert result.timestamptz_test == model.timestamptz_test
-                assert result.interval_test == model.interval_test
-                assert result.text_test == model.text_test
-                assert result.varchar_test == model.varchar_test
-                assert result.bpchar_test == model.bpchar_test
-                assert result.char_test == model.char_test
-                assert result.citext_test == model.citext_test
-                assert result.uuid_test == model.uuid_test
-                assert result.inet_test == model.inet_test
-                assert result.cidr_test == model.cidr_test
-                assert result.macaddr_test == model.macaddr_test
-                assert result.macaddr8_test == model.macaddr8_test
-                assert result.ltree_test == model.ltree_test
-                assert result.lquery_test == model.lquery_test
-                assert result.ltxtquery_test == model.ltxtquery_test
+                assert result == model
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_many_iterator"], name="TestMsgspecFunctions::delete")
