@@ -192,7 +192,7 @@ jobs:
         run: ./scripts/build/build.sh
 
   ci-done:
-    needs: [ test,upload-coverage, asyncpg, pyright, ruff ]
+    needs: [ test,upload-coverage, asyncpg, pyright, ruff, test-build ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest
