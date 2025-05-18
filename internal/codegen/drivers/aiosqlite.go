@@ -41,7 +41,6 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 		return false
 	}
 	toConvert := make(map[string]bool)
-	names := make([]string, 0)
 	for _, query := range queries {
 		for sqlType, _ := range typeConversion.SqliteGetConversions() {
 			name := types.SqliteTypeToPython(&plugin.GenerateRequest{}, &plugin.Column{Type: &plugin.Identifier{
@@ -49,7 +48,6 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 				Schema:  "",
 				Name:    sqlType,
 			}}, conf)
-			names = append(names, fmt.Sprintf("%s %s  %s", name, strconv.FormatBool(queryValueUses(name, query.Args[0])), strconv.FormatBool(typeConversion.SqliteDoTypeConversion(sqlType))))
 			if queryValueUses(name, query.Ret) {
 				toConvert[name] = true
 			}
@@ -60,7 +58,52 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 			}
 		}
 	}
-
+	adapters := make([]string, 0)
+	converters := make([]string, 0)
+	if _, found := toConvert["datetime.date"]; found {
+		body.WriteLine("def _adapt_date(val: datetime.date) -> str:")
+		body.WriteIndentedLine(1, "return val.isoformat()")
+		body.NewLine()
+		adapters = append(adapters, "aiosqlite.register_adapter(datetime.date, _adapt_date)")
+		body.WriteLine("def _convert_date(val: bytes) -> datetime.date:")
+		body.WriteIndentedLine(1, "return datetime.date.fromisoformat(val.decode())")
+		body.NewLine()
+		converters = append(converters, `aiosqlite.register_converter("date", _convert_date)`)
+	}
+	if _, found := toConvert["datetime.datetime"]; found {
+		body.WriteLine("def _adapt_datetime(val: datetime.datetime) -> str:")
+		body.WriteIndentedLine(1, "return val.isoformat()")
+		body.NewLine()
+		adapters = append(adapters, "aiosqlite.register_adapter(datetime.datetime, _adapt_datetime)")
+		body.WriteLine("def _convert_datetime(val: bytes) -> datetime.datetime:")
+		body.WriteIndentedLine(1, "return datetime.datetime.fromisoformat(val.decode())")
+		body.NewLine()
+		converters = append(converters, `aiosqlite.register_converter("datetime", _convert_datetime)`)
+		converters = append(converters, `aiosqlite.register_converter("timestamp", _convert_datetime)`)
+	}
+	if _, found := toConvert["bool"]; found {
+		body.WriteLine("def _adapt_bool(val: bool) -> int:")
+		body.WriteIndentedLine(1, "return int(val)")
+		body.NewLine()
+		adapters = append(adapters, "aiosqlite.register_adapter(bool, _adapt_bool)")
+		body.WriteLine("def _convert_bool(val: bytes) -> bool:")
+		body.WriteIndentedLine(1, "return bool(int(val))")
+		body.NewLine()
+		converters = append(converters, `aiosqlite.register_converter("bool", _convert_bool)`)
+		converters = append(converters, `aiosqlite.register_converter("boolean", _convert_bool)`)
+	}
+	for i, line := range adapters {
+		body.WriteLine(line)
+		if i == len(adapters)-1 {
+			body.NewLine()
+		}
+	}
+	for i, line := range converters {
+		body.WriteLine(line)
+		if i == len(converters)-1 {
+			body.NewLine()
+		}
+	}
 }
 
 func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
