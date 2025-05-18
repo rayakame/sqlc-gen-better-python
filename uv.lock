@@ -3,6 +3,18 @@ revision = 1
 requires-python = ">=3.10.0, <3.14.0"
 
 [[package]]
+name = "aiosqlite"
+version = "0.21.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/13/7d/8bca2bf9a247c2c5dfeec1d7a5f40db6518f88d314b8bca9da29670d2671/aiosqlite-0.21.0.tar.gz", hash = "sha256:131bb8056daa3bc875608c631c678cda73922a2d4ba8aec373b19f18c17e7aa3", size = 13454 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/10/6c25ed6de94c49f88a91fa5018cb4c0f3625f31d5be9f771ebe5cc7cd506/aiosqlite-0.21.0-py3-none-any.whl", hash = "sha256:2549cf4057f95f53dcba16f2b64e8e2791d7e1adedb13197dd8ed77bb226d7d0", size = 15792 },
+]
+
+[[package]]
 name = "argcomplete"
 version = "3.6.2"
 source = { registry = "https://pypi.org/simple" }
@@ -417,6 +429,7 @@ name = "sqlc-gen-better-python"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "aiosqlite" },
     { name = "asyncpg" },
     { name = "attrs" },
     { name = "msgspec" },
@@ -431,6 +444,7 @@ dev = [
 ]
 pyright = [
     { name = "asyncpg-stubs" },
+    { name = "coverage", extra = ["toml"] },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -438,6 +452,7 @@ pyright = [
     { name = "pytest-dependency" },
 ]
 pytest = [
+    { name = "coverage", extra = ["toml"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -449,6 +464,7 @@ ruff = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiosqlite", specifier = ">=0.21.0" },
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "attrs", specifier = ">=25.3.0" },
     { name = "msgspec", specifier = ">=0.19.0" },
@@ -459,6 +475,7 @@ coverage = [{ name = "coverage", extras = ["toml"], specifier = ">=7.8.0" }]
 dev = [{ name = "nox", specifier = ">=2025.5.1" }]
 pyright = [
     { name = "asyncpg-stubs", specifier = ">=0.30.1" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.8.0" },
     { name = "pyright", specifier = ">=1.1.400" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
@@ -466,6 +483,7 @@ pyright = [
     { name = "pytest-dependency", specifier = ">=0.6.0" },
 ]
 pytest = [
+    { name = "coverage", extras = ["toml"], specifier = ">=7.8.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-cov", specifier = ">=6.1.1" },
