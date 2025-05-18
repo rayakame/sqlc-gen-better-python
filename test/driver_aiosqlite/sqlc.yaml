@@ -1,0 +1,93 @@
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: file://sqlc-gen-better-python.wasm
+      sha256: 582032cad72124d18fc38927c1a178891f58a6a853c27e926c233136c0463d8c
+sql:
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /attrs/classes
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.attrs.classes
+          sql_driver: aiosqlite
+          model_type: attrs
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: numpy
+          debug: true
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /attrs/functions
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.attrs.functions
+          sql_driver: aiosqlite
+          model_type: attrs
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: numpy
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /dataclass/classes
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.dataclass.classes
+          sql_driver: aiosqlite
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /dataclass/functions
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.dataclass.functions
+          sql_driver: aiosqlite
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /msgspec/classes
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.msgspec.classes
+          sql_driver: aiosqlite
+          model_type: msgspec
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /msgspec/functions
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.msgspec.functions
+          sql_driver: aiosqlite
+          model_type: msgspec
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+
