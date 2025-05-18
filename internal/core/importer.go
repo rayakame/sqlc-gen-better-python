@@ -2,11 +2,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -44,7 +42,7 @@ func (i *Importer) Imports(fileName string) ([]string, []string, []string) {
 	return i.queryImports(fileName)
 }
 
-func tableUses(name string, s Table) (bool, string) {
+func TableUses(name string, s Table) (bool, string) {
 	for _, col := range s.Columns {
 		if col.Type.Type == name {
 			return true, col.Type.SqlType
@@ -83,7 +81,7 @@ func (i *Importer) splitTypeChecking(pks map[string]importSpec) (map[string]impo
 func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importSpec, map[string]importSpec) {
 	modelUses := func(name string) (bool, bool) {
 		for _, table := range i.Tables {
-			if val, _ := tableUses(name, table); val {
+			if val, _ := TableUses(name, table); val {
 				return true, true
 			}
 		}
@@ -110,9 +108,8 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 
 func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 	if !qv.IsEmpty() {
-		log.GlobalLogger.Log(strconv.FormatBool(qv.IsStruct()) + " " + strconv.FormatBool(qv.EmitStruct()) + " " + name)
 		if qv.IsStruct() && qv.EmitStruct() {
-			if val, sqlType := tableUses(name, *qv.Table); val {
+			if val, sqlType := TableUses(name, *qv.Table); val {
 				if i.C.SqlDriver == SQLDriverAsyncpg {
 					if typeConversion.AsyncpgDoTypeConversion(sqlType) {
 						return true, false
@@ -129,7 +126,7 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 				return true, false
 			}
 		} else if qv.IsStruct() && i.C.SqlDriver == SQLDriverAioSQLite {
-			if val, sqlType := tableUses(name, *qv.Table); val {
+			if val, sqlType := TableUses(name, *qv.Table); val {
 				if typeConversion.SqliteDoTypeConversion(sqlType) {
 					return true, false
 				}

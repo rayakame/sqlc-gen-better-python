@@ -4,12 +4,64 @@ import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
+	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
+	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"strconv"
 	"strings"
 )
 
 const AioSQLiteConn = "aiosqlite.Connection"
+
+func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStringBuilder, conf *core.Config) {
+	// this function fucking got out of hand
+	queryValueUses := func(name string, qv core.QueryValue) bool {
+		if !qv.IsEmpty() {
+			if qv.IsStruct() && qv.EmitStruct() {
+				if val, sqlType := core.TableUses(name, *qv.Table); val {
+					if typeConversion.SqliteDoTypeConversion(sqlType) {
+						return true
+					}
+				}
+			} else if qv.IsStruct() {
+				if val, sqlType := core.TableUses(name, *qv.Table); val {
+					if typeConversion.SqliteDoTypeConversion(sqlType) {
+						return true
+					}
+				}
+			} else {
+				if qv.Typ.Type == name {
+					if typeConversion.SqliteDoTypeConversion(qv.Typ.SqlType) {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}
+	toConvert := make(map[string]bool)
+	names := make([]string, 0)
+	for _, query := range queries {
+		for sqlType, _ := range typeConversion.SqliteGetConversions() {
+			name := types.SqliteTypeToPython(&plugin.GenerateRequest{}, &plugin.Column{Type: &plugin.Identifier{
+				Catalog: "",
+				Schema:  "",
+				Name:    sqlType,
+			}}, conf)
+			names = append(names, fmt.Sprintf("%s %s  %s", name, strconv.FormatBool(queryValueUses(name, query.Args[0])), strconv.FormatBool(typeConversion.SqliteDoTypeConversion(sqlType))))
+			if queryValueUses(name, query.Ret) {
+				toConvert[name] = true
+			}
+			for _, arg := range query.Args {
+				if queryValueUses(name, arg) {
+					toConvert[name] = true
+				}
+			}
+		}
+	}
+
+}
 
 func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
 	indentLevel := 0
@@ -48,7 +100,7 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 		aiosqliteWriteParams(query, body)
 		body.WriteLine(").lastrowid")
 	} else if query.Cmd == metadata.CmdOne {
-		body.WriteLine(fmt.Sprintf(") -> typing.Optional[%s]:", retType.Type))
+		body.WriteLine(fmt.Sprintf(") -> %s | None:", retType.Type))
 		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("row = await (await %s.execute(%s", conn, query.ConstantName))
 		aiosqliteWriteParams(query, body)
 		body.WriteLine(")).fetchone()")
@@ -122,11 +174,6 @@ func AioSQLiteAcceptedDriverCMDs() []string {
 		metadata.CmdMany,
 	}
 }
-
-/*
-func AioSQLiteSkipTypeConversion() map[string]struct{} {
-	return map[string]struct{}{}
-}*/
 
 func aiosqliteWriteParams(query *core.Query, body *builders.IndentStringBuilder) {
 	if len(query.Args) == 0 {
