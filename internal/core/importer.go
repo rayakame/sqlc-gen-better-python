@@ -153,7 +153,7 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 	return false, false
 }
 
-func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map[string]importSpec, map[string]importSpec, map[string]importSpec) {
+func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string]importSpec, map[string]importSpec, map[string]importSpec) {
 	addCiso := false
 	queryUses := func(name string) (bool, bool) {
 		var uses *bool = nil
