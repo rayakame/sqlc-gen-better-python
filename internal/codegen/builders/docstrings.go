@@ -8,10 +8,12 @@ import (
 
 var docstringConfig *string
 var docstringConfigEmitSQL *bool
+var docstringConfigDriver core.SQLDriverType = core.SQLDriverAsyncpg
 
-func SetDocstringConfig(c *string, b *bool) {
+func SetDocstringConfig(c *string, b *bool, d core.SQLDriverType) {
 	docstringConfig = c
 	docstringConfigEmitSQL = b
+	docstringConfigDriver = d
 }
 
 func (b *IndentStringBuilder) WriteQueryResultsAiterDocstring() {
@@ -384,7 +386,11 @@ func (b *IndentStringBuilder) WriteQueryFunctionDocstring(lvl int, query *core.Q
 			b.WriteIndentedLine(lvl, "Returns")
 			b.WriteIndentedLine(lvl, "-------")
 			b.WriteIndentedLine(lvl, returnType.Type)
-			b.WriteIndentedLine(lvl+1, "The number of affected rows. This will be 0 for queries like `CREATE TABLE`.")
+			if docstringConfigDriver == core.SQLDriverAioSQLite {
+				b.WriteIndentedLine(lvl+1, "The number of affected rows. This will be -1 for queries like `CREATE TABLE`.")
+			} else {
+				b.WriteIndentedLine(lvl+1, "The number of affected rows. This will be 0 for queries like `CREATE TABLE`.")
+			}
 			b.NewLine()
 		} else if *docstringConfig == core.DocstringConventionGoogle {
 			if len(queryArgs) != 0 || docstringConnType != "" {
@@ -399,7 +405,11 @@ func (b *IndentStringBuilder) WriteQueryFunctionDocstring(lvl int, query *core.Q
 				b.NewLine()
 			}
 			b.WriteIndentedLine(lvl, "Returns:")
-			b.WriteIndentedLine(lvl+1, fmt.Sprintf("The number (`%s`) of affected rows. This will be 0 for queries like `CREATE TABLE`.", returnType.Type))
+			if docstringConfigDriver == core.SQLDriverAioSQLite {
+				b.WriteIndentedLine(lvl+1, fmt.Sprintf("The number (`%s`) of affected rows. This will be -1 for queries like `CREATE TABLE`.", returnType.Type))
+			} else {
+				b.WriteIndentedLine(lvl+1, fmt.Sprintf("The number (`%s`) of affected rows. This will be 0 for queries like `CREATE TABLE`.", returnType.Type))
+			}
 		} else if *docstringConfig == core.DocstringConventionPEP257 {
 			if len(queryArgs) != 0 || docstringConnType != "" {
 				b.WriteIndentedLine(lvl, "Arguments:")
@@ -412,7 +422,11 @@ func (b *IndentStringBuilder) WriteQueryFunctionDocstring(lvl int, query *core.Q
 				b.NewLine()
 			}
 			b.WriteIndentedLine(lvl, "Returns:")
-			b.WriteIndentedLine(lvl, fmt.Sprintf("%s -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.", returnType.Type))
+			if docstringConfigDriver == core.SQLDriverAioSQLite {
+				b.WriteIndentedLine(lvl+1, fmt.Sprintf("%s -- The number of affected rows. This will be -1 for queries like `CREATE TABLE`.", returnType.Type))
+			} else {
+				b.WriteIndentedLine(lvl+1, fmt.Sprintf("%s -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.", returnType.Type))
+			}
 		}
 		b.WriteIndentedLine(lvl, `"""`)
 	} else if query.Cmd == metadata.CmdExecResult {

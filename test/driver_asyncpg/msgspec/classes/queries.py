@@ -849,7 +849,7 @@ class Queries:
         ltxtquery_test -- str.
 
         Returns:
-        int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
         """
         result = await self._conn.execute(CREATE_ROWS_ONE_TEST_POSTGRES_TYPE, id_, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
         return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
@@ -866,7 +866,7 @@ class Queries:
         ```
 
         Returns:
-        int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
         """
         result = await self._conn.execute(CREATE_ROWS_TABLE)
         return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
@@ -901,7 +901,7 @@ class Queries:
         id_ -- int.
 
         Returns:
-        int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
         """
         result = await self._conn.execute(DELETE_ONE_ROWS_TEST_POSTGRES_TYPE, id_)
         return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
@@ -1162,7 +1162,7 @@ class Queries:
         id_ -- int.
 
         Returns:
-        int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
         """
         result = await self._conn.execute(UPDATE_ROWS_TEST_POSTGRES_TYPE, id_)
         return int(result.split()[-1]) if result.split()[-1].isdigit() else 0

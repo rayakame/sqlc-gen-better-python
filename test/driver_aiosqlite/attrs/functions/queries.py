@@ -405,7 +405,7 @@ async def create_rows_table(conn: aiosqlite.Connection) -> int:
     Returns
     -------
     int
-        The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
     """
     return (await conn.execute(CREATE_ROWS_TABLE)).rowcount
@@ -514,7 +514,7 @@ async def delete_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -
     Returns
     -------
     int
-        The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
     """
     return (await conn.execute(DELETE_ROWS_ONE_SQLITE_TYPE,(id_, ))).rowcount
@@ -1264,7 +1264,7 @@ async def insert_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int, i
     Returns
     -------
     int
-        The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
     """
     return (await conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE,(id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).rowcount
@@ -1336,7 +1336,7 @@ async def update_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -
     Returns
     -------
     int
-        The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
     """
     return (await conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE,(id_, ))).rowcount
