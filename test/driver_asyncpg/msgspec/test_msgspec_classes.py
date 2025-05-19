@@ -42,7 +42,7 @@ class TestMsgspecClasses:
             date_test=datetime.date(2025, 1, 1),
             time_test=datetime.time(14, 30, 0),
             timetz_test=datetime.time(14, 30, 0, tzinfo=datetime.timezone.utc),
-            timestamp_test=datetime.datetime(2025, 1, 1, 14, 30, 0),  # noqa: DTZ001
+            timestamp_test=datetime.datetime(2025, 1, 1, 14, 30, 0),
             timestamptz_test=datetime.datetime(2025, 1, 1, 14, 30, 0, tzinfo=datetime.timezone.utc),
             interval_test=datetime.timedelta(days=1, hours=2, minutes=30),
             text_test="Lorem ipsum",
@@ -83,7 +83,7 @@ class TestMsgspecClasses:
             date_test=datetime.date(2025, 1, 1),
             time_test=datetime.time(14, 30, 0),
             timetz_test=datetime.time(14, 30, 0, tzinfo=datetime.timezone.utc),
-            timestamp_test=datetime.datetime(2025, 1, 1, 14, 30, 0),  # noqa: DTZ001
+            timestamp_test=datetime.datetime(2025, 1, 1, 14, 30, 0),
             timestamptz_test=datetime.datetime(2025, 1, 1, 14, 30, 0, tzinfo=datetime.timezone.utc),
             interval_test=datetime.timedelta(days=1, hours=2, minutes=30),
             text_test="Lorem ipsum",

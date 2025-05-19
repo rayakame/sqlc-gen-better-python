@@ -13,12 +13,15 @@ if typing.TYPE_CHECKING:
 PATH_TO_PROJECT = pathlib.Path(__name__).parent
 SCRIPT_PATHS = ["noxfile.py", PATH_TO_PROJECT / "scripts", PATH_TO_PROJECT / "test"]
 
-DRIVER_PATHS = {"asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg","aiosqlite": PATH_TO_PROJECT / "test" / "driver_aiosqlite"}
+DRIVER_PATHS = {
+    "asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg",
+    "aiosqlite": PATH_TO_PROJECT / "test" / "driver_aiosqlite",
+}
 
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["ruff_format", "asyncpg", "pyright", "ruff", "pytest"]
+options.sessions = ["ruff_format", "asyncpg", "aiosqlite", "pyright", "ruff", "pytest"]
 
 DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
 
@@ -84,8 +87,8 @@ def aiosqlite(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
     sqlc_generate(session, "aiosqlite")
-    #session.run("pyright", DRIVER_PATHS["aiosqlite"])
-    #session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
+    session.run("pyright", DRIVER_PATHS["aiosqlite"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
 
 
 @nox.session(reuse_venv=True)
@@ -93,8 +96,8 @@ def aiosqlite_check(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
     sqlc_check(session, "asyncpg")
-    #session.run("pyright", DRIVER_PATHS["aiosqlite"])
-    #session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
+    session.run("pyright", DRIVER_PATHS["aiosqlite"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
 
 
 @nox.session(reuse_venv=True)

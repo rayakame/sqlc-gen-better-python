@@ -17,7 +17,7 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":
 		return "int"
 	case "blob":
-		return "bytes"
+		return "memoryview"
 	case "real", "double", "double precision", "doubleprecision", "float", "numeric":
 		return "float"
 	case "boolean", "bool":

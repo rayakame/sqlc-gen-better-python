@@ -478,6 +478,21 @@ class QueryResults(typing.Generic[T]):
         """
         return self
 
+    def __await__(
+        self,
+    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
+        """Allow `await` on the object to return all rows as a fully decoded sequence.
+
+        Returns
+        -------
+        collections.abc.Sequence[T]
+            A sequence of decoded objects of type `T`.
+        """
+        async def _wrapper() -> collections.abc.Sequence[T]:
+            result = await self._conn.fetch(self._sql, *self._args)
+            return [self._decode_hook(row) for row in result]
+        return _wrapper().__await__()
+
     async def __anext__(self) -> T:
         """Yield the next item in the query result using an asyncpg cursor.
 
@@ -501,20 +516,6 @@ class QueryResults(typing.Generic[T]):
             self._iterator = None
             raise
         return self._decode_hook(record)
-    def __await__(
-        self,
-    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
-        """Allow `await` on the object to return all rows as a fully decoded sequence.
-
-        Returns
-        -------
-        collections.abc.Sequence[T]
-            A sequence of decoded objects of type `T`.
-        """
-        async def _wrapper() -> collections.abc.Sequence[T]:
-            result = await self._conn.fetch(self._sql, *self._args)
-            return [self._decode_hook(row) for row in result]
-        return _wrapper().__await__()
 
 async def create_one_test_postgres_inner_type(conn: ConnectionLike, *, table_id: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> None:
     """Execute SQL query with `name: CreateOneTestPostgresInnerType :exec`.
@@ -1081,8 +1082,8 @@ def get_many_test_bytea_postgres_type(conn: ConnectionLike, *, id_: int) -> Quer
 
     Returns
     -------
-    collections.abc.Sequence[memoryview]
-        Results fetched from the db.
+    QueryResults[memoryview]
+        Helper class that allows both iteration and normal fetching of data from the db.
 
     """
     def _decode_hook(row: asyncpg.Record) -> memoryview:
@@ -1107,8 +1108,8 @@ def get_many_test_iterator_postgres_type(conn: ConnectionLike, *, id_: int) -> Q
 
     Returns
     -------
-    collections.abc.Sequence[models.TestPostgresType]
-        Results fetched from the db.
+    QueryResults[models.TestPostgresType]
+        Helper class that allows both iteration and normal fetching of data from the db.
 
     """
     def _decode_hook(row: asyncpg.Record) -> models.TestPostgresType:
@@ -1133,8 +1134,8 @@ def get_many_test_postgres_type(conn: ConnectionLike, *, id_: int) -> QueryResul
 
     Returns
     -------
-    collections.abc.Sequence[models.TestPostgresType]
-        Results fetched from the db.
+    QueryResults[models.TestPostgresType]
+        Helper class that allows both iteration and normal fetching of data from the db.
 
     """
     def _decode_hook(row: asyncpg.Record) -> models.TestPostgresType:
@@ -1159,8 +1160,8 @@ def get_many_test_timestamp_postgres_type(conn: ConnectionLike, *, id_: int) -> 
 
     Returns
     -------
-    collections.abc.Sequence[datetime.datetime]
-        Results fetched from the db.
+    QueryResults[datetime.datetime]
+        Helper class that allows both iteration and normal fetching of data from the db.
 
     """
     def _decode_hook(row: asyncpg.Record) -> datetime.datetime:

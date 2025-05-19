@@ -477,6 +477,17 @@ coverage = [
 dev = [
     { name = "nox" },
 ]
+dev-complete = [
+    { name = "asyncpg-stubs" },
+    { name = "coverage", extra = ["toml"] },
+    { name = "nox" },
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-dependency" },
+    { name = "ruff" },
+]
 pyright = [
     { name = "asyncpg-stubs" },
     { name = "coverage", extra = ["toml"] },
@@ -509,6 +520,17 @@ requires-dist = [
 [package.metadata.requires-dev]
 coverage = [{ name = "coverage", extras = ["toml"], specifier = ">=7.8.0" }]
 dev = [{ name = "nox", specifier = ">=2025.5.1" }]
+dev-complete = [
+    { name = "asyncpg-stubs", specifier = ">=0.30.1" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.8.0" },
+    { name = "nox", specifier = ">=2025.5.1" },
+    { name = "pyright", specifier = ">=1.1.400" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "pytest-asyncio", specifier = ">=0.26.0" },
+    { name = "pytest-cov", specifier = ">=6.1.1" },
+    { name = "pytest-dependency", specifier = ">=0.6.0" },
+    { name = "ruff", specifier = ">=0.11.9" },
+]
 pyright = [
     { name = "asyncpg-stubs", specifier = ">=0.30.1" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.8.0" },

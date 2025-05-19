@@ -458,6 +458,21 @@ class QueryResults(typing.Generic[T]):
         """
         return self
 
+    def __await__(
+        self,
+    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
+        """Allow `await` on the object to return all rows as a fully decoded sequence.
+
+        Returns
+        -------
+        collections.abc.Sequence[T]
+            A sequence of decoded objects of type `T`.
+        """
+        async def _wrapper() -> collections.abc.Sequence[T]:
+            result = await self._conn.fetch(self._sql, *self._args)
+            return [self._decode_hook(row) for row in result]
+        return _wrapper().__await__()
+
     async def __anext__(self) -> T:
         """Yield the next item in the query result using an asyncpg cursor.
 
@@ -481,20 +496,6 @@ class QueryResults(typing.Generic[T]):
             self._iterator = None
             raise
         return self._decode_hook(record)
-    def __await__(
-        self,
-    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
-        """Allow `await` on the object to return all rows as a fully decoded sequence.
-
-        Returns
-        -------
-        collections.abc.Sequence[T]
-            A sequence of decoded objects of type `T`.
-        """
-        async def _wrapper() -> collections.abc.Sequence[T]:
-            result = await self._conn.fetch(self._sql, *self._args)
-            return [self._decode_hook(row) for row in result]
-        return _wrapper().__await__()
 
 class Queries:
     """Queries from file queries.sql.
@@ -1050,8 +1051,8 @@ class Queries:
 
         Returns
         -------
-        collections.abc.Sequence[memoryview]
-            Results fetched from the db.
+        QueryResults[memoryview]
+            Helper class that allows both iteration and normal fetching of data from the db.
 
         """
         def _decode_hook(row: asyncpg.Record) -> memoryview:
@@ -1073,8 +1074,8 @@ class Queries:
 
         Returns
         -------
-        collections.abc.Sequence[models.TestPostgresType]
-            Results fetched from the db.
+        QueryResults[models.TestPostgresType]
+            Helper class that allows both iteration and normal fetching of data from the db.
 
         """
         def _decode_hook(row: asyncpg.Record) -> models.TestPostgresType:
@@ -1096,8 +1097,8 @@ class Queries:
 
         Returns
         -------
-        collections.abc.Sequence[models.TestPostgresType]
-            Results fetched from the db.
+        QueryResults[models.TestPostgresType]
+            Helper class that allows both iteration and normal fetching of data from the db.
 
         """
         def _decode_hook(row: asyncpg.Record) -> models.TestPostgresType:
@@ -1119,8 +1120,8 @@ class Queries:
 
         Returns
         -------
-        collections.abc.Sequence[datetime.datetime]
-            Results fetched from the db.
+        QueryResults[datetime.datetime]
+            Helper class that allows both iteration and normal fetching of data from the db.
 
         """
         def _decode_hook(row: asyncpg.Record) -> datetime.datetime:

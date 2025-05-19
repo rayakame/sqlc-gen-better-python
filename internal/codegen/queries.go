@@ -40,7 +40,10 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 			retType = query.Ret.Typ.Type
 		}
 	}
-	if query.Cmd == metadata.CmdExecLastId || query.Cmd == metadata.CmdExecRows {
+	if query.Cmd == metadata.CmdExecLastId {
+		retType = "int | None"
+	}
+	if query.Cmd == metadata.CmdExecRows {
 		retType = "int"
 	}
 	return args, retType, pyTableNames

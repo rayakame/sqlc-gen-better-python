@@ -444,6 +444,19 @@ class QueryResults(typing.Generic[T]):
         """
         return self
 
+    def __await__(
+        self,
+    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
+        """Allow `await` on the object to return all rows as a fully decoded sequence.
+
+        Returns:
+        A sequence of decoded objects of type `T`.
+        """
+        async def _wrapper() -> collections.abc.Sequence[T]:
+            result = await self._conn.fetch(self._sql, *self._args)
+            return [self._decode_hook(row) for row in result]
+        return _wrapper().__await__()
+
     async def __anext__(self) -> T:
         """Yield the next item in the query result using an asyncpg cursor.
 
@@ -463,18 +476,6 @@ class QueryResults(typing.Generic[T]):
             self._iterator = None
             raise
         return self._decode_hook(record)
-    def __await__(
-        self,
-    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
-        """Allow `await` on the object to return all rows as a fully decoded sequence.
-
-        Returns:
-        A sequence of decoded objects of type `T`.
-        """
-        async def _wrapper() -> collections.abc.Sequence[T]:
-            result = await self._conn.fetch(self._sql, *self._args)
-            return [self._decode_hook(row) for row in result]
-        return _wrapper().__await__()
 
 class Queries:
     """Queries from file queries.sql."""
@@ -988,7 +989,7 @@ class Queries:
         id_ -- int.
 
         Returns:
-        collections.abc.Sequence[memoryview] -- Results fetched from the db.
+        QueryResults[memoryview] -- Helper class that allows both iteration and normal fetching of data from the db.
         """
         def _decode_hook(row: asyncpg.Record) -> memoryview:
             return memoryview(row[0])
@@ -1007,7 +1008,7 @@ class Queries:
         id_ -- int.
 
         Returns:
-        collections.abc.Sequence[models.TestPostgresType] -- Results fetched from the db.
+        QueryResults[models.TestPostgresType] -- Helper class that allows both iteration and normal fetching of data from the db.
         """
         def _decode_hook(row: asyncpg.Record) -> models.TestPostgresType:
             return models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35])
@@ -1026,7 +1027,7 @@ class Queries:
         id_ -- int.
 
         Returns:
-        collections.abc.Sequence[models.TestPostgresType] -- Results fetched from the db.
+        QueryResults[models.TestPostgresType] -- Helper class that allows both iteration and normal fetching of data from the db.
         """
         def _decode_hook(row: asyncpg.Record) -> models.TestPostgresType:
             return models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35])
@@ -1045,7 +1046,7 @@ class Queries:
         id_ -- int.
 
         Returns:
-        collections.abc.Sequence[datetime.datetime] -- Results fetched from the db.
+        QueryResults[datetime.datetime] -- Helper class that allows both iteration and normal fetching of data from the db.
         """
         def _decode_hook(row: asyncpg.Record) -> datetime.datetime:
             return row[0]

@@ -12,16 +12,22 @@ dependencies = [
 ]
 
 [dependency-groups]
-coverage = [
-    "coverage[toml]>=7.8.0",
-]
 dev = [
     "nox>=2025.5.1",
+]
+dev-complete = [
+    "nox>=2025.5.1",
+    { include-group = "pyright"},
+    { include-group = "pytest"},
+    { include-group = "ruff" },
 ]
 pyright = [
     "asyncpg-stubs>=0.30.1",
     "pyright>=1.1.400",
     { include-group = "pytest" }
+]
+coverage = [
+    "coverage[toml]>=7.8.0",
 ]
 pytest = [
     "pytest>=8.3.5",
@@ -66,5 +72,8 @@ skip_covered = false
 exclude_lines = [
     "\\#\\s*pragma: no cover$",
     "^\\s*if typing.TYPE_CHECKING:$",
+    # -------------- custom for adapters / converters ----------------
+    "^\\s*def _adapt_",
+    "^\\s*def _convert_",
 ]
 
