@@ -66,9 +66,23 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 		body.NewLine()
 		adapters = append(adapters, "aiosqlite.register_adapter(datetime.date, _adapt_date)")
 		body.WriteLine("def _convert_date(val: bytes) -> datetime.date:")
-		body.WriteIndentedLine(1, "return datetime.date.fromisoformat(val.decode())")
+		if conf.Speedups {
+			body.WriteIndentedLine(1, "return ciso8601.parse_datetime(val.decode()).date()")
+		} else {
+			body.WriteIndentedLine(1, "return datetime.date.fromisoformat(val.decode())")
+		}
 		body.NewLine()
 		converters = append(converters, `aiosqlite.register_converter("date", _convert_date)`)
+	}
+	if _, found := toConvert["decimal.Decimal"]; found {
+		body.WriteLine("def _adapt_decimal(val: decimal.Decimal) -> str:")
+		body.WriteIndentedLine(1, "return str(val)")
+		body.NewLine()
+		adapters = append(adapters, "aiosqlite.register_adapter(decimal.Decimal, _adapt_decimal)")
+		body.WriteLine("def _convert_decimal(val: bytes) -> decimal.Decimal:")
+		body.WriteIndentedLine(1, "return decimal.Decimal(val.decode())")
+		body.NewLine()
+		converters = append(converters, `aiosqlite.register_converter("decimal", _convert_decimal)`)
 	}
 	if _, found := toConvert["datetime.datetime"]; found {
 		body.WriteLine("def _adapt_datetime(val: datetime.datetime) -> str:")
@@ -76,7 +90,11 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 		body.NewLine()
 		adapters = append(adapters, "aiosqlite.register_adapter(datetime.datetime, _adapt_datetime)")
 		body.WriteLine("def _convert_datetime(val: bytes) -> datetime.datetime:")
-		body.WriteIndentedLine(1, "return datetime.datetime.fromisoformat(val.decode())")
+		if conf.Speedups {
+			body.WriteIndentedLine(1, "return ciso8601.parse_datetime(val.decode())")
+		} else {
+			body.WriteIndentedLine(1, "return datetime.datetime.fromisoformat(val.decode())")
+		}
 		body.NewLine()
 		converters = append(converters, `aiosqlite.register_converter("datetime", _convert_datetime)`)
 		converters = append(converters, `aiosqlite.register_converter("timestamp", _convert_datetime)`)
@@ -104,6 +122,33 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 			body.NewLine()
 		}
 	}
+}
+
+const Sqlite3Result = "sqlite3.Row"
+
+func AiosqliteBuildQueryResults(body *builders.IndentStringBuilder) string {
+	body.WriteQueryResultsClassHeader(AioSQLiteConn, []string{
+		"self._cursor: aiosqlite.Cursor | None = None",
+		fmt.Sprintf("self._iterator: typing.AsyncIterator[%s] | None = None", Sqlite3Result),
+	}, Sqlite3Result)
+	body.WriteQueryResultsAwaitFunction([]string{
+		"result = await (await self._conn.execute(self._sql, self._args)).fetchall()",
+		"return [self._decode_hook(row) for row in result]",
+	})
+	body.NewLine()
+	body.WriteIndentedLine(1, "async def __anext__(self) -> T:")
+	body.WriteQueryResultsAnextDocstringAiosqlite()
+	body.WriteIndentedLine(2, "if self._cursor is None or self._iterator is None:")
+	body.WriteIndentedLine(3, "self._cursor: aiosqlite.Cursor | None = await self._conn.execute(self._sql, self._args)")
+	body.WriteIndentedLine(3, "self._iterator = self._cursor.__aiter__()")
+	body.WriteIndentedLine(2, "try:")
+	body.WriteIndentedLine(3, "record = await self._iterator.__anext__()")
+	body.WriteIndentedLine(2, "except StopAsyncIteration:")
+	body.WriteIndentedLine(3, "self._cursor = None")
+	body.WriteIndentedLine(3, "self._iterator = None")
+	body.WriteIndentedLine(3, "raise")
+	body.WriteIndentedLine(2, "return self._decode_hook(record)")
+	return "QueryResults"
 }
 
 func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
@@ -171,16 +216,14 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 			}
 			body.WriteLine(")")
 		} else {
-			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return %s(row[0])", retType.Type))
+			body.WriteIndentedLine(indentLevel+1, "return row[0]")
 		}
 	} else if query.Cmd == metadata.CmdMany {
-		body.WriteLine(fmt.Sprintf(") -> typing.AsyncIterator[%s]:", retType.Type))
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("stream = await %s.execute(%s", conn, query.ConstantName))
-		aiosqliteWriteParams(query, body)
-		body.WriteLine(")")
-		body.WriteIndentedLine(indentLevel+1, "async for row in stream:")
+		body.WriteLine(fmt.Sprintf(") -> QueryResults[%s]:", retType.Type))
+		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", Sqlite3Result, retType.Type))
+
 		if query.Ret.IsStruct() {
-			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("yield %s(", retType.Type))
+			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return %s(", retType.Type))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
 				if i != 0 {
@@ -201,8 +244,23 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 			}
 			body.WriteLine(")")
 		} else {
-			body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("yield %s(row[0])", retType.Type))
+			body.WriteIndentedLine(indentLevel+2, "return row[0]")
 		}
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, _decode_hook", retType.Type, conn, query.ConstantName))
+		params := ""
+		for i, arg := range query.Args {
+			if !arg.IsEmpty() {
+				if i == len(query.Args)-1 {
+					params += fmt.Sprintf(" %s", arg.Name)
+				} else {
+					params += fmt.Sprintf(" %s,", arg.Name)
+				}
+			}
+		}
+		if params != "" {
+			body.WriteString("," + params)
+		}
+		body.WriteLine(")")
 	}
 	return nil
 }

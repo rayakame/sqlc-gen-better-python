@@ -35,6 +35,38 @@ func (b *IndentStringBuilder) WriteQueryResultsAiterDocstring() {
 	b.WriteIndentedLine(2, `"""`)
 }
 
+func (b *IndentStringBuilder) WriteQueryResultsAnextDocstringAiosqlite() {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedLine(2, `"""Yield the next item in the query result using an aiosqlite cursor.`)
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, "T")
+		b.WriteIndentedLine(3, "The next decoded result.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises")
+		b.WriteIndentedLine(2, "------")
+		b.WriteIndentedLine(2, "StopAsyncIteration")
+		b.WriteIndentedLine(3, "When no more records are available.")
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, "The next decoded result of type `T`.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises:")
+		b.WriteIndentedLine(3, "StopAsyncIteration: When no more records are available.")
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, "The next decoded result of type `T`.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises:")
+		b.WriteIndentedLine(2, "StopAsyncIteration -- When no more records are available.")
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
 func (b *IndentStringBuilder) WriteQueryResultsAnextDocstringAsyncpg() {
 	if *docstringConfig == core.DocstringConventionNone {
 		return

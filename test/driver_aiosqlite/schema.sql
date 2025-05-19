@@ -14,11 +14,11 @@ CREATE TABLE test_sqlite_types
     /* ───────────── Floating-point / numeric ───────────── */
     real_test             real                NOT NULL,
     double_test double NOT NULL,
-    double_precision_test "double precision"  NOT NULL,
+    double_precision_test double precision  NOT NULL,
     float_test            float               NOT NULL,
     numeric_test          numeric             NOT NULL,
     /* ───────────── Exact numeric (decimal) ───────────── */
-    decimal_test          decimal(12, 4)      NOT NULL,
+    decimal_test          decimal     NOT NULL,
     /* ───────────── Boolean ───────────── */
     boolean_test          boolean             NOT NULL,
     bool_test             bool                NOT NULL,

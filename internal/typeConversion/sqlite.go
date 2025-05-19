@@ -8,6 +8,7 @@ var conversions = map[string]struct{}{
 	"date":      {},
 	"datetime":  {},
 	"timestamp": {},
+	"decimal":   {},
 }
 
 func SqliteDoTypeConversion(name string) bool {

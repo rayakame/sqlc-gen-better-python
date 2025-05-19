@@ -18,7 +18,7 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 		return "int"
 	case "blob":
 		return "bytes"
-	case "real", "double", "double precision", "float", "numeric":
+	case "real", "double", "double precision", "doubleprecision", "float", "numeric":
 		return "float"
 	case "boolean", "bool":
 		return "bool"
@@ -26,6 +26,8 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 		return "datetime.date"
 	case "datetime", "timestamp":
 		return "datetime.datetime"
+	case "decimal":
+		return "decimal.Decimal"
 	}
 
 	switch {
@@ -39,8 +41,6 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 		columnType == "clob",
 		columnType == "json":
 		return "str"
-	case strings.HasPrefix(columnType, "decimal"):
-		return "decimal.Decimal"
 
 	default:
 		log.GlobalLogger.Log(fmt.Sprintf("unknown SQLite type: %s", columnType))

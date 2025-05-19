@@ -43,6 +43,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 		buildPyQueryFunc = drivers.AioSQLiteBuildPyQueryFunc
 		acceptedDriverCMDs = drivers.AioSQLiteAcceptedDriverCMDs
 		connType = drivers.AioSQLiteConn
+		driverBuildQueryResults = drivers.AiosqliteBuildQueryResults
 	case core.SQLDriverSQLite:
 		buildPyQueryFunc = drivers.SQLite3BuildPyQueryFunc
 		acceptedDriverCMDs = drivers.SQLite3AcceptedDriverCMDs

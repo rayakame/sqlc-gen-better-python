@@ -154,6 +154,7 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 }
 
 func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map[string]importSpec, map[string]importSpec, map[string]importSpec) {
+	addCiso := false
 	queryUses := func(name string) (bool, bool) {
 		var uses *bool = nil
 		var typeChecking *bool = nil
@@ -177,11 +178,25 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 				if q.Cmd == metadata.CmdMany {
 					helper(val1, false)
 				}
-				helper(val1, val2)
+				// if we have speedups enabled then we don't need datetime in the std imports
+				// we use ciso8601 for the converting and need datetime only in typechecking
+				if val2 == false && i.C.SqlDriver == SQLDriverAioSQLite && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
+					helper(val1, true)
+					addCiso = true
+				} else {
+					helper(val1, val2)
+				}
 			}
 			for _, arg := range q.Args {
 				if val1, val2 := i.queryValueUses(name, arg); val1 {
-					helper(val1, val2)
+					// if we have speedups enabled then we don't need datetime in the std imports
+					// we use ciso8601 for the converting and need datetime only in typechecking
+					if val2 == false && i.C.SqlDriver == SQLDriverAioSQLite && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
+						helper(val1, true)
+						addCiso = true
+					} else {
+						helper(val1, val2)
+					}
 				}
 			}
 		}
@@ -208,6 +223,12 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 		} else {
 			typeChecking[string(SQLDriverAioSQLite)] = importSpec{Module: string(SQLDriverAioSQLite)}
 		}
+		if IsAnyQueryMany(i.Queries) {
+			typeChecking[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
+		}
+	}
+	if addCiso {
+		std["ciso8601"] = importSpec{Module: "ciso8601"}
 	}
 
 	pkg := make(map[string]importSpec)

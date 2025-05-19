@@ -21,6 +21,7 @@ type Config struct {
 	EmitInitFile                *bool         `json:"emit_init_file" yaml:"emit_init_file"`
 	EmitDocstrings              *string       `json:"docstrings" yaml:"docstrings"`
 	EmitDocstringsSQL           *bool         `json:"docstrings_emit_sql" yaml:"docstrings_emit_sql"`
+	Speedups                    bool          `json:"speedups" yaml:"speedups"`
 	Debug                       bool          `json:"debug" yaml:"debug"`
 
 	IndentChar          string `json:"indent_char" yaml:"indent_char"`
