@@ -23,7 +23,7 @@ func AsyncpgTypeCheckingHook() []string {
 }
 
 func AsyncpgBuildQueryResults(body *builders.IndentStringBuilder) string {
-	body.WriteQueryResultsClassHeader(AsyncpgConn, []string{
+	body.WriteAsyncQueryResultsClassHeader(AsyncpgConn, []string{
 		fmt.Sprintf("self._cursor: asyncpg.cursor.CursorFactory[%s] | None = None", AsyncpgResult),
 		fmt.Sprintf("self._iterator: asyncpg.cursor.CursorIterator[%s] | None = None", AsyncpgResult),
 	}, AsyncpgResult)
