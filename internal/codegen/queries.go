@@ -20,6 +20,9 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 			if arg.Typ.IsList {
 				argType = fmt.Sprintf("collections.abc.Sequence[%s]", argType)
 			}
+			if arg.Typ.IsNullable {
+				argType = fmt.Sprintf("%s | None", argType)
+			}
 			args = append(args, core.FunctionArg{
 				Name:           arg.Name,
 				Type:           argType,

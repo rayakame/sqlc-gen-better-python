@@ -25,65 +25,65 @@ class TestInnerSqliteType(msgspec.Struct):
 
     Attributes:
     table_id -- int
-    int_test -- int
-    bigint_test -- int
-    smallint_test -- int
-    tinyint_test -- int
-    int2_test -- int
-    int8_test -- int
-    bigserial_test -- int
-    blob_test -- memoryview
-    real_test -- float
-    double_test -- float
-    double_precision_test -- float
-    float_test -- float
-    numeric_test -- float
-    decimal_test -- decimal.Decimal
-    boolean_test -- bool
-    bool_test -- bool
-    date_test -- datetime.date
-    datetime_test -- datetime.datetime
-    timestamp_test -- datetime.datetime
-    character_test -- str
-    varchar_test -- str
-    varyingcharacter_test -- str
-    nchar_test -- str
-    nativecharacter_test -- str
-    nvarchar_test -- str
-    text_test -- str
-    clob_test -- str
-    json_test -- str
+    int_test -- int | None
+    bigint_test -- int | None
+    smallint_test -- int | None
+    tinyint_test -- int | None
+    int2_test -- int | None
+    int8_test -- int | None
+    bigserial_test -- int | None
+    blob_test -- memoryview | None
+    real_test -- float | None
+    double_test -- float | None
+    double_precision_test -- float | None
+    float_test -- float | None
+    numeric_test -- float | None
+    decimal_test -- decimal.Decimal | None
+    boolean_test -- bool | None
+    bool_test -- bool | None
+    date_test -- datetime.date | None
+    datetime_test -- datetime.datetime | None
+    timestamp_test -- datetime.datetime | None
+    character_test -- str | None
+    varchar_test -- str | None
+    varyingcharacter_test -- str | None
+    nchar_test -- str | None
+    nativecharacter_test -- str | None
+    nvarchar_test -- str | None
+    text_test -- str | None
+    clob_test -- str | None
+    json_test -- str | None
     """
 
     table_id: int
-    int_test: int
-    bigint_test: int
-    smallint_test: int
-    tinyint_test: int
-    int2_test: int
-    int8_test: int
-    bigserial_test: int
-    blob_test: memoryview
-    real_test: float
-    double_test: float
-    double_precision_test: float
-    float_test: float
-    numeric_test: float
-    decimal_test: decimal.Decimal
-    boolean_test: bool
-    bool_test: bool
-    date_test: datetime.date
-    datetime_test: datetime.datetime
-    timestamp_test: datetime.datetime
-    character_test: str
-    varchar_test: str
-    varyingcharacter_test: str
-    nchar_test: str
-    nativecharacter_test: str
-    nvarchar_test: str
-    text_test: str
-    clob_test: str
-    json_test: str
+    int_test: int | None
+    bigint_test: int | None
+    smallint_test: int | None
+    tinyint_test: int | None
+    int2_test: int | None
+    int8_test: int | None
+    bigserial_test: int | None
+    blob_test: memoryview | None
+    real_test: float | None
+    double_test: float | None
+    double_precision_test: float | None
+    float_test: float | None
+    numeric_test: float | None
+    decimal_test: decimal.Decimal | None
+    boolean_test: bool | None
+    bool_test: bool | None
+    date_test: datetime.date | None
+    datetime_test: datetime.datetime | None
+    timestamp_test: datetime.datetime | None
+    character_test: str | None
+    varchar_test: str | None
+    varyingcharacter_test: str | None
+    nchar_test: str | None
+    nativecharacter_test: str | None
+    nvarchar_test: str | None
+    text_test: str | None
+    clob_test: str | None
+    json_test: str | None
 
 
 class TestSqliteType(msgspec.Struct):

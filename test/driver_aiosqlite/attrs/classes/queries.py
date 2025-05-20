@@ -955,7 +955,7 @@ class Queries:
         """
         return (await self._conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE,(id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).lastrowid
 
-    async def insert_one_inner_sqlite_type(self, *, table_id: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> None:
+    async def insert_one_inner_sqlite_type(self, *, table_id: int, int_test: int | None, bigint_test: int | None, smallint_test: int | None, tinyint_test: int | None, int2_test: int | None, int8_test: int | None, bigserial_test: int | None, blob_test: memoryview | None, real_test: float | None, double_test: float | None, double_precision_test: float | None, float_test: float | None, numeric_test: float | None, decimal_test: decimal.Decimal | None, boolean_test: bool | None, bool_test: bool | None, date_test: datetime.date | None, datetime_test: datetime.datetime | None, timestamp_test: datetime.datetime | None, character_test: str | None, varchar_test: str | None, varyingcharacter_test: str | None, nchar_test: str | None, nativecharacter_test: str | None, nvarchar_test: str | None, text_test: str | None, clob_test: str | None, json_test: str | None) -> None:
         """Execute SQL query with `name: InsertOneInnerSqliteType :exec`.
 
         ```sql
@@ -976,34 +976,34 @@ class Queries:
         Parameters
         ----------
         table_id : int
-        int_test : int
-        bigint_test : int
-        smallint_test : int
-        tinyint_test : int
-        int2_test : int
-        int8_test : int
-        bigserial_test : int
-        blob_test : memoryview
-        real_test : float
-        double_test : float
-        double_precision_test : float
-        float_test : float
-        numeric_test : float
-        decimal_test : decimal.Decimal
-        boolean_test : bool
-        bool_test : bool
-        date_test : datetime.date
-        datetime_test : datetime.datetime
-        timestamp_test : datetime.datetime
-        character_test : str
-        varchar_test : str
-        varyingcharacter_test : str
-        nchar_test : str
-        nativecharacter_test : str
-        nvarchar_test : str
-        text_test : str
-        clob_test : str
-        json_test : str
+        int_test : int | None
+        bigint_test : int | None
+        smallint_test : int | None
+        tinyint_test : int | None
+        int2_test : int | None
+        int8_test : int | None
+        bigserial_test : int | None
+        blob_test : memoryview | None
+        real_test : float | None
+        double_test : float | None
+        double_precision_test : float | None
+        float_test : float | None
+        numeric_test : float | None
+        decimal_test : decimal.Decimal | None
+        boolean_test : bool | None
+        bool_test : bool | None
+        date_test : datetime.date | None
+        datetime_test : datetime.datetime | None
+        timestamp_test : datetime.datetime | None
+        character_test : str | None
+        varchar_test : str | None
+        varyingcharacter_test : str | None
+        nchar_test : str | None
+        nativecharacter_test : str | None
+        nvarchar_test : str | None
+        text_test : str | None
+        clob_test : str | None
+        json_test : str | None
 
         """
         await self._conn.execute(INSERT_ONE_INNER_SQLITE_TYPE,(table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
