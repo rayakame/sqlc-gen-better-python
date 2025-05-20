@@ -84,7 +84,7 @@ class TestAttrsClasses:
             json_test=model.json_test,
         )
 
-    @pytest_asyncio.fixture(scope="session", loop_scope="session")
+    @pytest_asyncio.fixture(scope="class", loop_scope="session")
     async def queries_obj(self, aiosqlite_conn: aiosqlite.Connection) -> queries.Queries:
         return queries.Queries(conn=aiosqlite_conn)
 
