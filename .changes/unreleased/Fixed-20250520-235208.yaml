@@ -1,0 +1,6 @@
+kind: Fixed
+body: Fixed incorrect typing of query function arguments for nullable fields.
+time: 2025-05-20T23:52:08.6426019+02:00
+custom:
+    Author: null-domain
+    PR: "82"
