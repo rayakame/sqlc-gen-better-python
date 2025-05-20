@@ -108,7 +108,11 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
 						if typeConversion.AsyncpgDoTypeConversion(embedCol.Type.SqlType) {
-							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
+							if embedCol.Type.IsNullable {
+								inner = append(inner, fmt.Sprintf("%s=%s(row[%s]) if row[%s] is not None else None", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i), strconv.Itoa(i)))
+							} else {
+								inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
+							}
 						} else {
 							inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
 						}
@@ -117,7 +121,11 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
 					if typeConversion.AsyncpgDoTypeConversion(col.Type.SqlType) {
-						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+						if col.Type.IsNullable {
+							body.WriteString(fmt.Sprintf("%s=%s(row[%s]) if row[%s] is not None else None", col.Name, col.Type.Type, strconv.Itoa(i), strconv.Itoa(i)))
+						} else {
+							body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+						}
 					} else {
 						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
 					}

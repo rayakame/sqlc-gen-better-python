@@ -499,7 +499,7 @@ class Queries:
         """
         return self._conn
 
-    async def create_one_test_postgres_inner_type(self, *, table_id: int, serial_test: int, serial4_test: int, bigserial_test: int, smallserial_test: int, int_test: int, bigint_test: int, smallint_test: int, float_test: float, double_precision_test: float, real_test: float, numeric_test: decimal.Decimal, money_test: str, bool_test: bool, json_test: str, jsonb_test: str, bytea_test: memoryview, date_test: datetime.date, time_test: datetime.time, timetz_test: datetime.time, timestamp_test: datetime.datetime, timestamptz_test: datetime.datetime, interval_test: datetime.timedelta, text_test: str, varchar_test: str, bpchar_test: str, char_test: str, citext_test: str, uuid_test: uuid.UUID, inet_test: str, cidr_test: str, macaddr_test: str, macaddr8_test: str, ltree_test: str, lquery_test: str, ltxtquery_test: str) -> None:
+    async def create_one_test_postgres_inner_type(self, *, table_id: int, serial_test: int | None, serial4_test: int | None, bigserial_test: int | None, smallserial_test: int | None, int_test: int | None, bigint_test: int | None, smallint_test: int | None, float_test: float | None, double_precision_test: float | None, real_test: float | None, numeric_test: decimal.Decimal | None, money_test: str | None, bool_test: bool | None, json_test: str | None, jsonb_test: str | None, bytea_test: memoryview | None, date_test: datetime.date | None, time_test: datetime.time | None, timetz_test: datetime.time | None, timestamp_test: datetime.datetime | None, timestamptz_test: datetime.datetime | None, interval_test: datetime.timedelta | None, text_test: str | None, varchar_test: str | None, bpchar_test: str | None, char_test: str | None, citext_test: str | None, uuid_test: uuid.UUID | None, inet_test: str | None, cidr_test: str | None, macaddr_test: str | None, macaddr8_test: str | None, ltree_test: str | None, lquery_test: str | None, ltxtquery_test: str | None) -> None:
         """Execute SQL query with `name: CreateOneTestPostgresInnerType :exec`.
 
         ```sql
@@ -548,41 +548,41 @@ class Queries:
 
         Arguments:
         table_id -- int.
-        serial_test -- int.
-        serial4_test -- int.
-        bigserial_test -- int.
-        smallserial_test -- int.
-        int_test -- int.
-        bigint_test -- int.
-        smallint_test -- int.
-        float_test -- float.
-        double_precision_test -- float.
-        real_test -- float.
-        numeric_test -- decimal.Decimal.
-        money_test -- str.
-        bool_test -- bool.
-        json_test -- str.
-        jsonb_test -- str.
-        bytea_test -- memoryview.
-        date_test -- datetime.date.
-        time_test -- datetime.time.
-        timetz_test -- datetime.time.
-        timestamp_test -- datetime.datetime.
-        timestamptz_test -- datetime.datetime.
-        interval_test -- datetime.timedelta.
-        text_test -- str.
-        varchar_test -- str.
-        bpchar_test -- str.
-        char_test -- str.
-        citext_test -- str.
-        uuid_test -- uuid.UUID.
-        inet_test -- str.
-        cidr_test -- str.
-        macaddr_test -- str.
-        macaddr8_test -- str.
-        ltree_test -- str.
-        lquery_test -- str.
-        ltxtquery_test -- str.
+        serial_test -- int | None.
+        serial4_test -- int | None.
+        bigserial_test -- int | None.
+        smallserial_test -- int | None.
+        int_test -- int | None.
+        bigint_test -- int | None.
+        smallint_test -- int | None.
+        float_test -- float | None.
+        double_precision_test -- float | None.
+        real_test -- float | None.
+        numeric_test -- decimal.Decimal | None.
+        money_test -- str | None.
+        bool_test -- bool | None.
+        json_test -- str | None.
+        jsonb_test -- str | None.
+        bytea_test -- memoryview | None.
+        date_test -- datetime.date | None.
+        time_test -- datetime.time | None.
+        timetz_test -- datetime.time | None.
+        timestamp_test -- datetime.datetime | None.
+        timestamptz_test -- datetime.datetime | None.
+        interval_test -- datetime.timedelta | None.
+        text_test -- str | None.
+        varchar_test -- str | None.
+        bpchar_test -- str | None.
+        char_test -- str | None.
+        citext_test -- str | None.
+        uuid_test -- uuid.UUID | None.
+        inet_test -- str | None.
+        cidr_test -- str | None.
+        macaddr_test -- str | None.
+        macaddr8_test -- str | None.
+        ltree_test -- str | None.
+        lquery_test -- str | None.
+        ltxtquery_test -- str | None.
         """
         await self._conn.execute(CREATE_ONE_TEST_POSTGRES_INNER_TYPE, table_id, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test)
 
@@ -953,7 +953,7 @@ class Queries:
         row = await self._conn.fetchrow(GET_ALL_EMBEDDED_TEST_POSTGRES_TYPE, id_)
         if row is None:
             return None
-        return GetAllEmbeddedTestPostgresTypeRow(test_postgres_type=models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]), test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]), date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]), cidr_test=str(row[66]), macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
+        return GetAllEmbeddedTestPostgresTypeRow(test_postgres_type=models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]), test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]) if row[52] is not None else None, date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]) if row[65] is not None else None, cidr_test=str(row[66]) if row[66] is not None else None, macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
 
     async def get_embedded_test_postgres_type(self, *, id_: int) -> GetEmbeddedTestPostgresTypeRow | None:
         """Fetch one from the db using the SQL query with `name: GetEmbeddedTestPostgresType :one`.
@@ -974,7 +974,7 @@ class Queries:
         row = await self._conn.fetchrow(GET_EMBEDDED_TEST_POSTGRES_TYPE, id_)
         if row is None:
             return None
-        return GetEmbeddedTestPostgresTypeRow(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35], test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]), date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]), cidr_test=str(row[66]), macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
+        return GetEmbeddedTestPostgresTypeRow(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35], test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]) if row[52] is not None else None, date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]) if row[65] is not None else None, cidr_test=str(row[66]) if row[66] is not None else None, macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
 
     def get_many_test_bytea_postgres_type(self, *, id_: int) -> QueryResults[memoryview]:
         """Fetch many from the db using the SQL query with `name: GetManyTestByteaPostgresType :many`.
@@ -1070,7 +1070,7 @@ class Queries:
         row = await self._conn.fetchrow(GET_ONE_INNER_TEST_POSTGRES_TYPE, table_id)
         if row is None:
             return None
-        return models.TestInnerPostgresType(table_id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]   )
+        return models.TestInnerPostgresType(table_id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]) if row[16] is not None else None, date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]) if row[29] is not None else None, cidr_test=str(row[30]) if row[30] is not None else None, macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]   )
 
     async def get_one_test_bytea_postgres_type(self, *, id_: int) -> memoryview | None:
         """Fetch one from the db using the SQL query with `name: GetOneTestByteaPostgresType :one`.
