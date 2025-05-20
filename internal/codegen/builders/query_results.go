@@ -26,7 +26,7 @@ func (b *IndentStringBuilder) WriteSyncQueryResultsClassHeader(connType string, 
 	}
 	b.NewLine()
 	b.WriteIndentedLine(1, "def __iter__(self) -> QueryResults[T]:")
-	b.WriteQueryResultsAiterDocstring()
+	b.WriteQueryResultsIterDocstring()
 	b.WriteIndentedLine(2, "return self")
 	b.NewLine()
 }
@@ -54,8 +54,8 @@ func (b *IndentStringBuilder) WriteAsyncQueryResultsClassHeader(connType string,
 		b.WriteIndentedLine(2, line)
 	}
 	b.NewLine()
-	b.WriteIndentedLine(1, "def __iter__(self) -> QueryResults[T]:")
-	b.WriteQueryResultsIterDocstring()
+	b.WriteIndentedLine(1, "def __aiter__(self) -> QueryResults[T]:")
+	b.WriteQueryResultsAiterDocstring()
 	b.WriteIndentedLine(2, "return self")
 	b.NewLine()
 }

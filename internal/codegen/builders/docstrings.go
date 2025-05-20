@@ -62,7 +62,7 @@ func (b *IndentStringBuilder) WriteQueryResultsNextDocstringSqlite() {
 	if *docstringConfig == core.DocstringConventionNone {
 		return
 	}
-	b.WriteIndentedLine(2, `"""Yield the next item in the query result using an sqlite3 cursor.`)
+	b.WriteIndentedLine(2, `"""Yield the next item in the query result using a sqlite3 cursor.`)
 	b.NewLine()
 	if *docstringConfig == core.DocstringConventionNumpy {
 		b.WriteIndentedLine(2, "Returns")

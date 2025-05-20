@@ -22,7 +22,7 @@ DRIVER_PATHS = {
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["ruff_format", "asyncpg", "aiosqlite", "pyright", "ruff", "pytest"]
+options.sessions = ["ruff_format", "asyncpg", "sqlite3", "aiosqlite", "pyright", "ruff", "pytest"]
 
 DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
 
@@ -99,6 +99,7 @@ def sqlite3_check(session: nox.Session) -> None:
     sqlc_check(session, "sqlite3")
     session.run("pyright", DRIVER_PATHS["sqlite3"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["sqlite3"])
+
 
 @nox.session(reuse_venv=True)
 def aiosqlite(session: nox.Session) -> None:

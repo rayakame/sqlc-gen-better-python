@@ -136,7 +136,7 @@ func SQLite3BuildTypeConvFunc(queries []core.Query, body *builders.IndentStringB
 }
 
 func SQLite3BuildQueryResults(body *builders.IndentStringBuilder) string {
-	body.WriteAsyncQueryResultsClassHeader(SQLite3Conn, []string{
+	body.WriteSyncQueryResultsClassHeader(SQLite3Conn, []string{
 		"self._cursor: sqlite3.Cursor | None = None",
 		fmt.Sprintf("self._iterator: collections.abc.Iterator[%s] | None = None", Sqlite3Result),
 	}, Sqlite3Result)
