@@ -211,6 +211,14 @@ jobs:
       - name: Run build.sh
         run: ./scripts/build/build.sh
 
+      - name: Upload wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-artifact
+          path: sqlc-gen-better-python.wasm
+          if-no-files-found: error
+          retention-days: 30
+
   ci-done:
     needs: [ test,upload-coverage, asyncpg, pyright, ruff, test-build ]
     if: always() && !cancelled()
