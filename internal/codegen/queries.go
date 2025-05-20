@@ -185,5 +185,8 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 	if dr.conf.SqlDriver == core.SQLDriverAioSQLite {
 		drivers.AioSQLiteBuildTypeConvFunc(queries, body, dr.conf)
 	}
+	if dr.conf.SqlDriver == core.SQLDriverSQLite {
+		drivers.SQLite3BuildTypeConvFunc(queries, body, dr.conf)
+	}
 	return []byte(body.String() + pyTableBody.String() + funcBody.String()), nil
 }

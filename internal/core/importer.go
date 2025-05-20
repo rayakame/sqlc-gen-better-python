@@ -180,7 +180,7 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 				}
 				// if we have speedups enabled then we don't need datetime in the std imports
 				// we use ciso8601 for the converting and need datetime only in typechecking
-				if val2 == false && i.C.SqlDriver == SQLDriverAioSQLite && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
+				if val2 == false && (i.C.SqlDriver == SQLDriverAioSQLite || i.C.SqlDriver == SQLDriverSQLite) && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
 					helper(val1, true)
 					addCiso = true
 				} else {
@@ -191,7 +191,7 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 				if val1, val2 := i.queryValueUses(name, arg); val1 {
 					// if we have speedups enabled then we don't need datetime in the std imports
 					// we use ciso8601 for the converting and need datetime only in typechecking
-					if val2 == false && i.C.SqlDriver == SQLDriverAioSQLite && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
+					if val2 == false && (i.C.SqlDriver == SQLDriverAioSQLite || i.C.SqlDriver == SQLDriverSQLite) && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
 						helper(val1, true)
 						addCiso = true
 					} else {
@@ -224,6 +224,15 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 			typeChecking[string(SQLDriverAioSQLite)] = importSpec{Module: string(SQLDriverAioSQLite)}
 		}
 		if IsAnyQueryMany(i.Queries) {
+			typeChecking[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
+		}
+	} else if i.C.SqlDriver == SQLDriverSQLite {
+		// if the std mapping has exactly 2 members, these two are collections and typing,
+		// but if they are more than 2, we need to add type conversion and for that we
+		// need the aiosqlite in the normal import block, not in the type checking block
+		if len(std) > 2 {
+			std[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
+		} else {
 			typeChecking[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
 		}
 	}

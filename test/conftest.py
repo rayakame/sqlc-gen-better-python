@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import pytest
 import pathlib
 import sqlite3
 import typing
@@ -9,12 +10,12 @@ import aiosqlite
 import asyncpg
 
 if typing.TYPE_CHECKING:
-    import pytest
     import collections.abc
 import pytest_asyncio
 
 ASYNCPG_PATH = pathlib.Path(__file__).parent / "driver_asyncpg"
 AIOSQLITE_PATH = pathlib.Path(__file__).parent / "driver_aiosqlite"
+SQLITE3_PATH = pathlib.Path(__file__).parent / "driver_sqlite3"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -63,7 +64,25 @@ async def asyncpg_conn(
     await conn.close()
 
 
-@pytest_asyncio.fixture(scope="session", loop_scope="session")
+@pytest.fixture(scope="class")
+def sqlite3_conn(
+    request: pytest.FixtureRequest,
+) -> collections.abc.Generator[sqlite3.Connection, typing.Any]:
+    dsn = get_sqlite_dsn(request.config)
+    conn = sqlite3.connect(dsn, detect_types=sqlite3.PARSE_DECLTYPES)
+    conn.executescript((SQLITE3_PATH / "schema.sql").read_text())
+    conn.commit()
+    yield conn
+
+    conn.executescript("""
+        DELETE FROM test_sqlite_types;
+        DELETE FROM test_inner_sqlite_types;
+    """)
+    conn.commit()
+    conn.close()
+
+
+@pytest_asyncio.fixture(scope="class", loop_scope="session")
 async def aiosqlite_conn(
     request: pytest.FixtureRequest,
 ) -> collections.abc.AsyncGenerator[aiosqlite.Connection, typing.Any]:

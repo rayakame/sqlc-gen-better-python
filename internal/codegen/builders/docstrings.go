@@ -16,6 +16,27 @@ func SetDocstringConfig(c *string, b *bool, d core.SQLDriverType) {
 	docstringConfigDriver = d
 }
 
+func (b *IndentStringBuilder) WriteQueryResultsIterDocstring() {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedLine(2, `"""`+"Initialize iteration support.")
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, "QueryResults[T]")
+		b.WriteIndentedLine(3, "Self as an iterator.")
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, "Self as an iterator.")
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, "Self as an iterator.")
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
 func (b *IndentStringBuilder) WriteQueryResultsAiterDocstring() {
 	if *docstringConfig == core.DocstringConventionNone {
 		return
@@ -33,6 +54,38 @@ func (b *IndentStringBuilder) WriteQueryResultsAiterDocstring() {
 	} else if *docstringConfig == core.DocstringConventionPEP257 {
 		b.WriteIndentedLine(2, "Returns:")
 		b.WriteIndentedLine(2, "Self as an asynchronous iterator.")
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
+func (b *IndentStringBuilder) WriteQueryResultsNextDocstringSqlite() {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedLine(2, `"""Yield the next item in the query result using a sqlite3 cursor.`)
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, "T")
+		b.WriteIndentedLine(3, "The next decoded result.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises")
+		b.WriteIndentedLine(2, "------")
+		b.WriteIndentedLine(2, "StopIteration")
+		b.WriteIndentedLine(3, "When no more records are available.")
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, "The next decoded result of type `T`.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises:")
+		b.WriteIndentedLine(3, "StopIteration: When no more records are available.")
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, "The next decoded result of type `T`.")
+		b.NewLine()
+		b.WriteIndentedLine(2, "Raises:")
+		b.WriteIndentedLine(2, "StopIteration -- When no more records are available.")
 	}
 	b.WriteIndentedLine(2, `"""`)
 }
@@ -106,6 +159,27 @@ func (b *IndentStringBuilder) WriteQueryResultsAwaitDocstring() {
 		return
 	}
 	b.WriteIndentedLine(2, `"""`+"Allow `await` on the object to return all rows as a fully decoded sequence.")
+	b.NewLine()
+	if *docstringConfig == core.DocstringConventionNumpy {
+		b.WriteIndentedLine(2, "Returns")
+		b.WriteIndentedLine(2, "-------")
+		b.WriteIndentedLine(2, "collections.abc.Sequence[T]")
+		b.WriteIndentedLine(3, "A sequence of decoded objects of type `T`.")
+	} else if *docstringConfig == core.DocstringConventionGoogle {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(3, "A sequence of decoded objects of type `T`.")
+	} else if *docstringConfig == core.DocstringConventionPEP257 {
+		b.WriteIndentedLine(2, "Returns:")
+		b.WriteIndentedLine(2, "A sequence of decoded objects of type `T`.")
+	}
+	b.WriteIndentedLine(2, `"""`)
+}
+
+func (b *IndentStringBuilder) WriteQueryResultsCallDocstring() {
+	if *docstringConfig == core.DocstringConventionNone {
+		return
+	}
+	b.WriteIndentedLine(2, `"""`+"Allow calling the object to return all rows as a fully decoded sequence.")
 	b.NewLine()
 	if *docstringConfig == core.DocstringConventionNumpy {
 		b.WriteIndentedLine(2, "Returns")

@@ -48,6 +48,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 		buildPyQueryFunc = drivers.SQLite3BuildPyQueryFunc
 		acceptedDriverCMDs = drivers.SQLite3AcceptedDriverCMDs
 		connType = drivers.SQLite3Conn
+		driverBuildQueryResults = drivers.SQLite3BuildQueryResults
 	case core.SQLDriverAsyncpg:
 		buildPyQueryFunc = drivers.AsyncpgBuildPyQueryFunc
 		acceptedDriverCMDs = drivers.AsyncpgAcceptedDriverCMDs

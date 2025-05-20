@@ -5,7 +5,7 @@ REM ─────────────────────────�
 REM 1) CONFIGURATION – add folders here
 REM    (paths are relative to repo root)
 REM ──────────────────────────────
-set "TARGET_DIRS=test\driver_asyncpg test\driver_aiosqlite"
+set "TARGET_DIRS=test\driver_asyncpg test\driver_aiosqlite test\driver_sqlite3"
 set "SQLC_CONFIG_NAMES=sqlc.yaml"
 
 REM ──────────────────────────────
