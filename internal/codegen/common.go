@@ -43,6 +43,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 		buildPyQueryFunc = drivers.AioSQLiteBuildPyQueryFunc
 		acceptedDriverCMDs = drivers.AioSQLiteAcceptedDriverCMDs
 		connType = drivers.AioSQLiteConn
+		driverBuildQueryResults = drivers.AiosqliteBuildQueryResults
 	case core.SQLDriverSQLite:
 		buildPyQueryFunc = drivers.SQLite3BuildPyQueryFunc
 		acceptedDriverCMDs = drivers.SQLite3AcceptedDriverCMDs
@@ -56,7 +57,7 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
-	builders.SetDocstringConfig(conf.EmitDocstrings, conf.EmitDocstringsSQL)
+	builders.SetDocstringConfig(conf.EmitDocstrings, conf.EmitDocstringsSQL, conf.SqlDriver)
 
 	return &Driver{
 		buildPyQueryFunc:        buildPyQueryFunc,

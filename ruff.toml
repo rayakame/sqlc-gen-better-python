@@ -20,7 +20,10 @@ ignore = [
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
 ]
 "test/**/*test*.py" = [
-    "D" # ignore docstrings in test files
+    "D", # ignore docstrings in test files
+    "DTZ005", # `datetime.datetime.now()` called without a `tz` argument
+    "DTZ011", # `datetime.date.today()` used
+    "DTZ001", # `datetime.datetime()` called without a `tzinfo` argument
 ]
 "noxfile.py" = [
     "D"
@@ -31,6 +34,7 @@ ignore = [
 ]
 "**/{attrs,dataclass,msgspec,driver_asyncpg}/*.py" = [
     "INP001", # File is part of an implicit namespace package. Add an `__init__.py`.
+    "FBT001", # Boolean-typed positional argument in function definition
 ]
 
 

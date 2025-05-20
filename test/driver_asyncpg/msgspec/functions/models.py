@@ -26,79 +26,79 @@ class TestInnerPostgresType(msgspec.Struct):
 
     Attributes:
     table_id -- int
-    serial_test -- int
-    serial4_test -- int
-    bigserial_test -- int
-    smallserial_test -- int
-    int_test -- int
-    bigint_test -- int
-    smallint_test -- int
-    float_test -- float
-    double_precision_test -- float
-    real_test -- float
-    numeric_test -- decimal.Decimal
-    money_test -- str
-    bool_test -- bool
-    json_test -- str
-    jsonb_test -- str
-    bytea_test -- memoryview
-    date_test -- datetime.date
-    time_test -- datetime.time
-    timetz_test -- datetime.time
-    timestamp_test -- datetime.datetime
-    timestamptz_test -- datetime.datetime
-    interval_test -- datetime.timedelta
-    text_test -- str
-    varchar_test -- str
-    bpchar_test -- str
-    char_test -- str
-    citext_test -- str
-    uuid_test -- uuid.UUID
-    inet_test -- str
-    cidr_test -- str
-    macaddr_test -- str
-    macaddr8_test -- str
-    ltree_test -- str
-    lquery_test -- str
-    ltxtquery_test -- str
+    serial_test -- int | None
+    serial4_test -- int | None
+    bigserial_test -- int | None
+    smallserial_test -- int | None
+    int_test -- int | None
+    bigint_test -- int | None
+    smallint_test -- int | None
+    float_test -- float | None
+    double_precision_test -- float | None
+    real_test -- float | None
+    numeric_test -- decimal.Decimal | None
+    money_test -- str | None
+    bool_test -- bool | None
+    json_test -- str | None
+    jsonb_test -- str | None
+    bytea_test -- memoryview | None
+    date_test -- datetime.date | None
+    time_test -- datetime.time | None
+    timetz_test -- datetime.time | None
+    timestamp_test -- datetime.datetime | None
+    timestamptz_test -- datetime.datetime | None
+    interval_test -- datetime.timedelta | None
+    text_test -- str | None
+    varchar_test -- str | None
+    bpchar_test -- str | None
+    char_test -- str | None
+    citext_test -- str | None
+    uuid_test -- uuid.UUID | None
+    inet_test -- str | None
+    cidr_test -- str | None
+    macaddr_test -- str | None
+    macaddr8_test -- str | None
+    ltree_test -- str | None
+    lquery_test -- str | None
+    ltxtquery_test -- str | None
     """
 
     table_id: int
-    serial_test: int
-    serial4_test: int
-    bigserial_test: int
-    smallserial_test: int
-    int_test: int
-    bigint_test: int
-    smallint_test: int
-    float_test: float
-    double_precision_test: float
-    real_test: float
-    numeric_test: decimal.Decimal
-    money_test: str
-    bool_test: bool
-    json_test: str
-    jsonb_test: str
-    bytea_test: memoryview
-    date_test: datetime.date
-    time_test: datetime.time
-    timetz_test: datetime.time
-    timestamp_test: datetime.datetime
-    timestamptz_test: datetime.datetime
-    interval_test: datetime.timedelta
-    text_test: str
-    varchar_test: str
-    bpchar_test: str
-    char_test: str
-    citext_test: str
-    uuid_test: uuid.UUID
-    inet_test: str
-    cidr_test: str
-    macaddr_test: str
-    macaddr8_test: str
-    ltree_test: str
-    lquery_test: str
-    ltxtquery_test: str
+    serial_test: int | None
+    serial4_test: int | None
+    bigserial_test: int | None
+    smallserial_test: int | None
+    int_test: int | None
+    bigint_test: int | None
+    smallint_test: int | None
+    float_test: float | None
+    double_precision_test: float | None
+    real_test: float | None
+    numeric_test: decimal.Decimal | None
+    money_test: str | None
+    bool_test: bool | None
+    json_test: str | None
+    jsonb_test: str | None
+    bytea_test: memoryview | None
+    date_test: datetime.date | None
+    time_test: datetime.time | None
+    timetz_test: datetime.time | None
+    timestamp_test: datetime.datetime | None
+    timestamptz_test: datetime.datetime | None
+    interval_test: datetime.timedelta | None
+    text_test: str | None
+    varchar_test: str | None
+    bpchar_test: str | None
+    char_test: str | None
+    citext_test: str | None
+    uuid_test: uuid.UUID | None
+    inet_test: str | None
+    cidr_test: str | None
+    macaddr_test: str | None
+    macaddr8_test: str | None
+    ltree_test: str | None
+    lquery_test: str | None
+    ltxtquery_test: str | None
 
 
 class TestPostgresType(msgspec.Struct):

@@ -42,7 +42,7 @@ func (i *Importer) Imports(fileName string) ([]string, []string, []string) {
 	return i.queryImports(fileName)
 }
 
-func tableUses(name string, s Table) (bool, string) {
+func TableUses(name string, s Table) (bool, string) {
 	for _, col := range s.Columns {
 		if col.Type.Type == name {
 			return true, col.Type.SqlType
@@ -81,7 +81,7 @@ func (i *Importer) splitTypeChecking(pks map[string]importSpec) (map[string]impo
 func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importSpec, map[string]importSpec) {
 	modelUses := func(name string) (bool, bool) {
 		for _, table := range i.Tables {
-			if val, _ := tableUses(name, table); val {
+			if val, _ := TableUses(name, table); val {
 				return true, true
 			}
 		}
@@ -109,9 +109,15 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 	if !qv.IsEmpty() {
 		if qv.IsStruct() && qv.EmitStruct() {
-			if val, sqlType := tableUses(name, *qv.Table); val {
+			if val, sqlType := TableUses(name, *qv.Table); val {
 				if i.C.SqlDriver == SQLDriverAsyncpg {
-					if _, found := typeConversion.AsyncpgDoTypeConversion()[sqlType]; found {
+					if typeConversion.AsyncpgDoTypeConversion(sqlType) {
+						return true, false
+					} else {
+						return true, true
+					}
+				} else if i.C.SqlDriver == SQLDriverAioSQLite {
+					if typeConversion.SqliteDoTypeConversion(sqlType) {
 						return true, false
 					} else {
 						return true, true
@@ -119,10 +125,22 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 				}
 				return true, false
 			}
+		} else if qv.IsStruct() && i.C.SqlDriver == SQLDriverAioSQLite {
+			if val, sqlType := TableUses(name, *qv.Table); val {
+				if typeConversion.SqliteDoTypeConversion(sqlType) {
+					return true, false
+				}
+			}
 		} else {
 			if qv.Typ.Type == name {
 				if i.C.SqlDriver == SQLDriverAsyncpg {
-					if _, found := typeConversion.AsyncpgDoTypeConversion()[qv.Typ.SqlType]; found {
+					if typeConversion.AsyncpgDoTypeConversion(qv.Typ.SqlType) {
+						return true, false
+					} else {
+						return true, true
+					}
+				} else if i.C.SqlDriver == SQLDriverAioSQLite {
+					if typeConversion.SqliteDoTypeConversion(qv.Typ.SqlType) {
 						return true, false
 					} else {
 						return true, true
@@ -135,7 +153,8 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 	return false, false
 }
 
-func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map[string]importSpec, map[string]importSpec, map[string]importSpec) {
+func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string]importSpec, map[string]importSpec, map[string]importSpec) {
+	addCiso := false
 	queryUses := func(name string) (bool, bool) {
 		var uses *bool = nil
 		var typeChecking *bool = nil
@@ -159,11 +178,25 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 				if q.Cmd == metadata.CmdMany {
 					helper(val1, false)
 				}
-				helper(val1, val2)
+				// if we have speedups enabled then we don't need datetime in the std imports
+				// we use ciso8601 for the converting and need datetime only in typechecking
+				if val2 == false && i.C.SqlDriver == SQLDriverAioSQLite && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
+					helper(val1, true)
+					addCiso = true
+				} else {
+					helper(val1, val2)
+				}
 			}
 			for _, arg := range q.Args {
 				if val1, val2 := i.queryValueUses(name, arg); val1 {
-					helper(val1, val2)
+					// if we have speedups enabled then we don't need datetime in the std imports
+					// we use ciso8601 for the converting and need datetime only in typechecking
+					if val2 == false && i.C.SqlDriver == SQLDriverAioSQLite && i.C.Speedups && (name == "datetime.datetime" || name == "datetime.date") {
+						helper(val1, true)
+						addCiso = true
+					} else {
+						helper(val1, val2)
+					}
 				}
 			}
 		}
@@ -175,11 +208,28 @@ func (i *Importer) queryImportSpecs(fileName string) (map[string]importSpec, map
 
 	std := stdImports(queryUses)
 	std, typeChecking := i.splitTypeChecking(std)
-	typeChecking[i.C.SqlDriver.String()] = importSpec{Module: i.C.SqlDriver.String()}
-	if IsAnyQueryMany(i.Queries) && i.C.SqlDriver == SQLDriverAsyncpg {
-		typeChecking[i.C.SqlDriver.String()+".cursor"] = importSpec{Module: i.C.SqlDriver.String() + ".cursor"}
+	if i.C.SqlDriver == SQLDriverAsyncpg {
+		typeChecking[string(SQLDriverAsyncpg)] = importSpec{Module: string(SQLDriverAsyncpg)}
+
+		if IsAnyQueryMany(i.Queries) {
+			typeChecking[string(SQLDriverAsyncpg)+".cursor"] = importSpec{Module: string(SQLDriverAsyncpg) + ".cursor"}
+		}
+	} else if i.C.SqlDriver == SQLDriverAioSQLite {
+		// if the std mapping has exactly 2 members, these two are collections and typing,
+		// but if they are more than 2, we need to add type conversion and for that we
+		// need the aiosqlite in the normal import block, not in the type checking block
+		if len(std) > 2 {
+			std[string(SQLDriverAioSQLite)] = importSpec{Module: string(SQLDriverAioSQLite)}
+		} else {
+			typeChecking[string(SQLDriverAioSQLite)] = importSpec{Module: string(SQLDriverAioSQLite)}
+		}
+		if IsAnyQueryMany(i.Queries) {
+			typeChecking[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
+		}
 	}
-	std["typing"] = importSpec{Module: "typing"}
+	if addCiso {
+		std["ciso8601"] = importSpec{Module: "ciso8601"}
+	}
 
 	pkg := make(map[string]importSpec)
 	loc := make(map[string]importSpec)
@@ -308,6 +358,7 @@ func typeCheckingOverwriteProtection(std map[string]importSpec, name string, new
 func stdImports(uses func(name string) (bool, bool)) map[string]importSpec {
 	std := make(map[string]importSpec)
 	std["collections"] = importSpec{Module: "collections.abc", TypeChecking: true}
+	std["typing"] = importSpec{Module: "typing", TypeChecking: false}
 	add := func(name, module string) {
 		if use, typeChecking := uses(name); use {
 			typeCheckingOverwriteProtection(std, module, importSpec{Module: module, TypeChecking: typeChecking})

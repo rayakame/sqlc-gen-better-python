@@ -1,11 +1,12 @@
 package typeConversion
 
-func AsyncpgDoTypeConversion() map[string]struct{} {
-	return map[string]struct{}{
+func AsyncpgDoTypeConversion(name string) bool {
+	_, found := map[string]struct{}{
 		"bytea":            {},
 		"blob":             {},
 		"pg_catalog.bytea": {},
 		"inet":             {},
 		"cidr":             {},
-	}
+	}[name]
+	return found
 }

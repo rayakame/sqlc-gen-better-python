@@ -1,0 +1,6 @@
+kind: Fixed
+body: Brought `aiosqlite` back to full compatibility
+time: 2025-05-19T19:58:04.0087469+02:00
+custom:
+    Author: rayakame
+    PR: "82"

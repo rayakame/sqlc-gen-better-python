@@ -1,8 +1,9 @@
 package types
 
 import (
+	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
-	"log"
+	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"strings"
 
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -12,13 +13,12 @@ import (
 func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.Config) string {
 	columnType := strings.ToLower(sdk.DataType(col.Type))
 
-	// see: https://github.com/sqlc-dev/sqlc/blob/main/internal/codegen/golang/sqlite_type.go
 	switch columnType {
 	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":
 		return "int"
 	case "blob":
-		return "bytes"
-	case "real", "double", "double precision", "float", "numeric":
+		return "memoryview"
+	case "real", "double", "double precision", "doubleprecision", "float", "numeric":
 		return "float"
 	case "boolean", "bool":
 		return "bool"
@@ -26,8 +26,8 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 		return "datetime.date"
 	case "datetime", "timestamp":
 		return "datetime.datetime"
-	case "any":
-		return "typing.Any"
+	case "decimal":
+		return "decimal.Decimal"
 	}
 
 	switch {
@@ -41,11 +41,9 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 		columnType == "clob",
 		columnType == "json":
 		return "str"
-	case strings.HasPrefix(columnType, "decimal"):
-		return "decimal.Decimal"
 
 	default:
-		log.Printf("unknown SQLite type: %s\n", columnType)
+		log.GlobalLogger.Log(fmt.Sprintf("unknown SQLite type: %s", columnType))
 		return "typing.Any"
 	}
 }

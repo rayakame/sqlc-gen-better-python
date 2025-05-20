@@ -1,0 +1,6 @@
+kind: Added
+body: Added tests for `aiosqlite` driver with 100% coverage
+time: 2025-05-19T19:58:25.3094785+02:00
+custom:
+    Author: rayakame
+    PR: "82"

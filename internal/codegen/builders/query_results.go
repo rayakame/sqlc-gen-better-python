@@ -13,7 +13,7 @@ func (b *IndentStringBuilder) WriteQueryResultsClassHeader(connType string, init
 	b.WriteIndentedLine(2, "self,")
 	b.WriteIndentedLine(2, fmt.Sprintf("conn: %s,", connType))
 	b.WriteIndentedLine(2, "sql: str,")
-	b.WriteIndentedLine(2, "decode_hook: collections.abc.Callable[[asyncpg.Record], T],")
+	b.WriteIndentedLine(2, fmt.Sprintf("decode_hook: collections.abc.Callable[[%s], T],", driverReturnType))
 	b.WriteIndentedLine(2, "*args: QueryResultsArgsType,")
 	b.WriteIndentedLine(1, ") -> None:")
 	b.WriteQueryResultsInitDocstring(connType, driverReturnType)

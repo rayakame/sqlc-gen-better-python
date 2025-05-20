@@ -107,8 +107,12 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					var inner []string
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
-						if _, found := typeConversion.AsyncpgDoTypeConversion()[embedCol.Type.SqlType]; found {
-							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
+						if typeConversion.AsyncpgDoTypeConversion(embedCol.Type.SqlType) {
+							if embedCol.Type.IsNullable {
+								inner = append(inner, fmt.Sprintf("%s=%s(row[%s]) if row[%s] is not None else None", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i), strconv.Itoa(i)))
+							} else {
+								inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
+							}
 						} else {
 							inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
 						}
@@ -116,8 +120,12 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					}
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
-					if _, found := typeConversion.AsyncpgDoTypeConversion()[col.Type.SqlType]; found {
-						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+					if typeConversion.AsyncpgDoTypeConversion(col.Type.SqlType) {
+						if col.Type.IsNullable {
+							body.WriteString(fmt.Sprintf("%s=%s(row[%s]) if row[%s] is not None else None", col.Name, col.Type.Type, strconv.Itoa(i), strconv.Itoa(i)))
+						} else {
+							body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+						}
 					} else {
 						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
 					}
@@ -127,7 +135,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 			body.WriteString("   ")
 			body.WriteLine(")")
 		} else {
-			if _, found := typeConversion.AsyncpgDoTypeConversion()[retType.SqlType]; found {
+			if typeConversion.AsyncpgDoTypeConversion(retType.SqlType) {
 				body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return %s(row[0])", retType.Type))
 			} else {
 				body.WriteIndentedLine(indentLevel+1, "return row[0]")
@@ -148,7 +156,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					var inner []string
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
-						if _, found := typeConversion.AsyncpgDoTypeConversion()[embedCol.Type.SqlType]; found {
+						if typeConversion.AsyncpgDoTypeConversion(embedCol.Type.SqlType) {
 							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
 						} else {
 							inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
@@ -157,7 +165,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					}
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
-					if _, found := typeConversion.AsyncpgDoTypeConversion()[col.Type.SqlType]; found {
+					if typeConversion.AsyncpgDoTypeConversion(col.Type.SqlType) {
 						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
 					} else {
 						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
@@ -167,7 +175,7 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 			}
 			body.WriteLine(")")
 		} else {
-			if _, found := typeConversion.AsyncpgDoTypeConversion()[retType.SqlType]; found {
+			if typeConversion.AsyncpgDoTypeConversion(retType.SqlType) {
 				body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("return %s(row[0])", retType.Type))
 			} else {
 				body.WriteIndentedLine(indentLevel+2, "return row[0]")

@@ -3,6 +3,7 @@ package codegen
 import (
 	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
+	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/drivers"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -19,6 +20,9 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 			if arg.Typ.IsList {
 				argType = fmt.Sprintf("collections.abc.Sequence[%s]", argType)
 			}
+			if arg.Typ.IsNullable {
+				argType = fmt.Sprintf("%s | None", argType)
+			}
 			args = append(args, core.FunctionArg{
 				Name:           arg.Name,
 				Type:           argType,
@@ -29,7 +33,7 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 	retType := "None"
 	if query.Ret.EmitStruct() && query.Ret.IsStruct() {
 		BuildPyTabel(dr.conf.ModelType, query.Ret.Table, body)
-		body.WriteString("\n\n")
+		body.NNewLine(2)
 		retType = query.Ret.Table.Name
 		pyTableNames = append(pyTableNames, query.Ret.Table.Name)
 	} else if !query.Ret.IsEmpty() {
@@ -39,7 +43,10 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 			retType = query.Ret.Typ.Type
 		}
 	}
-	if query.Cmd == metadata.CmdExecLastId || query.Cmd == metadata.CmdExecRows {
+	if query.Cmd == metadata.CmdExecLastId {
+		retType = "int | None"
+	}
+	if query.Cmd == metadata.CmdExecRows {
 		retType = "int"
 	}
 	return args, retType, pyTableNames
@@ -175,5 +182,8 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 		body.WriteLine(imp)
 	}
 	body.NNewLine(2)
+	if dr.conf.SqlDriver == core.SQLDriverAioSQLite {
+		drivers.AioSQLiteBuildTypeConvFunc(queries, body, dr.conf)
+	}
 	return []byte(body.String() + pyTableBody.String() + funcBody.String()), nil
 }

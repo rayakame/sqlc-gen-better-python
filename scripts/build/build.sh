@@ -4,7 +4,7 @@ set -euo pipefail
 # ──────────────────────────────
 # 1) CONFIGURATION
 # ──────────────────────────────
-TARGET_DIRS=("test/driver_asyncpg")
+TARGET_DIRS=("test/driver_asyncpg", "test\driver_aiosqlite")
 SQLC_CONFIG_NAMES=("sqlc.yaml")
 
 # ──────────────────────────────
