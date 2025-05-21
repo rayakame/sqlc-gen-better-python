@@ -69,7 +69,7 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 |-----------|---------|---------------|-------------|---------------|---------|--------|-------------|
 | aiosqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
 | sqlite3   | yes     | yes           | yes         | yes           | yes     | yes    | no          |
-| asyncpg   | yes     | no            | no          | no            | yes     | yes    | no          |
+| asyncpg   | yes     | no            | no          | no            | yes     | yes    | yes         |
 | psycopg2  | no      | no            | no          | no            | no      | no     | no          |
 | mysql     | no      | no            | no          | no            | no      | no     | no          |
 
