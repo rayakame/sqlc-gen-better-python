@@ -60,6 +60,7 @@ jobs:
             
       - name: Generate release description
         run: |
+          cd ${{ github.workspace }}
           export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
           export download_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${{ steps.latest.outputs.output }}/sqlc-gen-better-python.wasm"
 
