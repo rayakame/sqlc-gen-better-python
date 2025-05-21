@@ -360,7 +360,7 @@ class QueryResults(typing.Generic[T]):
         return [self._decode_hook(row) for row in result]
 
     def __next__(self) -> T:
-        """Yield the next item in the query result using an sqlite3 cursor.
+        """Yield the next item in the query result using a sqlite3 cursor.
 
         Returns
         -------

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "CopyFromOneTestPostgresTypeParams",
     "GetAllEmbeddedTestPostgresTypeRow",
     "GetEmbeddedTestPostgresTypeRow",
     "Queries",
@@ -28,6 +29,87 @@ if typing.TYPE_CHECKING:
     ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
 from test.driver_asyncpg.dataclass.classes import models
+
+
+@dataclasses.dataclass()
+class CopyFromOneTestPostgresTypeParams:
+    """Model representing CopyFromOneTestPostgresTypeParams.
+
+    Attributes:
+        id: int
+        serial_test: int
+        serial4_test: int
+        bigserial_test: int
+        smallserial_test: int
+        int_test: int
+        bigint_test: int
+        smallint_test: int
+        float_test: float
+        double_precision_test: float
+        real_test: float
+        numeric_test: decimal.Decimal
+        money_test: str
+        bool_test: bool
+        json_test: str
+        jsonb_test: str
+        bytea_test: memoryview
+        date_test: datetime.date
+        time_test: datetime.time
+        timetz_test: datetime.time
+        timestamp_test: datetime.datetime
+        timestamptz_test: datetime.datetime
+        interval_test: datetime.timedelta
+        text_test: str
+        varchar_test: str
+        bpchar_test: str
+        char_test: str
+        citext_test: str
+        uuid_test: uuid.UUID
+        inet_test: str
+        cidr_test: str
+        macaddr_test: str
+        macaddr8_test: str
+        ltree_test: str
+        lquery_test: str
+        ltxtquery_test: str
+    """
+
+    id: int
+    serial_test: int
+    serial4_test: int
+    bigserial_test: int
+    smallserial_test: int
+    int_test: int
+    bigint_test: int
+    smallint_test: int
+    float_test: float
+    double_precision_test: float
+    real_test: float
+    numeric_test: decimal.Decimal
+    money_test: str
+    bool_test: bool
+    json_test: str
+    jsonb_test: str
+    bytea_test: memoryview
+    date_test: datetime.date
+    time_test: datetime.time
+    timetz_test: datetime.time
+    timestamp_test: datetime.datetime
+    timestamptz_test: datetime.datetime
+    interval_test: datetime.timedelta
+    text_test: str
+    varchar_test: str
+    bpchar_test: str
+    char_test: str
+    citext_test: str
+    uuid_test: uuid.UUID
+    inet_test: str
+    cidr_test: str
+    macaddr_test: str
+    macaddr8_test: str
+    ltree_test: str
+    lquery_test: str
+    ltxtquery_test: str
 
 
 @dataclasses.dataclass()
@@ -125,6 +207,50 @@ class GetEmbeddedTestPostgresTypeRow:
     ltxtquery_test: str
     test_inner_postgres_type: models.TestInnerPostgresType
 
+
+COPY_FROM_ONE_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: CopyFromOneTestPostgresType :copyfrom
+INSERT INTO test_postgres_types (id,
+                                 serial_test,
+                                 serial4_test,
+                                 bigserial_test,
+                                 smallserial_test,
+                                 int_test,
+                                 bigint_test,
+                                 smallint_test,
+                                 float_test,
+                                 double_precision_test,
+                                 real_test,
+                                 numeric_test,
+                                 money_test,
+                                 bool_test,
+                                 json_test,
+                                 jsonb_test,
+                                 bytea_test,
+                                 date_test,
+                                 time_test,
+                                 timetz_test,
+                                 timestamp_test,
+                                 timestamptz_test,
+                                 interval_test,
+                                 text_test,
+                                 varchar_test,
+                                 bpchar_test,
+                                 char_test,
+                                 citext_test,
+                                 uuid_test,
+                                 inet_test,
+                                 cidr_test,
+                                 macaddr_test,
+                                 macaddr8_test,
+                                 ltree_test,
+                                 lquery_test,
+                                 ltxtquery_test)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13, $14, $15, $16,
+        $17, $18, $19, $20, $21, $22, $23, $24,
+        $25, $26, $27, $28, $29, $30, $31, $32,
+        $33, $34, $35, $36)
+"""
 
 CREATE_ONE_TEST_POSTGRES_INNER_TYPE: typing.Final[str] = """-- name: CreateOneTestPostgresInnerType :exec
 INSERT INTO test_inner_postgres_types (table_id,
@@ -505,6 +631,23 @@ class Queries:
             Connection object of type `ConnectionLike` used to make queries.
         """
         return self._conn
+
+    async def copy_from_one_test_postgres_type(self, *, params: collections.abc.Sequence[CopyFromOneTestPostgresTypeParams]) -> int:
+        """Execute COPY FROM query to insert rows into a table with `name: CopyFromOneTestPostgresType :copyfrom` and return the number of affected rows.
+
+        Args:
+            params: collections.abc.Sequence[CopyFromOneTestPostgresTypeParams].
+                A list of params for rows that should be inserted.
+
+        Returns:
+            The number (`int`) of affected rows.
+        """
+        records = [
+            (param.id, param.serial_test, param.serial4_test, param.bigserial_test, param.smallserial_test, param.int_test, param.bigint_test, param.smallint_test, param.float_test, param.double_precision_test, param.real_test, param.numeric_test, param.money_test, param.bool_test, param.json_test, param.jsonb_test, param.bytea_test, param.date_test, param.time_test, param.timetz_test, param.timestamp_test, param.timestamptz_test, param.interval_test, param.text_test, param.varchar_test, param.bpchar_test, param.char_test, param.citext_test, param.uuid_test, param.inet_test, param.cidr_test, param.macaddr_test, param.macaddr8_test, param.ltree_test, param.lquery_test, param.ltxtquery_test)
+            for param in params
+        ]
+        result = await self._conn.copy_records_to_table("test_postgres_types", records=records)
+        return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
 
     async def create_one_test_postgres_inner_type(self, *, table_id: int, serial_test: int | None, serial4_test: int | None, bigserial_test: int | None, smallserial_test: int | None, int_test: int | None, bigint_test: int | None, smallint_test: int | None, float_test: float | None, double_precision_test: float | None, real_test: float | None, numeric_test: decimal.Decimal | None, money_test: str | None, bool_test: bool | None, json_test: str | None, jsonb_test: str | None, bytea_test: memoryview | None, date_test: datetime.date | None, time_test: datetime.time | None, timetz_test: datetime.time | None, timestamp_test: datetime.datetime | None, timestamptz_test: datetime.datetime | None, interval_test: datetime.timedelta | None, text_test: str | None, varchar_test: str | None, bpchar_test: str | None, char_test: str | None, citext_test: str | None, uuid_test: uuid.UUID | None, inet_test: str | None, cidr_test: str | None, macaddr_test: str | None, macaddr8_test: str | None, ltree_test: str | None, lquery_test: str | None, ltxtquery_test: str | None) -> None:
         """Execute SQL query with `name: CreateOneTestPostgresInnerType :exec`.
