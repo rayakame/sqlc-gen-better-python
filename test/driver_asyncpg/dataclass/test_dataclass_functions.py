@@ -650,6 +650,27 @@ class TestDataclassFunctions:
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::delete_rows"], name="TestDataclassFunctions::copy_from")
+    async def test_copy_from(
+        self,
+        asyncpg_conn: asyncpg.Connection[asyncpg.Record],
+        model: models.TestPostgresType,
+    ) -> None:
+        num = 3
+        rows: list[queries.TestCopyFromParams] = [
+            queries.TestCopyFromParams(
+                id=i,
+                int_test=model.int_test,
+                float_test=model.float_test,
+            )
+            for i in range(num)
+        ]
+
+        result = await queries.test_copy_from(conn=asyncpg_conn, params=rows)
+        assert result == num
+        await asyncpg_conn.execute("""DELETE FROM test_copy_from;""")
+
+    @pytest.mark.asyncio(loop_scope="session")
     async def test_create_table(
         self,
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
