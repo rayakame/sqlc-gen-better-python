@@ -4,24 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## v0.4.0 - 2025-05-21
 ### Added
-* [#59](https://github.com/rayakame/sqlc-gen-better-python/pull/59) Added hyperlink to github profile of contributors in the changelog ([rayakame](rayakame))
-* [#63](https://github.com/rayakame/sqlc-gen-better-python/pull/63) Added strict output tests & ci to prevent bugs from happening ([rayakame](rayakame))
-* [#66](https://github.com/rayakame/sqlc-gen-better-python/pull/66) Added an example sqlc.yaml to README.md ([AlexanderHOtt](AlexanderHOtt))
-* [#69](https://github.com/rayakame/sqlc-gen-better-python/pull/69) Added config option to auto generate docstrings for generated python code. ([rayakame](rayakame))
-* [#74](https://github.com/rayakame/sqlc-gen-better-python/pull/74) Added support for query annotations `execrows` and `execresult` for driver `asyncpg` ([rayakame](rayakame))
-* [#75](https://github.com/rayakame/sqlc-gen-better-python/pull/75) Code coverage tooling ([rayakame](rayakame))
-* [#74](https://github.com/rayakame/sqlc-gen-better-python/pull/74) Added `ConnectionLike` instead of `asyncpg.Connection` which allows also using connection pools ([AlexanderHott](AlexanderHott))
-* [#82](https://github.com/rayakame/sqlc-gen-better-python/pull/82) Added tests for `aiosqlite` driver with 100% coverage ([rayakame](rayakame))
-* [#86](https://github.com/rayakame/sqlc-gen-better-python/pull/86) Added tests for `sqlite3` driver with 100% coverage ([rayakame](rayakame))
-* [#86](https://github.com/rayakame/sqlc-gen-better-python/pull/86) Brought `sqlite3` back to full compatibility ([rayakame](rayakame))
-* [#87](https://github.com/rayakame/sqlc-gen-better-python/pull/87) Added support for `:copyfrom` for driver `asyncpg` ([rayakame](rayakame))
+* [#59](https://github.com/rayakame/sqlc-gen-better-python/pull/59) Added hyperlink to github profile of contributors in the changelog ([rayakame](https://github.com/rayakame))
+* [#63](https://github.com/rayakame/sqlc-gen-better-python/pull/63) Added strict output tests & ci to prevent bugs from happening ([rayakame](https://github.com/rayakame))
+* [#66](https://github.com/rayakame/sqlc-gen-better-python/pull/66) Added an example sqlc.yaml to README.md ([AlexanderHOtt](https://github.com/AlexanderHOtt))
+* [#69](https://github.com/rayakame/sqlc-gen-better-python/pull/69) Added config option to auto generate docstrings for generated python code. ([rayakame](https://github.com/rayakame))
+* [#74](https://github.com/rayakame/sqlc-gen-better-python/pull/74) Added support for query annotations `execrows` and `execresult` for driver `asyncpg` ([rayakame](https://github.com/rayakame))
+* [#75](https://github.com/rayakame/sqlc-gen-better-python/pull/75) Code coverage tooling ([rayakame](https://github.com/rayakame))
+* [#74](https://github.com/rayakame/sqlc-gen-better-python/pull/74) Added `ConnectionLike` instead of `asyncpg.Connection` which allows also using connection pools ([AlexanderHott](https://github.com/AlexanderHott))
+* [#82](https://github.com/rayakame/sqlc-gen-better-python/pull/82) Added tests for `aiosqlite` driver with 100% coverage ([rayakame](https://github.com/rayakame))
+* [#86](https://github.com/rayakame/sqlc-gen-better-python/pull/86) Added tests for `sqlite3` driver with 100% coverage ([rayakame](https://github.com/rayakame))
+* [#86](https://github.com/rayakame/sqlc-gen-better-python/pull/86) Brought `sqlite3` back to full compatibility ([rayakame](https://github.com/rayakame))
+* [#87](https://github.com/rayakame/sqlc-gen-better-python/pull/87) Added support for `:copyfrom` for driver `asyncpg` ([rayakame](https://github.com/rayakame))
 ### Changed
-* [#63](https://github.com/rayakame/sqlc-gen-better-python/pull/63) Removed unnecessary `msgspec.field()` and `attrs.field()` for models. ([rayakame](rayakame))
-* [#74](https://github.com/rayakame/sqlc-gen-better-python/pull/74) `:many` queries now return `QueryResults` allowing both iteration over rows and fetching rows. ([rayakame](rayakame))
+* [#63](https://github.com/rayakame/sqlc-gen-better-python/pull/63) Removed unnecessary `msgspec.field()` and `attrs.field()` for models. ([rayakame](https://github.com/rayakame))
+* [#74](https://github.com/rayakame/sqlc-gen-better-python/pull/74) `:many` queries now return `QueryResults` allowing both iteration over rows and fetching rows. ([rayakame](https://github.com/rayakame))
 ### Fixed
-* [#70](https://github.com/rayakame/sqlc-gen-better-python/pull/70) Fixed the `uv sync` command in CONTRIBUTING.md and added an example docker command to create a postgres instance for testing.  ([AlexanderHOtt](AlexanderHOtt))
-* [#82](https://github.com/rayakame/sqlc-gen-better-python/pull/82) Brought `aiosqlite` back to full compatibility ([rayakame](rayakame))
-* [#82](https://github.com/rayakame/sqlc-gen-better-python/pull/82) Fixed incorrect typing of query function arguments for nullable fields. ([null-domain](null-domain))
+* [#70](https://github.com/rayakame/sqlc-gen-better-python/pull/70) Fixed the `uv sync` command in CONTRIBUTING.md and added an example docker command to create a postgres instance for testing.  ([AlexanderHOtt](https://github.com/AlexanderHOtt))
+* [#82](https://github.com/rayakame/sqlc-gen-better-python/pull/82) Brought `aiosqlite` back to full compatibility ([rayakame](https://github.com/rayakame))
+* [#82](https://github.com/rayakame/sqlc-gen-better-python/pull/82) Fixed incorrect typing of query function arguments for nullable fields. ([null-domain](https://github.com/null-domain))
 
 ## v0.3.1 - 2025-05-07
 ### Fixed
