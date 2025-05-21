@@ -1,5 +1,5 @@
 plugins:
   - name: python
     wasm:
-      url: TODO
-      sha256: TODO
+      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.4.0/sqlc-gen-better-python.wasm
+      sha256: 3c0767cc739fc8cbeb7118426dc2c18ce59d3714d9a895db5ffb65dd5a4d9c52
