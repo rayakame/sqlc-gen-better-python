@@ -23,6 +23,8 @@ SELECT *
 FROM test_postgres_types
 WHERE id = $1;
 
+-- name: GetManyNullableTestPostgresType :many
+SELECT * FROM test_inner_postgres_types WHERE table_id = $1 AND int_test = $2;
 
 -- name: GetManyTestIteratorPostgresType :many
 SELECT *

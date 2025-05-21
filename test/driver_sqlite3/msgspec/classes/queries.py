@@ -18,7 +18,7 @@ import typing
 if typing.TYPE_CHECKING:
     import collections.abc
 
-    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta
+    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | None | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta
 
 from test.driver_sqlite3.msgspec.classes import models
 
@@ -130,6 +130,10 @@ SELECT decimal_test FROM test_sqlite_types WHERE id = ? AND decimal_test = ?
 
 GET_MANY_INNER_SQLITE_TYPE: typing.Final[str] = """-- name: GetManyInnerSqliteType :many
 SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_inner_sqlite_types WHERE table_id = ?
+"""
+
+GET_MANY_NULLABLE_INNER_SQLITE_TYPE: typing.Final[str] = """-- name: GetManyNullableInnerSqliteType :many
+SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_inner_sqlite_types WHERE table_id = ? AND int_test = ?
 """
 
 GET_MANY_SQLITE_TYPE: typing.Final[str] = """-- name: GetManySqliteType :many
@@ -578,6 +582,24 @@ class Queries:
         def _decode_hook(row: sqlite3.Row) -> models.TestInnerSqliteType:
             return models.TestInnerSqliteType(table_id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
         return QueryResults[models.TestInnerSqliteType](self._conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
+
+    def get_many_nullable_inner_sqlite_type(self, *, table_id: int, int_test: int | None) -> QueryResults[models.TestInnerSqliteType]:
+        """Fetch many from the db using the SQL query with `name: GetManyNullableInnerSqliteType :many`.
+
+        ```sql
+        SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_inner_sqlite_types WHERE table_id = ? AND int_test = ?
+        ```
+
+        Arguments:
+        table_id -- int.
+        int_test -- int | None.
+
+        Returns:
+        QueryResults[models.TestInnerSqliteType] -- Helper class that allows both iteration and normal fetching of data from the db.
+        """
+        def _decode_hook(row: sqlite3.Row) -> models.TestInnerSqliteType:
+            return models.TestInnerSqliteType(table_id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
+        return QueryResults[models.TestInnerSqliteType](self._conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
 
     def get_many_sqlite_type(self, *, id_: int) -> QueryResults[models.TestSqliteType]:
         """Fetch many from the db using the SQL query with `name: GetManySqliteType :many`.
