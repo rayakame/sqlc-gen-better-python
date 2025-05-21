@@ -38,6 +38,7 @@ jobs:
 
       - name: Update README with new version and checksum
         run: |
+          cd ${{ github.workspace }}
           version=${{ steps.latest.outputs.output }}
           export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
           export escaped_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${version}/sqlc-gen-better-python.wasm"
