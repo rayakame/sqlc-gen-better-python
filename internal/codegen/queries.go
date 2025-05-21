@@ -17,17 +17,31 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 	for _, arg := range query.Args {
 		if !arg.IsEmpty() {
 			argType := arg.Typ.Type
-			if arg.Typ.IsList {
-				argType = fmt.Sprintf("collections.abc.Sequence[%s]", argType)
+			if arg.EmitStruct() && arg.IsStruct() {
+				BuildPyTabel(dr.conf.ModelType, arg.Table, body)
+				body.NNewLine(2)
+				pyTableNames = append(pyTableNames, arg.Table.Name)
+				if query.Cmd == metadata.CmdCopyFrom {
+					argType = fmt.Sprintf("collections.abc.Sequence[%s]", argType)
+				}
+				args = append(args, core.FunctionArg{
+					Name:           arg.Name,
+					Type:           argType,
+					FunctionFormat: fmt.Sprintf("%s: %s", arg.Name, argType),
+				})
+			} else {
+				if arg.Typ.IsList {
+					argType = fmt.Sprintf("collections.abc.Sequence[%s]", argType)
+				}
+				if arg.Typ.IsNullable {
+					argType = fmt.Sprintf("%s | None", argType)
+				}
+				args = append(args, core.FunctionArg{
+					Name:           arg.Name,
+					Type:           argType,
+					FunctionFormat: fmt.Sprintf("%s: %s", arg.Name, argType),
+				})
 			}
-			if arg.Typ.IsNullable {
-				argType = fmt.Sprintf("%s | None", argType)
-			}
-			args = append(args, core.FunctionArg{
-				Name:           arg.Name,
-				Type:           argType,
-				FunctionFormat: fmt.Sprintf("%s: %s", arg.Name, argType),
-			})
 		}
 	}
 	retType := "None"
@@ -46,7 +60,7 @@ func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.Indent
 	if query.Cmd == metadata.CmdExecLastId {
 		retType = "int | None"
 	}
-	if query.Cmd == metadata.CmdExecRows {
+	if query.Cmd == metadata.CmdExecRows || query.Cmd == metadata.CmdCopyFrom {
 		retType = "int"
 	}
 	return args, retType, pyTableNames
