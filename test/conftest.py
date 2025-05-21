@@ -55,11 +55,13 @@ async def asyncpg_conn(
 ) -> collections.abc.AsyncGenerator[asyncpg.Connection[asyncpg.Record], typing.Any]:
     dsn = get_dsn(request.config)
     conn = await asyncpg.connect(dsn)
+
     await conn.execute((ASYNCPG_PATH / "schema.sql").read_text())
     yield conn
     await conn.execute("""
         DELETE FROM test_postgres_types;
         DELETE FROM test_inner_postgres_types;
+        DELETE FROM test_copy_from;
     """)
     await conn.close()
 

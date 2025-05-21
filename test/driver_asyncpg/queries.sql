@@ -262,3 +262,8 @@ CREATE TABLE test_create_rows_table
 );
 
 
+
+-- name: TestCopyFrom :copyfrom
+INSERT INTO test_copy_from (id,
+                            float_test, int_test)
+VALUES ($1, $2, $3);

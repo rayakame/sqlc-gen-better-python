@@ -122,3 +122,11 @@ CREATE TABLE IF NOT EXISTS test_inner_postgres_types
     lquery_test           lquery           ,
     ltxtquery_test        ltxtquery
 );
+
+
+CREATE TABLE IF NOT EXISTS test_copy_from
+(
+    id                    int PRIMARY KEY  NOT NULL,
+    float_test            float           NOT NULL ,
+    int_test              int NOT NULL
+);

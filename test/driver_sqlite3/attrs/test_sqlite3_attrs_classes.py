@@ -407,6 +407,10 @@ class TestSqlite3AttrsClasses:
         assert isinstance(results[0], models.TestSqliteType)
 
         assert results[0] == model
+        results = result()
+        assert isinstance(results[0], models.TestSqliteType)
+
+        assert results[0] == model
 
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsClasses::get_many_iter", depends=["Sqlite3TestAttrsClasses::get_many"]

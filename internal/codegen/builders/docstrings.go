@@ -503,6 +503,58 @@ func (b *IndentStringBuilder) WriteQueryFunctionDocstring(lvl int, query *core.Q
 			}
 		}
 		b.WriteIndentedLine(lvl, `"""`)
+	} else if query.Cmd == metadata.CmdCopyFrom {
+		b.WriteIndentedLine(lvl, `"""`+fmt.Sprintf("Execute COPY FROM query to insert rows into a table with `name: %s %s` and return the number of affected rows.", query.MethodName, query.Cmd))
+		b.NewLine()
+		if *docstringConfig == core.DocstringConventionNumpy {
+			if len(queryArgs) != 0 || docstringConnType != "" {
+				b.WriteIndentedLine(lvl, "Parameters")
+				b.WriteIndentedLine(lvl, "----------")
+				if docstringConnType != "" {
+					b.WriteIndentedLine(lvl, fmt.Sprintf("conn : %s", docstringConnType))
+					b.WriteIndentedLine(lvl+1, fmt.Sprintf("Connection object of type `%s` used to execute the query.", docstringConnType))
+				}
+				for _, arg := range queryArgs {
+					b.WriteIndentedLine(lvl, fmt.Sprintf("%s : %s", arg.Name, arg.Type))
+					b.WriteIndentedLine(lvl+1, "A list of params for rows that should be inserted.")
+				}
+				b.NewLine()
+			}
+			b.WriteIndentedLine(lvl, "Returns")
+			b.WriteIndentedLine(lvl, "-------")
+			b.WriteIndentedLine(lvl, returnType.Type)
+			b.WriteIndentedLine(lvl+1, "The number of affected rows.")
+			b.NewLine()
+		} else if *docstringConfig == core.DocstringConventionGoogle {
+			if len(queryArgs) != 0 || docstringConnType != "" {
+				b.WriteIndentedLine(lvl, "Args:")
+				if docstringConnType != "" {
+					b.WriteIndentedLine(lvl+1, "conn:")
+					b.WriteIndentedLine(lvl+2, fmt.Sprintf("Connection object of type `%s` used to execute the query.", docstringConnType))
+				}
+				for _, arg := range queryArgs {
+					b.WriteIndentedLine(lvl+1, fmt.Sprintf("%s: %s.", arg.Name, arg.Type))
+					b.WriteIndentedLine(lvl+2, "A list of params for rows that should be inserted.")
+				}
+				b.NewLine()
+			}
+			b.WriteIndentedLine(lvl, "Returns:")
+			b.WriteIndentedLine(lvl+1, fmt.Sprintf("The number (`%s`) of affected rows.", returnType.Type))
+		} else if *docstringConfig == core.DocstringConventionPEP257 {
+			if len(queryArgs) != 0 || docstringConnType != "" {
+				b.WriteIndentedLine(lvl, "Arguments:")
+				if docstringConnType != "" {
+					b.WriteIndentedLine(lvl, fmt.Sprintf("conn -- Connection object of type `%s` used to execute the query.", docstringConnType))
+				}
+				for _, arg := range queryArgs {
+					b.WriteIndentedLine(lvl, fmt.Sprintf("%s -- %s. A list of params for rows that should be inserted.", arg.Name, arg.Type))
+				}
+				b.NewLine()
+			}
+			b.WriteIndentedLine(lvl, "Returns:")
+			b.WriteIndentedLine(lvl, fmt.Sprintf("%s -- The number of affected rows.", returnType.Type))
+		}
+		b.WriteIndentedLine(lvl, `"""`)
 	} else if query.Cmd == metadata.CmdExecResult {
 		b.WriteIndentedLine(lvl, `"""`+fmt.Sprintf("Execute and return the result of SQL query with `name: %s %s`.", query.MethodName, query.Cmd))
 		b.NewLine()

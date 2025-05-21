@@ -52,6 +52,7 @@ More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/re
 | `docstrings`                     | string       | no       | If set, there will be docstrings generated in the selected format. This can be one of `google`, `numpy`, `pep257` and `none`. `none` will not generate any docstrings.                                                    |
 | `docstrings_emit_sql`            | bool         | no       | If set to `false` the SQL code for each query wont be included in the docstrings. This defaults to `true` but is not used when `docstrings` is not set or set to `none`                                                   |
 | `query_parameter_limit`          | integer      | no       | Not yet implemented.                                                                                                                                                                                                      |
+| `speedups`                       | bool         | no       | If set to `true` the plugin will use other librarys for type conversion. Needs extra dependecys to be installed. This option currently only affects `sqlite3` & `aiosqlite` and uses the library `ciso8601`               |
 | `debug`                          | bool         | no       | If set to `true`, there will be debug logs generated into a `log.txt` file when executing `sqlc generate`. Defaults to `false`                                                                                            |
 
 ## Feature Support
@@ -61,14 +62,11 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 
 > Prepared Queries are not planned for the near future, but will be implemented sooner or later
 
-> [!NOTE]  
-> Asyncpg only has very bad support until now. It doesn't support `:execresult`, `:execrows` and `:execlastid`
-
 |           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
 |-----------|---------|---------------|-------------|---------------|---------|--------|-------------|
 | aiosqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
 | sqlite3   | yes     | yes           | yes         | yes           | yes     | yes    | no          |
-| asyncpg   | yes     | no            | no          | no            | yes     | yes    | no          |
+| asyncpg   | yes     | yes           | yes         | no            | yes     | yes    | yes         |
 | psycopg2  | no      | no            | no          | no            | no      | no     | no          |
 | mysql     | no      | no            | no          | no            | no      | no     | no          |
 

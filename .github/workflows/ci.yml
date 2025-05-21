@@ -193,6 +193,26 @@ jobs:
         run: |
           uv run nox -s aiosqlite_check
 
+  sqlite3:
+    runs-on: ubuntu-latest
+    name: "Run sqlite3 check via nox"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.9"
+          python-version: "3.13"
+
+      - name: Install sqlc
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: '1.28.0'
+
+      - name: Run sqlc verify via nox
+        run: |
+          uv run nox -s sqlite3_check
+
   test-build:
     runs-on: ubuntu-latest
 
@@ -220,7 +240,7 @@ jobs:
           retention-days: 30
 
   ci-done:
-    needs: [ test,upload-coverage, asyncpg, pyright, ruff, test-build ]
+    needs: [ test,upload-coverage, asyncpg, aiosqlite, sqlite3, ruff, test-build ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest

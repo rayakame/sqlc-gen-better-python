@@ -9,6 +9,7 @@ __all__: collections.abc.Sequence[str] = (
     "GetAllEmbeddedTestPostgresTypeRow",
     "GetEmbeddedTestPostgresTypeRow",
     "QueryResults",
+    "TestCopyFromParams",
     "create_one_test_postgres_inner_type",
     "create_one_test_postgres_type",
     "create_result_one_test_postgres_type",
@@ -28,6 +29,7 @@ __all__: collections.abc.Sequence[str] = (
     "get_one_test_bytea_postgres_type",
     "get_one_test_postgres_type",
     "get_one_test_timestamp_postgres_type",
+    "test_copy_from",
     "update_result_test_postgres_type",
     "update_rows_test_postgres_type",
 )
@@ -142,6 +144,20 @@ class GetEmbeddedTestPostgresTypeRow(msgspec.Struct):
     lquery_test: str
     ltxtquery_test: str
     test_inner_postgres_type: models.TestInnerPostgresType
+
+
+class TestCopyFromParams(msgspec.Struct):
+    """Model representing TestCopyFromParams.
+
+    Attributes:
+    id -- int
+    float_test -- float
+    int_test -- int
+    """
+
+    id: int
+    float_test: float
+    int_test: int
 
 
 CREATE_ONE_TEST_POSTGRES_INNER_TYPE: typing.Final[str] = """-- name: CreateOneTestPostgresInnerType :exec
@@ -412,6 +428,12 @@ GET_ONE_TEST_TIMESTAMP_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneTest
 SELECT timestamp_test
 FROM test_postgres_types
 WHERE id = $1 LIMIT 1
+"""
+
+TEST_COPY_FROM: typing.Final[str] = """-- name: TestCopyFrom :copyfrom
+INSERT INTO test_copy_from (id,
+                            float_test, int_test)
+VALUES ($1, $2, $3)
 """
 
 UPDATE_RESULT_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: UpdateResultTestPostgresType :execresult
@@ -1168,6 +1190,24 @@ async def get_one_test_timestamp_postgres_type(conn: ConnectionLike, *, id_: int
     if row is None:
         return None
     return row[0]
+
+
+async def test_copy_from(conn: ConnectionLike, *, params: collections.abc.Sequence[TestCopyFromParams]) -> int:
+    """Execute COPY FROM query to insert rows into a table with `name: TestCopyFrom :copyfrom` and return the number of affected rows.
+
+    Arguments:
+    conn -- Connection object of type `ConnectionLike` used to execute the query.
+    params -- collections.abc.Sequence[TestCopyFromParams]. A list of params for rows that should be inserted.
+
+    Returns:
+    int -- The number of affected rows.
+    """
+    records = [
+        (param.id, param.float_test, param.int_test)
+        for param in params
+    ]
+    result = await conn.copy_records_to_table("test_copy_from", records=records)
+    return int(result.split()[-1]) if result.split()[-1].isdigit() else 0
 
 
 async def update_result_test_postgres_type(conn: ConnectionLike, *, id_: int) -> str:
