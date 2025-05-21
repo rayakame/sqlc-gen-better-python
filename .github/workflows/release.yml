@@ -39,8 +39,8 @@ jobs:
       - name: Update README with new version and checksum
         run: |
           version=${{ steps.latest.outputs.output }}
-          checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
-          escaped_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${version}/sqlc-gen-better-python.wasm"
+          export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
+          export escaped_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${version}/sqlc-gen-better-python.wasm"
           
           sed -i -E "s|(url: ).*|url: ${escaped_url}|" README.md
           sed -i -E "s|(sha256: )[a-f0-9]+|\1${checksum}|" README.md
@@ -82,4 +82,4 @@ jobs:
           name: "${{ steps.latest.outputs.output }}"
           tag_name: "refs/tags/${{ steps.latest.outputs.output }}"
           body_path: release_body.md
-          files: sqlc-gen-better-python.wasm
+          files: ./sqlc-gen-better-python.wasm
