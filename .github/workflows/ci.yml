@@ -111,11 +111,11 @@ jobs:
 
       - name: Combine coverage
         run: |
-            uv sync --frozen --only-group coverage
-            
-            coverage combine
-            coverage xml
-            coverage report
+          uv sync --frozen --only-group coverage
+          
+          coverage combine
+          coverage xml
+          coverage report
 
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v5
@@ -240,7 +240,7 @@ jobs:
           retention-days: 30
 
   ci-done:
-    needs: [ test,upload-coverage, asyncpg, aiosqlite, sqlite3, ruff, test-build ]
+    needs: [ test, upload-coverage, asyncpg, aiosqlite, sqlite3, pyright, ruff, test-build ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest

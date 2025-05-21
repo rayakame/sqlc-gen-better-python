@@ -1,6 +1,0 @@
-kind: Added
-body: Added support for query annotations `execrows` and `execresult` for driver `asyncpg`
-time: 2025-05-16T11:14:45.1597385+02:00
-custom:
-    Author: rayakame
-    PR: "74"
