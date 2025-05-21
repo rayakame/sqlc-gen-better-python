@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 * [#63](https://github.com/rayakame/sqlc-gen-better-python/pull/63) Removed unnecessary `msgspec.field()` and `attrs.field()` for models. ([rayakame](https://github.com/rayakame))
 * [#74](https://github.com/rayakame/sqlc-gen-better-python/pull/74) `:many` queries now return `QueryResults` allowing both iteration over rows and fetching rows. ([rayakame](https://github.com/rayakame))
+### Deprecated
+* [#63](https://github.com/rayakame/sqlc-gen-better-python/pull/63) Added `id` to reserved keywords so that it will appear as `id_` ([rayakame](https://github.com/rayakame))
 ### Fixed
 * [#70](https://github.com/rayakame/sqlc-gen-better-python/pull/70) Fixed the `uv sync` command in CONTRIBUTING.md and added an example docker command to create a postgres instance for testing.  ([AlexanderHOtt](https://github.com/AlexanderHOtt))
 * [#82](https://github.com/rayakame/sqlc-gen-better-python/pull/82) Brought `aiosqlite` back to full compatibility ([rayakame](https://github.com/rayakame))
