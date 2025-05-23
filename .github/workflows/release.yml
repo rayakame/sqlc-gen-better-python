@@ -67,9 +67,12 @@ jobs:
 
       - name: Generate release description
         run: |
+          export checksum=${{ steps.hash.outputs.sha256 }}
+          export download_url=${{ steps.tag.outputs.download_url }}
 
-          yq -i '.plugins[0].wasm.url = \"$DOWNLOAD_URL\"' .github/release_output_template.yaml
-          yq -i '.plugins[0].wasm.sha256 = \"$SHA256\"' .github/release_output_template.yaml
+          
+          yq -i '.plugins[0].wasm.url = env(download_url)' .github/release_output_template.yaml
+          yq -i '.plugins[0].wasm.sha256 = env(checksum)' .github/release_output_template.yaml
           
           # Create the release body with the warning message at the top
           echo "> [!WARNING]" > release_body.md
