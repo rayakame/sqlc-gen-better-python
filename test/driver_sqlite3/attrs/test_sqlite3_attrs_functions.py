@@ -449,8 +449,44 @@ class TestSqlite3AttrsFunctions:
 
             assert result == inner_model
 
+    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        name="Sqlite3TestAttrsFunctions::get_many_date", depends=["Sqlite3TestAttrsFunctions::get_many_inner_iter"]
+        name="Sqlite3TestAttrsFunctions::get_many_nullable_inner",
+        depends=["Sqlite3TestAttrsFunctions::get_many_inner_iter"],
+    )
+    async def test_get_many_nullable_inner(
+        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
+    ) -> None:
+        result = queries.get_many_nullable_inner_sqlite_type(
+            conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
+        )
+
+        assert result is not None
+        assert isinstance(result, queries.QueryResults)
+        results = list(result)
+        assert isinstance(results[0], models.TestInnerSqliteType)
+
+        assert results[0] == inner_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_many_nullable_inner_iter",
+        depends=["Sqlite3TestAttrsFunctions::get_many_nullable_inner"],
+    )
+    async def test_get_many_nullable_inner_iter(
+        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
+    ) -> None:
+        for result in queries.get_many_nullable_inner_sqlite_type(
+            conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
+        ):
+            assert result is not None
+            assert isinstance(result, models.TestInnerSqliteType)
+
+            assert result == inner_model
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_many_date",
+        depends=["Sqlite3TestAttrsFunctions::get_many_nullable_inner_iter"],
     )
     def test_get_many_date(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
         result = queries.get_many_date(conn=sqlite3_conn, id_=model.id, date_test=model.date_test)

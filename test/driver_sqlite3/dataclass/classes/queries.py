@@ -133,7 +133,7 @@ SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, 
 """
 
 GET_MANY_NULLABLE_INNER_SQLITE_TYPE: typing.Final[str] = """-- name: GetManyNullableInnerSqliteType :many
-SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_inner_sqlite_types WHERE table_id = ? AND int_test = ?
+SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_inner_sqlite_types WHERE table_id = ? AND int_test IS ?
 """
 
 GET_MANY_SQLITE_TYPE: typing.Final[str] = """-- name: GetManySqliteType :many
@@ -592,7 +592,7 @@ class Queries:
         """Fetch many from the db using the SQL query with `name: GetManyNullableInnerSqliteType :many`.
 
         ```sql
-        SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_inner_sqlite_types WHERE table_id = ? AND int_test = ?
+        SELECT table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_inner_sqlite_types WHERE table_id = ? AND int_test IS ?
         ```
 
         Args:

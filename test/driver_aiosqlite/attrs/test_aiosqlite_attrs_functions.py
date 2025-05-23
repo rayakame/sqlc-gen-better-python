@@ -472,7 +472,42 @@ class TestAttrsFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        name="AiosqliteTestAttrsFunctions::get_many_date", depends=["AiosqliteTestAttrsFunctions::get_many_inner_iter"]
+        name="AiosqliteTestAttrsFunctions::get_many_nullable_inner",
+        depends=["AiosqliteTestAttrsFunctions::get_many_inner_iter"],
+    )
+    async def test_get_many_nullable_inner(
+        self, aiosqlite_conn: aiosqlite.Connection, inner_model: models.TestInnerSqliteType
+    ) -> None:
+        result = await queries.get_many_nullable_inner_sqlite_type(
+            conn=aiosqlite_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
+        )
+
+        assert result is not None
+        assert isinstance(result, collections.abc.Sequence)
+        assert isinstance(result[0], models.TestInnerSqliteType)
+
+        assert result[0] == inner_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsFunctions::get_many_nullable_inner_iter",
+        depends=["AiosqliteTestAttrsFunctions::get_many_nullable_inner"],
+    )
+    async def test_get_many_nullable_inner_iter(
+        self, aiosqlite_conn: aiosqlite.Connection, inner_model: models.TestInnerSqliteType
+    ) -> None:
+        async for result in queries.get_many_nullable_inner_sqlite_type(
+            conn=aiosqlite_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
+        ):
+            assert result is not None
+            assert isinstance(result, models.TestInnerSqliteType)
+
+            assert result == inner_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsFunctions::get_many_date",
+        depends=["AiosqliteTestAttrsFunctions::get_many_nullable_inner_iter"],
     )
     async def test_get_many_date(self, aiosqlite_conn: aiosqlite.Connection, model: models.TestSqliteType) -> None:
         result = await queries.get_many_date(conn=aiosqlite_conn, id_=model.id, date_test=model.date_test)

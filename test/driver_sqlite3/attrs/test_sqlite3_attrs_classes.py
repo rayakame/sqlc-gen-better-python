@@ -445,8 +445,43 @@ class TestSqlite3AttrsClasses:
 
             assert result == inner_model
 
+    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_date", depends=["Sqlite3TestAttrsClasses::get_many_inner_iter"]
+        name="Sqlite3TestAttrsClasses::get_many_nullable_inner",
+        depends=["Sqlite3TestAttrsClasses::get_many_inner_iter"],
+    )
+    async def test_get_many_nullable_inner(
+        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
+    ) -> None:
+        result = queries_obj.get_many_nullable_inner_sqlite_type(
+            table_id=inner_model.table_id, int_test=inner_model.int_test
+        )
+
+        assert result is not None
+        assert isinstance(result, queries.QueryResults)
+        results = result()
+        assert isinstance(results[0], models.TestInnerSqliteType)
+
+        assert results[0] == inner_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsClasses::get_many_nullable_inner_iter",
+        depends=["Sqlite3TestAttrsClasses::get_many_nullable_inner"],
+    )
+    async def test_get_many_nullable_inner_iter(
+        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
+    ) -> None:
+        for result in queries_obj.get_many_nullable_inner_sqlite_type(
+            table_id=inner_model.table_id, int_test=inner_model.int_test
+        ):
+            assert result is not None
+            assert isinstance(result, models.TestInnerSqliteType)
+
+            assert result == inner_model
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsClasses::get_many_date", depends=["Sqlite3TestAttrsClasses::get_many_nullable_inner_iter"]
     )
     def test_get_many_date(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
         result = queries_obj.get_many_date(id_=model.id, date_test=model.date_test)

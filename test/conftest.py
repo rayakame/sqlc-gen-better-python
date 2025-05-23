@@ -76,10 +76,7 @@ def sqlite3_conn(
     conn.commit()
     yield conn
 
-    conn.executescript("""
-        DELETE FROM test_sqlite_types;
-        DELETE FROM test_inner_sqlite_types;
-    """)
+    conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;""")
     conn.commit()
     conn.close()
 
@@ -94,10 +91,7 @@ async def aiosqlite_conn(
     await conn.commit()
     yield conn
 
-    await conn.executescript("""
-        DELETE FROM test_sqlite_types;
-        DELETE FROM test_inner_sqlite_types;
-    """)
+    await conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;""")
     await conn.commit()
     await conn.close()
 
@@ -108,6 +102,7 @@ async def asyncpg_delete_all(dsn: str) -> None:
     await conn.execute("""
     DELETE FROM test_postgres_types;
     DELETE FROM test_inner_postgres_types;
+        DELETE FROM test_copy_from;
     """)
     await conn.close()
 
