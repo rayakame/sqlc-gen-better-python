@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.4.1 - 2025-05-23
+### Fixed
+* [#97](https://github.com/rayakame/sqlc-gen-better-python/pull/97) Added `None` to `QueryResultsArgsType` ([rayakame](https://github.com/rayakame))
+
 ## v0.4.0 - 2025-05-21
 ### Added
 * [#59](https://github.com/rayakame/sqlc-gen-better-python/pull/59) Added hyperlink to github profile of contributors in the changelog ([rayakame](https://github.com/rayakame))
