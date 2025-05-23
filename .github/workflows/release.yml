@@ -52,16 +52,14 @@ jobs:
           commit-message: "chore: update README example with v${{ steps.latest.outputs.output }}"
           branch: "release/update-readme-${{ steps.latest.outputs.output }}"
           title: "Update README for release ${{ steps.latest.outputs.output }}"
+          add-paths: |
+              README.md
           body: |
             This PR updates the README example config with:
             - WASM plugin version: `${{ steps.latest.outputs.output }}`
             - SHA256 checksum: `${checksum}`
 
             Auto-generated during the release workflow.
-
-      - name: Build plugin again
-        working-directory: plugin
-        run: GOOS=wasip1 GOARCH=wasm go build -o ../sqlc-gen-better-python.wasm
 
       - name: Generate release description
         run: |
