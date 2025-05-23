@@ -56,6 +56,7 @@ jobs:
           commit-message: "chore: update README example with v${{ steps.latest.outputs.output }}"
           branch: "release/update-readme-${{ steps.latest.outputs.output }}"
           title: "Update README for release ${{ steps.latest.outputs.output }}"
+          labels: skip-fragment-check
           add-paths: |
               README.md
           body: |
