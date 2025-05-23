@@ -24,6 +24,12 @@ jobs:
         working-directory: plugin
         run: GOOS=wasip1 GOARCH=wasm go build -o ../sqlc-gen-better-python.wasm
 
+      - name: Calculate SHA256 hash
+        id: hash
+        run: |
+          HASH=$(sha256sum sqlc-gen-better-python.wasm | awk '{ print $1 }')
+          echo "sha256=$HASH" >> $GITHUB_OUTPUT
+      
       - name: Get the latest version
         id: latest
         uses: miniscruff/changie-action@v2
@@ -32,19 +38,17 @@ jobs:
           args: latest
 
       - name: Create tag
+        id: tag
         run: |
           git tag ${{ steps.latest.outputs.output }}
           git push origin ${{ steps.latest.outputs.output }}
+          DOWNLOAD_URL="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${{ steps.latest.outputs.output }}/sqlc-gen-better-python.wasm"
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
 
       - name: Update README with new version and checksum
         run: |
-          cd ${{ github.workspace }}
-          version=${{ steps.latest.outputs.output }}
-          export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
-          export escaped_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${version}/sqlc-gen-better-python.wasm"
-          
-          sed -i -E "s|(url: ).*|url: ${escaped_url}|" README.md
-          sed -i -E "s|(sha256: )[a-f0-9]+|\1${checksum}|" README.md
+          sed -i -E "s|(url: ).*|url: ${{ steps.tag.outputs.download_url }}|" README.md
+          sed -i -E "s|(sha256: ).*|sha256: ${{ steps.hash.outputs.sha256 }}|" README.md
 
       - name: Create PR to update README
         uses: peter-evans/create-pull-request@v7
@@ -57,18 +61,15 @@ jobs:
           body: |
             This PR updates the README example config with:
             - WASM plugin version: `${{ steps.latest.outputs.output }}`
-            - SHA256 checksum: `${checksum}`
+            - SHA256 checksum: `${{ steps.hash.outputs.sha256 }}`
 
             Auto-generated during the release workflow.
 
       - name: Generate release description
         run: |
-          cd ${{ github.workspace }}
-          export checksum=$(sha256sum sqlc-gen-better-python.wasm | awk '{print $1}')
-          export download_url="https://github.com/rayakame/sqlc-gen-better-python/releases/download/${{ steps.latest.outputs.output }}/sqlc-gen-better-python.wasm"
 
-          yq -i '.plugins[0].wasm.url = env(download_url)' .github/release_output_template.yaml
-          yq -i '.plugins[0].wasm.sha256 = env(checksum)' .github/release_output_template.yaml
+          yq -i '.plugins[0].wasm.url = ${{ steps.tag.outputs.download_url }}' .github/release_output_template.yaml
+          yq -i '.plugins[0].wasm.sha256 = ${{ steps.hash.outputs.sha256 }}' .github/release_output_template.yaml
           
           # Create the release body with the warning message at the top
           echo "> [!WARNING]" > release_body.md
