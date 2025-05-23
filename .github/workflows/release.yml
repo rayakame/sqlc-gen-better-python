@@ -68,8 +68,8 @@ jobs:
       - name: Generate release description
         run: |
 
-          yq -i '.plugins[0].wasm.url = ${{ steps.tag.outputs.download_url }}' .github/release_output_template.yaml
-          yq -i '.plugins[0].wasm.sha256 = ${{ steps.hash.outputs.sha256 }}' .github/release_output_template.yaml
+          yq -i '.plugins[0].wasm.url = \"$DOWNLOAD_URL\"' .github/release_output_template.yaml
+          yq -i '.plugins[0].wasm.sha256 = \"$SHA256\"' .github/release_output_template.yaml
           
           # Create the release body with the warning message at the top
           echo "> [!WARNING]" > release_body.md
