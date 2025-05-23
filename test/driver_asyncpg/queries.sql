@@ -23,7 +23,6 @@ SELECT *
 FROM test_postgres_types
 WHERE id = $1;
 
-
 -- name: GetManyTestIteratorPostgresType :many
 SELECT *
 FROM test_postgres_types

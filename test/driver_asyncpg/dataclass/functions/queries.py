@@ -45,7 +45,7 @@ if typing.TYPE_CHECKING:
     import decimal
     import uuid
 
-    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | uuid.UUID | datetime.date | datetime.time | datetime.datetime | datetime.timedelta
+    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | None | decimal.Decimal | uuid.UUID | datetime.date | datetime.time | datetime.datetime | datetime.timedelta
 
     ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 

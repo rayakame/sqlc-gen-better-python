@@ -59,6 +59,9 @@ SELECT * FROM test_sqlite_types WHERE id = ?;
 -- name: GetManyInnerSqliteType :many
 SELECT * FROM test_inner_sqlite_types WHERE table_id = ?;
 
+-- name: GetManyNullableInnerSqliteType :many
+SELECT * FROM test_inner_sqlite_types WHERE table_id = ? AND int_test IS ?;
+
 -- name: GetManyDate :many
 SELECT date_test FROM test_sqlite_types WHERE id = ? AND date_test = ?;
 

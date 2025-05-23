@@ -309,42 +309,7 @@ class TestAttrsFunctions:
         assert isinstance(result[0], models.TestPostgresType)
 
         first_result = result[0]
-        assert first_result.id == model.id
-        assert first_result.serial_test == model.serial_test
-        assert first_result.serial4_test == model.serial4_test
-        assert first_result.bigserial_test == model.bigserial_test
-        assert first_result.smallserial_test == model.smallserial_test
-        assert first_result.int_test == model.int_test
-        assert first_result.bigint_test == model.bigint_test
-        assert first_result.smallint_test == model.smallint_test
-        assert first_result.float_test == model.float_test
-        assert first_result.double_precision_test == model.double_precision_test
-        assert first_result.real_test == model.real_test
-        assert first_result.numeric_test == model.numeric_test
-        assert first_result.money_test == model.money_test
-        assert first_result.bool_test == model.bool_test
-        assert first_result.json_test == model.json_test
-        assert first_result.jsonb_test == model.jsonb_test
-        assert first_result.bytea_test == model.bytea_test
-        assert first_result.date_test == model.date_test
-        assert first_result.time_test == model.time_test
-        assert first_result.timetz_test == model.timetz_test
-        assert first_result.timestamp_test == model.timestamp_test
-        assert first_result.timestamptz_test == model.timestamptz_test
-        assert first_result.interval_test == model.interval_test
-        assert first_result.text_test == model.text_test
-        assert first_result.varchar_test == model.varchar_test
-        assert first_result.bpchar_test == model.bpchar_test
-        assert first_result.char_test == model.char_test
-        assert first_result.citext_test == model.citext_test
-        assert first_result.uuid_test == model.uuid_test
-        assert first_result.inet_test == model.inet_test
-        assert first_result.cidr_test == model.cidr_test
-        assert first_result.macaddr_test == model.macaddr_test
-        assert first_result.macaddr8_test == model.macaddr8_test
-        assert first_result.ltree_test == model.ltree_test
-        assert first_result.lquery_test == model.lquery_test
-        assert first_result.ltxtquery_test == model.ltxtquery_test
+        assert first_result == model
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsFunctions::get_many"], name="TestAttrsFunctions::get_many_timestamp")

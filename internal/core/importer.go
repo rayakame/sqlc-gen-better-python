@@ -280,7 +280,7 @@ func (i *Importer) queryImports(fileName string) ([]string, []string, []string) 
 		if len(typeCheck) != 0 {
 			typeLines[len(typeLines)-1] = typeLines[len(typeLines)-1] + "\n"
 		}
-		queryResultsArgsType := "QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview"
+		queryResultsArgsType := "QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | None"
 		if IsInMultipleMaps("decimal", std, typeCheck) {
 			queryResultsArgsType += " | decimal.Decimal"
 		}
