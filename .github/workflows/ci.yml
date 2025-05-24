@@ -139,7 +139,7 @@ jobs:
 
       - name: Run ruff via nox
         run: |
-          uv run nox -s ruff_check
+          uv run nox -s ruff_check -- --output-format=github
   pyright:
     runs-on: ubuntu-latest
     name: "Run pyright via nox"
