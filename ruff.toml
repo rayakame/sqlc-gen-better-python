@@ -37,6 +37,10 @@ ignore = [
 "**/{attrs,dataclass,msgspec,driver_asyncpg}/*.py" = [
     "INP001", # File is part of an implicit namespace package. Add an `__init__.py`.
     "FBT001", # Boolean-typed positional argument in function definition
+    "CPY001", # Missing copyright notice at top of file
+]
+"test/{models,queries}.py" = [
+    "CPY001", # Missing copyright notice at top of file
 ]
 
 

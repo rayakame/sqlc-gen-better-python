@@ -13,6 +13,7 @@ import pytest
 
 from test.driver_asyncpg.attrs.functions import models
 from test.driver_asyncpg.attrs.functions import queries
+import math
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -28,8 +29,8 @@ class TestAttrsFunctions:
             int_test=123,
             bigint_test=123_456_789_012_345,
             smallint_test=12,
-            float_test=3.14,
-            double_precision_test=2.718281828459045,
+            float_test=math.pi,
+            double_precision_test=math.e,
             real_test=3.25,
             numeric_test=decimal.Decimal("12345.6789"),
             money_test="$99.99",

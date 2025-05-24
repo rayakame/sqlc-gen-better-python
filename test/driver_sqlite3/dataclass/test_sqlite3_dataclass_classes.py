@@ -10,6 +10,7 @@ import pytest
 
 from test.driver_sqlite3.dataclass.classes import models
 from test.driver_sqlite3.dataclass.classes import queries
+import math
 
 
 class TestSqlite3DataclassClasses:
@@ -25,8 +26,8 @@ class TestSqlite3DataclassClasses:
             int8_test=123_456_789,
             bigserial_test=1,
             blob_test=memoryview(b"\x00\x01\x02hello"),
-            real_test=3.14,
-            double_test=2.71828,
+            real_test=math.pi,
+            double_test=math.e,
             double_precision_test=1.41421,
             float_test=9.81,
             numeric_test=123.456,
