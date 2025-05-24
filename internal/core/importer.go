@@ -89,6 +89,11 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 	}
 
 	std := stdImports(modelUses)
+	for _, override := range i.C.Overrides {
+		if val1, val2 := modelUses(override.PyTypeName); val1 {
+			std[override.PyTypeName] = importSpec{Module: override.PyImportPath, Name: override.PyPackageName, TypeChecking: val2}
+		}
+	}
 	std, typeChecking := i.splitTypeChecking(std)
 	if len(typeChecking) != 0 {
 		std["typing"] = importSpec{Module: "typing"}
@@ -207,6 +212,11 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 	}
 
 	std := stdImports(queryUses)
+	for _, override := range i.C.Overrides {
+		if val1, val2 := queryUses(override.PyTypeName); val1 {
+			std[override.PyTypeName] = importSpec{Module: override.PyImportPath, Name: override.PyPackageName, TypeChecking: val2}
+		}
+	}
 	std, typeChecking := i.splitTypeChecking(std)
 	if i.C.SqlDriver == SQLDriverAsyncpg {
 		typeChecking[string(SQLDriverAsyncpg)] = importSpec{Module: string(SQLDriverAsyncpg)}

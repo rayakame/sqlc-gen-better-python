@@ -58,9 +58,38 @@ func (gen *PythonGenerator) buildTables() []core.Table {
 }
 
 func (gen *PythonGenerator) makePythonType(col *plugin.Column) core.PyType {
+	columnType := sdk.DataType(col.Type)
+	for _, override := range gen.config.Overrides {
+		if override.PyTypeName == "" {
+			continue
+		}
+		cname := col.Name
+		if col.OriginalName != "" {
+			cname = col.OriginalName
+		}
+		sameTable := override.Matches(col.Table, gen.req.Catalog.DefaultSchema)
+		if override.Column != "" && sdk.MatchString(override.Column, cname) && sameTable {
+			return core.PyType{
+				SqlType:    columnType,
+				Type:       override.PyTypeName,
+				IsNullable: !col.NotNull,
+				IsList:     col.GetIsArray() || col.GetIsSqlcSlice(),
+				IsEnum:     false,
+			}
+		}
+		if override.DBType != "" && override.DBType == columnType {
+			return core.PyType{
+				SqlType:    columnType,
+				Type:       override.PyTypeName,
+				IsNullable: !col.NotNull,
+				IsList:     col.GetIsArray() || col.GetIsSqlcSlice(),
+				IsEnum:     false,
+			}
+		}
+	}
 	strType := gen.typeConversionFunc(gen.req, col, gen.config)
 	return core.PyType{
-		SqlType:    sdk.DataType(col.Type),
+		SqlType:    columnType,
 		Type:       strType,
 		IsNullable: !col.NotNull,
 		IsList:     col.GetIsArray() || col.GetIsSqlcSlice(),
