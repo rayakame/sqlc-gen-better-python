@@ -149,6 +149,7 @@ def ruff_format(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["ruff"])
 
     session.run("ruff", "format")
+    session.run("ruff", "check", "--select", "I", "--fix")
 
 
 @nox.session(reuse_venv=True)
