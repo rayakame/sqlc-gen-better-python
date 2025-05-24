@@ -19,7 +19,6 @@ if typing.TYPE_CHECKING:
     import decimal
 
 
-
 @attrs.define()
 class TestInnerSqliteType:
     """Model representing TestInnerSqliteType.

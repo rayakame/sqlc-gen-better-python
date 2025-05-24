@@ -19,6 +19,7 @@ ignore = [
     "S101", # Use of assert detected
     "PLR0915", # Too many statements
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "PLR0904", # Too many public methods
 ]
 "test/**/*test*.py" = [
     "D", # ignore docstrings in test files
@@ -34,10 +35,14 @@ ignore = [
     "T201", # Print found
     "INP001" # File is part of an implicit namespace package. Add an `__init__.py`.
 ]
-"**/{attrs,dataclass,msgspec,driver_asyncpg}/*.py" = [
+"**/{attrs,dataclass,msgspec}/*.py" = [
     "INP001", # File is part of an implicit namespace package. Add an `__init__.py`.
     "FBT001", # Boolean-typed positional argument in function definition
     "CPY001", # Missing copyright notice at top of file
+]
+"**/{msgspec}/*.py" = [
+    "DOC501", # Raised exception `StopIteration` missing from docstring
+              # Ruff doesn't understand that we actually documented the exceptions raised when using pep257
 ]
 "test/{models,queries}.py" = [
     "CPY001", # Missing copyright notice at top of file

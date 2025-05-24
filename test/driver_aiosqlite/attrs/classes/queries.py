@@ -14,13 +14,14 @@ import aiosqlite
 import ciso8601
 import datetime
 import decimal
+import operator
 import typing
 
 if typing.TYPE_CHECKING:
     import collections.abc
     import sqlite3
 
-    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | None | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta
+    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | None
 
 from test.driver_aiosqlite.attrs.classes import models
 
@@ -28,32 +29,42 @@ from test.driver_aiosqlite.attrs.classes import models
 def _adapt_date(val: datetime.date) -> str:
     return val.isoformat()
 
+
 def _convert_date(val: bytes) -> datetime.date:
     return ciso8601.parse_datetime(val.decode()).date()
+
 
 def _adapt_decimal(val: decimal.Decimal) -> str:
     return str(val)
 
+
 def _convert_decimal(val: bytes) -> decimal.Decimal:
     return decimal.Decimal(val.decode())
+
 
 def _adapt_datetime(val: datetime.datetime) -> str:
     return val.isoformat()
 
+
 def _convert_datetime(val: bytes) -> datetime.datetime:
     return ciso8601.parse_datetime(val.decode())
+
 
 def _adapt_bool(val: bool) -> int:
     return int(val)
 
+
 def _convert_bool(val: bytes) -> bool:
     return bool(int(val))
+
 
 def _adapt_memoryview(val: memoryview) -> bytes:
     return val.tobytes()
 
+
 def _convert_memoryview(val: bytes) -> memoryview:
     return memoryview(val)
+
 
 aiosqlite.register_adapter(datetime.date, _adapt_date)
 aiosqlite.register_adapter(decimal.Decimal, _adapt_decimal)
@@ -278,6 +289,7 @@ WHERE test_sqlite_types.id = ?
 
 T = typing.TypeVar("T")
 
+
 class QueryResults(typing.Generic[T]):
     """Helper class that allows both iteration and normal fetching of data from the db.
 
@@ -360,6 +372,7 @@ class QueryResults(typing.Generic[T]):
             raise
         return self._decode_hook(record)
 
+
 class Queries:
     """Queries from file queries.sql.
 
@@ -425,7 +438,7 @@ class Queries:
             The id of the last affected row. Will be `None` if no rows are affected.
 
         """
-        return (await self._conn.execute(DELETE_LAST_ID_ONE_SQLITE_TYPE,(id_, ))).lastrowid
+        return (await self._conn.execute(DELETE_LAST_ID_ONE_SQLITE_TYPE, (id_, ))).lastrowid
 
     async def delete_one_sqlite_type(self, *, id_: int) -> None:
         """Execute SQL query with `name: DeleteOneSqliteType :exec`.
@@ -441,7 +454,7 @@ class Queries:
         id_ : int
 
         """
-        await self._conn.execute(DELETE_ONE_SQLITE_TYPE,(id_, ))
+        await self._conn.execute(DELETE_ONE_SQLITE_TYPE, (id_, ))
 
     async def delete_one_test_inner_sqlite_type(self, *, table_id: int) -> None:
         """Execute SQL query with `name: DeleteOneTestInnerSqliteType :exec`.
@@ -456,7 +469,7 @@ class Queries:
         table_id : int
 
         """
-        await self._conn.execute(DELETE_ONE_TEST_INNER_SQLITE_TYPE,(table_id, ))
+        await self._conn.execute(DELETE_ONE_TEST_INNER_SQLITE_TYPE, (table_id, ))
 
     async def delete_result_one_sqlite_type(self, *, id_: int) -> aiosqlite.Cursor:
         """Execute and return the result of SQL query with `name: DeleteResultOneSqliteType :execresult`.
@@ -477,7 +490,7 @@ class Queries:
             The result returned when executing the query.
 
         """
-        return await self._conn.execute(DELETE_RESULT_ONE_SQLITE_TYPE,(id_, ))
+        return await self._conn.execute(DELETE_RESULT_ONE_SQLITE_TYPE, (id_, ))
 
     async def delete_rows_one_sqlite_type(self, *, id_: int) -> int:
         """Execute SQL query with `name: DeleteRowsOneSqliteType :execrows` and return the number of affected rows.
@@ -498,7 +511,7 @@ class Queries:
             The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
-        return (await self._conn.execute(DELETE_ROWS_ONE_SQLITE_TYPE,(id_, ))).rowcount
+        return (await self._conn.execute(DELETE_ROWS_ONE_SQLITE_TYPE, (id_, ))).rowcount
 
     def get_many_blob(self, *, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
         """Fetch many from the db using the SQL query with `name: GetManyBlob :many`.
@@ -518,9 +531,7 @@ class Queries:
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
-        def _decode_hook(row: sqlite3.Row) -> memoryview:
-            return row[0]
-        return QueryResults[memoryview](self._conn, GET_MANY_BLOB, _decode_hook, id_, blob_test)
+        return QueryResults[memoryview](self._conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
 
     def get_many_bool(self, *, id_: int, bool_test: bool) -> QueryResults[bool]:
         """Fetch many from the db using the SQL query with `name: GetManyBool :many`.
@@ -540,9 +551,7 @@ class Queries:
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
-        def _decode_hook(row: sqlite3.Row) -> bool:
-            return row[0]
-        return QueryResults[bool](self._conn, GET_MANY_BOOL, _decode_hook, id_, bool_test)
+        return QueryResults[bool](self._conn, GET_MANY_BOOL, operator.itemgetter(0), id_, bool_test)
 
     def get_many_boolean(self, *, id_: int, boolean_test: bool) -> QueryResults[bool]:
         """Fetch many from the db using the SQL query with `name: GetManyBoolean :many`.
@@ -562,9 +571,7 @@ class Queries:
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
-        def _decode_hook(row: sqlite3.Row) -> bool:
-            return row[0]
-        return QueryResults[bool](self._conn, GET_MANY_BOOLEAN, _decode_hook, id_, boolean_test)
+        return QueryResults[bool](self._conn, GET_MANY_BOOLEAN, operator.itemgetter(0), id_, boolean_test)
 
     def get_many_date(self, *, id_: int, date_test: datetime.date) -> QueryResults[datetime.date]:
         """Fetch many from the db using the SQL query with `name: GetManyDate :many`.
@@ -584,9 +591,7 @@ class Queries:
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
-        def _decode_hook(row: sqlite3.Row) -> datetime.date:
-            return row[0]
-        return QueryResults[datetime.date](self._conn, GET_MANY_DATE, _decode_hook, id_, date_test)
+        return QueryResults[datetime.date](self._conn, GET_MANY_DATE, operator.itemgetter(0), id_, date_test)
 
     def get_many_datetime(self, *, id_: int, datetime_test: datetime.datetime) -> QueryResults[datetime.datetime]:
         """Fetch many from the db using the SQL query with `name: GetManyDatetime :many`.
@@ -606,9 +611,7 @@ class Queries:
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
-        def _decode_hook(row: sqlite3.Row) -> datetime.datetime:
-            return row[0]
-        return QueryResults[datetime.datetime](self._conn, GET_MANY_DATETIME, _decode_hook, id_, datetime_test)
+        return QueryResults[datetime.datetime](self._conn, GET_MANY_DATETIME, operator.itemgetter(0), id_, datetime_test)
 
     def get_many_decimal(self, *, id_: int, decimal_test: decimal.Decimal) -> QueryResults[decimal.Decimal]:
         """Fetch many from the db using the SQL query with `name: GetManyDecimal :many`.
@@ -628,9 +631,7 @@ class Queries:
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
-        def _decode_hook(row: sqlite3.Row) -> decimal.Decimal:
-            return row[0]
-        return QueryResults[decimal.Decimal](self._conn, GET_MANY_DECIMAL, _decode_hook, id_, decimal_test)
+        return QueryResults[decimal.Decimal](self._conn, GET_MANY_DECIMAL, operator.itemgetter(0), id_, decimal_test)
 
     def get_many_inner_sqlite_type(self, *, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
         """Fetch many from the db using the SQL query with `name: GetManyInnerSqliteType :many`.
@@ -714,9 +715,7 @@ class Queries:
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
-        def _decode_hook(row: sqlite3.Row) -> datetime.datetime:
-            return row[0]
-        return QueryResults[datetime.datetime](self._conn, GET_MANY_TIMESTAMP, _decode_hook, id_, timestamp_test)
+        return QueryResults[datetime.datetime](self._conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
 
     async def get_one_blob(self, *, id_: int, blob_test: memoryview) -> memoryview | None:
         """Fetch one from the db using the SQL query with `name: GetOneBlob :one`.
@@ -736,7 +735,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_BLOB,(id_, blob_test))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_BLOB, (id_, blob_test))).fetchone()
         if row is None:
             return None
         return row[0]
@@ -759,7 +758,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_BOOL,(id_, bool_test))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_BOOL, (id_, bool_test))).fetchone()
         if row is None:
             return None
         return row[0]
@@ -782,7 +781,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_BOOLEAN,(id_, boolean_test))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_BOOLEAN, (id_, boolean_test))).fetchone()
         if row is None:
             return None
         return row[0]
@@ -805,7 +804,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_DATE,(id_, date_test))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_DATE, (id_, date_test))).fetchone()
         if row is None:
             return None
         return row[0]
@@ -828,7 +827,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_DATETIME,(id_, datetime_test))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_DATETIME, (id_, datetime_test))).fetchone()
         if row is None:
             return None
         return row[0]
@@ -851,7 +850,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_DECIMAL,(id_, decimal_test))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_DECIMAL, (id_, decimal_test))).fetchone()
         if row is None:
             return None
         return row[0]
@@ -873,7 +872,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_INNER_SQLITE_TYPE,(table_id, ))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_INNER_SQLITE_TYPE, (table_id, ))).fetchone()
         if row is None:
             return None
         return models.TestInnerSqliteType(table_id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
@@ -895,7 +894,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_SQLITE_TYPE,(id_, ))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_SQLITE_TYPE, (id_, ))).fetchone()
         if row is None:
             return None
         return models.TestSqliteType(id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
@@ -918,7 +917,7 @@ class Queries:
             Result fetched from the db. Will be `None` if not found.
 
         """
-        row = await (await self._conn.execute(GET_ONE_TIMESTAMP,(id_, timestamp_test))).fetchone()
+        row = await (await self._conn.execute(GET_ONE_TIMESTAMP, (id_, timestamp_test))).fetchone()
         if row is None:
             return None
         return row[0]
@@ -979,7 +978,7 @@ class Queries:
             The id of the last affected row. Will be `None` if no rows are affected.
 
         """
-        return (await self._conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE,(id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).lastrowid
+        return (await self._conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).lastrowid
 
     async def insert_one_inner_sqlite_type(self, *, table_id: int, int_test: int | None, bigint_test: int | None, smallint_test: int | None, tinyint_test: int | None, int2_test: int | None, int8_test: int | None, bigserial_test: int | None, blob_test: memoryview | None, real_test: float | None, double_test: float | None, double_precision_test: float | None, float_test: float | None, numeric_test: float | None, decimal_test: decimal.Decimal | None, boolean_test: bool | None, bool_test: bool | None, date_test: datetime.date | None, datetime_test: datetime.datetime | None, timestamp_test: datetime.datetime | None, character_test: str | None, varchar_test: str | None, varyingcharacter_test: str | None, nchar_test: str | None, nativecharacter_test: str | None, nvarchar_test: str | None, text_test: str | None, clob_test: str | None, json_test: str | None) -> None:
         """Execute SQL query with `name: InsertOneInnerSqliteType :exec`.
@@ -1032,7 +1031,7 @@ class Queries:
         json_test : str | None
 
         """
-        await self._conn.execute(INSERT_ONE_INNER_SQLITE_TYPE,(table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
+        await self._conn.execute(INSERT_ONE_INNER_SQLITE_TYPE, (table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
 
     async def insert_one_sqlite_type(self, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> None:
         """Execute SQL query with `name: InsertOneSqliteType :exec`.
@@ -1085,7 +1084,7 @@ class Queries:
         json_test : str
 
         """
-        await self._conn.execute(INSERT_ONE_SQLITE_TYPE,(id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
+        await self._conn.execute(INSERT_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
 
     async def insert_result_one_sqlite_type(self, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> aiosqlite.Cursor:
         """Execute and return the result of SQL query with `name: InsertResultOneSqliteType :execresult`.
@@ -1143,7 +1142,7 @@ class Queries:
             The result returned when executing the query.
 
         """
-        return await self._conn.execute(INSERT_RESULT_ONE_SQLITE_TYPE,(id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
+        return await self._conn.execute(INSERT_RESULT_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
 
     async def insert_rows_one_sqlite_type(self, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> int:
         """Execute SQL query with `name: InsertRowsOneSqliteType :execrows` and return the number of affected rows.
@@ -1201,7 +1200,7 @@ class Queries:
             The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
-        return (await self._conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE,(id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).rowcount
+        return (await self._conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).rowcount
 
     async def update_last_id_one_sqlite_type(self, *, id_: int) -> int | None:
         """Execute SQL query with `name: UpdateLastIdOneSqliteType :execlastid` and return the id of the last affected row.
@@ -1222,7 +1221,7 @@ class Queries:
             The id of the last affected row. Will be `None` if no rows are affected.
 
         """
-        return (await self._conn.execute(UPDATE_LAST_ID_ONE_SQLITE_TYPE,(id_, ))).lastrowid
+        return (await self._conn.execute(UPDATE_LAST_ID_ONE_SQLITE_TYPE, (id_, ))).lastrowid
 
     async def update_result_one_sqlite_type(self, *, id_: int) -> aiosqlite.Cursor:
         """Execute and return the result of SQL query with `name: UpdateResultOneSqliteType :execresult`.
@@ -1243,7 +1242,7 @@ class Queries:
             The result returned when executing the query.
 
         """
-        return await self._conn.execute(UPDATE_RESULT_ONE_SQLITE_TYPE,(id_, ))
+        return await self._conn.execute(UPDATE_RESULT_ONE_SQLITE_TYPE, (id_, ))
 
     async def update_rows_one_sqlite_type(self, *, id_: int) -> int:
         """Execute SQL query with `name: UpdateRowsOneSqliteType :execrows` and return the number of affected rows.
@@ -1264,4 +1263,4 @@ class Queries:
             The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
-        return (await self._conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE,(id_, ))).rowcount
+        return (await self._conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE, (id_, ))).rowcount

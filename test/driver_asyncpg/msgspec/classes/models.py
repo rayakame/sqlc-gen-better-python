@@ -20,7 +20,6 @@ if typing.TYPE_CHECKING:
     import uuid
 
 
-
 class TestInnerPostgresType(msgspec.Struct):
     """Model representing TestInnerPostgresType.
 

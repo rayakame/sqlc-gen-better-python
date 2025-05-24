@@ -19,7 +19,6 @@ if typing.TYPE_CHECKING:
     import decimal
 
 
-
 class TestInnerSqliteType(msgspec.Struct):
     """Model representing TestInnerSqliteType.
 

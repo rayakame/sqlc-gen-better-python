@@ -15,6 +15,7 @@ __all__: collections.abc.Sequence[str] = (
 
 import dataclasses
 import datetime
+import operator
 import typing
 
 if typing.TYPE_CHECKING:
@@ -24,7 +25,7 @@ if typing.TYPE_CHECKING:
     import decimal
     import uuid
 
-    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | None | decimal.Decimal | uuid.UUID | datetime.date | datetime.time | datetime.datetime | datetime.timedelta
+    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | uuid.UUID | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | None
 
     ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
@@ -433,6 +434,7 @@ WHERE test_postgres_types.id = $1
 
 T = typing.TypeVar("T")
 
+
 class QueryResults(typing.Generic[T]):
     """Helper class that allows both iteration and normal fetching of data from the db."""
 
@@ -504,6 +506,7 @@ class QueryResults(typing.Generic[T]):
             self._iterator = None
             raise
         return self._decode_hook(record)
+
 
 class Queries:
     """Queries from file queries.sql."""
@@ -982,7 +985,7 @@ class Queries:
         row = await self._conn.fetchrow(GET_ALL_EMBEDDED_TEST_POSTGRES_TYPE, id_)
         if row is None:
             return None
-        return GetAllEmbeddedTestPostgresTypeRow(test_postgres_type=models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]), test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]) if row[52] is not None else None, date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]) if row[65] is not None else None, cidr_test=str(row[66]) if row[66] is not None else None, macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
+        return GetAllEmbeddedTestPostgresTypeRow(test_postgres_type=models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]), test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]) if row[52] is not None else None, date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]) if row[65] is not None else None, cidr_test=str(row[66]) if row[66] is not None else None, macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71]))
 
     async def get_embedded_test_postgres_type(self, *, id_: int) -> GetEmbeddedTestPostgresTypeRow | None:
         """Fetch one from the db using the SQL query with `name: GetEmbeddedTestPostgresType :one`.
@@ -1003,7 +1006,7 @@ class Queries:
         row = await self._conn.fetchrow(GET_EMBEDDED_TEST_POSTGRES_TYPE, id_)
         if row is None:
             return None
-        return GetEmbeddedTestPostgresTypeRow(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35], test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]) if row[52] is not None else None, date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]) if row[65] is not None else None, cidr_test=str(row[66]) if row[66] is not None else None, macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71])   )
+        return GetEmbeddedTestPostgresTypeRow(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35], test_inner_postgres_type=models.TestInnerPostgresType(table_id=row[36], serial_test=row[37], serial4_test=row[38], bigserial_test=row[39], smallserial_test=row[40], int_test=row[41], bigint_test=row[42], smallint_test=row[43], float_test=row[44], double_precision_test=row[45], real_test=row[46], numeric_test=row[47], money_test=row[48], bool_test=row[49], json_test=row[50], jsonb_test=row[51], bytea_test=memoryview(row[52]) if row[52] is not None else None, date_test=row[53], time_test=row[54], timetz_test=row[55], timestamp_test=row[56], timestamptz_test=row[57], interval_test=row[58], text_test=row[59], varchar_test=row[60], bpchar_test=row[61], char_test=row[62], citext_test=row[63], uuid_test=row[64], inet_test=str(row[65]) if row[65] is not None else None, cidr_test=str(row[66]) if row[66] is not None else None, macaddr_test=row[67], macaddr8_test=row[68], ltree_test=row[69], lquery_test=row[70], ltxtquery_test=row[71]))
 
     def get_many_test_bytea_postgres_type(self, *, id_: int) -> QueryResults[memoryview]:
         """Fetch many from the db using the SQL query with `name: GetManyTestByteaPostgresType :many`.
@@ -1077,9 +1080,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[datetime.datetime]` that allows both iteration and normal fetching of data from the db.
         """
-        def _decode_hook(row: asyncpg.Record) -> datetime.datetime:
-            return row[0]
-        return QueryResults[datetime.datetime](self._conn, GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE, _decode_hook, id_)
+        return QueryResults[datetime.datetime](self._conn, GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE, operator.itemgetter(0), id_)
 
     async def get_one_inner_test_postgres_type(self, *, table_id: int) -> models.TestInnerPostgresType | None:
         """Fetch one from the db using the SQL query with `name: GetOneInnerTestPostgresType :one`.
@@ -1099,7 +1100,7 @@ class Queries:
         row = await self._conn.fetchrow(GET_ONE_INNER_TEST_POSTGRES_TYPE, table_id)
         if row is None:
             return None
-        return models.TestInnerPostgresType(table_id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]) if row[16] is not None else None, date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]) if row[29] is not None else None, cidr_test=str(row[30]) if row[30] is not None else None, macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]   )
+        return models.TestInnerPostgresType(table_id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]) if row[16] is not None else None, date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]) if row[29] is not None else None, cidr_test=str(row[30]) if row[30] is not None else None, macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35])
 
     async def get_one_test_bytea_postgres_type(self, *, id_: int) -> memoryview | None:
         """Fetch one from the db using the SQL query with `name: GetOneTestByteaPostgresType :one`.
@@ -1139,7 +1140,7 @@ class Queries:
         row = await self._conn.fetchrow(GET_ONE_TEST_POSTGRES_TYPE, id_)
         if row is None:
             return None
-        return models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35]   )
+        return models.TestPostgresType(id=row[0], serial_test=row[1], serial4_test=row[2], bigserial_test=row[3], smallserial_test=row[4], int_test=row[5], bigint_test=row[6], smallint_test=row[7], float_test=row[8], double_precision_test=row[9], real_test=row[10], numeric_test=row[11], money_test=row[12], bool_test=row[13], json_test=row[14], jsonb_test=row[15], bytea_test=memoryview(row[16]), date_test=row[17], time_test=row[18], timetz_test=row[19], timestamp_test=row[20], timestamptz_test=row[21], interval_test=row[22], text_test=row[23], varchar_test=row[24], bpchar_test=row[25], char_test=row[26], citext_test=row[27], uuid_test=row[28], inet_test=str(row[29]), cidr_test=str(row[30]), macaddr_test=row[31], macaddr8_test=row[32], ltree_test=row[33], lquery_test=row[34], ltxtquery_test=row[35])
 
     async def get_one_test_timestamp_postgres_type(self, *, id_: int) -> datetime.datetime | None:
         """Fetch one from the db using the SQL query with `name: GetOneTestTimestampPostgresType :one`.

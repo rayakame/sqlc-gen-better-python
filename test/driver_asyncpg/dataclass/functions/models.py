@@ -20,7 +20,6 @@ if typing.TYPE_CHECKING:
     import uuid
 
 
-
 @dataclasses.dataclass()
 class TestInnerPostgresType:
     """Model representing TestInnerPostgresType.

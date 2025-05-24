@@ -149,7 +149,6 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					i++
 				}
 			}
-			body.WriteString("   ")
 			body.WriteLine(")")
 		} else {
 			if typeConversion.AsyncpgDoTypeConversion(retType.SqlType) {
@@ -161,8 +160,14 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 	} else if query.Cmd == metadata.CmdMany {
 		body.WriteLine(fmt.Sprintf(") -> QueryResults[%s]:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
-		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", AsyncpgResult, retType.Type))
-		if query.Ret.IsStruct() {
+		decode_hook := "_decode_hook"
+		if !query.Ret.IsStruct() && !typeConversion.AsyncpgDoTypeConversion(retType.SqlType) {
+			decode_hook = "operator.itemgetter(0)"
+		} else if !query.Ret.IsStruct() {
+			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", AsyncpgResult, retType.Type))
+			body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("return %s(row[0])", retType.Type))
+		} else {
+			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", AsyncpgResult, retType.Type))
 			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return %s(", retType.Type))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
@@ -191,14 +196,8 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 				}
 			}
 			body.WriteLine(")")
-		} else {
-			if typeConversion.AsyncpgDoTypeConversion(retType.SqlType) {
-				body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("return %s(row[0])", retType.Type))
-			} else {
-				body.WriteIndentedLine(indentLevel+2, "return row[0]")
-			}
 		}
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, _decode_hook", retType.Type, conn, query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, %s", retType.Type, conn, query.ConstantName, decode_hook))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
 	}

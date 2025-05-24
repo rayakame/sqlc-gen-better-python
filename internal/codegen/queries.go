@@ -142,6 +142,7 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 	if core.IsAnyQueryMany(queries) {
 		funcBody.NewLine()
 		allNames = append(allNames, dr.driverBuildQueryResults(funcBody))
+		funcBody.NewLine()
 	}
 	funcBody.NewLine()
 	if dr.conf.EmitClasses {
