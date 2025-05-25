@@ -2,6 +2,7 @@ target-version = "py310"
 line-length = 120
 
 [lint]
+preview = true
 # https://docs.astral.sh/ruff/rules/
 select = ["ALL"]
 ignore = [
@@ -13,28 +14,35 @@ ignore = [
 "test/**" = [
     "E501",    # Line too long
     "PLR0913",  # Too many arguments in function definition
-    "I001", # Import block is un-sorted or un-formatted
     #"D", # Docstrings
     "S101", # Use of assert detected
     "PLR0915", # Too many statements
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "PLR0904", # Too many public methods
 ]
 "test/**/*test*.py" = [
     "D", # ignore docstrings in test files
     "DTZ005", # `datetime.datetime.now()` called without a `tz` argument
     "DTZ011", # `datetime.date.today()` used
     "DTZ001", # `datetime.datetime()` called without a `tzinfo` argument
+    "PLR6301" # method does not use `self`
 ]
 "noxfile.py" = [
     "D"
 ]
 "scripts/**" = [
     "T201", # Print found
-    "INP001" # File is part of an implicit namespace package. Add an `__init__.py`.
-]
-"**/{attrs,dataclass,msgspec,driver_asyncpg}/*.py" = [
     "INP001", # File is part of an implicit namespace package. Add an `__init__.py`.
+]
+# Purely generated code
+"**/{classes,functions}/*.py" = [
+    "CPY001", # Missing copyright notice at top of file
+    "I001", # Import block is un-sorted or un-formatted
     "FBT001", # Boolean-typed positional argument in function definition
+]
+"**/{msgspec}/{classes,functions}/*.py" = [
+    "DOC501", # Raised exception `StopIteration` missing from docstring
+    # Ruff doesn't understand that we actually documented the exceptions raised when using pep257
 ]
 
 
@@ -47,6 +55,6 @@ convention = "numpy"
 
 [format]
 exclude = [
-    "**/classes/*",
-    "**/functions/*",
+    "models.py",
+    "queries.py",
 ]

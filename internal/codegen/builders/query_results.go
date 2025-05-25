@@ -4,7 +4,7 @@ import "fmt"
 
 func (b *IndentStringBuilder) WriteSyncQueryResultsClassHeader(connType string, initFields []string, driverReturnType string) {
 	b.WriteLine(`T = typing.TypeVar("T")`)
-	b.NewLine()
+	b.NNewLine(2)
 	b.WriteLine("class QueryResults(typing.Generic[T]):")
 	b.WriteQueryResultsClassDocstring(connType, driverReturnType)
 	b.WriteIndentedLine(1, `__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")`)
@@ -33,7 +33,7 @@ func (b *IndentStringBuilder) WriteSyncQueryResultsClassHeader(connType string, 
 
 func (b *IndentStringBuilder) WriteAsyncQueryResultsClassHeader(connType string, initFields []string, driverReturnType string) {
 	b.WriteLine(`T = typing.TypeVar("T")`)
-	b.NewLine()
+	b.NNewLine(2)
 	b.WriteLine("class QueryResults(typing.Generic[T]):")
 	b.WriteQueryResultsClassDocstring(connType, driverReturnType)
 	b.WriteIndentedLine(1, `__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")`)

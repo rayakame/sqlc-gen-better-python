@@ -210,6 +210,14 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 		}
 		return *uses, *typeChecking
 	}
+	querySimpleReturn := func(conv typeConversion.TypeDoTypeConversion) bool {
+		for _, q := range i.Queries {
+			if !q.Ret.IsStruct() && !conv(q.Ret.Typ.SqlType) {
+				return true
+			}
+		}
+		return false
+	}
 
 	std := stdImports(queryUses)
 	for _, override := range i.C.Overrides {
@@ -223,6 +231,9 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 
 		if IsAnyQueryMany(i.Queries) {
 			typeChecking[string(SQLDriverAsyncpg)+".cursor"] = importSpec{Module: string(SQLDriverAsyncpg) + ".cursor"}
+			if querySimpleReturn(typeConversion.AsyncpgDoTypeConversion) {
+				std["operator"] = importSpec{Module: "operator"}
+			}
 		}
 	} else if i.C.SqlDriver == SQLDriverAioSQLite {
 		// if the std mapping has exactly 2 members, these two are collections and typing,
@@ -235,6 +246,9 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 		}
 		if IsAnyQueryMany(i.Queries) {
 			typeChecking[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
+			if querySimpleReturn(typeConversion.SqliteDoTypeConversion) {
+				std["operator"] = importSpec{Module: "operator"}
+			}
 		}
 	} else if i.C.SqlDriver == SQLDriverSQLite {
 		// if the std mapping has exactly 2 members, these two are collections and typing,
@@ -244,6 +258,11 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 			std[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
 		} else {
 			typeChecking[string(SQLDriverSQLite)] = importSpec{Module: string(SQLDriverSQLite)}
+		}
+		if IsAnyQueryMany(i.Queries) {
+			if querySimpleReturn(typeConversion.SqliteDoTypeConversion) {
+				std["operator"] = importSpec{Module: "operator"}
+			}
 		}
 	}
 	if addCiso {
@@ -290,7 +309,7 @@ func (i *Importer) queryImports(fileName string) ([]string, []string, []string) 
 		if len(typeCheck) != 0 {
 			typeLines[len(typeLines)-1] = typeLines[len(typeLines)-1] + "\n"
 		}
-		queryResultsArgsType := "QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | None"
+		queryResultsArgsType := "QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview"
 		if IsInMultipleMaps("decimal", std, typeCheck) {
 			queryResultsArgsType += " | decimal.Decimal"
 		}
@@ -300,6 +319,7 @@ func (i *Importer) queryImports(fileName string) ([]string, []string, []string) 
 		if IsInMultipleMaps("datetime", std, typeCheck) {
 			queryResultsArgsType += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
 		}
+		queryResultsArgsType += " | None"
 		typeLines = append(typeLines, queryResultsArgsType)
 	}
 

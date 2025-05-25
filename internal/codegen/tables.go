@@ -67,8 +67,10 @@ func (dr *Driver) buildPyTables(imp *core.Importer, tables []core.Table) (string
 			body.WriteIndentedLine(1, imp)
 		}
 	}
-	body.WriteLine("")
-	for _, imp := range pkg {
+	for i, imp := range pkg {
+		if i == 0 {
+			body.NewLine()
+		}
 		body.WriteLine(imp)
 	}
 	for _, table := range tables {
