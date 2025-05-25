@@ -1,6 +1,0 @@
-kind: Added
-body: 'Enabled ruff `preview` config option. '
-time: 2025-05-24T21:59:48.7591041Z
-custom:
-    Author: rayakame
-    PR: "104"
