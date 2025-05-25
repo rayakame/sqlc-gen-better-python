@@ -68,22 +68,24 @@ func (gen *PythonGenerator) makePythonType(col *plugin.Column) core.PyType {
 			cname = col.OriginalName
 		}
 		sameTable := override.Matches(col.Table, gen.req.Catalog.DefaultSchema)
-		if override.Column != "" && sdk.MatchString(override.Column, cname) && sameTable {
+		if override.Column != "" && override.ColumnName.MatchString(cname) && sameTable {
 			return core.PyType{
-				SqlType:    columnType,
-				Type:       override.PyTypeName,
-				IsNullable: !col.NotNull,
-				IsList:     col.GetIsArray() || col.GetIsSqlcSlice(),
-				IsEnum:     false,
+				SqlType:     columnType,
+				Type:        override.PyTypeName,
+				IsNullable:  !col.NotNull,
+				IsList:      col.GetIsArray() || col.GetIsSqlcSlice(),
+				IsEnum:      false,
+				IsOverwrite: true,
 			}
 		}
 		if override.DBType != "" && override.DBType == columnType {
 			return core.PyType{
-				SqlType:    columnType,
-				Type:       override.PyTypeName,
-				IsNullable: !col.NotNull,
-				IsList:     col.GetIsArray() || col.GetIsSqlcSlice(),
-				IsEnum:     false,
+				SqlType:     columnType,
+				Type:        override.PyTypeName,
+				IsNullable:  !col.NotNull,
+				IsList:      col.GetIsArray() || col.GetIsSqlcSlice(),
+				IsEnum:      false,
+				IsOverwrite: true,
 			}
 		}
 	}

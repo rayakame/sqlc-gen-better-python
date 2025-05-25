@@ -14,11 +14,12 @@ type Table struct {
 }
 
 type PyType struct {
-	SqlType    string
-	Type       string
-	IsList     bool
-	IsNullable bool
-	IsEnum     bool
+	SqlType     string
+	Type        string
+	IsList      bool
+	IsNullable  bool
+	IsEnum      bool
+	IsOverwrite bool
 }
 type Constant struct {
 	Name  string
