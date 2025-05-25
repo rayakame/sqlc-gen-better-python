@@ -79,6 +79,7 @@ sqlite3.register_converter("bool", _convert_bool)
 sqlite3.register_converter("boolean", _convert_bool)
 sqlite3.register_converter("blob", _convert_memoryview)
 
+
 CREATE_ROWS_TABLE: typing.Final[str] = """-- name: CreateRowsTable :execrows
 CREATE TABLE test_create_rows_table
 (

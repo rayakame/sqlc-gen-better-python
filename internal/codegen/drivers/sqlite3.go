@@ -20,20 +20,20 @@ func SQLite3BuildTypeConvFunc(queries []core.Query, body *builders.IndentStringB
 	queryValueUses := func(name string, qv core.QueryValue) bool {
 		if !qv.IsEmpty() {
 			if qv.IsStruct() && qv.EmitStruct() {
-				if val, sqlType := core.TableUses(name, *qv.Table); val {
-					if typeConversion.SqliteDoTypeConversion(sqlType) {
+				if val, pyType := core.TableUses(name, *qv.Table); val {
+					if pyType.DoConversion(typeConversion.SqliteDoTypeConversion) {
 						return true
 					}
 				}
 			} else if qv.IsStruct() {
-				if val, sqlType := core.TableUses(name, *qv.Table); val {
-					if typeConversion.SqliteDoTypeConversion(sqlType) {
+				if val, pyType := core.TableUses(name, *qv.Table); val {
+					if pyType.DoConversion(typeConversion.SqliteDoTypeConversion) {
 						return true
 					}
 				}
 			} else {
 				if qv.Typ.Type == name {
-					if typeConversion.SqliteDoTypeConversion(qv.Typ.SqlType) {
+					if qv.Typ.DoConversion(typeConversion.SqliteDoTypeConversion) {
 						return true
 					}
 				}
@@ -130,7 +130,7 @@ func SQLite3BuildTypeConvFunc(queries []core.Query, body *builders.IndentStringB
 	for i, line := range converters {
 		body.WriteLine(line)
 		if i == len(converters)-1 {
-			body.NewLine()
+			body.NNewLine(2)
 		}
 	}
 }
@@ -221,25 +221,41 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					var inner []string
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
-						inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
+						if embedCol.Type.DoOverride() {
+							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
+						} else {
+							inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
+						}
 						i++
 					}
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
-					body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					if col.Type.DoOverride() {
+						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+					} else {
+						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					}
 					i++
 				}
 			}
 			body.WriteLine(")")
 		} else {
-			body.WriteIndentedLine(indentLevel+1, "return row[0]")
+			if query.Ret.Typ.DoOverride() {
+				body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("return %s(row[0])", query.Ret.Typ.Type))
+			} else {
+				body.WriteIndentedLine(indentLevel+1, "return row[0]")
+			}
 		}
 	} else if query.Cmd == metadata.CmdMany {
 		body.WriteLine(fmt.Sprintf(") -> QueryResults[%s]:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
-		decode_hook := "_decode_hook"
-		if !query.Ret.IsStruct() {
-			decode_hook = "operator.itemgetter(0)"
+
+		decodeHook := "_decode_hook"
+		if !query.Ret.IsStruct() && !query.Ret.Typ.DoOverride() {
+			decodeHook = "operator.itemgetter(0)"
+		} else if !query.Ret.IsStruct() && query.Ret.Typ.DoOverride() {
+			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", Sqlite3Result, retType.Type))
+			body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("return %s(row[0])", retType.Type))
 		} else {
 			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", Sqlite3Result, retType.Type))
 			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return %s(", retType.Type))
@@ -252,18 +268,26 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 					var inner []string
 					body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
 					for _, embedCol := range col.EmbedFields {
-						inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
+						if embedCol.Type.DoOverride() {
+							inner = append(inner, fmt.Sprintf("%s=%s(row[%s])", embedCol.Name, embedCol.Type.Type, strconv.Itoa(i)))
+						} else {
+							inner = append(inner, fmt.Sprintf("%s=row[%s]", embedCol.Name, strconv.Itoa(i)))
+						}
 						i++
 					}
 					body.WriteString(strings.Join(inner, ", ") + ")")
 				} else {
-					body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					if col.Type.DoOverride() {
+						body.WriteString(fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, strconv.Itoa(i)))
+					} else {
+						body.WriteString(fmt.Sprintf("%s=row[%s]", col.Name, strconv.Itoa(i)))
+					}
 					i++
 				}
 			}
 			body.WriteLine(")")
 		}
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, %s", retType.Type, conn, query.ConstantName, decode_hook))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, %s", retType.Type, conn, query.ConstantName, decodeHook))
 		params := ""
 		for i, arg := range query.Args {
 			if !arg.IsEmpty() {
@@ -300,10 +324,14 @@ func sqlite3WriteParams(query *core.Query, body *builders.IndentStringBuilder) {
 	params := "("
 	for i, arg := range query.Args {
 		if !arg.IsEmpty() {
+			argName := arg.Name
+			if arg.Typ.DoOverride() {
+				argName = fmt.Sprintf("%s(%s)", arg.Typ.DefaultType, argName)
+			}
 			if i == len(query.Args)-1 && i != 0 {
-				params += fmt.Sprintf("%s", arg.Name)
+				params += fmt.Sprintf("%s", argName)
 			} else {
-				params += fmt.Sprintf("%s, ", arg.Name)
+				params += fmt.Sprintf("%s, ", argName)
 			}
 		}
 	}

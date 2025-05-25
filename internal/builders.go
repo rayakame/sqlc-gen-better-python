@@ -59,6 +59,7 @@ func (gen *PythonGenerator) buildTables() []core.Table {
 
 func (gen *PythonGenerator) makePythonType(col *plugin.Column) core.PyType {
 	columnType := sdk.DataType(col.Type)
+	strType := gen.typeConversionFunc(gen.req, col, gen.config)
 	for _, override := range gen.config.Overrides {
 		if override.PyTypeName == "" {
 			continue
@@ -72,30 +73,34 @@ func (gen *PythonGenerator) makePythonType(col *plugin.Column) core.PyType {
 			return core.PyType{
 				SqlType:     columnType,
 				Type:        override.PyTypeName,
+				DefaultType: strType,
 				IsNullable:  !col.NotNull,
 				IsList:      col.GetIsArray() || col.GetIsSqlcSlice(),
 				IsEnum:      false,
-				IsOverwrite: true,
+				IsOverride:  true,
+				Override:    &override,
 			}
 		}
 		if override.DBType != "" && override.DBType == columnType {
 			return core.PyType{
 				SqlType:     columnType,
 				Type:        override.PyTypeName,
+				DefaultType: strType,
 				IsNullable:  !col.NotNull,
 				IsList:      col.GetIsArray() || col.GetIsSqlcSlice(),
 				IsEnum:      false,
-				IsOverwrite: true,
+				IsOverride:  true,
+				Override:    &override,
 			}
 		}
 	}
-	strType := gen.typeConversionFunc(gen.req, col, gen.config)
 	return core.PyType{
-		SqlType:    columnType,
-		Type:       strType,
-		IsNullable: !col.NotNull,
-		IsList:     col.GetIsArray() || col.GetIsSqlcSlice(),
-		IsEnum:     false,
+		SqlType:     columnType,
+		Type:        strType,
+		DefaultType: strType,
+		IsNullable:  !col.NotNull,
+		IsList:      col.GetIsArray() || col.GetIsSqlcSlice(),
+		IsEnum:      false,
 	}
 }
 
@@ -295,7 +300,7 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 				for i, f := range s.Columns {
 					c := query.Columns[i]
 					sameName := f.Name == core.ColumnName(c, i)
-					sameType := f.Type == gen.makePythonType(c)
+					sameType := f.Type.Type == gen.makePythonType(c).Type
 					sameTable := sdk.SameTableName(c.Table, s.Table, gen.req.Catalog.DefaultSchema)
 					if !sameName || !sameType || !sameTable {
 						same = false

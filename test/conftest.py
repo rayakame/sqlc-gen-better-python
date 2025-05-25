@@ -110,7 +110,9 @@ async def aiosqlite_conn(
     await conn.commit()
     yield conn
 
-    await conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;""")
+    await conn.executescript(
+        """DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_type_override;"""
+    )
     await conn.commit()
     await conn.close()
 
@@ -132,6 +134,7 @@ async def aiosqlite_delete_all(dsn: str) -> None:
     await conn.executescript("""
         DELETE FROM test_sqlite_types;
         DELETE FROM test_inner_sqlite_types;
+        DELETE FROM test_type_override;
     """)
     await conn.commit()
     await conn.close()
