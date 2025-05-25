@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.4.2 - 2025-05-25
+### Added
+* [#104](https://github.com/rayakame/sqlc-gen-better-python/pull/104) Enabled ruff `preview` config option.  ([rayakame](https://github.com/rayakame))
+* [#105](https://github.com/rayakame/sqlc-gen-better-python/pull/105) Added support for type overrides, allowing users to specify their own python types for specific sql types. ([rayakame](https://github.com/rayakame))
+
 ## v0.4.1 - 2025-05-23
 ### Fixed
 * [#97](https://github.com/rayakame/sqlc-gen-better-python/pull/97) Added `None` to `QueryResultsArgsType` ([rayakame](https://github.com/rayakame))

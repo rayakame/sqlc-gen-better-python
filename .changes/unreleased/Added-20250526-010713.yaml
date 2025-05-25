@@ -1,6 +1,0 @@
-kind: Added
-body: Added support for type overrides, allowing users to specify their own python types for specific sql types.
-time: 2025-05-26T01:07:13.9596774+02:00
-custom:
-    Author: rayakame
-    PR: "105"
