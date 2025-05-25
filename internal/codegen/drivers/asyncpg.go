@@ -230,10 +230,14 @@ func asyncpgWriteParams(query *core.Query, body *builders.IndentStringBuilder) {
 	params := ""
 	for i, arg := range query.Args {
 		if !arg.IsEmpty() {
+			argName := arg.Name
+			if arg.Typ.DoOverride() {
+				argName = fmt.Sprintf("%s(%s)", arg.Typ.DefaultType, argName)
+			}
 			if i == len(query.Args)-1 {
-				params += fmt.Sprintf(" %s", arg.Name)
+				params += fmt.Sprintf(" %s", argName)
 			} else {
-				params += fmt.Sprintf(" %s,", arg.Name)
+				params += fmt.Sprintf(" %s,", argName)
 			}
 		}
 	}
