@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 7bac7a78cf06f248b9428cc28455f9e85cba72a7d3fd61a10f6e3acfb9738c11
+      sha256: a896385cde5bf2f28f1e50a7687c3931b759ab1c8c72c7ee98234785d3375cbf
 sql:
   - schema: test/schema.sql
     queries: test/queries.sql
@@ -22,6 +22,11 @@ sql:
           docstrings: numpy
           overrides:
             - db_type: serial
+              py_type:
+                import: test
+                package: test_type
+                type: test_type.Test
+            - column: test_inner_postgres_types.bool_test
               py_type:
                 import: test
                 package: test_type
