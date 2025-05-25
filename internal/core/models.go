@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"strings"
@@ -14,12 +15,26 @@ type Table struct {
 }
 
 type PyType struct {
-	SqlType    string
-	Type       string
-	IsList     bool
-	IsNullable bool
-	IsEnum     bool
+	SqlType     string
+	Type        string
+	DefaultType string
+	IsList      bool
+	IsNullable  bool
+	IsEnum      bool
+	IsOverride  bool
+	Override    *Override
 }
+
+func (p *PyType) DoConversion(conversion typeConversion.TypeDoTypeConversion) bool {
+	if p.DoOverride() {
+		return true
+	}
+	return conversion(p.SqlType)
+}
+func (p *PyType) DoOverride() bool {
+	return p.IsOverride && p.Override != nil
+}
+
 type Constant struct {
 	Name  string
 	Type  string

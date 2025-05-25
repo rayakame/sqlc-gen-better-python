@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 2c9d5a773bcb32aa922f237c02622052f281a275c224f40d6e249799f6f798ec
+      sha256: cc86fe59be6e321df7b3a88bcc989d69bc35019d023c71f4f09bafbaac412747
 sql:
   - schema: schema.sql
     queries: queries.sql
@@ -19,6 +19,12 @@ sql:
           omit_unused_models: true
           emit_init_file: true
           docstrings: numpy
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -33,6 +39,12 @@ sql:
           omit_unused_models: true
           emit_init_file: true
           docstrings: numpy
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -47,6 +59,12 @@ sql:
           omit_unused_models: true
           emit_init_file: true
           docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -61,6 +79,12 @@ sql:
           omit_unused_models: true
           emit_init_file: true
           docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -75,6 +99,12 @@ sql:
           omit_unused_models: true
           emit_init_file: true
           docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
   - schema: schema.sql
     queries: queries.sql
     engine: postgresql
@@ -89,4 +119,10 @@ sql:
           omit_unused_models: true
           emit_init_file: true
           docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
 

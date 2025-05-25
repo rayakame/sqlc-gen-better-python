@@ -13,6 +13,7 @@ __all__: collections.abc.Sequence[str] = (
     "delete_one_test_inner_sqlite_type",
     "delete_result_one_sqlite_type",
     "delete_rows_one_sqlite_type",
+    "delete_type_override",
     "get_many_blob",
     "get_many_bool",
     "get_many_boolean",
@@ -22,7 +23,9 @@ __all__: collections.abc.Sequence[str] = (
     "get_many_inner_sqlite_type",
     "get_many_nullable_inner_sqlite_type",
     "get_many_sqlite_type",
+    "get_many_text_type_override",
     "get_many_timestamp",
+    "get_many_type_override",
     "get_one_blob",
     "get_one_bool",
     "get_one_boolean",
@@ -31,17 +34,21 @@ __all__: collections.abc.Sequence[str] = (
     "get_one_decimal",
     "get_one_inner_sqlite_type",
     "get_one_sqlite_type",
+    "get_one_text_type_override",
     "get_one_timestamp",
+    "get_one_type_override",
     "insert_last_id_one_sqlite_type",
     "insert_one_inner_sqlite_type",
     "insert_one_sqlite_type",
     "insert_result_one_sqlite_type",
     "insert_rows_one_sqlite_type",
+    "insert_type_override",
     "update_last_id_one_sqlite_type",
     "update_result_one_sqlite_type",
     "update_rows_one_sqlite_type",
 )
 
+from collections import UserString
 import datetime
 import decimal
 import operator
@@ -110,6 +117,7 @@ sqlite3.register_converter("bool", _convert_bool)
 sqlite3.register_converter("boolean", _convert_bool)
 sqlite3.register_converter("blob", _convert_memoryview)
 
+
 CREATE_ROWS_TABLE: typing.Final[str] = """-- name: CreateRowsTable :execrows
 CREATE TABLE test_create_rows_table
 (
@@ -145,6 +153,12 @@ DELETE_ROWS_ONE_SQLITE_TYPE: typing.Final[str] = """-- name: DeleteRowsOneSqlite
 DELETE
 FROM test_sqlite_types
 WHERE test_sqlite_types.id = ?
+"""
+
+DELETE_TYPE_OVERRIDE: typing.Final[str] = """-- name: DeleteTypeOverride :exec
+DELETE
+FROM test_type_override
+WHERE test_type_override.id = ?
 """
 
 GET_MANY_BLOB: typing.Final[str] = """-- name: GetManyBlob :many
@@ -183,8 +197,16 @@ GET_MANY_SQLITE_TYPE: typing.Final[str] = """-- name: GetManySqliteType :many
 SELECT id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_sqlite_types WHERE id = ?
 """
 
+GET_MANY_TEXT_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetManyTextTypeOverride :many
+SELECT text_test FROM test_type_override WHERE test_type_override.id = ?
+"""
+
 GET_MANY_TIMESTAMP: typing.Final[str] = """-- name: GetManyTimestamp :many
 SELECT timestamp_test FROM test_sqlite_types WHERE id = ? AND timestamp_test = ?
+"""
+
+GET_MANY_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetManyTypeOverride :many
+SELECT id, text_test FROM test_type_override WHERE test_type_override.id = ?
 """
 
 GET_ONE_BLOB: typing.Final[str] = """-- name: GetOneBlob :one
@@ -219,8 +241,16 @@ GET_ONE_SQLITE_TYPE: typing.Final[str] = """-- name: GetOneSqliteType :one
 SELECT id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test FROM test_sqlite_types WHERE id = ?
 """
 
+GET_ONE_TEXT_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetOneTextTypeOverride :one
+SELECT text_test FROM test_type_override WHERE test_type_override.id = ?
+"""
+
 GET_ONE_TIMESTAMP: typing.Final[str] = """-- name: GetOneTimestamp :one
 SELECT timestamp_test FROM test_sqlite_types WHERE id = ? AND timestamp_test = ?
+"""
+
+GET_ONE_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetOneTypeOverride :one
+SELECT id, text_test FROM test_type_override WHERE id = ?
 """
 
 INSERT_LAST_ID_ONE_SQLITE_TYPE: typing.Final[str] = """-- name: InsertLastIdOneSqliteType :execlastid
@@ -296,6 +326,12 @@ INSERT INTO test_sqlite_types (
              ?, ?, ?, ?, ?,
              ?, ?, ?, ?, ?, ?, ?, ?, ?
          )
+"""
+
+INSERT_TYPE_OVERRIDE: typing.Final[str] = """-- name: InsertTypeOverride :exec
+INSERT INTO test_type_override (
+    id, text_test
+) VALUES (? ,?)
 """
 
 UPDATE_LAST_ID_ONE_SQLITE_TYPE: typing.Final[str] = """-- name: UpdateLastIdOneSqliteType :execlastid
@@ -505,6 +541,23 @@ def delete_rows_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int:
     return conn.execute(DELETE_ROWS_ONE_SQLITE_TYPE, (id_, )).rowcount
 
 
+def delete_type_override(conn: sqlite3.Connection, *, id_: int) -> None:
+    """Execute SQL query with `name: DeleteTypeOverride :exec`.
+
+    ```sql
+    DELETE
+    FROM test_type_override
+    WHERE test_type_override.id = ?
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        id_: int.
+    """
+    conn.execute(DELETE_TYPE_OVERRIDE, (id_, ))
+
+
 def get_many_blob(conn: sqlite3.Connection, *, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
     """Fetch many from the db using the SQL query with `name: GetManyBlob :many`.
 
@@ -680,6 +733,26 @@ def get_many_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> QueryResults[
     return QueryResults[models.TestSqliteType](conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
 
 
+def get_many_text_type_override(conn: sqlite3.Connection, *, id_: int) -> QueryResults[UserString]:
+    """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
+
+    ```sql
+    SELECT text_test FROM test_type_override WHERE test_type_override.id = ?
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        id_: int.
+
+    Returns:
+        Helper class of type `QueryResults[UserString]` that allows both iteration and normal fetching of data from the db.
+    """
+    def _decode_hook(row: sqlite3.Row) -> UserString:
+        return UserString(row[0])
+    return QueryResults[UserString](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
+
+
 def get_many_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: datetime.datetime) -> QueryResults[datetime.datetime]:
     """Fetch many from the db using the SQL query with `name: GetManyTimestamp :many`.
 
@@ -697,6 +770,26 @@ def get_many_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: da
         Helper class of type `QueryResults[datetime.datetime]` that allows both iteration and normal fetching of data from the db.
     """
     return QueryResults[datetime.datetime](conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
+
+
+def get_many_type_override(conn: sqlite3.Connection, *, id_: int) -> QueryResults[models.TestTypeOverride]:
+    """Fetch many from the db using the SQL query with `name: GetManyTypeOverride :many`.
+
+    ```sql
+    SELECT id, text_test FROM test_type_override WHERE test_type_override.id = ?
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        id_: int.
+
+    Returns:
+        Helper class of type `QueryResults[models.TestTypeOverride]` that allows both iteration and normal fetching of data from the db.
+    """
+    def _decode_hook(row: sqlite3.Row) -> models.TestTypeOverride:
+        return models.TestTypeOverride(id=row[0], text_test=UserString(row[1]))
+    return QueryResults[models.TestTypeOverride](conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
 
 def get_one_blob(conn: sqlite3.Connection, *, id_: int, blob_test: memoryview) -> memoryview | None:
@@ -873,6 +966,27 @@ def get_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> models.TestSql
     return models.TestSqliteType(id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
 
 
+def get_one_text_type_override(conn: sqlite3.Connection, *, id_: int) -> UserString | None:
+    """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
+
+    ```sql
+    SELECT text_test FROM test_type_override WHERE test_type_override.id = ?
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        id_: int.
+
+    Returns:
+        Result of type `UserString` fetched from the db. Will be `None` if not found.
+    """
+    row = conn.execute(GET_ONE_TEXT_TYPE_OVERRIDE, (id_, )).fetchone()
+    if row is None:
+        return None
+    return UserString(row[0])
+
+
 def get_one_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: datetime.datetime) -> datetime.datetime | None:
     """Fetch one from the db using the SQL query with `name: GetOneTimestamp :one`.
 
@@ -893,6 +1007,27 @@ def get_one_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: dat
     if row is None:
         return None
     return row[0]
+
+
+def get_one_type_override(conn: sqlite3.Connection, *, id_: int) -> models.TestTypeOverride | None:
+    """Fetch one from the db using the SQL query with `name: GetOneTypeOverride :one`.
+
+    ```sql
+    SELECT id, text_test FROM test_type_override WHERE id = ?
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        id_: int.
+
+    Returns:
+        Result of type `models.TestTypeOverride` fetched from the db. Will be `None` if not found.
+    """
+    row = conn.execute(GET_ONE_TYPE_OVERRIDE, (id_, )).fetchone()
+    if row is None:
+        return None
+    return models.TestTypeOverride(id=row[0], text_test=UserString(row[1]))
 
 
 def insert_last_id_one_sqlite_type(conn: sqlite3.Connection, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> int | None:
@@ -1172,6 +1307,24 @@ def insert_rows_one_sqlite_type(conn: sqlite3.Connection, *, id_: int, int_test:
         The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
     """
     return conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test)).rowcount
+
+
+def insert_type_override(conn: sqlite3.Connection, *, id_: int, text_test: UserString | None) -> None:
+    """Execute SQL query with `name: InsertTypeOverride :exec`.
+
+    ```sql
+    INSERT INTO test_type_override (
+        id, text_test
+    ) VALUES (? ,?)
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        id_: int.
+        text_test: UserString | None.
+    """
+    conn.execute(INSERT_TYPE_OVERRIDE, (id_, str(text_test)))
 
 
 def update_last_id_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int | None:

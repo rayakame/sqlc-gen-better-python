@@ -42,13 +42,13 @@ func (i *Importer) Imports(fileName string) ([]string, []string, []string) {
 	return i.queryImports(fileName)
 }
 
-func TableUses(name string, s Table) (bool, string) {
+func TableUses(name string, s Table) (bool, PyType) {
 	for _, col := range s.Columns {
 		if col.Type.Type == name {
-			return true, col.Type.SqlType
+			return true, col.Type
 		}
 	}
-	return false, ""
+	return false, PyType{}
 
 }
 
@@ -89,6 +89,11 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 	}
 
 	std := stdImports(modelUses)
+	for _, override := range i.C.Overrides {
+		if val1, val2 := modelUses(override.PyTypeName); val1 {
+			std[override.PyTypeName] = importSpec{Module: override.PyImportPath, Name: override.PyPackageName, TypeChecking: val2}
+		}
+	}
 	std, typeChecking := i.splitTypeChecking(std)
 	if len(typeChecking) != 0 {
 		std["typing"] = importSpec{Module: "typing"}
@@ -109,15 +114,15 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 	if !qv.IsEmpty() {
 		if qv.IsStruct() && qv.EmitStruct() {
-			if val, sqlType := TableUses(name, *qv.Table); val {
+			if val, pyType := TableUses(name, *qv.Table); val {
 				if i.C.SqlDriver == SQLDriverAsyncpg {
-					if typeConversion.AsyncpgDoTypeConversion(sqlType) {
+					if pyType.DoConversion(typeConversion.AsyncpgDoTypeConversion) {
 						return true, false
 					} else {
 						return true, true
 					}
-				} else if i.C.SqlDriver == SQLDriverAioSQLite {
-					if typeConversion.SqliteDoTypeConversion(sqlType) {
+				} else if i.C.SqlDriver == SQLDriverAioSQLite || i.C.SqlDriver == SQLDriverSQLite {
+					if pyType.DoConversion(typeConversion.SqliteDoTypeConversion) {
 						return true, false
 					} else {
 						return true, true
@@ -125,22 +130,22 @@ func (i *Importer) queryValueUses(name string, qv QueryValue) (bool, bool) {
 				}
 				return true, false
 			}
-		} else if qv.IsStruct() && i.C.SqlDriver == SQLDriverAioSQLite {
-			if val, sqlType := TableUses(name, *qv.Table); val {
-				if typeConversion.SqliteDoTypeConversion(sqlType) {
+		} else if qv.IsStruct() && (i.C.SqlDriver == SQLDriverAioSQLite || i.C.SqlDriver == SQLDriverSQLite) {
+			if val, pyType := TableUses(name, *qv.Table); val {
+				if pyType.DoConversion(typeConversion.SqliteDoTypeConversion) {
 					return true, false
 				}
 			}
 		} else {
 			if qv.Typ.Type == name {
 				if i.C.SqlDriver == SQLDriverAsyncpg {
-					if typeConversion.AsyncpgDoTypeConversion(qv.Typ.SqlType) {
+					if qv.Typ.DoConversion(typeConversion.AsyncpgDoTypeConversion) {
 						return true, false
 					} else {
 						return true, true
 					}
-				} else if i.C.SqlDriver == SQLDriverAioSQLite {
-					if typeConversion.SqliteDoTypeConversion(qv.Typ.SqlType) {
+				} else if i.C.SqlDriver == SQLDriverAioSQLite || i.C.SqlDriver == SQLDriverSQLite {
+					if qv.Typ.DoConversion(typeConversion.SqliteDoTypeConversion) {
 						return true, false
 					} else {
 						return true, true
@@ -215,6 +220,11 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 	}
 
 	std := stdImports(queryUses)
+	for _, override := range i.C.Overrides {
+		if val1, val2 := queryUses(override.PyTypeName); val1 {
+			std[override.PyTypeName] = importSpec{Module: override.PyImportPath, Name: override.PyPackageName, TypeChecking: val2}
+		}
+	}
 	std, typeChecking := i.splitTypeChecking(std)
 	if i.C.SqlDriver == SQLDriverAsyncpg {
 		typeChecking[string(SQLDriverAsyncpg)] = importSpec{Module: string(SQLDriverAsyncpg)}

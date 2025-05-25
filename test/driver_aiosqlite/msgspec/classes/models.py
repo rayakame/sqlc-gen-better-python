@@ -8,12 +8,14 @@ from __future__ import annotations
 __all__: collections.abc.Sequence[str] = (
     "TestInnerSqliteType",
     "TestSqliteType",
+    "TestTypeOverride",
 )
 
 import msgspec
 import typing
 
 if typing.TYPE_CHECKING:
+    from collections import UserString
     import collections.abc
     import datetime
     import decimal
@@ -149,3 +151,15 @@ class TestSqliteType(msgspec.Struct):
     text_test: str
     clob_test: str
     json_test: str
+
+
+class TestTypeOverride(msgspec.Struct):
+    """Model representing TestTypeOverride.
+
+    Attributes:
+    id -- int
+    text_test -- UserString | None
+    """
+
+    id: int
+    text_test: UserString | None

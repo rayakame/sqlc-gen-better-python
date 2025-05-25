@@ -22,7 +22,9 @@ type Config struct {
 	EmitDocstrings              *string       `json:"docstrings" yaml:"docstrings"`
 	EmitDocstringsSQL           *bool         `json:"docstrings_emit_sql" yaml:"docstrings_emit_sql"`
 	Speedups                    bool          `json:"speedups" yaml:"speedups"`
-	Debug                       bool          `json:"debug" yaml:"debug"`
+	Overrides                   []Override    `json:"overrides,omitempty" yaml:"overrides"`
+
+	Debug bool `json:"debug" yaml:"debug"`
 
 	IndentChar          string `json:"indent_char" yaml:"indent_char"`
 	CharsPerIndentLevel int    `json:"chars_per_indent_level" yaml:"chars_per_indent_level"`
@@ -47,6 +49,13 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 		return nil, fmt.Errorf("invalid options: %s", err)
 	}
 	config.Async = val
+
+	for i := range config.Overrides {
+		if err := config.Overrides[i].parse(req); err != nil {
+			return nil, err
+		}
+	}
+
 	if config.ModelType == "" {
 		config.ModelType = ModelTypeDataclass
 	}

@@ -266,3 +266,25 @@ CREATE TABLE test_create_rows_table
 INSERT INTO test_copy_from (id,
                             float_test, int_test)
 VALUES ($1, $2, $3);
+
+-- name: InsertTypeOverride :exec
+INSERT INTO test_type_override (
+    id, text_test
+) VALUES ($1 ,$2);
+
+-- name: GetOneTypeOverride :one
+SELECT * FROM test_type_override WHERE id = $1;
+
+-- name: GetManyTypeOverride :many
+SELECT * FROM test_type_override WHERE test_type_override.id = $1;
+
+-- name: GetOneTextTypeOverride :one
+SELECT text_test FROM test_type_override WHERE test_type_override.id = $1;
+
+-- name: GetManyTextTypeOverride :many
+SELECT text_test FROM test_type_override WHERE test_type_override.id = $1;
+
+-- name: DeleteTypeOverride :exec
+DELETE
+FROM test_type_override
+WHERE test_type_override.id = $1;

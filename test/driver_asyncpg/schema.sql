@@ -130,3 +130,9 @@ CREATE TABLE IF NOT EXISTS test_copy_from
     float_test            float           NOT NULL ,
     int_test              int NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS test_type_override
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    text_test             text
+);

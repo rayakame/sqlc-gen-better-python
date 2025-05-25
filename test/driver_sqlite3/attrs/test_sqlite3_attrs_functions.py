@@ -25,6 +25,7 @@ import json
 import math
 import random
 import sqlite3
+from collections import UserString
 
 import pytest
 
@@ -33,6 +34,10 @@ from test.driver_sqlite3.attrs.functions import queries
 
 
 class TestSqlite3AttrsFunctions:
+    @pytest.fixture(scope="session")
+    def override_model(self) -> models.TestTypeOverride:
+        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+
     @pytest.fixture(scope="session")
     def model(self) -> models.TestSqliteType:
         return models.TestSqliteType(
@@ -469,12 +474,11 @@ class TestSqlite3AttrsFunctions:
 
             assert result == inner_model
 
-    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsFunctions::get_many_nullable_inner",
         depends=["Sqlite3TestAttrsFunctions::get_many_inner_iter"],
     )
-    async def test_get_many_nullable_inner(
+    def test_get_many_nullable_inner(
         self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
     ) -> None:
         result = queries.get_many_nullable_inner_sqlite_type(
@@ -488,12 +492,11 @@ class TestSqlite3AttrsFunctions:
 
         assert results[0] == inner_model
 
-    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsFunctions::get_many_nullable_inner_iter",
         depends=["Sqlite3TestAttrsFunctions::get_many_nullable_inner"],
     )
-    async def test_get_many_nullable_inner_iter(
+    def test_get_many_nullable_inner_iter(
         self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
     ) -> None:
         for result in queries.get_many_nullable_inner_sqlite_type(
@@ -894,3 +897,102 @@ class TestSqlite3AttrsFunctions:
         self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
     ) -> None:
         queries.delete_one_test_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id)
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::insert_type_override",
+    )
+    def test_insert_type_override(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        queries.insert_type_override(conn=sqlite3_conn, id_=override_model.id, text_test=override_model.text_test)
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_one_type_override",
+        depends=["Sqlite3TestAttrsFunctions::insert_type_override"],
+    )
+    def test_get_one_type_override(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id)
+        assert result is not None
+        assert result == override_model
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_one_type_override_none",
+        depends=["Sqlite3TestAttrsFunctions::get_one_type_override"],
+    )
+    def test_get_one_type_override_none(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id - 1)
+        assert result is None
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_many_type_override",
+        depends=["Sqlite3TestAttrsFunctions::get_one_type_override_none"],
+    )
+    def test_get_many_type_override(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        result = queries.get_many_type_override(conn=sqlite3_conn, id_=override_model.id)
+        assert result is not None
+        assert isinstance(result, queries.QueryResults)
+        results = list(result)
+        assert isinstance(results[0], models.TestTypeOverride)
+
+        assert results[0] == override_model
+
+        results = result()
+        assert isinstance(results[0], models.TestTypeOverride)
+
+        assert results[0] == override_model
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_one_text_type_override",
+        depends=["Sqlite3TestAttrsFunctions::get_many_type_override"],
+    )
+    def test_get_one_text_type_override(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id)
+        assert result is not None
+        assert result == override_model.text_test
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_one_text_type_override_none",
+        depends=["Sqlite3TestAttrsFunctions::get_one_text_type_override"],
+    )
+    def test_get_one_text_type_override_none(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id - 1)
+        assert result is None
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::get_many_text_type_override",
+        depends=["Sqlite3TestAttrsFunctions::get_one_text_type_override_none"],
+    )
+    def test_get_many_text_type_override(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        result = queries.get_many_text_type_override(conn=sqlite3_conn, id_=override_model.id)
+        assert result is not None
+        assert isinstance(result, queries.QueryResults)
+        results = list(result)
+        assert isinstance(results[0], UserString)
+
+        assert results[0] == override_model.text_test
+
+        results = result()
+        assert isinstance(results[0], UserString)
+
+        assert results[0] == override_model.text_test
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestAttrsFunctions::delete_type_override",
+        depends=["Sqlite3TestAttrsFunctions::get_many_text_type_override"],
+    )
+    def test_delete_type_override(
+        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
+    ) -> None:
+        queries.delete_type_override(conn=sqlite3_conn, id_=override_model.id)

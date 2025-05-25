@@ -25,6 +25,7 @@ import decimal
 import random
 import typing
 import uuid
+from collections import UserString
 
 if typing.TYPE_CHECKING:
     import asyncpg
@@ -38,6 +39,10 @@ from test.driver_asyncpg.attrs.functions import queries
 
 @pytest.mark.asyncio(loop_scope="session")
 class TestAttrsFunctions:
+    @pytest.fixture(scope="session")
+    def override_model(self) -> models.TestTypeOverride:
+        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+
     @pytest.fixture(scope="session")
     def model(self) -> models.TestPostgresType:
         return models.TestPostgresType(
@@ -704,3 +709,92 @@ class TestAttrsFunctions:
         assert result == 0
 
         await asyncpg_conn.execute("""DROP TABLE test_create_rows_table;""")
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::insert_type_override",
+    )
+    async def test_insert_type_override(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        await queries.insert_type_override(conn=asyncpg_conn, id_=override_model.id, text_test=override_model.text_test)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::get_one_type_override",
+        depends=["TestAttrsFunctions::insert_type_override"],
+    )
+    async def test_get_one_type_override(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id)
+        assert result is not None
+        assert result == override_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::get_one_type_override_none",
+        depends=["TestAttrsFunctions::get_one_type_override"],
+    )
+    async def test_get_one_type_override_none(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id - 1)
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::get_many_type_override",
+        depends=["TestAttrsFunctions::get_one_type_override_none"],
+    )
+    async def test_get_many_type_override(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries.get_many_type_override(conn=asyncpg_conn, id_=override_model.id)
+        assert isinstance(result, collections.abc.Sequence)
+        assert result[0] == override_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::get_one_text_type_override",
+        depends=["TestAttrsFunctions::get_many_type_override"],
+    )
+    async def test_get_one_text_type_override(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id)
+        assert result is not None
+        assert result == override_model.text_test
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::get_one_text_type_override_none",
+        depends=["TestAttrsFunctions::get_one_text_type_override"],
+    )
+    async def test_get_one_text_type_override_none(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id - 1)
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::get_many_text_type_override",
+        depends=["TestAttrsFunctions::get_one_text_type_override_none"],
+    )
+    async def test_get_many_text_type_override(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries.get_many_text_type_override(conn=asyncpg_conn, id_=override_model.id)
+        assert isinstance(result, collections.abc.Sequence)
+        assert result[0] == override_model.text_test
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestAttrsFunctions::delete_type_override",
+        depends=["TestAttrsFunctions::get_many_text_type_override"],
+    )
+    async def test_delete_type_override(
+        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
+    ) -> None:
+        await queries.delete_type_override(conn=asyncpg_conn, id_=override_model.id)

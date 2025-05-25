@@ -171,5 +171,24 @@ DELETE
 FROM test_sqlite_types
 WHERE test_sqlite_types.id = ?;
 
+-- name: InsertTypeOverride :exec
+INSERT INTO test_type_override (
+                                id, text_test
+) VALUES (? ,?);
 
+-- name: GetOneTypeOverride :one
+SELECT * FROM test_type_override WHERE id = ?;
 
+-- name: GetManyTypeOverride :many
+SELECT * FROM test_type_override WHERE test_type_override.id = ?;
+
+-- name: GetOneTextTypeOverride :one
+SELECT text_test FROM test_type_override WHERE test_type_override.id = ?;
+
+-- name: GetManyTextTypeOverride :many
+SELECT text_test FROM test_type_override WHERE test_type_override.id = ?;
+
+-- name: DeleteTypeOverride :exec
+DELETE
+FROM test_type_override
+WHERE test_type_override.id = ?;

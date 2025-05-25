@@ -77,3 +77,9 @@ CREATE TABLE IF NOT EXISTS test_inner_sqlite_types
     clob_test             clob                ,
     json_test             json
 );
+
+CREATE TABLE IF NOT EXISTS test_type_override
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    text_test             text
+);
