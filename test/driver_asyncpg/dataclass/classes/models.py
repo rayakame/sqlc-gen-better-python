@@ -8,12 +8,14 @@ from __future__ import annotations
 __all__: collections.abc.Sequence[str] = (
     "TestInnerPostgresType",
     "TestPostgresType",
+    "TestTypeOverride",
 )
 
 import dataclasses
 import typing
 
 if typing.TYPE_CHECKING:
+    from collections import UserString
     import collections.abc
     import datetime
     import decimal
@@ -180,3 +182,16 @@ class TestPostgresType:
     ltree_test: str
     lquery_test: str
     ltxtquery_test: str
+
+
+@dataclasses.dataclass()
+class TestTypeOverride:
+    """Model representing TestTypeOverride.
+
+    Attributes:
+        id: int
+        text_test: UserString | None
+    """
+
+    id: int
+    text_test: UserString | None

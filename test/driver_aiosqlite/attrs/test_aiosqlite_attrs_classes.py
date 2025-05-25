@@ -25,6 +25,7 @@ import decimal
 import json
 import math
 import random
+from collections import UserString
 
 import aiosqlite
 import pytest
@@ -36,6 +37,10 @@ from test.driver_aiosqlite.attrs.classes import queries
 
 @pytest.mark.asyncio(loop_scope="session")
 class TestAttrsClasses:
+    @pytest.fixture(scope="session")
+    def override_model(self) -> models.TestTypeOverride:
+        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+
     @pytest.fixture(scope="session")
     def model(self) -> models.TestSqliteType:
         return models.TestSqliteType(
@@ -936,3 +941,92 @@ class TestAttrsClasses:
         self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
     ) -> None:
         await queries_obj.delete_one_test_inner_sqlite_type(table_id=inner_model.table_id)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::insert_type_override",
+    )
+    async def test_insert_type_override(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        await queries_obj.insert_type_override(id_=override_model.id, text_test=override_model.text_test)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::get_one_type_override",
+        depends=["AiosqliteTestAttrsClasses::insert_type_override"],
+    )
+    async def test_get_one_type_override(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries_obj.get_one_type_override(id_=override_model.id)
+        assert result is not None
+        assert result == override_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::get_one_type_override_none",
+        depends=["AiosqliteTestAttrsClasses::get_one_type_override"],
+    )
+    async def test_get_one_type_override_none(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries_obj.get_one_type_override(id_=override_model.id - 1)
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::get_many_type_override",
+        depends=["AiosqliteTestAttrsClasses::get_one_type_override_none"],
+    )
+    async def test_get_many_type_override(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries_obj.get_many_type_override(id_=override_model.id)
+        assert isinstance(result, collections.abc.Sequence)
+        assert result[0] == override_model
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::get_one_text_type_override",
+        depends=["AiosqliteTestAttrsClasses::get_many_type_override"],
+    )
+    async def test_get_one_text_type_override(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries_obj.get_one_text_type_override(id_=override_model.id)
+        assert result is not None
+        assert result == override_model.text_test
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::get_one_text_type_override_none",
+        depends=["AiosqliteTestAttrsClasses::get_one_text_type_override"],
+    )
+    async def test_get_one_text_type_override_none(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries_obj.get_one_text_type_override(id_=override_model.id - 1)
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::get_many_text_type_override",
+        depends=["AiosqliteTestAttrsClasses::get_one_text_type_override_none"],
+    )
+    async def test_get_many_text_type_override(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        result = await queries_obj.get_many_text_type_override(id_=override_model.id)
+        assert isinstance(result, collections.abc.Sequence)
+        assert result[0] == override_model.text_test
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestAttrsClasses::delete_type_override",
+        depends=["AiosqliteTestAttrsClasses::get_many_text_type_override"],
+    )
+    async def test_delete_type_override(
+        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
+    ) -> None:
+        await queries_obj.delete_type_override(id_=override_model.id)

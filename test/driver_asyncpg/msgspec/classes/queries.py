@@ -13,6 +13,7 @@ __all__: collections.abc.Sequence[str] = (
     "TestCopyFromParams",
 )
 
+from collections import UserString
 import datetime
 import msgspec
 import operator
@@ -348,6 +349,12 @@ FROM test_postgres_types
 WHERE test_postgres_types.id = $1
 """
 
+DELETE_TYPE_OVERRIDE: typing.Final[str] = """-- name: DeleteTypeOverride :exec
+DELETE
+FROM test_type_override
+WHERE test_type_override.id = $1
+"""
+
 GET_ALL_EMBEDDED_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetAllEmbeddedTestPostgresType :one
 SELECT test_postgres_types.id, test_postgres_types.serial_test, test_postgres_types.serial4_test, test_postgres_types.bigserial_test, test_postgres_types.smallserial_test, test_postgres_types.int_test, test_postgres_types.bigint_test, test_postgres_types.smallint_test, test_postgres_types.float_test, test_postgres_types.double_precision_test, test_postgres_types.real_test, test_postgres_types.numeric_test, test_postgres_types.money_test, test_postgres_types.bool_test, test_postgres_types.json_test, test_postgres_types.jsonb_test, test_postgres_types.bytea_test, test_postgres_types.date_test, test_postgres_types.time_test, test_postgres_types.timetz_test, test_postgres_types.timestamp_test, test_postgres_types.timestamptz_test, test_postgres_types.interval_test, test_postgres_types.text_test, test_postgres_types.varchar_test, test_postgres_types.bpchar_test, test_postgres_types.char_test, test_postgres_types.citext_test, test_postgres_types.uuid_test, test_postgres_types.inet_test, test_postgres_types.cidr_test, test_postgres_types.macaddr_test, test_postgres_types.macaddr8_test, test_postgres_types.ltree_test, test_postgres_types.lquery_test, test_postgres_types.ltxtquery_test, test_inner_postgres_types.table_id, test_inner_postgres_types.serial_test, test_inner_postgres_types.serial4_test, test_inner_postgres_types.bigserial_test, test_inner_postgres_types.smallserial_test, test_inner_postgres_types.int_test, test_inner_postgres_types.bigint_test, test_inner_postgres_types.smallint_test, test_inner_postgres_types.float_test, test_inner_postgres_types.double_precision_test, test_inner_postgres_types.real_test, test_inner_postgres_types.numeric_test, test_inner_postgres_types.money_test, test_inner_postgres_types.bool_test, test_inner_postgres_types.json_test, test_inner_postgres_types.jsonb_test, test_inner_postgres_types.bytea_test, test_inner_postgres_types.date_test, test_inner_postgres_types.time_test, test_inner_postgres_types.timetz_test, test_inner_postgres_types.timestamp_test, test_inner_postgres_types.timestamptz_test, test_inner_postgres_types.interval_test, test_inner_postgres_types.text_test, test_inner_postgres_types.varchar_test, test_inner_postgres_types.bpchar_test, test_inner_postgres_types.char_test, test_inner_postgres_types.citext_test, test_inner_postgres_types.uuid_test, test_inner_postgres_types.inet_test, test_inner_postgres_types.cidr_test, test_inner_postgres_types.macaddr_test, test_inner_postgres_types.macaddr8_test, test_inner_postgres_types.ltree_test, test_inner_postgres_types.lquery_test, test_inner_postgres_types.ltxtquery_test
 FROM test_postgres_types
@@ -386,6 +393,14 @@ FROM test_postgres_types
 WHERE id = $1 LIMIT 2
 """
 
+GET_MANY_TEXT_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetManyTextTypeOverride :many
+SELECT text_test FROM test_type_override WHERE test_type_override.id = $1
+"""
+
+GET_MANY_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetManyTypeOverride :many
+SELECT id, text_test FROM test_type_override WHERE test_type_override.id = $1
+"""
+
 GET_ONE_INNER_TEST_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneInnerTestPostgresType :one
 SELECT table_id, serial_test, serial4_test, bigserial_test, smallserial_test, int_test, bigint_test, smallint_test, float_test, double_precision_test, real_test, numeric_test, money_test, bool_test, json_test, jsonb_test, bytea_test, date_test, time_test, timetz_test, timestamp_test, timestamptz_test, interval_test, text_test, varchar_test, bpchar_test, char_test, citext_test, uuid_test, inet_test, cidr_test, macaddr_test, macaddr8_test, ltree_test, lquery_test, ltxtquery_test
 FROM test_inner_postgres_types
@@ -408,6 +423,20 @@ GET_ONE_TEST_TIMESTAMP_POSTGRES_TYPE: typing.Final[str] = """-- name: GetOneTest
 SELECT timestamp_test
 FROM test_postgres_types
 WHERE id = $1 LIMIT 1
+"""
+
+GET_ONE_TEXT_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetOneTextTypeOverride :one
+SELECT text_test FROM test_type_override WHERE test_type_override.id = $1
+"""
+
+GET_ONE_TYPE_OVERRIDE: typing.Final[str] = """-- name: GetOneTypeOverride :one
+SELECT id, text_test FROM test_type_override WHERE id = $1
+"""
+
+INSERT_TYPE_OVERRIDE: typing.Final[str] = """-- name: InsertTypeOverride :exec
+INSERT INTO test_type_override (
+    id, text_test
+) VALUES ($1 ,$2)
 """
 
 TEST_COPY_FROM: typing.Final[str] = """-- name: TestCopyFrom :copyfrom
@@ -958,6 +987,20 @@ class Queries:
         """
         await self._conn.execute(DELETE_ONE_TEST_POSTGRES_TYPE, id_)
 
+    async def delete_type_override(self, *, id_: int) -> None:
+        """Execute SQL query with `name: DeleteTypeOverride :exec`.
+
+        ```sql
+        DELETE
+        FROM test_type_override
+        WHERE test_type_override.id = $1
+        ```
+
+        Arguments:
+        id_ -- int.
+        """
+        await self._conn.execute(DELETE_TYPE_OVERRIDE, id_)
+
     async def get_all_embedded_test_postgres_type(self, *, id_: int) -> GetAllEmbeddedTestPostgresTypeRow | None:
         """Fetch one from the db using the SQL query with `name: GetAllEmbeddedTestPostgresType :one`.
 
@@ -1074,6 +1117,38 @@ class Queries:
         """
         return QueryResults[datetime.datetime](self._conn, GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE, operator.itemgetter(0), id_)
 
+    def get_many_text_type_override(self, *, id_: int) -> QueryResults[UserString]:
+        """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
+
+        ```sql
+        SELECT text_test FROM test_type_override WHERE test_type_override.id = $1
+        ```
+
+        Arguments:
+        id_ -- int.
+
+        Returns:
+        QueryResults[UserString] -- Helper class that allows both iteration and normal fetching of data from the db.
+        """
+        return QueryResults[UserString](self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, operator.itemgetter(0), id_)
+
+    def get_many_type_override(self, *, id_: int) -> QueryResults[models.TestTypeOverride]:
+        """Fetch many from the db using the SQL query with `name: GetManyTypeOverride :many`.
+
+        ```sql
+        SELECT id, text_test FROM test_type_override WHERE test_type_override.id = $1
+        ```
+
+        Arguments:
+        id_ -- int.
+
+        Returns:
+        QueryResults[models.TestTypeOverride] -- Helper class that allows both iteration and normal fetching of data from the db.
+        """
+        def _decode_hook(row: asyncpg.Record) -> models.TestTypeOverride:
+            return models.TestTypeOverride(id=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
+        return QueryResults[models.TestTypeOverride](self._conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
+
     async def get_one_inner_test_postgres_type(self, *, table_id: int) -> models.TestInnerPostgresType | None:
         """Fetch one from the db using the SQL query with `name: GetOneInnerTestPostgresType :one`.
 
@@ -1153,6 +1228,57 @@ class Queries:
         if row is None:
             return None
         return row[0]
+
+    async def get_one_text_type_override(self, *, id_: int) -> UserString | None:
+        """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
+
+        ```sql
+        SELECT text_test FROM test_type_override WHERE test_type_override.id = $1
+        ```
+
+        Arguments:
+        id_ -- int.
+
+        Returns:
+        UserString -- Result fetched from the db. Will be `None` if not found.
+        """
+        row = await self._conn.fetchrow(GET_ONE_TEXT_TYPE_OVERRIDE, id_)
+        if row is None:
+            return None
+        return row[0]
+
+    async def get_one_type_override(self, *, id_: int) -> models.TestTypeOverride | None:
+        """Fetch one from the db using the SQL query with `name: GetOneTypeOverride :one`.
+
+        ```sql
+        SELECT id, text_test FROM test_type_override WHERE id = $1
+        ```
+
+        Arguments:
+        id_ -- int.
+
+        Returns:
+        models.TestTypeOverride -- Result fetched from the db. Will be `None` if not found.
+        """
+        row = await self._conn.fetchrow(GET_ONE_TYPE_OVERRIDE, id_)
+        if row is None:
+            return None
+        return models.TestTypeOverride(id=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
+
+    async def insert_type_override(self, *, id_: int, text_test: UserString | None) -> None:
+        """Execute SQL query with `name: InsertTypeOverride :exec`.
+
+        ```sql
+        INSERT INTO test_type_override (
+            id, text_test
+        ) VALUES ($1 ,$2)
+        ```
+
+        Arguments:
+        id_ -- int.
+        text_test -- UserString | None.
+        """
+        await self._conn.execute(INSERT_TYPE_OVERRIDE, id_, str(text_test))
 
     async def test_copy_from(self, *, params: collections.abc.Sequence[TestCopyFromParams]) -> int:
         """Execute COPY FROM query to insert rows into a table with `name: TestCopyFrom :copyfrom` and return the number of affected rows.
