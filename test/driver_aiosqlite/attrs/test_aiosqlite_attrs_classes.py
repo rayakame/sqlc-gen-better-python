@@ -1,12 +1,32 @@
+# Copyright (c) 2025 Rayakame
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 from __future__ import annotations
 
 import collections.abc
 import datetime
 import decimal
 import json
+import math
 import random
-import aiosqlite
 
+import aiosqlite
 import pytest
 import pytest_asyncio
 
@@ -28,8 +48,8 @@ class TestAttrsClasses:
             int8_test=123_456_789,
             bigserial_test=1,
             blob_test=memoryview(b"\x00\x01\x02hello"),
-            real_test=3.14,
-            double_test=2.71828,
+            real_test=math.pi,
+            double_test=math.e,
             double_precision_test=1.41421,
             float_test=9.81,
             numeric_test=123.456,

@@ -1,15 +1,35 @@
+# Copyright (c) 2025 Rayakame
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 from __future__ import annotations
 
 import collections.abc
 import datetime
 import decimal
 import random
-import uuid
-
 import typing
+import uuid
 
 if typing.TYPE_CHECKING:
     import asyncpg
+
+import math
 
 import pytest
 
@@ -30,8 +50,8 @@ class TestDataclassFunctions:
             int_test=123,
             bigint_test=123_456_789_012_345,
             smallint_test=12,
-            float_test=3.14,
-            double_precision_test=2.718281828459045,
+            float_test=math.pi,
+            double_precision_test=math.e,
             real_test=3.25,
             numeric_test=decimal.Decimal("12345.6789"),
             money_test="$99.99",

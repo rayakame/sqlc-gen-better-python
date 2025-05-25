@@ -63,7 +63,7 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 	if _, found := toConvert["datetime.date"]; found {
 		body.WriteLine("def _adapt_date(val: datetime.date) -> str:")
 		body.WriteIndentedLine(1, "return val.isoformat()")
-		body.NewLine()
+		body.NNewLine(2)
 		adapters = append(adapters, "aiosqlite.register_adapter(datetime.date, _adapt_date)")
 		body.WriteLine("def _convert_date(val: bytes) -> datetime.date:")
 		if conf.Speedups {
@@ -71,23 +71,23 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 		} else {
 			body.WriteIndentedLine(1, "return datetime.date.fromisoformat(val.decode())")
 		}
-		body.NewLine()
+		body.NNewLine(2)
 		converters = append(converters, `aiosqlite.register_converter("date", _convert_date)`)
 	}
 	if _, found := toConvert["decimal.Decimal"]; found {
 		body.WriteLine("def _adapt_decimal(val: decimal.Decimal) -> str:")
 		body.WriteIndentedLine(1, "return str(val)")
-		body.NewLine()
+		body.NNewLine(2)
 		adapters = append(adapters, "aiosqlite.register_adapter(decimal.Decimal, _adapt_decimal)")
 		body.WriteLine("def _convert_decimal(val: bytes) -> decimal.Decimal:")
 		body.WriteIndentedLine(1, "return decimal.Decimal(val.decode())")
-		body.NewLine()
+		body.NNewLine(2)
 		converters = append(converters, `aiosqlite.register_converter("decimal", _convert_decimal)`)
 	}
 	if _, found := toConvert["datetime.datetime"]; found {
 		body.WriteLine("def _adapt_datetime(val: datetime.datetime) -> str:")
 		body.WriteIndentedLine(1, "return val.isoformat()")
-		body.NewLine()
+		body.NNewLine(2)
 		adapters = append(adapters, "aiosqlite.register_adapter(datetime.datetime, _adapt_datetime)")
 		body.WriteLine("def _convert_datetime(val: bytes) -> datetime.datetime:")
 		if conf.Speedups {
@@ -95,29 +95,29 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 		} else {
 			body.WriteIndentedLine(1, "return datetime.datetime.fromisoformat(val.decode())")
 		}
-		body.NewLine()
+		body.NNewLine(2)
 		converters = append(converters, `aiosqlite.register_converter("datetime", _convert_datetime)`)
 		converters = append(converters, `aiosqlite.register_converter("timestamp", _convert_datetime)`)
 	}
 	if _, found := toConvert["bool"]; found {
 		body.WriteLine("def _adapt_bool(val: bool) -> int:")
 		body.WriteIndentedLine(1, "return int(val)")
-		body.NewLine()
+		body.NNewLine(2)
 		adapters = append(adapters, "aiosqlite.register_adapter(bool, _adapt_bool)")
 		body.WriteLine("def _convert_bool(val: bytes) -> bool:")
 		body.WriteIndentedLine(1, "return bool(int(val))")
-		body.NewLine()
+		body.NNewLine(2)
 		converters = append(converters, `aiosqlite.register_converter("bool", _convert_bool)`)
 		converters = append(converters, `aiosqlite.register_converter("boolean", _convert_bool)`)
 	}
 	if _, found := toConvert["memoryview"]; found {
 		body.WriteLine("def _adapt_memoryview(val: memoryview) -> bytes:")
 		body.WriteIndentedLine(1, "return val.tobytes()")
-		body.NewLine()
+		body.NNewLine(2)
 		adapters = append(adapters, "aiosqlite.register_adapter(memoryview, _adapt_memoryview)")
 		body.WriteLine("def _convert_memoryview(val: bytes) -> memoryview:")
 		body.WriteIndentedLine(1, "return memoryview(val)")
-		body.NewLine()
+		body.NNewLine(2)
 		converters = append(converters, `aiosqlite.register_converter("blob", _convert_memoryview)`)
 	}
 	for i, line := range adapters {
@@ -240,9 +240,12 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 	} else if query.Cmd == metadata.CmdMany {
 		body.WriteLine(fmt.Sprintf(") -> QueryResults[%s]:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
-		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", Sqlite3Result, retType.Type))
 
-		if query.Ret.IsStruct() {
+		decode_hook := "_decode_hook"
+		if !query.Ret.IsStruct() {
+			decode_hook = "operator.itemgetter(0)"
+		} else {
+			body.WriteIndentedLine(indentLevel+1, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", Sqlite3Result, retType.Type))
 			body.WriteIndentedString(indentLevel+2, fmt.Sprintf("return %s(", retType.Type))
 			i := 0
 			for _, col := range query.Ret.Table.Columns {
@@ -263,10 +266,8 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 				}
 			}
 			body.WriteLine(")")
-		} else {
-			body.WriteIndentedLine(indentLevel+2, "return row[0]")
 		}
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, _decode_hook", retType.Type, conn, query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("return QueryResults[%s](%s, %s, %s", retType.Type, conn, query.ConstantName, decode_hook))
 		params := ""
 		for i, arg := range query.Args {
 			if !arg.IsEmpty() {
