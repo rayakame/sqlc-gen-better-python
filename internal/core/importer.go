@@ -286,6 +286,12 @@ func (i *Importer) queryImportSpecs(_ string) (map[string]importSpec, map[string
 		//	continue
 		//}
 		queryValueModelImports(q.Ret)
+		if q.Cmd == metadata.CmdCopyFrom {
+			modelName, modelImport, err := i.getModelImportSpec()
+			if err == nil {
+				std[modelName] = modelImport
+			}
+		}
 	}
 
 	loc["models"] = importSpec{Module: i.C.Package, Name: "models"}
