@@ -1,6 +1,0 @@
-kind: Fixed
-body: Fixed missing model import when using `:copyfrom` cmd.
-time: 2025-05-28T14:57:14.0509214Z
-custom:
-    Author: rayakame
-    PR: "109"

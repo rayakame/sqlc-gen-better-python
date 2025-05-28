@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.4.3 - 2025-05-28
+### Fixed
+* [#109](https://github.com/rayakame/sqlc-gen-better-python/pull/109) Fixed missing model import when using `:copyfrom` cmd. ([rayakame](https://github.com/rayakame))
+
 ## v0.4.2 - 2025-05-25
 ### Added
 * [#104](https://github.com/rayakame/sqlc-gen-better-python/pull/104) Enabled ruff `preview` config option.  ([rayakame](https://github.com/rayakame))
