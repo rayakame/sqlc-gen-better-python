@@ -128,8 +128,9 @@ CREATE TABLE IF NOT EXISTS test_copy_from
 (
     id                    int PRIMARY KEY  NOT NULL,
     float_test            float           NOT NULL ,
-    int_test              int NOT NULL
-);
+    int_test              int NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+    );
 
 CREATE TABLE IF NOT EXISTS test_type_override
 (
