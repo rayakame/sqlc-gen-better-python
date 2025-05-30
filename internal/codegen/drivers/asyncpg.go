@@ -47,13 +47,13 @@ func AsyncpgBuildQueryResults(body *builders.IndentStringBuilder) string {
 	return "QueryResults"
 }
 
-func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
+func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, conf *core.Config) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", AsyncpgConn)
 	conn := "conn"
 	asyncFunc := "async "
 	docstringConnType := AsyncpgConn
-	if isClass {
+	if conf.EmitClasses {
 		params = "self"
 		conn = "self._conn"
 		indentLevel = 1
@@ -84,10 +84,14 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 	} else if query.Cmd == metadata.CmdExecRows {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
-		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("result = await %s.execute(%s", conn, query.ConstantName))
+		body.WriteIndentedString(indentLevel+1, fmt.Sprintf("r = await %s.execute(%s", conn, query.ConstantName))
 		asyncpgWriteParams(query, body)
 		body.WriteLine(")")
-		body.WriteIndentedLine(indentLevel+1, "return int(result.split()[-1]) if result.split()[-1].isdigit() else 0")
+		if conf.Speedups {
+			body.WriteIndentedLine(indentLevel+1, "return int(n) if (n := r.split()[-1]).isdigit() else 0")
+		} else {
+			body.WriteIndentedLine(indentLevel+1, "return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0")
+		}
 	} else if query.Cmd == metadata.CmdCopyFrom {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
@@ -106,8 +110,12 @@ func AsyncpgBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("(%s)", params))
 		body.WriteIndentedLine(indentLevel+2, fmt.Sprintf("for param in %s", query.Args[0].Name))
 		body.WriteIndentedLine(indentLevel+1, "]")
-		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf(`result = await %s.copy_records_to_table("%s", columns=[%s], records=records)`, conn, query.Table.Name, columns))
-		body.WriteIndentedLine(indentLevel+1, "return int(result.split()[-1]) if result.split()[-1].isdigit() else 0")
+		body.WriteIndentedLine(indentLevel+1, fmt.Sprintf(`r = await %s.copy_records_to_table("%s", columns=[%s], records=records)`, conn, query.Table.Name, columns))
+		if conf.Speedups {
+			body.WriteIndentedLine(indentLevel+1, "return int(n) if (n := r.split()[-1]).isdigit() else 0")
+		} else {
+			body.WriteIndentedLine(indentLevel+1, "return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0")
+		}
 	} else if query.Cmd == metadata.CmdOne {
 		body.WriteLine(fmt.Sprintf(") -> %s | None:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
