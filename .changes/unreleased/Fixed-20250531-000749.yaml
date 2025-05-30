@@ -1,6 +1,0 @@
-kind: Fixed
-body: Added `columns` kwarg to `:copyfrom` for `asyncpg` to fix inserts for columns with default values
-time: 2025-05-31T00:07:49.4105598+02:00
-custom:
-    Author: rayakame
-    PR: "112"

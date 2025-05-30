@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.4.4 - 2025-05-30
+### Changed
+* [#112](https://github.com/rayakame/sqlc-gen-better-python/pull/112) Improved `:execrows` performance for `asyncpg` and added speedup option for `:execrows` ([rayakame](https://github.com/rayakame))
+### Fixed
+* [#112](https://github.com/rayakame/sqlc-gen-better-python/pull/112) Added `columns` kwarg to `:copyfrom` for `asyncpg` to fix inserts for columns with default values ([rayakame](https://github.com/rayakame))
+
 ## v0.4.3 - 2025-05-28
 ### Fixed
 * [#109](https://github.com/rayakame/sqlc-gen-better-python/pull/109) Fixed missing model import when using `:copyfrom` cmd. ([rayakame](https://github.com/rayakame))
