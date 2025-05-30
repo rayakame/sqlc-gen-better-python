@@ -160,12 +160,12 @@ func SQLite3BuildQueryResults(body *builders.IndentStringBuilder) string {
 	return "QueryResults"
 }
 
-func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
+func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, conf *core.Config) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", SQLite3Conn)
 	conn := "conn"
 	docstringConnType := SQLite3Conn
-	if isClass {
+	if conf.EmitClasses {
 		params = "self"
 		conn = "self._conn"
 		indentLevel = 1

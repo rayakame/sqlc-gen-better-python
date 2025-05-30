@@ -155,7 +155,7 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 			Type:    retType,
 		}
 		allNames = append(allNames, addedPyTableNames...)
-		err := dr.buildPyQueryFunc(&query, funcBody, args, returnType, dr.conf.EmitClasses)
+		err := dr.buildPyQueryFunc(&query, funcBody, args, returnType, dr.conf)
 		if err != nil {
 			return nil, err
 		}

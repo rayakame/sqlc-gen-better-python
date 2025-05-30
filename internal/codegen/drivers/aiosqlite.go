@@ -159,13 +159,13 @@ func AiosqliteBuildQueryResults(body *builders.IndentStringBuilder) string {
 	return "QueryResults"
 }
 
-func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, isClass bool) error {
+func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuilder, args []core.FunctionArg, retType core.PyType, conf *core.Config) error {
 	indentLevel := 0
 	params := fmt.Sprintf("conn: %s", AioSQLiteConn)
 	conn := "conn"
 	asyncFunc := "async "
 	docstringConnType := AioSQLiteConn
-	if isClass {
+	if conf.EmitClasses {
 		params = "self"
 		conn = "self._conn"
 		indentLevel = 1
