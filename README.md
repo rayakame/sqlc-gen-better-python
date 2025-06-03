@@ -2,6 +2,7 @@
 [![Codecov](https://codecov.io/gh/rayakame/sqlc-gen-better-python/graph/badge.svg?token=LROCMXW6MC)](https://codecov.io/gh/rayakame/sqlc-gen-better-python)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Frayakame%2Fsqlc-gen-better-python%2Fmain%2Fpyproject.toml)
 ![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)
+[![CI](https://github.com/rayakame/sqlc-gen-better-python/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rayakame/sqlc-gen-better-python/actions/workflows/ci.yml)
 
 A WASM plugin for SQLC allowing the generation of Python code.
 
