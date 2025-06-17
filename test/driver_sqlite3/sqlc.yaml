@@ -1,7 +1,7 @@
 plugins:
 - name: python
   wasm:
-    sha256: bf83af9e7ed465b6501846a3d8f8084f8a083b7d15eb3ccfee9730c0ee5bf3e6
+    sha256: c74603350f66ae3701e88fd2e7f500dc54e181d8dbac68ade7ad2be832f45c67
     url: file://../sqlc-gen-better-python.wasm
 sql:
 - codegen:

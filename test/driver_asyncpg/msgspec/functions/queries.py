@@ -55,7 +55,7 @@ if typing.TYPE_CHECKING:
 
     QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | uuid.UUID | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | None
 
-    ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.Pool[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+    ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
 from test.driver_asyncpg.msgspec.functions import models
 
