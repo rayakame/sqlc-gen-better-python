@@ -1,130 +1,129 @@
-version: "2"
 plugins:
-  - name: python
-    wasm:
-      url: file://sqlc-gen-better-python.wasm
-      sha256: 750bbaa7a45acdce18c4c06ea4384c4df7e5f3e0e51ed6c8badcaea2dbe6d14d
+- name: python
+  wasm:
+    sha256: bf83af9e7ed465b6501846a3d8f8084f8a083b7d15eb3ccfee9730c0ee5bf3e6
+    url: file://../sqlc-gen-better-python.wasm
 sql:
-  - schema: schema.sql
-    queries: queries.sql
-    engine: postgresql
-    codegen:
-      - out: /attrs/classes
-        plugin: python
-        options:
-          package: test.driver_asyncpg.attrs.classes
-          sql_driver: asyncpg
-          model_type: attrs
-          emit_classes: true
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: numpy
-          speedups: true
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: postgresql
-    codegen:
-      - out: /attrs/functions
-        plugin: python
-        options:
-          package: test.driver_asyncpg.attrs.functions
-          sql_driver: asyncpg
-          model_type: attrs
-          emit_classes: false
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: numpy
-          speedups: true
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: postgresql
-    codegen:
-      - out: /dataclass/classes
-        plugin: python
-        options:
-          package: test.driver_asyncpg.dataclass.classes
-          sql_driver: asyncpg
-          model_type: dataclass
-          emit_classes: true
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: google
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: postgresql
-    codegen:
-      - out: /dataclass/functions
-        plugin: python
-        options:
-          package: test.driver_asyncpg.dataclass.functions
-          sql_driver: asyncpg
-          model_type: dataclass
-          emit_classes: false
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: google
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: postgresql
-    codegen:
-      - out: /msgspec/classes
-        plugin: python
-        options:
-          package: test.driver_asyncpg.msgspec.classes
-          sql_driver: asyncpg
-          model_type: msgspec
-          emit_classes: true
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: pep257
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: postgresql
-    codegen:
-      - out: /msgspec/functions
-        plugin: python
-        options:
-          package: test.driver_asyncpg.msgspec.functions
-          sql_driver: asyncpg
-          model_type: msgspec
-          emit_classes: false
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: pep257
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-
+- codegen:
+  - options:
+      docstrings: numpy
+      emit_classes: true
+      emit_init_file: true
+      model_type: attrs
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_asyncpg.attrs.classes
+      speedups: true
+      sql_driver: asyncpg
+    out: /attrs/classes
+    plugin: python
+  engine: postgresql
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: numpy
+      emit_classes: false
+      emit_init_file: true
+      model_type: attrs
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_asyncpg.attrs.functions
+      speedups: true
+      sql_driver: asyncpg
+    out: /attrs/functions
+    plugin: python
+  engine: postgresql
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: google
+      emit_classes: true
+      emit_init_file: true
+      model_type: dataclass
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_asyncpg.dataclass.classes
+      sql_driver: asyncpg
+    out: /dataclass/classes
+    plugin: python
+  engine: postgresql
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: google
+      emit_classes: false
+      emit_init_file: true
+      model_type: dataclass
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_asyncpg.dataclass.functions
+      sql_driver: asyncpg
+    out: /dataclass/functions
+    plugin: python
+  engine: postgresql
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: pep257
+      emit_classes: true
+      emit_init_file: true
+      model_type: msgspec
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_asyncpg.msgspec.classes
+      sql_driver: asyncpg
+    out: /msgspec/classes
+    plugin: python
+  engine: postgresql
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: pep257
+      emit_classes: false
+      emit_init_file: true
+      model_type: msgspec
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_asyncpg.msgspec.functions
+      sql_driver: asyncpg
+    out: /msgspec/functions
+    plugin: python
+  engine: postgresql
+  queries: queries.sql
+  schema: schema.sql
+version: '2'
