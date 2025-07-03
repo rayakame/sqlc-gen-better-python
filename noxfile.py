@@ -133,12 +133,11 @@ def update_test_plugin(session: nox.Session) -> None:
 def sqlite3(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
-    sqlc_generate(session, "sqlite3")
     session.run("pyright", DRIVER_PATHS["sqlite3"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["sqlite3"])
 
 
-@nox.session(reuse_venv=True, requires=["update_test_plugin"])
+@nox.session(reuse_venv=True)
 def sqlite3_check(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
@@ -151,7 +150,6 @@ def sqlite3_check(session: nox.Session) -> None:
 def aiosqlite(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
-    sqlc_generate(session, "aiosqlite")
     session.run("pyright", DRIVER_PATHS["aiosqlite"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
 
@@ -165,11 +163,10 @@ def aiosqlite_check(session: nox.Session) -> None:
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True, requires=["update_test_plugin"])
 def asyncpg(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
-    sqlc_generate(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["asyncpg"])
 
