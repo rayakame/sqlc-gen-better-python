@@ -17,6 +17,7 @@ type Config struct {
 	EmitClasses                 bool          `json:"emit_classes" yaml:"emit_classes"`
 	InflectionExcludeTableNames []string      `json:"inflection_exclude_table_names,omitempty" yaml:"inflection_exclude_table_names,omitempty"`
 	OmitUnusedModels            bool          `json:"omit_unused_models" yaml:"omit_unused_models"`
+	EmitTypechekingBlock        bool          `json:"emit_typechecking_block" yaml:"emit_typechecking_block"`
 	QueryParameterLimit         *int32        `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
 	EmitInitFile                *bool         `json:"emit_init_file" yaml:"emit_init_file"`
 	EmitDocstrings              *string       `json:"docstrings" yaml:"docstrings"`
