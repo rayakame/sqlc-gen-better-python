@@ -1,0 +1,6 @@
+kind: Added
+body: Add `omit_typechecking_blocks` option
+time: 2025-08-31T18:21:22.489913514+02:00
+custom:
+    Author: davfsa
+    PR: "122"

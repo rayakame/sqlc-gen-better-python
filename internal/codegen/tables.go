@@ -62,9 +62,15 @@ func (dr *Driver) buildPyTables(imp *core.Importer, tables []core.Table) (string
 		if len(std) != 0 {
 			body.NewLine()
 		}
-		body.WriteLine("if typing.TYPE_CHECKING:")
-		for _, imp := range tye {
-			body.WriteIndentedLine(1, imp)
+		if !dr.conf.OmitTypecheckingBlock {
+			body.WriteLine("if typing.TYPE_CHECKING:")
+			for _, imp := range tye {
+				body.WriteIndentedLine(1, imp)
+			}
+		} else {
+			for _, imp := range tye {
+				body.WriteLine(imp)
+			}
 		}
 	}
 	for i, imp := range pkg {
