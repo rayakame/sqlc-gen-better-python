@@ -1,22 +1,25 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import pathlib
 import typing
 
 import nox
+import yaml
 from nox import options
 
 if typing.TYPE_CHECKING:
     import collections.abc
 
-PATH_TO_PROJECT = pathlib.Path(__name__).parent
+PATH_TO_PROJECT = pathlib.Path(__name__).parent.absolute()
 SCRIPT_PATHS = ["noxfile.py", PATH_TO_PROJECT / "scripts", PATH_TO_PROJECT / "test"]
+TESTS_PATH = PATH_TO_PROJECT / "test"
 
 DRIVER_PATHS = {
-    "asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg",
-    "aiosqlite": PATH_TO_PROJECT / "test" / "driver_aiosqlite",
-    "sqlite3": PATH_TO_PROJECT / "test" / "driver_sqlite3",
+    "asyncpg": TESTS_PATH / "driver_asyncpg",
+    "aiosqlite": TESTS_PATH / "driver_aiosqlite",
+    "sqlite3": TESTS_PATH / "driver_sqlite3",
 }
 
 SQLC_CONFIGS = ["sqlc.yaml"]
@@ -84,10 +87,52 @@ def sqlc_check(session: nox.Session, driver: str) -> None:
 
 
 @nox.session(reuse_venv=True)
+def update_test_plugin(session: nox.Session) -> None:
+    # Build the plugin
+    wasm_path = TESTS_PATH / "sqlc-gen-better-python.wasm"
+
+    with session.chdir("plugin"):
+        session.run(
+            "go",
+            "build",
+            "-o",
+            str(wasm_path),
+            env={"GOOS": "wasip1", "GOARCH": "wasm"},
+            external=True,
+        )
+
+    # Calculate the SHA256 hash
+    sha256_hasher = hashlib.sha256()
+    with wasm_path.open("rb") as fp:
+        while True:
+            data = fp.read(65536)  # 64kb chunks
+            if not data:
+                break
+
+            sha256_hasher.update(data)
+
+    plugin_hash = sha256_hasher.hexdigest()
+
+    # Update the SHA256 in the config files
+    for driver_name, driver_path in DRIVER_PATHS.items():
+        for config_filename in SQLC_CONFIGS:
+            config_path = driver_path / config_filename
+
+            with config_path.open() as fp:
+                config = yaml.safe_load(fp)
+
+            config["plugins"][0]["wasm"]["sha256"] = plugin_hash
+
+            with config_path.open("w") as fp:
+                yaml.safe_dump(config, fp)
+
+        sqlc_generate(session, driver_name)
+
+
+@nox.session(reuse_venv=True, requires=["update_test_plugin"])
 def sqlite3(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
-    sqlc_generate(session, "sqlite3")
     session.run("pyright", DRIVER_PATHS["sqlite3"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["sqlite3"])
 
@@ -101,11 +146,10 @@ def sqlite3_check(session: nox.Session) -> None:
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["sqlite3"])
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True, requires=["update_test_plugin"])
 def aiosqlite(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
-    sqlc_generate(session, "aiosqlite")
     session.run("pyright", DRIVER_PATHS["aiosqlite"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
 
@@ -119,11 +163,10 @@ def aiosqlite_check(session: nox.Session) -> None:
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["aiosqlite"])
 
 
-@nox.session(reuse_venv=True)
+@nox.session(reuse_venv=True, requires=["update_test_plugin"])
 def asyncpg(session: nox.Session) -> None:
     uv_sync(session, include_self=True, groups=["pyright", "ruff"])
 
-    sqlc_generate(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["asyncpg"])
 

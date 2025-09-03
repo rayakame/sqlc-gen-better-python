@@ -1,129 +1,128 @@
-version: "2"
 plugins:
-  - name: python
-    wasm:
-      url: file://sqlc-gen-better-python.wasm
-      sha256: 750bbaa7a45acdce18c4c06ea4384c4df7e5f3e0e51ed6c8badcaea2dbe6d14d
+- name: python
+  wasm:
+    sha256: c74603350f66ae3701e88fd2e7f500dc54e181d8dbac68ade7ad2be832f45c67
+    url: file://../sqlc-gen-better-python.wasm
 sql:
-  - schema: schema.sql
-    queries: queries.sql
-    engine: sqlite
-    codegen:
-      - out: /attrs/classes
-        plugin: python
-        options:
-          package: test.driver_sqlite3.attrs.classes
-          sql_driver: sqlite3
-          model_type: attrs
-          emit_classes: true
-          omit_unused_models: false
-          emit_init_file: true
-          docstrings: numpy
-          speedups: true
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: sqlite
-    codegen:
-      - out: /attrs/functions
-        plugin: python
-        options:
-          package: test.driver_sqlite3.attrs.functions
-          sql_driver: sqlite3
-          model_type: attrs
-          emit_classes: false
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: numpy
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: sqlite
-    codegen:
-      - out: /dataclass/classes
-        plugin: python
-        options:
-          package: test.driver_sqlite3.dataclass.classes
-          sql_driver: sqlite3
-          model_type: dataclass
-          emit_classes: true
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: google
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: sqlite
-    codegen:
-      - out: /dataclass/functions
-        plugin: python
-        options:
-          package: test.driver_sqlite3.dataclass.functions
-          sql_driver: sqlite3
-          model_type: dataclass
-          emit_classes: false
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: google
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: sqlite
-    codegen:
-      - out: /msgspec/classes
-        plugin: python
-        options:
-          package: test.driver_sqlite3.msgspec.classes
-          sql_driver: sqlite3
-          model_type: msgspec
-          emit_classes: true
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: pep257
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-  - schema: schema.sql
-    queries: queries.sql
-    engine: sqlite
-    codegen:
-      - out: /msgspec/functions
-        plugin: python
-        options:
-          package: test.driver_sqlite3.msgspec.functions
-          sql_driver: sqlite3
-          model_type: msgspec
-          emit_classes: false
-          omit_unused_models: true
-          emit_init_file: true
-          docstrings: pep257
-          overrides:
-            - column: test_type_override.text_test
-              py_type:
-                import: collections
-                package: UserString
-                type: UserString
-
+- codegen:
+  - options:
+      docstrings: numpy
+      emit_classes: true
+      emit_init_file: true
+      model_type: attrs
+      omit_unused_models: false
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_sqlite3.attrs.classes
+      speedups: true
+      sql_driver: sqlite3
+    out: /attrs/classes
+    plugin: python
+  engine: sqlite
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: numpy
+      emit_classes: false
+      emit_init_file: true
+      model_type: attrs
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_sqlite3.attrs.functions
+      sql_driver: sqlite3
+    out: /attrs/functions
+    plugin: python
+  engine: sqlite
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: google
+      emit_classes: true
+      emit_init_file: true
+      model_type: dataclass
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_sqlite3.dataclass.classes
+      sql_driver: sqlite3
+    out: /dataclass/classes
+    plugin: python
+  engine: sqlite
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: google
+      emit_classes: false
+      emit_init_file: true
+      model_type: dataclass
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_sqlite3.dataclass.functions
+      sql_driver: sqlite3
+    out: /dataclass/functions
+    plugin: python
+  engine: sqlite
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: pep257
+      emit_classes: true
+      emit_init_file: true
+      model_type: msgspec
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_sqlite3.msgspec.classes
+      sql_driver: sqlite3
+    out: /msgspec/classes
+    plugin: python
+  engine: sqlite
+  queries: queries.sql
+  schema: schema.sql
+- codegen:
+  - options:
+      docstrings: pep257
+      emit_classes: false
+      emit_init_file: true
+      model_type: msgspec
+      omit_unused_models: true
+      overrides:
+      - column: test_type_override.text_test
+        py_type:
+          import: collections
+          package: UserString
+          type: UserString
+      package: test.driver_sqlite3.msgspec.functions
+      sql_driver: sqlite3
+    out: /msgspec/functions
+    plugin: python
+  engine: sqlite
+  queries: queries.sql
+  schema: schema.sql
+version: '2'
