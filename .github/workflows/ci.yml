@@ -167,7 +167,7 @@ jobs:
       - name: Install sqlc
         uses: sqlc-dev/setup-sqlc@v4
         with:
-          sqlc-version: '1.28.0'
+          sqlc-version: '1.30.0'
 
       - name: Run sqlc verify via nox
         run: |
@@ -187,7 +187,7 @@ jobs:
       - name: Install sqlc
         uses: sqlc-dev/setup-sqlc@v4
         with:
-          sqlc-version: '1.28.0'
+          sqlc-version: '1.30.0'
 
       - name: Run sqlc verify via nox
         run: |
@@ -207,7 +207,7 @@ jobs:
       - name: Install sqlc
         uses: sqlc-dev/setup-sqlc@v4
         with:
-          sqlc-version: '1.28.0'
+          sqlc-version: '1.30.0'
 
       - name: Run sqlc verify via nox
         run: |
