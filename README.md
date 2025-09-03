@@ -1,4 +1,5 @@
 # sqlc-gen-better-python
+
 [![Codecov](https://codecov.io/gh/rayakame/sqlc-gen-better-python/graph/badge.svg?token=LROCMXW6MC)](https://codecov.io/gh/rayakame/sqlc-gen-better-python)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Frayakame%2Fsqlc-gen-better-python%2Fmain%2Fpyproject.toml)
 ![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)
@@ -39,6 +40,7 @@ sql:
 More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/reference/config.html)
 
 ## Configuration Options
+
 | Name                             | Type           | Required | Description                                                                                                                                                                                                               |
 |----------------------------------|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `package`                        | string         | yes      | The name of the package where the generated files will be located                                                                                                                                                         |
@@ -54,34 +56,39 @@ More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/re
 | `docstrings`                     | string         | no       | If set, there will be docstrings generated in the selected format. This can be one of `google`, `numpy`, `pep257` and `none`. `none` will not generate any docstrings.                                                    |
 | `docstrings_emit_sql`            | bool           | no       | If set to `false` the SQL code for each query wont be included in the docstrings. This defaults to `true` but is not used when `docstrings` is not set or set to `none`                                                   |
 | `query_parameter_limit`          | integer        | no       | Not yet implemented.                                                                                                                                                                                                      |
+| `omit_kwargs_limit`              | integer        | no       | This can be used to set a limit where any query with less or equal amounts of parameters will not require kwargs for the parameters. This defaults to `0` which makes every query require kwargs for their parameters.    |
 | `speedups`                       | bool           | no       | If set to `true` the plugin will use other librarys for type conversion. Needs extra dependecys to be installed. This option currently only affects `sqlite3` & `aiosqlite` and uses the library `ciso8601`               |
 | `overrides`                      | list[Override] | no       | A list of [type overrides](#type-overrides).                                                                                                                                                                              |
 | `debug`                          | bool           | no       | If set to `true`, there will be debug logs generated into a `log.txt` file when executing `sqlc generate`. Defaults to `false`                                                                                            |
 
 ### Type Overrides
-Similar to `sqlc-gen-go` this plugin supports overriding types with your own. You can either override the type of every column that has a specific sql type, or you can overwrite the type of specific columns. 
+
+Similar to `sqlc-gen-go` this plugin supports overriding types with your own. You can either override the type of every
+column that has a specific sql type, or you can overwrite the type of specific columns.
 
 ```yaml
 # filename: sqlc.yaml
 # ...
-  options:
-    # ...
-    overrides:
-      - db_type: text
-        py_type:
-          import: collections
-          package: UserString
-          type: UserString
-      - column: table_name.text_column
-        py_type:
-          import: collections
-          type: collections.UserString
+options:
+  # ...
+  overrides:
+    - db_type: text
+      py_type:
+        import: collections
+        package: UserString
+        type: UserString
+    - column: table_name.text_column
+      py_type:
+        import: collections
+        type: collections.UserString
 
 ```
 
 ## Feature Support
+
 Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is supported.
-The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-annotations.html) depend on the SQL driver you are using, supported commands are listed below.
+The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-annotations.html) depend on the SQL
+driver you are using, supported commands are listed below.
 > Every `:batch*` command is not supported by this plugin and probably will never be.
 
 > Prepared Queries are not planned for the near future, but will be implemented sooner or later
@@ -95,15 +102,21 @@ The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-a
 | mysql     | no      | no            | no          | no            | no      | no     | no          |
 
 ## Development
+
 A roadmap of what is planned & worked on can be found [here](https://github.com/users/rayakame/projects/1/).
 
-Contributions are very welcome, for more information and help please read the [contribution guidelines](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CONTRIBUTING.md).
+Contributions are very welcome, for more information and help please read
+the [contribution guidelines](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CONTRIBUTING.md).
+
 ### Changelog
+
 Can be found [here](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CHANGELOG.md)
 
 ## Credits
-Because of missing documentation about creating these plugins, this work is heavily 
+
+Because of missing documentation about creating these plugins, this work is heavily
 inspired by:
+
 - [sqlc-gen-go](https://github.com/sqlc-dev/sqlc-gen-go)
 - [sqlc-gen-java](https://github.com/tandemdude/sqlc-gen-java)
 

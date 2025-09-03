@@ -172,12 +172,7 @@ func SQLite3BuildPyQueryFunc(query *core.Query, body *builders.IndentStringBuild
 		docstringConnType = ""
 	}
 	body.WriteIndentedString(indentLevel, fmt.Sprintf("def %s(%s", query.FuncName, params))
-	for i, arg := range args {
-		if i == 0 {
-			body.WriteString(", *")
-		}
-		body.WriteString(fmt.Sprintf(", %s", arg.FunctionFormat))
-	}
+	body.WriteQueryFunctionArgs(args, conf)
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
