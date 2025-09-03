@@ -6,7 +6,7 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
-const PluginVersion = "v0.4.4"
+const PluginVersion = "v0.4.5"
 
 type Config struct {
 	Package                     string        `json:"package" yaml:"package"`
@@ -19,6 +19,7 @@ type Config struct {
 	OmitUnusedModels            bool          `json:"omit_unused_models" yaml:"omit_unused_models"`
 	OmitTypecheckingBlock       bool          `json:"omit_typechecking_block" yaml:"omit_typechecking_block"`
 	QueryParameterLimit         *int32        `json:"query_parameter_limit,omitempty" yaml:"query_parameter_limit"`
+	OmitKwargsLimit             *int32        `json:"omit_kwargs_limit,omitempty" yaml:"omit_kwargs_limit"`
 	EmitInitFile                *bool         `json:"emit_init_file" yaml:"emit_init_file"`
 	EmitDocstrings              *string       `json:"docstrings" yaml:"docstrings"`
 	EmitDocstringsSQL           *bool         `json:"docstrings_emit_sql" yaml:"docstrings_emit_sql"`
@@ -64,6 +65,10 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 		config.QueryParameterLimit = new(int32)
 		*config.QueryParameterLimit = 1
 	}
+	if config.OmitKwargsLimit == nil {
+		config.OmitKwargsLimit = new(int32)
+		*config.OmitKwargsLimit = 0
+	}
 	if config.Initialisms == nil {
 		config.Initialisms = new([]string)
 		*config.Initialisms = []string{"id"}
@@ -93,6 +98,9 @@ func ValidateConf(conf *Config, engine string) error {
 	if *conf.QueryParameterLimit < 0 {
 		return fmt.Errorf("invalid options: query parameter limit must not be negative")
 	}
+	if *conf.OmitKwargsLimit < 0 {
+		return fmt.Errorf("invalid options: omit kwarg limit must not be negative")
+	}
 
 	if conf.EmitInitFile == nil {
 		return fmt.Errorf("invalid options: you need to specify emit_init_file")
@@ -107,7 +115,6 @@ func ValidateConf(conf *Config, engine string) error {
 	}
 
 	if err := isModelTypeValid(conf.ModelType); err != nil {
-
 		return fmt.Errorf("invalid options: %s", err)
 	}
 

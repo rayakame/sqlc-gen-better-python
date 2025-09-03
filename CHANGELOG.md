@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.4.5 - 2025-09-03
+### Added
+* [#122](https://github.com/rayakame/sqlc-gen-better-python/pull/122) Add `omit_typechecking_blocks` option ([davfsa](https://github.com/davfsa))
+* [#124](https://github.com/rayakame/sqlc-gen-better-python/pull/124) Added config option `omit_kwargs_limit`. ([rayakame](https://github.com/rayakame))
+### Dependencys
+* [#125](https://github.com/rayakame/sqlc-gen-better-python/pull/125) Updated sqlc to v1.30.0 used for testing the plugin ([rayakame](https://github.com/rayakame))
+
 ## v0.4.4 - 2025-05-30
 ### Changed
 * [#112](https://github.com/rayakame/sqlc-gen-better-python/pull/112) Improved `:execrows` performance for `asyncpg` and added speedup option for `:execrows` ([rayakame](https://github.com/rayakame))
