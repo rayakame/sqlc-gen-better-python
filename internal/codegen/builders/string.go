@@ -1,6 +1,7 @@
 package builders
 
 import (
+	"fmt"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"os"
 	"strings"
@@ -17,6 +18,15 @@ func NewIndentStringBuilder(indentChar string, charsPerIndentLevel int) *IndentS
 	return &IndentStringBuilder{
 		indentChar:          indentChar,
 		charsPerIndentLevel: charsPerIndentLevel,
+	}
+}
+
+func (b *IndentStringBuilder) WriteQueryFunctionArgs(args []core.FunctionArg, conf *core.Config) {
+	for i, arg := range args {
+		if i == 0 && len(args) > int(*conf.OmitKwargsLimit) {
+			b.WriteString(", *")
+		}
+		b.WriteString(fmt.Sprintf(", %s", arg.FunctionFormat))
 	}
 }
 

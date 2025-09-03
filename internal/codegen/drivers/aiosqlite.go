@@ -175,12 +175,7 @@ func AioSQLiteBuildPyQueryFunc(query *core.Query, body *builders.IndentStringBui
 		asyncFunc = ""
 	}
 	body.WriteIndentedString(indentLevel, fmt.Sprintf("%sdef %s(%s", asyncFunc, query.FuncName, params))
-	for i, arg := range args {
-		if i == 0 {
-			body.WriteString(", *")
-		}
-		body.WriteString(fmt.Sprintf(", %s", arg.FunctionFormat))
-	}
+	body.WriteQueryFunctionArgs(args, conf)
 	if query.Cmd == metadata.CmdExec {
 		body.WriteLine(fmt.Sprintf(") -> %s:", retType.Type))
 		body.WriteQueryFunctionDocstring(indentLevel+1, query, docstringConnType, args, retType)
