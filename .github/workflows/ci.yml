@@ -58,7 +58,7 @@ jobs:
           uv run nox -s pytest -- --coverage
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: .coverage.${{ matrix.python-version }}
           path: .coverage
@@ -94,7 +94,7 @@ jobs:
           activate-environment: true
 
       - name: Download coverage
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: coverages/
 
@@ -232,7 +232,7 @@ jobs:
         run: ./scripts/build/build.sh
 
       - name: Upload wasm artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: wasm-artifact
           path: sqlc-gen-better-python.wasm
