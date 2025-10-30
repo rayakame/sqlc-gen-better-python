@@ -9,8 +9,8 @@ A WASM plugin for SQLC allowing the generation of Python code.
 
 
 > [!NOTE]  
-> This is currently being worked on. It is far from being ready for any kind of release, let alone a stable one.  
-> Please wait for the v1 release; before that, this plugin is likely to not work.
+> Every Release before `v1.0.0`, including this one is an beta release. 
+> These versions are primarly released for interested people who want to test this plugin and help make it better.
 
 ## Example Config
 
