@@ -51,7 +51,7 @@ jobs:
           sed -i -E "s|(sha256: ).*|sha256: ${{ steps.hash.outputs.sha256 }}|" README.md
 
       - name: Create PR to update README
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore: update README example with v${{ steps.latest.outputs.output }}"
           branch: "release/update-readme-${{ steps.latest.outputs.output }}"
