@@ -44,7 +44,7 @@ func ParseConfig(req *plugin.GenerateRequest) (*Config, error) {
 		return nil, fmt.Errorf("unmarshalling plugin options: %w", err)
 	}
 	if config.SqlDriver == "" {
-		config.SqlDriver = SQLDriverAioSQLite
+		return nil, fmt.Errorf("invalid options: driver must not be empty")
 	}
 	val, err := isDriverAsync(config.SqlDriver)
 	if err != nil {

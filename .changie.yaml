@@ -29,6 +29,8 @@ kinds:
       auto: patch
     - label: Dependencys
       auto: patch
+    - label: Breaking
+      auto: patch
 newlines:
     afterChangelogHeader: 1
     beforeChangelogVersion: 1
