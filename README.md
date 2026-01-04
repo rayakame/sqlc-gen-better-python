@@ -11,6 +11,13 @@ A WASM plugin for SQLC allowing the generation of Python code.
 > [!NOTE]  
 > Every Release before `v1.0.0`, including this one is an beta release. 
 > These versions are primarly released for interested people who want to test this plugin and help make it better.
+>
+> I want to be very open about the current state of the project. Everything that is implemented works, and is beeing used
+> in production envirouments already. But there are some drivers and features that are sadly not implemented yet, biggest one
+> beeing that enums don't have support yet. I am working on that but I have a lot of stuff todo at the moment so I can't give a clear
+> estimate on how long this is going to take. Feel free to lmk any wanted features and I'm going to do my best on implementing them with
+> the time I have rn.
+
 
 ## Example Config
 
