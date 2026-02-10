@@ -6,6 +6,8 @@ CREATE TABLE test_postgres_types
     timestamp_test        timestamp        NOT NULL
 );
 
+CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
+
 CREATE TABLE test_inner_postgres_types
 (
     /* ───────────── Integer family ───────────── */
@@ -13,3 +15,12 @@ CREATE TABLE test_inner_postgres_types
     /* ───────────── Boolean ───────────── */
     bool_test             boolean          NOT NULL
 );
+
+CREATE TABLE test_enum
+(
+    /* ───────────── Integer family ───────────── */
+    id int PRIMARY KEY NOT NULL,
+    m  mood            NOT NULL
+);
+
+

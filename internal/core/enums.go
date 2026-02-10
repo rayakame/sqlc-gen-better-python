@@ -2,31 +2,35 @@ package core
 
 import "fmt"
 
-type SQLDriverType string
+type (
+	SQLDriver           string
+	DocstringConvention string
+	ModelType           string
+)
 
-func (dr *SQLDriverType) String() string {
-	return string(*dr)
+func (dr SQLDriver) String() string {
+	return string(dr)
 }
 
 const (
-	SQLDriverSQLite    SQLDriverType = "sqlite3"
-	SQLDriverAioSQLite SQLDriverType = "aiosqlite"
-	SQLDriverAsyncpg   SQLDriverType = "asyncpg"
+	SQLDriverSQLite    SQLDriver = "sqlite3"
+	SQLDriverAioSQLite SQLDriver = "aiosqlite"
+	SQLDriverAsyncpg   SQLDriver = "asyncpg"
 )
 
 const (
-	ModelTypeDataclass = "dataclass"
-	ModelTypeAttrs     = "attrs"
-	ModelTypeMsgspec   = "msgspec"
+	ModelTypeDataclass ModelType = "dataclass"
+	ModelTypeAttrs     ModelType = "attrs"
+	ModelTypeMsgspec   ModelType = "msgspec"
 )
 
-var asyncDrivers = map[SQLDriverType]bool{
+var asyncDrivers = map[SQLDriver]bool{
 	SQLDriverSQLite:    false,
 	SQLDriverAioSQLite: true,
 	SQLDriverAsyncpg:   true,
 }
 
-var driversEngine = map[SQLDriverType]string{
+var driversEngine = map[SQLDriver]string{
 	SQLDriverSQLite:    "sqlite",
 	SQLDriverAioSQLite: "sqlite",
 	SQLDriverAsyncpg:   "postgresql",
@@ -39,51 +43,45 @@ var validModelTypes = map[string]struct{}{
 }
 
 const (
-	DocstringConventionNone   = "none"
-	DocstringConventionGoogle = "google"
-	DocstringConventionNumpy  = "numpy"
-	DocstringConventionPEP257 = "pep257"
+	DocstringConventionNone   DocstringConvention = "none"
+	DocstringConventionGoogle DocstringConvention = "google"
+	DocstringConventionNumpy  DocstringConvention = "numpy"
+	DocstringConventionPEP257 DocstringConvention = "pep257"
 )
 
-var validDocstringConventions = map[string]struct{}{
-	DocstringConventionNone:   {},
-	DocstringConventionGoogle: {},
-	DocstringConventionNumpy:  {},
-	DocstringConventionPEP257: {},
-}
-
-func isDriverAsync(sqlDriver SQLDriverType) (bool, error) {
-	val, found := asyncDrivers[sqlDriver]
+func (dr SQLDriver) Async() bool {
+	val, found := asyncDrivers[dr]
 	if !found {
-		return false, fmt.Errorf("unknown SQL driver: %s", sqlDriver)
+		return false
 	}
-	return val, nil
+	return val
 }
 
-func isDriverValid(sqlDriver SQLDriverType, engine string) error {
-	val, found := driversEngine[sqlDriver]
+func (dr SQLDriver) Validate(engine string) error {
+	val, found := driversEngine[dr]
 	if !found {
-		return fmt.Errorf("unknown SQL driver: %s", sqlDriver)
+		return fmt.Errorf("unknown SQL driver: %s", dr)
 	}
 	if val != engine {
-		return fmt.Errorf("SQL driver %s does not support %s", sqlDriver, engine)
+		return fmt.Errorf("SQL driver %s does not support %s", dr, engine)
 	}
 	return nil
 }
 
-func isModelTypeValid(modelType string) error {
-	if _, found := validModelTypes[modelType]; !found {
-		return fmt.Errorf("unknown model type: %s", modelType)
+func (modelType ModelType) Valid() bool {
+	switch modelType {
+	case ModelTypeDataclass, ModelTypeMsgspec, ModelTypeAttrs:
+		return true
+	default:
+		return false
 	}
-	return nil
 }
 
-func isDocstringValid(ds *string) error {
-	if ds == nil {
-		return nil
+func (ds DocstringConvention) Valid() bool {
+	switch ds {
+	case DocstringConventionNone, DocstringConventionNumpy, DocstringConventionGoogle, DocstringConventionPEP257:
+		return true
+	default:
+		return false
 	}
-	if _, found := validDocstringConventions[*ds]; !found {
-		return fmt.Errorf("unknown docstring convention: %s", ds)
-	}
-	return nil
 }

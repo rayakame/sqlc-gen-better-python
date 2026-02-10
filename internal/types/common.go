@@ -5,4 +5,4 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
-type TypeConversionFunc func(req *plugin.GenerateRequest, col *plugin.Column, conf *core.Config) string
+type TypeConversionFunc func(req *plugin.GenerateRequest, typ *plugin.Identifier, conf *core.Config) string

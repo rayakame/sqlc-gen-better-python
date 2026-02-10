@@ -2,13 +2,14 @@ package internal
 
 import (
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/inflection"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
-	"sort"
-	"strings"
 )
 
 func (gen *PythonGenerator) buildTable(schema *plugin.Schema, table *plugin.Table) core.Table {
@@ -47,8 +48,7 @@ func (gen *PythonGenerator) buildTables() []core.Table {
 			continue
 		}
 		for _, table := range schema.Tables {
-			t := gen.buildTable(schema, table)
-			tables = append(tables, t)
+			tables = append(tables, gen.buildTable(schema, table))
 		}
 	}
 	if len(tables) > 0 {
@@ -59,7 +59,7 @@ func (gen *PythonGenerator) buildTables() []core.Table {
 
 func (gen *PythonGenerator) makePythonType(col *plugin.Column) core.PyType {
 	columnType := sdk.DataType(col.Type)
-	strType := gen.typeConversionFunc(gen.req, col, gen.config)
+	strType := gen.typeConversionFunc(gen.req, col.Type, gen.config)
 	for _, override := range gen.config.Overrides {
 		if override.PyTypeName == "" {
 			continue
@@ -122,6 +122,16 @@ func (gen *PythonGenerator) buildEnums() []core.Enum {
 				Name:    core.SnakeToCamel(enumName, gen.config),
 				Comment: enum.Comment,
 			}
+			enumType := core.PyType{
+				SqlType:     enumName,
+				Type:        e.Name,
+				DefaultType: "",
+				IsList:      false,
+				IsNullable:  false,
+				IsEnum:      true,
+				IsOverride:  false,
+				Override:    nil,
+			}
 
 			seen := make(map[string]struct{}, len(enum.Vals))
 			for i, v := range enum.Vals {
@@ -132,7 +142,7 @@ func (gen *PythonGenerator) buildEnums() []core.Enum {
 				e.Constants = append(e.Constants, core.Constant{
 					Name:  core.SnakeToCamel(enumName+"_"+value, gen.config),
 					Value: v,
-					Type:  e.Name,
+					Type:  enumType,
 				})
 				seen[value] = struct{}{}
 			}

@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"fmt"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/drivers"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
@@ -58,7 +59,6 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver.String())
 	}
-	builders.SetDocstringConfig(conf.EmitDocstrings, conf.EmitDocstringsSQL, conf.SqlDriver)
 
 	return &Driver{
 		buildPyQueryFunc:        buildPyQueryFunc,
@@ -68,6 +68,16 @@ func NewDriver(conf *core.Config) (*Driver, error) {
 		driverTypeCheckingHook:  driverTypeCheckingHook,
 		driverBuildQueryResults: driverBuildQueryResults,
 	}, nil
+}
+
+func (dr *Driver) GetStringBuilder() *builders.IndentStringBuilder {
+	return builders.NewIndentStringBuilder(
+		dr.conf.IndentChar,
+		dr.conf.CharsPerIndentLevel,
+		dr.conf.EmitDocstrings,
+		dr.conf.OmitDocstringsSQL,
+		dr.conf.SqlDriver,
+	)
 }
 
 func (dr *Driver) supportedCMD(command string) error {

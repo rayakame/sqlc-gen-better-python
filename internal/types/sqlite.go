@@ -2,16 +2,17 @@ package types
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
-	"strings"
 
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
-func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.Config) string {
-	columnType := strings.ToLower(sdk.DataType(col.Type))
+func SqliteTypeToPython(_ *plugin.GenerateRequest, typ *plugin.Identifier, _ *core.Config) string {
+	columnType := strings.ToLower(sdk.DataType(typ))
 
 	switch columnType {
 	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":

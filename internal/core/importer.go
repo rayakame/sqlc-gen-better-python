@@ -2,10 +2,11 @@ package core
 
 import (
 	"fmt"
-	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
-	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"sort"
 	"strings"
+
+	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
+	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 )
 
 type importSpec struct {
@@ -39,6 +40,9 @@ func (i *Importer) Imports(fileName string) ([]string, []string, []string) {
 	if fileName == "models.sql" {
 		return i.modelImports()
 	}
+	if fileName == "enums.sql" {
+		return i.enumImports()
+	}
 	return i.queryImports(fileName)
 }
 
@@ -49,7 +53,15 @@ func TableUses(name string, s Table) (bool, PyType) {
 		}
 	}
 	return false, PyType{}
+}
 
+func enumUses(name string, e Enum) (bool, PyType) {
+	for _, constant := range e.Constants {
+		if constant.Type.Type == name {
+			return true, constant.Type
+		}
+	}
+	return false, PyType{}
 }
 
 func (i *Importer) getModelImportSpec() (string, importSpec, error) {
@@ -78,6 +90,33 @@ func (i *Importer) splitTypeChecking(pks map[string]importSpec) (map[string]impo
 	return normalImports, typeChecking
 }
 
+func (i *Importer) enumImportSpecs() (map[string]importSpec, map[string]importSpec, map[string]importSpec) {
+	modelUses := func(name string) (bool, bool) {
+		for _, enum := range i.Enums {
+			if val, _ := enumUses(name, enum); val {
+				return true, true
+			}
+		}
+		return false, false
+	}
+
+	std := stdImports(modelUses)
+	for _, override := range i.C.Overrides {
+		if val1, val2 := modelUses(override.PyTypeName); val1 {
+			std[override.PyTypeName] = importSpec{Module: override.PyImportPath, Name: override.PyPackageName, TypeChecking: val2}
+		}
+	}
+	std, typeChecking := i.splitTypeChecking(std)
+	if len(typeChecking) != 0 {
+		std["typing"] = importSpec{Module: "typing"}
+	}
+	std["enum"] = importSpec{Module: "enum"}
+
+	pkg := make(map[string]importSpec)
+
+	return std, typeChecking, pkg
+}
+
 func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importSpec, map[string]importSpec) {
 	modelUses := func(name string) (bool, bool) {
 		for _, table := range i.Tables {
@@ -103,7 +142,7 @@ func (i *Importer) modelImportSpecs() (map[string]importSpec, map[string]importS
 		std[modelName] = modelImport
 	}
 	if len(i.Enums) > 0 {
-		std["enum"] = importSpec{Module: fmt.Sprintf("from %s import enums", i.C.Package)}
+		std["enum"] = importSpec{Module: i.C.Package, Name: "enums"}
 	}
 
 	pkg := make(map[string]importSpec)
@@ -337,6 +376,23 @@ func (i *Importer) queryImports(fileName string) ([]string, []string, []string) 
 			packageLines = append(packageLines, "")
 		}
 		packageLines = append(packageLines, buildImportBlock(loc)...)
+	}
+	return importLines, typeLines, packageLines
+}
+
+func (i *Importer) enumImports() ([]string, []string, []string) {
+	std, typeCheck, pkg := i.enumImportSpecs()
+	importLines := make([]string, 0)
+	typeLines := make([]string, 0)
+	packageLines := make([]string, 0)
+	if len(std) != 0 {
+		importLines = append(importLines, buildImportBlock(std)...)
+	}
+	if len(typeCheck) != 0 {
+		typeLines = append(typeLines, buildImportBlock(typeCheck)...)
+	}
+	if len(pkg) != 0 {
+		packageLines = append(packageLines, buildImportBlock(pkg)...)
 	}
 	return importLines, typeLines, packageLines
 }

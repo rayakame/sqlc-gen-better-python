@@ -2,9 +2,10 @@ package builders
 
 import (
 	"fmt"
-	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"os"
 	"strings"
+
+	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 )
 
 type IndentStringBuilder struct {
@@ -12,12 +13,19 @@ type IndentStringBuilder struct {
 
 	indentChar          string
 	charsPerIndentLevel int
+
+	docstringOmitSQL    bool
+	docstringConvention core.DocstringConvention
+	docstringDriver     core.SQLDriver
 }
 
-func NewIndentStringBuilder(indentChar string, charsPerIndentLevel int) *IndentStringBuilder {
+func NewIndentStringBuilder(indentChar string, charsPerIndentLevel int, docstringConvention core.DocstringConvention, docstringOmitSQL bool, docstringDriver core.SQLDriver) *IndentStringBuilder {
 	return &IndentStringBuilder{
 		indentChar:          indentChar,
 		charsPerIndentLevel: charsPerIndentLevel,
+		docstringConvention: docstringConvention,
+		docstringDriver:     docstringDriver,
+		docstringOmitSQL:    docstringOmitSQL,
 	}
 }
 
@@ -67,4 +75,8 @@ func (b *IndentStringBuilder) NNewLine(n int) {
 	for range n {
 		b.WriteString("\n")
 	}
+}
+
+func (b *IndentStringBuilder) Bytes() []byte {
+	return []byte(b.String())
 }
