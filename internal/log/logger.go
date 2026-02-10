@@ -1,5 +1,10 @@
 package log
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type Logger struct {
 	messages []string
 }
@@ -9,6 +14,15 @@ func (logger *Logger) Log(message string) {
 }
 func (logger *Logger) LogByte(message []byte) {
 	logger.messages = append(logger.messages, string(message))
+}
+
+func (logger *Logger) LogAny(message any) {
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		logger.Log(fmt.Sprintf("Error while trying to log any: %e", err))
+	} else {
+		logger.LogByte(jsonData)
+	}
 }
 
 func (logger *Logger) Print() (string, []byte) {

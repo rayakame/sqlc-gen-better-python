@@ -38,3 +38,7 @@ SELECT * FROM test_postgres_types;
 -- name: TTTT :one
 SELECT serial_test
 FROM test_postgres_types LIMIT 1;
+
+-- name: TestEnum :exec
+INSERT INTO test_enum (id, m)
+VALUES ($1, $2);

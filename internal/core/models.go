@@ -1,10 +1,11 @@
 package core
 
 import (
+	"strings"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
-	"strings"
 )
 
 type Table struct {
@@ -37,7 +38,7 @@ func (p *PyType) DoOverride() bool {
 
 type Constant struct {
 	Name  string
-	Type  string
+	Type  PyType
 	Value string
 }
 

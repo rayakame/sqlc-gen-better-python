@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"fmt"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -18,7 +19,7 @@ func (dr *Driver) BuildPyTablesFile(imp *core.Importer, tables []core.Table) (*p
 	}, nil
 }
 
-func BuildPyTabel(modelType string, table *core.Table, body *builders.IndentStringBuilder) {
+func BuildPyTabel(modelType core.ModelType, table *core.Table, body *builders.IndentStringBuilder) {
 	if modelType == core.ModelTypeDataclass {
 		body.WriteLine("@dataclasses.dataclass()")
 	} else if modelType == core.ModelTypeAttrs {
@@ -44,7 +45,7 @@ func BuildPyTabel(modelType string, table *core.Table, body *builders.IndentStri
 
 func (dr *Driver) buildPyTables(imp *core.Importer, tables []core.Table) (string, []byte, error) {
 	fileName := "models.sql"
-	body := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	body := dr.GetStringBuilder()
 	body.WriteSqlcHeader()
 	body.WriteModelFileModuleDocstring()
 	body.WriteImportAnnotations()

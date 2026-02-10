@@ -2,13 +2,14 @@ package codegen
 
 import (
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/drivers"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
-	"sort"
-	"strings"
 )
 
 func (dr *Driver) prepareFunctionHeader(query *core.Query, body *builders.IndentStringBuilder) ([]core.FunctionArg, string, []string) {
@@ -119,7 +120,7 @@ func (dr *Driver) buildClassTemplate(sourceName string, body *builders.IndentStr
 }
 
 func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, sourceName string) ([]byte, error) {
-	body := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	body := dr.GetStringBuilder()
 	body.WriteSqlcHeader()
 	body.WriteQueryFileModuleDocstring(sourceName)
 	body.WriteImportAnnotations()
@@ -130,8 +131,8 @@ func (dr *Driver) buildPyQueriesFile(imp *core.Importer, queries []core.Query, s
 	}
 
 	allNames := make([]string, 0)
-	funcBody := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
-	pyTableBody := builders.NewIndentStringBuilder(imp.C.IndentChar, imp.C.CharsPerIndentLevel)
+	funcBody := dr.GetStringBuilder()
+	pyTableBody := dr.GetStringBuilder()
 	for _, query := range queries {
 		if !dr.conf.EmitClasses {
 			allNames = append(allNames, query.FuncName)

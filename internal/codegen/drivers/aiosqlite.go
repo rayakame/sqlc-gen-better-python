@@ -2,14 +2,15 @@ package drivers
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/codegen/builders"
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/typeConversion"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
-	"strconv"
-	"strings"
 )
 
 const AioSQLiteConn = "aiosqlite.Connection"
@@ -43,11 +44,11 @@ func AioSQLiteBuildTypeConvFunc(queries []core.Query, body *builders.IndentStrin
 	toConvert := make(map[string]bool)
 	for _, query := range queries {
 		for sqlType, _ := range typeConversion.SqliteGetConversions() {
-			name := types.SqliteTypeToPython(&plugin.GenerateRequest{}, &plugin.Column{Type: &plugin.Identifier{
+			name := types.SqliteTypeToPython(&plugin.GenerateRequest{}, &plugin.Identifier{
 				Catalog: "",
 				Schema:  "",
 				Name:    sqlType,
-			}}, conf)
+			}, conf)
 			if queryValueUses(name, query.Ret) {
 				toConvert[name] = true
 			}

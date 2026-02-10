@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/core"
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 
@@ -9,8 +10,8 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
-func PostgresTypeToPython(req *plugin.GenerateRequest, col *plugin.Column, conf *core.Config) string {
-	columnType := sdk.DataType(col.Type)
+func PostgresTypeToPython(req *plugin.GenerateRequest, typ *plugin.Identifier, conf *core.Config) string {
+	columnType := sdk.DataType(typ)
 
 	switch columnType {
 	case "serial", "serial4", "pg_catalog.serial4", "bigserial", "serial8", "pg_catalog.serial8", "smallserial", "serial2", "pg_catalog.serial2", "integer", "int", "int4", "pg_catalog.int4", "bigint", "int8", "pg_catalog.int8", "smallint", "int2", "pg_catalog.int2":
@@ -54,9 +55,9 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, col *plugin.Column, conf 
 			for _, enum := range schema.Enums {
 				if columnType == enum.Name {
 					if schema.Name == req.Catalog.DefaultSchema {
-						return "models." + core.ModelName(enum.Name, "", conf)
+						return "enums." + core.ModelName(enum.Name, "", conf)
 					}
-					return "models." + core.ModelName(enum.Name, schema.Name, conf)
+					return "enums." + core.ModelName(enum.Name, schema.Name, conf)
 				}
 			}
 		}
