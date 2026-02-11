@@ -1,15 +1,23 @@
-CREATE TABLE test_postgres_types
+-- Public schema (default)
+CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
+
+CREATE TABLE test_enum
 (
-    /* ───────────── Integer family ───────────── */
-    id                    int PRIMARY KEY  NOT NULL,
-    serial_test           serial           NOT NULL,
-    timestamp_test        timestamp        NOT NULL
+    id int PRIMARY KEY NOT NULL,
+    b boolean NOT NULL,
+    b2 boolean,
+    m  mood NOT NULL
 );
 
-CREATE TABLE test_inner_postgres_types
+-- Custom schema
+CREATE SCHEMA IF NOT EXISTS custom;
+
+CREATE TYPE custom.mood AS ENUM ('sad', 'ok', 'happy');
+
+CREATE TABLE custom.test_enum
 (
-    /* ───────────── Integer family ───────────── */
-    table_id              int              NOT NULL,
-    /* ───────────── Boolean ───────────── */
-    bool_test             boolean          NOT NULL
+    id int PRIMARY KEY NOT NULL,
+    b boolean NOT NULL,
+    b2 boolean,
+    m  custom.mood NOT NULL
 );
