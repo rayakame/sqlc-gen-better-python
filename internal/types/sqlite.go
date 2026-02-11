@@ -1,27 +1,26 @@
 package types
 
 import (
-	"fmt"
-	"github.com/rayakame/sqlc-gen-better-python/internal/core"
-	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"strings"
 
+	"github.com/rayakame/sqlc-gen-better-python/internal/config"
+	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
-func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.Config) string {
-	columnType := strings.ToLower(sdk.DataType(col.Type))
+func SqliteTypeToPython(_ *plugin.GenerateRequest, _ *config.Config, pluginType *plugin.Identifier) string {
+	columnType := sdk.DataType(pluginType)
 
 	switch columnType {
-	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":
-		return "int"
+	case Int, "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":
+		return Int
 	case "blob":
 		return "memoryview"
-	case "real", "double", "double precision", "doubleprecision", "float", "numeric":
-		return "float"
-	case "boolean", "bool":
-		return "bool"
+	case "real", "double", "double precision", "doubleprecision", Float, "numeric":
+		return Float
+	case Boolean, Bool:
+		return Bool
 	case "date":
 		return "datetime.date"
 	case "datetime", "timestamp":
@@ -40,10 +39,11 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, col *plugin.Column, _ *core.C
 		columnType == "text",
 		columnType == "clob",
 		columnType == "json":
-		return "str"
+		return Str
 
 	default:
-		log.GlobalLogger.Log(fmt.Sprintf("unknown SQLite type: %s", columnType))
+		log.L().Log("unknown SQLite type: " + columnType)
+
 		return "typing.Any"
 	}
 }
