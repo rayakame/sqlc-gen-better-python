@@ -1,11 +1,11 @@
 module github.com/rayakame/sqlc-gen-better-python
 
-go 1.24.1
+go 1.25.0
 
 require (
 	github.com/jinzhu/inflection v1.0.0
 	github.com/sqlc-dev/plugin-sdk-go v1.23.0
-	golang.org/x/text v0.34.0
+	golang.org/x/text v0.35.0
 )
 
 require (
