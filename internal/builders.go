@@ -261,9 +261,19 @@ func (gen *PythonGenerator) buildQueries(tables []core.Table) ([]core.Query, err
 				}}
 			} else if len(query.Params) >= 1 {
 				var values []core.QueryValue
+				// Positional ($n) and named (sqlc.arg) references
+				// can infer the same name; suffix duplicates to keep
+				// the function definition valid.
+				seenParams := map[string]int{}
 				for _, p := range query.Params {
+					baseName := core.Escape(core.ParamName(p))
+					name := baseName
+					if n := seenParams[baseName]; n > 0 {
+						name = fmt.Sprintf("%s_%d", baseName, n+1)
+					}
+					seenParams[baseName]++
 					values = append(values, core.QueryValue{
-						Name:   core.Escape(core.ParamName(p)),
+						Name:   name,
 						DBName: p.Column.GetName(),
 						Typ:    gen.makePythonType(p.Column),
 						Column: p.Column,
