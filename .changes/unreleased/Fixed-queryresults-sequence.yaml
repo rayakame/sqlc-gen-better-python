@@ -1,0 +1,6 @@
+kind: Fixed
+body: QueryResultsArgsType includes Sequence so array parameters of :many queries type-check
+time: 2026-06-09T00:00:02.0000000Z
+custom:
+    Author: Mic92
+    PR: "164"

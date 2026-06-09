@@ -137,3 +137,10 @@ CREATE TABLE IF NOT EXISTS test_type_override
     id                    integer PRIMARY KEY NOT NULL,
     text_test             text
 );
+-- Plural column names: generated fields must not be singularized.
+CREATE TABLE IF NOT EXISTS test_field_namings
+(
+    id      int PRIMARY KEY NOT NULL,
+    outputs jsonb           NOT NULL,
+    groups  text[]          NOT NULL
+);

@@ -1,0 +1,6 @@
+kind: Fixed
+body: Column field names are no longer singularized (`outputs` generated an `output` field); duplicate selected columns get suffixed fields instead of an invalid class
+time: 2026-06-09T00:00:00.0000000Z
+custom:
+    Author: Mic92
+    PR: "164"

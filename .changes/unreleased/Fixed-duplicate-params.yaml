@@ -1,0 +1,6 @@
+kind: Fixed
+body: Queries mixing a positional reference with a same-named sqlc.arg() no longer generate a duplicate function parameter
+time: 2026-06-09T00:00:01.0000000Z
+custom:
+    Author: Mic92
+    PR: "164"
