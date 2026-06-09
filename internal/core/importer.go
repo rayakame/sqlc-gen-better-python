@@ -325,7 +325,9 @@ func (i *Importer) queryImports(fileName string) ([]string, []string, []string) 
 		if IsInMultipleMaps("datetime", std, typeCheck) {
 			queryResultsArgsType += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
 		}
-		queryResultsArgsType += " | None"
+		// asyncpg passes array-typed parameters (e.g. text[]) as
+		// sequences.
+		queryResultsArgsType += " | collections.abc.Sequence[typing.Any] | None"
 		typeLines = append(typeLines, queryResultsArgsType)
 	}
 
