@@ -370,11 +370,23 @@ func (gen *PythonGenerator) columnsToStruct(name string, columns []goColumn, use
 			fieldName = fmt.Sprintf("%s_%d", fieldName, suffix)
 		}
 
-		f := core.Column{
-			Name: inflection.Singular(inflection.SingularParams{
-				Name:       core.ColumnName(c.Column, i),
+		// Singularizing belongs to table names only; on columns it
+		// renames e.g. "outputs" to "output". Embedded fields are
+		// singularized: they hold one row of the joined table.
+		// Duplicate columns need the suffix in the field name,
+		// otherwise the class ends up with duplicate fields.
+		pyFieldName := core.ColumnName(c.Column, i)
+		if c.embed != nil {
+			pyFieldName = inflection.Singular(inflection.SingularParams{
+				Name:       pyFieldName,
 				Exclusions: gen.config.InflectionExcludeTableNames,
-			}),
+			})
+		}
+		if suffix > 0 {
+			pyFieldName = fmt.Sprintf("%s_%d", pyFieldName, suffix)
+		}
+		f := core.Column{
+			Name:   pyFieldName,
 			DBName: colName,
 			Column: c.Column,
 		}
