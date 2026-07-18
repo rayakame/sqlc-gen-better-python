@@ -12,21 +12,36 @@ import (
 
 const sqliteResultType = "sqlite3.Row"
 
-// sqliteBase contains shared logic between the sqlite3 and aiosqlite drivers.
+// sqliteBase is the complete driver implementation for both sqlite modules —
+// sqlite3 (sync) and aiosqlite (async). All emission differences between the
+// two are derived from moduleName and the async flag.
 type sqliteBase struct {
 	moduleName string // "sqlite3" or "aiosqlite"
+	async      bool
 	rows       *RowBuilder
 }
 
-// newSqliteBase creates a shared sqlite base. The RowBuilder never converts
-// inline (except overrides/enums): registered converters handle the raw values,
-// see WriteConversionSetup.
-func newSqliteBase(moduleName string) sqliteBase {
-	return sqliteBase{
+var _ Driver = (*sqliteBase)(nil)
+
+// newSqliteDriver creates the driver for one of the two sqlite modules. The
+// RowBuilder never converts inline (except overrides/enums): registered
+// converters handle the raw values, see WriteConversionSetup.
+func newSqliteDriver(moduleName string, async bool) *sqliteBase {
+	return &sqliteBase{
 		moduleName: moduleName,
+		async:      async,
 		rows:       newRowBuilder(func(string) bool { return false }),
 	}
 }
+
+// Name returns the Python module name ("sqlite3" or "aiosqlite").
+func (sb *sqliteBase) Name() string { return sb.moduleName }
+
+// ConnType returns the connection type annotation, e.g. "sqlite3.Connection".
+func (sb *sqliteBase) ConnType() string { return sb.moduleName + ".Connection" }
+
+// IsAsync reports whether this is the aiosqlite (async) driver.
+func (sb *sqliteBase) IsAsync() bool { return sb.async }
 
 // SupportsCommand returns if the driver supports the command.
 func (sb *sqliteBase) SupportsCommand(cmd string) bool {
@@ -59,66 +74,6 @@ func (sb *sqliteBase) ConvertsInline(_ string) bool {
 	return false
 }
 
-// sqliteConvSpec describes one adapter/converter pair for a Python type.
-type sqliteConvSpec struct {
-	suffix        string   // function name suffix, e.g. "date"
-	pyType        string   // Python type to register the adapter for
-	adaptRet      string   // adapter return annotation
-	adaptBody     string   // adapter body expression
-	convBody      string   // converter body expression
-	speedupsBody  string   // converter body when speedups are enabled ("" = same as convBody)
-	converterKeys []string // sqlite declared type names to register the converter under
-}
-
-// sqliteConvSpecs maps Python type names to their conversion spec.
-var sqliteConvSpecs = map[string]sqliteConvSpec{
-	"datetime.date": {
-		suffix:        "date",
-		pyType:        "datetime.date",
-		adaptRet:      "str",
-		adaptBody:     "val.isoformat()",
-		convBody:      "datetime.date.fromisoformat(val.decode())",
-		speedupsBody:  "ciso8601.parse_datetime(val.decode()).date()",
-		converterKeys: []string{"date"},
-	},
-	"decimal.Decimal": {
-		suffix:        "decimal",
-		pyType:        "decimal.Decimal",
-		adaptRet:      "str",
-		adaptBody:     "str(val)",
-		convBody:      "decimal.Decimal(val.decode())",
-		speedupsBody:  "",
-		converterKeys: []string{"decimal"},
-	},
-	"datetime.datetime": {
-		suffix:        "datetime",
-		pyType:        "datetime.datetime",
-		adaptRet:      "str",
-		adaptBody:     "val.isoformat()",
-		convBody:      "datetime.datetime.fromisoformat(val.decode())",
-		speedupsBody:  "ciso8601.parse_datetime(val.decode())",
-		converterKeys: []string{"datetime", "timestamp"},
-	},
-	"bool": {
-		suffix:        "bool",
-		pyType:        "bool",
-		adaptRet:      "int",
-		adaptBody:     "int(val)",
-		convBody:      "bool(int(val))",
-		speedupsBody:  "",
-		converterKeys: []string{"bool", "boolean"},
-	},
-	"memoryview": {
-		suffix:        "memoryview",
-		pyType:        "memoryview",
-		adaptRet:      "bytes",
-		adaptBody:     "val.tobytes()",
-		convBody:      "memoryview(val)",
-		speedupsBody:  "",
-		converterKeys: []string{"blob"},
-	},
-}
-
 // WriteConversionSetup writes the adapter/converter functions and their
 // registrations for every conversion type used by the given queries.
 // Values written by adapters and read back by converters require the user's
@@ -128,11 +83,18 @@ func (sb *sqliteBase) WriteConversionSetup(body *writer.CodeWriter, config *conf
 	if len(usedTypes) == 0 {
 		return false
 	}
+	used := make(map[string]struct{}, len(usedTypes))
+	for _, pyType := range usedTypes {
+		used[pyType] = struct{}{}
+	}
 
 	adapters := make([]string, 0, len(usedTypes))
 	converters := make([]string, 0, len(usedTypes))
-	for _, pyType := range usedTypes {
-		spec := sqliteConvSpecs[pyType]
+	for i := range sqliteConversions {
+		spec := &sqliteConversions[i]
+		if _, ok := used[spec.pyType]; !ok {
+			continue
+		}
 
 		body.WriteLine(fmt.Sprintf("def _adapt_%s(val: %s) -> %s:", spec.suffix, spec.pyType, spec.adaptRet))
 		body.WriteIndentedLine(1, "return "+spec.adaptBody)
@@ -147,8 +109,11 @@ func (sb *sqliteBase) WriteConversionSetup(body *writer.CodeWriter, config *conf
 		body.NNewLine(2)
 
 		adapters = append(adapters, fmt.Sprintf("%s.register_adapter(%s, _adapt_%s)", sb.moduleName, spec.pyType, spec.suffix))
-		for _, key := range spec.converterKeys {
-			converters = append(converters, fmt.Sprintf(`%s.register_converter("%s", _convert_%s)`, sb.moduleName, key, spec.suffix))
+		for _, key := range spec.sqlTypes {
+			converters = append(
+				converters,
+				fmt.Sprintf(`%s.register_converter("%s", _convert_%s)`, sb.moduleName, key, spec.suffix),
+			)
 		}
 	}
 
@@ -161,6 +126,130 @@ func (sb *sqliteBase) WriteConversionSetup(body *writer.CodeWriter, config *conf
 	}
 
 	return true
+}
+
+// WriteQueryResultsClass writes the QueryResults class for :many queries,
+// in its sync (sqlite3) or async (aiosqlite) variant.
+func (sb *sqliteBase) WriteQueryResultsClass(body *writer.CodeWriter) string {
+	cursorType := sb.moduleName + ".Cursor"
+	awaitKw, iteratorType, nextDef, iterDunder, nextDunder, stopExc, article := "", "Iterator", "def __next__", "__iter__", "__next__", "StopIteration", "a "
+	if sb.async {
+		awaitKw, iteratorType, nextDef, iterDunder, nextDunder, stopExc, article = "await ", "AsyncIterator", "async def __anext__", "__aiter__", "__anext__", "StopAsyncIteration", "an "
+	}
+
+	body.QueryResults.WriteQueryResultsClassHeader(sb.ConnType(), []string{
+		fmt.Sprintf("self._cursor: %s | None = None", cursorType),
+		fmt.Sprintf("self._iterator: collections.abc.%s[%s] | None = None", iteratorType, sqliteResultType),
+	}, sqliteResultType, sb.async)
+	if sb.async {
+		body.QueryResults.WriteQueryResultsAwaitFunction([]string{
+			"result = await (await self._conn.execute(self._sql, self._args)).fetchall()",
+			"return [self._decode_hook(row) for row in result]",
+		})
+	} else {
+		body.QueryResults.WriteQueryResultsCallFunction([]string{
+			"result = self._conn.execute(self._sql, self._args).fetchall()",
+			"return [self._decode_hook(row) for row in result]",
+		})
+	}
+	body.NewLine()
+	body.WriteIndentedLine(1, nextDef+"(self) -> T:")
+	body.WriteQueryResultsNextDocstring(article+sb.moduleName+" cursor", sb.async)
+	body.WriteIndentedLine(2, "if self._cursor is None or self._iterator is None:")
+	body.WriteIndentedLine(
+		3,
+		fmt.Sprintf("self._cursor: %s | None = %sself._conn.execute(self._sql, self._args)", cursorType, awaitKw),
+	)
+	body.WriteIndentedLine(3, fmt.Sprintf("self._iterator = self._cursor.%s()", iterDunder))
+	body.WriteIndentedLine(2, "try:")
+	body.WriteIndentedLine(3, fmt.Sprintf("record = %sself._iterator.%s()", awaitKw, nextDunder))
+	body.WriteIndentedLine(2, "except "+stopExc+":")
+	body.WriteIndentedLine(3, "self._cursor = None")
+	body.WriteIndentedLine(3, "self._iterator = None")
+	body.WriteIndentedLine(3, "raise")
+	body.WriteIndentedLine(2, "return self._decode_hook(record)")
+
+	return "QueryResults"
+}
+
+func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Config, query model.Query, indent int) {
+	cursorType := sb.moduleName + ".Cursor"
+	var annotation, docRetType string
+	switch query.Cmd {
+	case metadata.CmdExec:
+		annotation, docRetType = query.Returns.Type.Print(), ""
+	case metadata.CmdExecResult:
+		annotation, docRetType = cursorType, cursorType
+	case metadata.CmdExecRows, metadata.CmdExecLastId:
+		annotation, docRetType = query.Returns.Type.Print(), query.Returns.Type.Type
+	case metadata.CmdOne:
+		annotation, docRetType = query.Returns.Type.PrintOptional(), query.Returns.Type.Type
+	case metadata.CmdMany:
+		annotation, docRetType = "QueryResults["+query.Returns.Type.Print()+"]", query.Returns.Type.Print()
+	}
+
+	conn := writeFuncSignature(body, sb, config, indent, query, annotation)
+
+	indent++
+	writeQueryDocstring(body, sb, config, query, indent, docRetType)
+
+	// stmt builds the execute-statement head/tail with the correct await
+	// wrapping for the async driver: accessing an attribute or method of the
+	// cursor requires parenthesizing the awaited execute call.
+	stmt := func(prefix, attribute string) (string, string) {
+		base := fmt.Sprintf("%s.execute(%s", conn, query.ConstantName)
+		switch {
+		case !sb.async:
+			return prefix + base, ")" + attribute
+		case attribute == "":
+			return prefix + "await " + base, ")"
+		default:
+			return prefix + "(await " + base, "))" + attribute
+		}
+	}
+
+	switch query.Cmd {
+	case metadata.CmdExec:
+		head, tail := stmt("", "")
+		writeSqliteCall(body, indent, query, head, tail)
+
+	case metadata.CmdExecResult:
+		head, tail := stmt("return ", "")
+		writeSqliteCall(body, indent, query, head, tail)
+
+	case metadata.CmdExecRows:
+		head, tail := stmt("return ", ".rowcount")
+		writeSqliteCall(body, indent, query, head, tail)
+
+	case metadata.CmdExecLastId:
+		head, tail := stmt("return ", ".lastrowid")
+		writeSqliteCall(body, indent, query, head, tail)
+
+	case metadata.CmdOne:
+		prefix := "row = "
+		if sb.async {
+			// aiosqlite's fetchone is itself a coroutine.
+			prefix = "row = await "
+		}
+		head, tail := stmt(prefix, ".fetchone()")
+		writeSqliteCall(body, indent, query, head, tail)
+		body.WriteIndentedLine(indent, "if row is None:")
+		body.WriteIndentedLine(indent+1, "return None")
+
+		if query.Returns.IsStruct() {
+			sb.rows.WriteStructReturn(body, indent, query.Returns)
+		} else {
+			sb.rows.WriteScalarReturn(body, indent, query.Returns)
+		}
+
+	case metadata.CmdMany:
+		decodeHook := sb.rows.WriteDecodeHook(body, indent, query, sqliteResultType)
+		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
+		// Deliberately unsubscripted: QueryResults[T](...) would go through
+		// typing's _GenericAlias.__call__ on every invocation (~10x call
+		// overhead) for zero benefit — the return annotation carries the type.
+		body.WriteWrappedCall(indent, "return QueryResults(", manyArgs, ")")
+	}
 }
 
 // writeSqliteCall writes stmtHead+argsSegment+stmtTail on one line, hoisting a

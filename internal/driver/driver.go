@@ -50,9 +50,9 @@ func New(conf *config.Config) (Driver, error) {
 	case config.SQLDriverAsyncpg:
 		return newAsyncpgDriver(), nil
 	case config.SQLDriverAioSQLite:
-		return newAiosqliteDriver(), nil
+		return newSqliteDriver("aiosqlite", true), nil
 	case config.SQLDriverSQLite:
-		return newSqlite3Driver(), nil
+		return newSqliteDriver("sqlite3", false), nil
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver)
 	}
