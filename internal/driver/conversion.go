@@ -132,6 +132,26 @@ func (u SqliteConversionUsage) Any() bool {
 	return len(u.uses) > 0
 }
 
+// RuntimeModules returns the Python modules the emitted conversion setup
+// references at runtime: register_adapter needs the adapted type's module,
+// and converter bodies reference their type's module unless the speedups
+// variant (which references only ciso8601) replaces them. Builtin types
+// (bool, memoryview) need no import.
+func (u SqliteConversionUsage) RuntimeModules(speedups bool) map[string]struct{} {
+	modules := make(map[string]struct{})
+	for _, use := range u.uses {
+		module, _, found := strings.Cut(use.spec.pyType, ".")
+		if !found {
+			continue
+		}
+		if use.adapter || (use.converter && (!speedups || use.spec.speedupsBody == "")) {
+			modules[module] = struct{}{}
+		}
+	}
+
+	return modules
+}
+
 // SpeedupConverterUsed reports whether any needed converter has a speedups
 // variant — i.e. whether the generated module references ciso8601 when the
 // speedups option is enabled.

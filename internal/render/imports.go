@@ -185,15 +185,29 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 
 	std, typeChecking := splitTypeChecking(std)
 
-	// The conversion usage decides two runtime imports below: the sqlite
-	// module itself (register_adapter/register_converter run at import time)
-	// and ciso8601 (referenced only inside emitted converter bodies when
-	// speedups are on) — mirroring exactly what WriteConversionSetup emits.
+	// The conversion usage decides the runtime imports below by mirroring
+	// exactly what WriteConversionSetup emits: the sqlite module itself
+	// (register_adapter/register_converter run at import time), the modules
+	// referenced by adapter registrations and converter bodies, and ciso8601
+	// (referenced only inside speedups converter bodies).
 	var conversions driver.SqliteConversionUsage
 	if r.conf.SqlDriver == config.SQLDriverAioSQLite || r.conf.SqlDriver == config.SQLDriverSQLite {
 		conversions = driver.SqliteConversionsUsed(queries)
 	}
 	r.addDriverImports(std, typeChecking, queries, conversions)
+
+	for module := range conversions.RuntimeModules(r.conf.Speedups) {
+		spec, ok := typeChecking[module]
+		if !ok {
+			spec, ok = std[module]
+			if !ok {
+				spec = importSpec{Module: module}
+			}
+		}
+		delete(typeChecking, module)
+		spec.TypeChecking = false
+		std[module] = spec
+	}
 
 	if r.conf.Speedups && conversions.SpeedupConverterUsed() {
 		std["ciso8601"] = importSpec{Module: "ciso8601"}
@@ -431,7 +445,7 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 				return
 			}
 			used = true
-			if r.drv.NeedsConversion(typ.SQLType) || typ.DoOverride() {
+			if r.drv.ConvertsInline(typ.SQLType) || typ.DoOverride() {
 				typeChecking = false
 			}
 		}
@@ -453,7 +467,7 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 	}
 
 	if queryValue.Type.Type == name {
-		needsConv := r.drv.NeedsConversion(queryValue.Type.SQLType) || queryValue.Type.DoOverride()
+		needsConv := r.drv.ConvertsInline(queryValue.Type.SQLType) || queryValue.Type.DoOverride()
 		return true, !needsConv
 	}
 
