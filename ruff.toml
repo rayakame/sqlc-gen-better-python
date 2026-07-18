@@ -57,4 +57,5 @@ convention = "numpy"
 exclude = [
     "models.py",
     "queries.py",
+    "enums.py",
 ]
