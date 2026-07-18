@@ -113,11 +113,45 @@ func (w *CodeWriter) WriteAll(items []string) {
 	slices.SortFunc(items, func(a, b string) int {
 		return cmp.Compare(a, b)
 	})
+	// A single-element tuple's trailing comma is required syntax, so ruff
+	// format collapses it onto one line; match that.
+	if len(items) == 1 {
+		w.WriteLine(fmt.Sprintf(`__all__: collections.abc.Sequence[str] = ("%s",)`, items[0]))
+
+		return
+	}
 	w.WriteLine("__all__: collections.abc.Sequence[str] = (")
 	for _, item := range items {
 		w.WriteIndentedLine(1, fmt.Sprintf(`"%s",`, item))
 	}
 	w.WriteLine(")")
+}
+
+// MaxLineLength is the ruff line-length limit (ruff's maximum allowed value).
+// Statements the generator would render longer than this are exploded with
+// magic trailing commas so that ruff format leaves them untouched.
+const MaxLineLength = 320
+
+// FitsLine reports whether txt fits within MaxLineLength at the indent level.
+func (w *CodeWriter) FitsLine(indent int, txt string) bool {
+	return len(w.indent(indent))+len(txt) <= MaxLineLength
+}
+
+// WriteWrappedCall writes head+args+tail on a single line when it fits,
+// otherwise one argument per line with trailing commas. head must end with
+// the opening parenthesis, tail must start with the closing one.
+func (w *CodeWriter) WriteWrappedCall(indent int, head string, args []string, tail string) {
+	single := head + strings.Join(args, ", ") + tail
+	if w.FitsLine(indent, single) {
+		w.WriteIndentedLine(indent, single)
+
+		return
+	}
+	w.WriteIndentedLine(indent, head)
+	for _, arg := range args {
+		w.WriteIndentedLine(indent+1, arg+",")
+	}
+	w.WriteIndentedLine(indent, tail)
 }
 
 // indent returns the indentation string for the given level.

@@ -145,9 +145,7 @@ class TestSqlite3PydanticFunctions:
             json_test=model.json_test,
         )
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::inner_insert", depends=["Sqlite3TestPydanticFunctions::insert"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::inner_insert", depends=["Sqlite3TestPydanticFunctions::insert"])
     def test_inner_insert(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -186,9 +184,7 @@ class TestSqlite3PydanticFunctions:
             json_test=inner_model.json_test,
         )
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_one", depends=["Sqlite3TestPydanticFunctions::inner_insert"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_one", depends=["Sqlite3TestPydanticFunctions::inner_insert"])
     def test_get_one(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -202,9 +198,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_one_none", depends=["Sqlite3TestPydanticFunctions::get_one"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_one_none", depends=["Sqlite3TestPydanticFunctions::get_one"])
     def test_get_one_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -213,9 +207,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_one_inner", depends=["Sqlite3TestPydanticFunctions::get_one_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_one_inner", depends=["Sqlite3TestPydanticFunctions::get_one_none"])
     def test_get_one_inner(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -240,9 +232,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_date", depends=["Sqlite3TestPydanticFunctions::get_one_inner_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_date", depends=["Sqlite3TestPydanticFunctions::get_one_inner_none"])
     def test_get_date(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -255,9 +245,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, datetime.date)
         assert result == model.date_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_date_none", depends=["Sqlite3TestPydanticFunctions::get_date"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_date_none", depends=["Sqlite3TestPydanticFunctions::get_date"])
     def test_get_date_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -266,9 +254,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_datetime", depends=["Sqlite3TestPydanticFunctions::get_date_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_datetime", depends=["Sqlite3TestPydanticFunctions::get_date_none"])
     def test_get_datetime(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -281,9 +267,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, datetime.datetime)
         assert result == model.datetime_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_datetime_none", depends=["Sqlite3TestPydanticFunctions::get_datetime"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_datetime_none", depends=["Sqlite3TestPydanticFunctions::get_datetime"])
     def test_get_datetime_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -320,9 +304,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_bool", depends=["Sqlite3TestPydanticFunctions::get_timestamp_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_bool", depends=["Sqlite3TestPydanticFunctions::get_timestamp_none"])
     def test_get_bool(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -335,9 +317,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, bool)
         assert result == model.bool_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_bool_none", depends=["Sqlite3TestPydanticFunctions::get_bool"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_bool_none", depends=["Sqlite3TestPydanticFunctions::get_bool"])
     def test_get_bool_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -346,9 +326,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_boolean", depends=["Sqlite3TestPydanticFunctions::get_bool_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_boolean", depends=["Sqlite3TestPydanticFunctions::get_bool_none"])
     def test_get_boolean(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -361,9 +339,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, bool)
         assert result == model.boolean_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_boolean_none", depends=["Sqlite3TestPydanticFunctions::get_boolean"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_boolean_none", depends=["Sqlite3TestPydanticFunctions::get_boolean"])
     def test_get_boolean_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -372,9 +348,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_decimal", depends=["Sqlite3TestPydanticFunctions::get_boolean_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_decimal", depends=["Sqlite3TestPydanticFunctions::get_boolean_none"])
     def test_get_decimal(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -387,9 +361,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, decimal.Decimal)
         assert result == model.decimal_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_decimal_none", depends=["Sqlite3TestPydanticFunctions::get_decimal"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_decimal_none", depends=["Sqlite3TestPydanticFunctions::get_decimal"])
     def test_get_decimal_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -398,9 +370,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_blob", depends=["Sqlite3TestPydanticFunctions::get_decimal_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_blob", depends=["Sqlite3TestPydanticFunctions::get_decimal_none"])
     def test_get_blob(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -413,9 +383,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, memoryview)
         assert result == model.blob_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_blob_none", depends=["Sqlite3TestPydanticFunctions::get_blob"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_blob_none", depends=["Sqlite3TestPydanticFunctions::get_blob"])
     def test_get_blob_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -424,9 +392,7 @@ class TestSqlite3PydanticFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_many", depends=["Sqlite3TestPydanticFunctions::get_blob_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_many", depends=["Sqlite3TestPydanticFunctions::get_blob_none"])
     def test_get_many(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
         result = queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id_)
 
@@ -441,9 +407,7 @@ class TestSqlite3PydanticFunctions:
 
         assert results[0] == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_many_iter", depends=["Sqlite3TestPydanticFunctions::get_many"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_many_iter", depends=["Sqlite3TestPydanticFunctions::get_many"])
     def test_get_many_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
         for result in queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id_):
             assert result is not None
@@ -451,9 +415,7 @@ class TestSqlite3PydanticFunctions:
 
             assert result == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::get_many_inner", depends=["Sqlite3TestPydanticFunctions::get_many_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::get_many_inner", depends=["Sqlite3TestPydanticFunctions::get_many_iter"])
     def test_get_many_inner(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
         result = queries.get_many_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id)
 
@@ -468,9 +430,7 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_many_inner_iter",
         depends=["Sqlite3TestPydanticFunctions::get_many_inner"],
     )
-    def test_get_many_inner_iter(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    def test_get_many_inner_iter(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
         for result in queries.get_many_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
@@ -482,12 +442,8 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_many_nullable_inner",
         depends=["Sqlite3TestPydanticFunctions::get_many_inner_iter"],
     )
-    async def test_get_many_nullable_inner(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
-        result = queries.get_many_nullable_inner_sqlite_type(
-            conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
-        )
+    async def test_get_many_nullable_inner(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
+        result = queries.get_many_nullable_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -501,12 +457,8 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_many_nullable_inner_iter",
         depends=["Sqlite3TestPydanticFunctions::get_many_nullable_inner"],
     )
-    async def test_get_many_nullable_inner_iter(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
-        for result in queries.get_many_nullable_inner_sqlite_type(
-            conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
-        ):
+    async def test_get_many_nullable_inner_iter(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
+        for result in queries.get_many_nullable_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
 
@@ -730,9 +682,7 @@ class TestSqlite3PydanticFunctions:
         )
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::update_result", depends=["Sqlite3TestPydanticFunctions::insert_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::update_result", depends=["Sqlite3TestPydanticFunctions::insert_result"])
     def test_update_result(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -741,9 +691,7 @@ class TestSqlite3PydanticFunctions:
         result = queries.update_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::delete_result", depends=["Sqlite3TestPydanticFunctions::update_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::delete_result", depends=["Sqlite3TestPydanticFunctions::update_result"])
     def test_delete_result(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -752,9 +700,7 @@ class TestSqlite3PydanticFunctions:
         result = queries.delete_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::insert_rows", depends=["Sqlite3TestPydanticFunctions::delete_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::insert_rows", depends=["Sqlite3TestPydanticFunctions::delete_result"])
     def test_insert_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -795,9 +741,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::update_rows", depends=["Sqlite3TestPydanticFunctions::insert_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::update_rows", depends=["Sqlite3TestPydanticFunctions::insert_rows"])
     def test_update_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -807,9 +751,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::delete_rows", depends=["Sqlite3TestPydanticFunctions::update_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::delete_rows", depends=["Sqlite3TestPydanticFunctions::update_rows"])
     def test_delete_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -819,9 +761,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::create_table_rows", depends=["Sqlite3TestPydanticFunctions::delete_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::create_table_rows", depends=["Sqlite3TestPydanticFunctions::delete_rows"])
     def test_create_table_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -876,9 +816,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, int)
         assert result == model.id_ + 3
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::update_last_id", depends=["Sqlite3TestPydanticFunctions::insert_last_id"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::update_last_id", depends=["Sqlite3TestPydanticFunctions::insert_last_id"])
     def test_update_last_id(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -888,9 +826,7 @@ class TestSqlite3PydanticFunctions:
         assert isinstance(result, int)
         assert result == model.id_ + 3
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestPydanticFunctions::delete_last_id", depends=["Sqlite3TestPydanticFunctions::update_last_id"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestPydanticFunctions::delete_last_id", depends=["Sqlite3TestPydanticFunctions::update_last_id"])
     def test_delete_last_id(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -911,26 +847,20 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::delete_inner_sqlite_type",
         depends=["Sqlite3TestPydanticFunctions::delete_sqlite_type"],
     )
-    def test_delete_inner_sqlite_type(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    def test_delete_inner_sqlite_type(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
         queries.delete_one_test_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id)
 
     @pytest.mark.dependency(
         name="Sqlite3TestPydanticFunctions::insert_type_override",
     )
-    def test_insert_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_insert_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         queries.insert_type_override(conn=sqlite3_conn, id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.dependency(
         name="Sqlite3TestPydanticFunctions::get_one_type_override",
         depends=["Sqlite3TestPydanticFunctions::insert_type_override"],
     )
-    def test_get_one_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_get_one_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model
@@ -939,9 +869,7 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_one_type_override_none",
         depends=["Sqlite3TestPydanticFunctions::get_one_type_override"],
     )
-    def test_get_one_type_override_none(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_get_one_type_override_none(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id_ - 1)
         assert result is None
 
@@ -949,9 +877,7 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_many_type_override",
         depends=["Sqlite3TestPydanticFunctions::get_one_type_override_none"],
     )
-    def test_get_many_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_get_many_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         result = queries.get_many_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -969,9 +895,7 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_one_text_type_override",
         depends=["Sqlite3TestPydanticFunctions::get_many_type_override"],
     )
-    def test_get_one_text_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_get_one_text_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
@@ -980,9 +904,7 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_one_text_type_override_none",
         depends=["Sqlite3TestPydanticFunctions::get_one_text_type_override"],
     )
-    def test_get_one_text_type_override_none(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_get_one_text_type_override_none(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id_ - 1)
         assert result is None
 
@@ -990,9 +912,7 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::get_many_text_type_override",
         depends=["Sqlite3TestPydanticFunctions::get_one_text_type_override_none"],
     )
-    def test_get_many_text_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_get_many_text_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         result = queries.get_many_text_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -1010,7 +930,5 @@ class TestSqlite3PydanticFunctions:
         name="Sqlite3TestPydanticFunctions::delete_type_override",
         depends=["Sqlite3TestPydanticFunctions::get_many_text_type_override"],
     )
-    def test_delete_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
+    def test_delete_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         queries.delete_type_override(conn=sqlite3_conn, id_=override_model.id_)

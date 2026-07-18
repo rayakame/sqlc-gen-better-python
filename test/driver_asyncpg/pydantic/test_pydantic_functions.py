@@ -245,9 +245,7 @@ class TestPydanticFunctions:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestPydanticFunctions::get_one_none"], name="TestPydanticFunctions::get_one_inner"
-    )
+    @pytest.mark.dependency(depends=["TestPydanticFunctions::get_one_none"], name="TestPydanticFunctions::get_one_inner")
     async def test_get_one_inner(
         self,
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
@@ -261,9 +259,7 @@ class TestPydanticFunctions:
         assert result == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestPydanticFunctions::get_one_inner"], name="TestPydanticFunctions::get_one_inner_none"
-    )
+    @pytest.mark.dependency(depends=["TestPydanticFunctions::get_one_inner"], name="TestPydanticFunctions::get_one_inner_none")
     async def test_get_one_inner_none(
         self,
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
@@ -331,9 +327,7 @@ class TestPydanticFunctions:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestPydanticFunctions::get_one_bytea_none"], name="TestPydanticFunctions::get_many"
-    )
+    @pytest.mark.dependency(depends=["TestPydanticFunctions::get_one_bytea_none"], name="TestPydanticFunctions::get_many")
     async def test_get_many(
         self,
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
@@ -710,21 +704,15 @@ class TestPydanticFunctions:
     @pytest.mark.dependency(
         name="TestPydanticFunctions::insert_type_override",
     )
-    async def test_insert_type_override(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
-        await queries.insert_type_override(
-            conn=asyncpg_conn, id_=override_model.id_, text_test=override_model.text_test
-        )
+    async def test_insert_type_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
+        await queries.insert_type_override(conn=asyncpg_conn, id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="TestPydanticFunctions::get_one_type_override",
         depends=["TestPydanticFunctions::insert_type_override"],
     )
-    async def test_get_one_type_override(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_type_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model
@@ -734,9 +722,7 @@ class TestPydanticFunctions:
         name="TestPydanticFunctions::get_one_type_override_none",
         depends=["TestPydanticFunctions::get_one_type_override"],
     )
-    async def test_get_one_type_override_none(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_type_override_none(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id_ - 1)
         assert result is None
 
@@ -745,9 +731,7 @@ class TestPydanticFunctions:
         name="TestPydanticFunctions::get_many_type_override",
         depends=["TestPydanticFunctions::get_one_type_override_none"],
     )
-    async def test_get_many_type_override(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_many_type_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         result = await queries.get_many_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model
@@ -757,9 +741,7 @@ class TestPydanticFunctions:
         name="TestPydanticFunctions::get_one_text_type_override",
         depends=["TestPydanticFunctions::get_many_type_override"],
     )
-    async def test_get_one_text_type_override(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_text_type_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
@@ -769,9 +751,7 @@ class TestPydanticFunctions:
         name="TestPydanticFunctions::get_one_text_type_override_none",
         depends=["TestPydanticFunctions::get_one_text_type_override"],
     )
-    async def test_get_one_text_type_override_none(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_text_type_override_none(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id_ - 1)
         assert result is None
 
@@ -780,9 +760,7 @@ class TestPydanticFunctions:
         name="TestPydanticFunctions::get_many_text_type_override",
         depends=["TestPydanticFunctions::get_one_text_type_override_none"],
     )
-    async def test_get_many_text_type_override(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_many_text_type_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         result = await queries.get_many_text_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model.text_test
@@ -792,7 +770,5 @@ class TestPydanticFunctions:
         name="TestPydanticFunctions::delete_type_override",
         depends=["TestPydanticFunctions::get_many_text_type_override"],
     )
-    async def test_delete_type_override(
-        self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_delete_type_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         await queries.delete_type_override(conn=asyncpg_conn, id_=override_model.id_)

@@ -65,9 +65,13 @@ func (w *QueryResultsWriter) WriteQueryResultsAwaitFunction(wrapperLines []strin
 	w.writer.WriteIndentedLine(2, "self,")
 	w.writer.WriteIndentedLine(1, ") -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:")
 	w.writer.WriteQueryResultsFetchDocstring(true)
+	if w.writer.DocstringsEnabled() {
+		w.writer.NewLine()
+	}
 	w.writer.WriteIndentedLine(2, "async def _wrapper() -> collections.abc.Sequence[T]:")
 	for _, line := range wrapperLines {
 		w.writer.WriteIndentedLine(3, line)
 	}
+	w.writer.NewLine()
 	w.writer.WriteIndentedLine(2, "return _wrapper().__await__()")
 }

@@ -58,71 +58,51 @@ func (d *Sqlite3Driver) WriteQueryResultsClass(body *writer.CodeWriter) string {
 }
 
 func (d *Sqlite3Driver) WriteQueryFunc(body *writer.CodeWriter, config *config.Config, query model.Query, indent int) {
-	conn := writeFuncSignature(body, d, config, indent, query)
-
-	indent++
+	var annotation, docRetType string
 	switch query.Cmd {
 	case metadata.CmdExec:
-		body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.Print()))
-		writeQueryDocstring(body, d, config, query, indent, "")
-		body.WriteIndentedString(indent, fmt.Sprintf("%s.execute(%s", conn, query.ConstantName))
-		writeSqliteParams(body, query)
-		body.WriteLine(")")
+		annotation, docRetType = query.Returns.Type.Print(), ""
+	case metadata.CmdExecResult:
+		annotation, docRetType = "sqlite3.Cursor", "sqlite3.Cursor"
+	case metadata.CmdExecRows, metadata.CmdExecLastId:
+		annotation, docRetType = query.Returns.Type.Print(), query.Returns.Type.Type
+	case metadata.CmdOne:
+		annotation, docRetType = query.Returns.Type.PrintOptional(), query.Returns.Type.Type
+	case metadata.CmdMany:
+		annotation, docRetType = "QueryResults["+query.Returns.Type.Type+"]", query.Returns.Type.Type
+	}
+
+	conn := writeFuncSignature(body, d, config, indent, query, annotation)
+
+	indent++
+	writeQueryDocstring(body, d, config, query, indent, docRetType)
+	switch query.Cmd {
+	case metadata.CmdExec:
+		writeSqliteCall(body, indent, query, fmt.Sprintf("%s.execute(%s", conn, query.ConstantName), ")")
 
 	case metadata.CmdExecResult:
-		body.WriteLine(") -> sqlite3.Cursor:")
-		writeQueryDocstring(body, d, config, query, indent, "sqlite3.Cursor")
-		body.WriteIndentedString(indent, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
-		writeSqliteParams(body, query)
-		body.WriteLine(")")
+		writeSqliteCall(body, indent, query, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName), ")")
 
 	case metadata.CmdExecRows:
-		body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.Print()))
-		writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
-		body.WriteIndentedString(indent, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
-		writeSqliteParams(body, query)
-		body.WriteLine(").rowcount")
+		writeSqliteCall(body, indent, query, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName), ").rowcount")
 
 	case metadata.CmdExecLastId:
-		body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.Print()))
-		writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
-		body.WriteIndentedString(indent, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName))
-		writeSqliteParams(body, query)
-		body.WriteLine(").lastrowid")
+		writeSqliteCall(body, indent, query, fmt.Sprintf("return %s.execute(%s", conn, query.ConstantName), ").lastrowid")
 
 	case metadata.CmdOne:
-		d.writeOneBody(body, config, query, conn, indent)
+		writeSqliteCall(body, indent, query, fmt.Sprintf("row = %s.execute(%s", conn, query.ConstantName), ").fetchone()")
+		body.WriteIndentedLine(indent, "if row is None:")
+		body.WriteIndentedLine(indent+1, "return None")
+
+		if query.Returns.IsStruct() {
+			d.rows.WriteStructReturn(body, indent, query.Returns)
+		} else {
+			d.rows.WriteScalarReturn(body, indent, query.Returns)
+		}
 
 	case metadata.CmdMany:
-		d.writeManyBody(body, config, query, conn, indent)
+		decodeHook := d.rows.WriteDecodeHook(body, indent, query, sqliteResultType)
+		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
+		body.WriteWrappedCall(indent, fmt.Sprintf("return QueryResults[%s](", query.Returns.Type.Type), manyArgs, ")")
 	}
-}
-
-// writeOneBody writes the body for a :one query.
-func (d *Sqlite3Driver) writeOneBody(body *writer.CodeWriter, config *config.Config, query model.Query, conn string, indent int) {
-	body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.PrintOptional()))
-	writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
-	body.WriteIndentedString(indent, fmt.Sprintf("row = %s.execute(%s", conn, query.ConstantName))
-	writeSqliteParams(body, query)
-	body.WriteLine(").fetchone()")
-	body.WriteIndentedLine(indent, "if row is None:")
-	body.WriteIndentedLine(indent+1, "return None")
-
-	if query.Returns.IsStruct() {
-		d.rows.WriteStructReturn(body, indent, query.Returns)
-	} else {
-		d.rows.WriteScalarReturn(body, indent, query.Returns)
-	}
-}
-
-// writeManyBody writes the body for a :many query.
-func (d *Sqlite3Driver) writeManyBody(body *writer.CodeWriter, config *config.Config, query model.Query, conn string, indent int) {
-	body.WriteLine(fmt.Sprintf(") -> QueryResults[%s]:", query.Returns.Type.Type))
-	writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
-
-	decodeHook := d.rows.WriteDecodeHook(body, indent, query, sqliteResultType)
-
-	body.WriteIndentedString(indent, fmt.Sprintf("return QueryResults[%s](%s, %s, %s", query.Returns.Type.Type, conn, query.ConstantName, decodeHook))
-	writeSqliteManyParams(body, query)
-	body.WriteLine(")")
 }

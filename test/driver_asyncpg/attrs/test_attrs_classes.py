@@ -249,9 +249,7 @@ class TestAttrsClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestAttrsClasses::get_one_inner_none"], name="TestAttrsClasses::get_one_timestamp"
-    )
+    @pytest.mark.dependency(depends=["TestAttrsClasses::get_one_inner_none"], name="TestAttrsClasses::get_one_timestamp")
     async def test_get_one_timestamp(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
         result = await queries_obj.get_one_test_timestamp_postgres_type(id_=model.id_)
 
@@ -260,9 +258,7 @@ class TestAttrsClasses:
         assert result == model.timestamp_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestAttrsClasses::get_one_timestamp"], name="TestAttrsClasses::get_one_timestamp_none"
-    )
+    @pytest.mark.dependency(depends=["TestAttrsClasses::get_one_timestamp"], name="TestAttrsClasses::get_one_timestamp_none")
     async def test_get_one_timestamp_none(self, queries_obj: queries.Queries) -> None:
         result = await queries_obj.get_one_test_timestamp_postgres_type(id_=0)
 
@@ -401,9 +397,7 @@ class TestAttrsClasses:
         assert result.test_inner_postgres_type == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestAttrsClasses::get_all_embedded"], name="TestAttrsClasses::get_all_embedded_none"
-    )
+    @pytest.mark.dependency(depends=["TestAttrsClasses::get_all_embedded"], name="TestAttrsClasses::get_all_embedded_none")
     async def test_get_all_embedded_none(
         self,
         queries_obj: queries.Queries,
@@ -623,9 +617,7 @@ class TestAttrsClasses:
     @pytest.mark.dependency(
         name="TestAttrsClasses::insert_type_override",
     )
-    async def test_insert_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_insert_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         await queries_obj.insert_type_override(id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.asyncio(loop_scope="session")
@@ -633,9 +625,7 @@ class TestAttrsClasses:
         name="TestAttrsClasses::get_one_type_override",
         depends=["TestAttrsClasses::insert_type_override"],
     )
-    async def test_get_one_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         result = await queries_obj.get_one_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model
@@ -645,9 +635,7 @@ class TestAttrsClasses:
         name="TestAttrsClasses::get_one_type_override_none",
         depends=["TestAttrsClasses::get_one_type_override"],
     )
-    async def test_get_one_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         result = await queries_obj.get_one_type_override(id_=override_model.id_ - 1)
         assert result is None
 
@@ -656,9 +644,7 @@ class TestAttrsClasses:
         name="TestAttrsClasses::get_many_type_override",
         depends=["TestAttrsClasses::get_one_type_override_none"],
     )
-    async def test_get_many_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_many_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         result = await queries_obj.get_many_type_override(id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model
@@ -668,9 +654,7 @@ class TestAttrsClasses:
         name="TestAttrsClasses::get_one_text_type_override",
         depends=["TestAttrsClasses::get_many_type_override"],
     )
-    async def test_get_one_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         result = await queries_obj.get_one_text_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
@@ -680,9 +664,7 @@ class TestAttrsClasses:
         name="TestAttrsClasses::get_one_text_type_override_none",
         depends=["TestAttrsClasses::get_one_text_type_override"],
     )
-    async def test_get_one_text_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_one_text_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         result = await queries_obj.get_one_text_type_override(id_=override_model.id_ - 1)
         assert result is None
 
@@ -691,9 +673,7 @@ class TestAttrsClasses:
         name="TestAttrsClasses::get_many_text_type_override",
         depends=["TestAttrsClasses::get_one_text_type_override_none"],
     )
-    async def test_get_many_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_get_many_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         result = await queries_obj.get_many_text_type_override(id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model.text_test
@@ -703,7 +683,5 @@ class TestAttrsClasses:
         name="TestAttrsClasses::delete_type_override",
         depends=["TestAttrsClasses::get_many_text_type_override"],
     )
-    async def test_delete_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
+    async def test_delete_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         await queries_obj.delete_type_override(id_=override_model.id_)

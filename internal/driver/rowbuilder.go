@@ -22,42 +22,80 @@ func newRowBuilder(needsConversion func(string) bool) *RowBuilder {
 }
 
 // WriteStructReturn writes "return ModelType(col1=row[0], col2=row[1], ...)"
-// handling embeds, nullable wrapping, and type conversions.
+// handling embeds, nullable wrapping, and type conversions. Constructions that
+// would exceed the line limit are exploded with magic trailing commas.
 func (rb *RowBuilder) WriteStructReturn(body *writer.CodeWriter, indent int, ret model.QueryValue) {
-	body.WriteIndentedString(indent, fmt.Sprintf("return %s(", ret.Type.Type))
+	head := fmt.Sprintf("return %s(", ret.Type.Type)
+
+	args := make([]string, 0, len(ret.Table.Columns))
 	idx := 0
-	for colIdx, col := range ret.Table.Columns {
-		if colIdx != 0 {
-			body.WriteString(", ")
-		}
+	for _, col := range ret.Table.Columns {
 		if col.Embed != nil {
-			rb.writeEmbedConstruction(body, col, &idx)
+			args = append(args, rb.formatEmbedConstruction(col, &idx))
 		} else {
-			rb.writeColumnAssignment(body, col, idx)
+			args = append(args, rb.formatColumnValue(col, idx))
 			idx++
 		}
 	}
-	body.WriteLine(")")
+
+	single := head + strings.Join(args, ", ") + ")"
+	if body.FitsLine(indent, single) {
+		body.WriteIndentedLine(indent, single)
+
+		return
+	}
+
+	body.WriteIndentedLine(indent, head)
+	idx = 0
+	for _, col := range ret.Table.Columns {
+		if col.Embed != nil {
+			embedHead := fmt.Sprintf("%s=%s(", col.Name, col.Type.Type)
+			embedArgs := make([]string, 0, len(col.Embed.Columns))
+			for _, embedCol := range col.Embed.Columns {
+				embedArgs = append(embedArgs, rb.formatColumnValue(embedCol, idx))
+				idx++
+			}
+			body.WriteWrappedCall(indent+1, embedHead, embedArgs, "),")
+
+			continue
+		}
+		body.WriteIndentedLine(indent+1, rb.formatColumnValue(col, idx)+",")
+		idx++
+	}
+	body.WriteIndentedLine(indent, ")")
+}
+
+// formatEmbedConstruction returns "name=EmbedType(field1=row[i], ...)".
+func (rb *RowBuilder) formatEmbedConstruction(col model.Column, idx *int) string {
+	inner := make([]string, 0, len(col.Embed.Columns))
+	for _, embedCol := range col.Embed.Columns {
+		inner = append(inner, rb.formatColumnValue(embedCol, *idx))
+		*idx++
+	}
+
+	return fmt.Sprintf("%s=%s(%s)", col.Name, col.Type.Type, strings.Join(inner, ", "))
 }
 
 // WriteDecodeHook writes a _decode_hook function for :many queries or returns
-// "operator.itemgetter(0)" for simple non-converted scalar returns.
+// "operator.itemgetter(0)" for simple non-converted scalar returns. The blank
+// lines around the nested def match ruff format's layout.
 func (rb *RowBuilder) WriteDecodeHook(body *writer.CodeWriter, indent int, query model.Query, resultType string) string {
 	// Simple scalar without conversion: use itemgetter.
 	if !query.Returns.IsStruct() && !rb.columnNeedsConversion(query.Returns.Type) {
 		return "operator.itemgetter(0)"
 	}
 
-	// Scalar with conversion: simple decode hook.
-	if !query.Returns.IsStruct() {
-		body.WriteIndentedLine(indent, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", resultType, query.Returns.Type.Type))
-		body.WriteIndentedLine(indent+1, fmt.Sprintf("return %s(row[0])", query.Returns.Type.Type))
-		return "_decode_hook"
+	if body.DocstringsEnabled() {
+		body.NewLine()
 	}
-
-	// Struct: full decode hook with column assignments.
 	body.WriteIndentedLine(indent, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", resultType, query.Returns.Type.Type))
-	rb.WriteStructReturn(body, indent+1, query.Returns)
+	if query.Returns.IsStruct() {
+		rb.WriteStructReturn(body, indent+1, query.Returns)
+	} else {
+		body.WriteIndentedLine(indent+1, fmt.Sprintf("return %s(row[0])", query.Returns.Type.Type))
+	}
+	body.NewLine()
+
 	return "_decode_hook"
 }
 
@@ -75,22 +113,6 @@ func (rb *RowBuilder) WriteScalarReturn(body *writer.CodeWriter, indent int, ret
 // which must be wrapped in the generated enum class.
 func (rb *RowBuilder) columnNeedsConversion(typ model.PyType) bool {
 	return typ.DoOverride() || typ.IsEnum || rb.needsConversion(typ.SQLType)
-}
-
-// writeEmbedConstruction writes "name=EmbedType(field1=row[i], field2=row[i+1], ...)".
-func (rb *RowBuilder) writeEmbedConstruction(body *writer.CodeWriter, col model.Column, idx *int) {
-	body.WriteString(fmt.Sprintf("%s=%s(", col.Name, col.Type.Type))
-	var inner []string
-	for _, embedCol := range col.Embed.Columns {
-		inner = append(inner, rb.formatColumnValue(embedCol, *idx))
-		*idx++
-	}
-	body.WriteString(strings.Join(inner, ", ") + ")")
-}
-
-// writeColumnAssignment writes "name=row[i]" or "name=Type(row[i])" depending on conversion needs.
-func (rb *RowBuilder) writeColumnAssignment(body *writer.CodeWriter, col model.Column, idx int) {
-	body.WriteString(rb.formatColumnValue(col, idx))
 }
 
 // formatColumnValue returns the Python expression for accessing a single column from a row.

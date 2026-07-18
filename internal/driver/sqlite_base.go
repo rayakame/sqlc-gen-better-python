@@ -163,23 +163,30 @@ func (sb *sqliteBase) WriteConversionSetup(body *writer.CodeWriter, config *conf
 	return true
 }
 
-// writeSqliteParams writes sqlite-style parameters: ", (arg1, arg2)".
-func writeSqliteParams(body *writer.CodeWriter, query model.Query) {
+// writeSqliteCall writes stmtHead+argsSegment+stmtTail on one line, hoisting a
+// too-long parameter tuple into a local _args variable first so the statement
+// stays within the line limit.
+func writeSqliteCall(body *writer.CodeWriter, indent int, query model.Query, stmtHead, stmtTail string) {
 	parts := expandParams(query)
-	if len(parts) == 0 {
+	segment := ""
+	switch {
+	case len(parts) == 1:
+		segment = fmt.Sprintf(", (%s,)", parts[0])
+	case len(parts) > 1:
+		segment = fmt.Sprintf(", (%s)", strings.Join(parts, ", "))
+	}
+
+	stmt := stmtHead + segment + stmtTail
+	if body.FitsLine(indent, stmt) {
+		body.WriteIndentedLine(indent, stmt)
+
 		return
 	}
-	if len(parts) == 1 {
-		body.WriteString(fmt.Sprintf(", (%s, )", parts[0]))
-	} else {
-		body.WriteString(fmt.Sprintf(", (%s)", strings.Join(parts, ", ")))
-	}
-}
 
-// writeSqliteManyParams writes parameters for sqlite :many QueryResults constructor.
-func writeSqliteManyParams(body *writer.CodeWriter, query model.Query) {
-	parts := expandParams(query)
-	if len(parts) > 0 {
-		body.WriteString(", " + strings.Join(parts, ", "))
+	body.WriteIndentedLine(indent, "sql_args = (")
+	for _, part := range parts {
+		body.WriteIndentedLine(indent+1, part+",")
 	}
+	body.WriteIndentedLine(indent, ")")
+	body.WriteIndentedLine(indent, stmtHead+", sql_args"+stmtTail)
 }

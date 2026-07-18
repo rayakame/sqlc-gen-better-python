@@ -9,24 +9,31 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 )
 
-func writeFuncSignature(body *writer.CodeWriter, d Driver, config *config.Config, indent int, query model.Query) string {
+func writeFuncSignature(body *writer.CodeWriter, d Driver, config *config.Config, indent int, query model.Query, returnAnnotation string) string {
 	conn := "conn"
-	params := fmt.Sprintf("conn: %s", d.ConnType())
+	first := fmt.Sprintf("conn: %s", d.ConnType())
 	if config.EmitClasses {
-		params = "self"
+		first = "self"
 		conn = "self._conn"
 	}
 	asyncPrefix := ""
 	if d.IsAsync() && query.Cmd != metadata.CmdMany {
 		asyncPrefix = "async "
 	}
-	body.WriteIndentedString(indent, fmt.Sprintf("%sdef %s(%s", asyncPrefix, query.FuncName, params))
+
+	args := []string{first}
 	if len(query.Params) > config.OmitKwargsLimit {
-		body.WriteString(", *")
+		args = append(args, "*")
 	}
 	for _, param := range query.Params {
-		body.WriteString(fmt.Sprintf(", %s: %s", param.Name, param.Type.Print()))
+		args = append(args, fmt.Sprintf("%s: %s", param.Name, param.Type.Print()))
 	}
+	body.WriteWrappedCall(indent,
+		fmt.Sprintf("%sdef %s(", asyncPrefix, query.FuncName),
+		args,
+		fmt.Sprintf(") -> %s:", returnAnnotation),
+	)
+
 	return conn
 }
 

@@ -103,89 +103,59 @@ func (d *AsyncpgDriver) SupportsCommand(cmd string) bool {
 }
 
 func (d *AsyncpgDriver) WriteQueryFunc(body *writer.CodeWriter, config *config.Config, query model.Query, indent int) {
-	conn := writeFuncSignature(body, d, config, indent, query)
-
-	indent++
+	var annotation, docRetType string
 	switch query.Cmd {
 	case metadata.CmdExec:
-		body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.Print()))
-		writeQueryDocstring(body, d, config, query, indent, "")
-		body.WriteIndentedString(indent, fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName))
-		writeAsyncpgParams(body, query)
-		body.WriteLine(")")
+		annotation, docRetType = query.Returns.Type.Print(), ""
+	case metadata.CmdExecResult:
+		annotation, docRetType = "str", "str"
+	case metadata.CmdExecRows, metadata.CmdCopyFrom:
+		annotation, docRetType = query.Returns.Type.Print(), query.Returns.Type.Type
+	case metadata.CmdOne:
+		annotation, docRetType = query.Returns.Type.PrintOptional(), query.Returns.Type.Type
+	case metadata.CmdMany:
+		annotation, docRetType = "QueryResults["+query.Returns.Type.Type+"]", query.Returns.Type.Type
+	}
+
+	conn := writeFuncSignature(body, d, config, indent, query, annotation)
+
+	indent++
+	writeQueryDocstring(body, d, config, query, indent, docRetType)
+	callArgs := append([]string{query.ConstantName}, expandParams(query)...)
+	switch query.Cmd {
+	case metadata.CmdExec:
+		body.WriteWrappedCall(indent, fmt.Sprintf("await %s.execute(", conn), callArgs, ")")
 
 	case metadata.CmdExecResult:
-		body.WriteLine(") -> str:")
-		writeQueryDocstring(body, d, config, query, indent, "str")
-		body.WriteIndentedString(indent, fmt.Sprintf("return await %s.execute(%s", conn, query.ConstantName))
-		writeAsyncpgParams(body, query)
-		body.WriteLine(")")
+		body.WriteWrappedCall(indent, fmt.Sprintf("return await %s.execute(", conn), callArgs, ")")
 
 	case metadata.CmdExecRows:
-		body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.Print()))
-		writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
-		body.WriteIndentedString(indent, fmt.Sprintf("r = await %s.execute(%s", conn, query.ConstantName))
-		writeAsyncpgParams(body, query)
-		body.WriteLine(")")
+		body.WriteWrappedCall(indent, fmt.Sprintf("r = await %s.execute(", conn), callArgs, ")")
 		writeExecRowsReturn(body, config, indent)
 
 	case metadata.CmdCopyFrom:
-		body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.Print()))
-		writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
 		writeCopyFromBody(body, config, query, conn, indent)
 
 	case metadata.CmdOne:
-		d.writeOneBody(body, config, query, conn, indent)
+		body.WriteWrappedCall(indent, fmt.Sprintf("row = await %s.fetchrow(", conn), callArgs, ")")
+		body.WriteIndentedLine(indent, "if row is None:")
+		body.WriteIndentedLine(indent+1, "return None")
+
+		if query.Returns.IsStruct() {
+			d.rows.WriteStructReturn(body, indent, query.Returns)
+		} else {
+			d.rows.WriteScalarReturn(body, indent, query.Returns)
+		}
 
 	case metadata.CmdMany:
-		d.writeManyBody(body, config, query, conn, indent)
-	}
-}
-
-// writeOneBody writes the body for a :one query.
-func (d *AsyncpgDriver) writeOneBody(body *writer.CodeWriter, config *config.Config, query model.Query, conn string, indent int) {
-	body.WriteLine(fmt.Sprintf(") -> %s:", query.Returns.Type.PrintOptional()))
-	writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
-	body.WriteIndentedString(indent, fmt.Sprintf("row = await %s.fetchrow(%s", conn, query.ConstantName))
-	writeAsyncpgParams(body, query)
-	body.WriteLine(")")
-	body.WriteIndentedLine(indent, "if row is None:")
-	body.WriteIndentedLine(indent+1, "return None")
-
-	if query.Returns.IsStruct() {
-		d.rows.WriteStructReturn(body, indent, query.Returns)
-	} else {
-		d.rows.WriteScalarReturn(body, indent, query.Returns)
-	}
-}
-
-// writeManyBody writes the body for a :many query.
-func (d *AsyncpgDriver) writeManyBody(body *writer.CodeWriter, config *config.Config, query model.Query, conn string, indent int) {
-	body.WriteLine(fmt.Sprintf(") -> QueryResults[%s]:", query.Returns.Type.Type))
-	writeQueryDocstring(body, d, config, query, indent, query.Returns.Type.Type)
-
-	decodeHook := d.rows.WriteDecodeHook(body, indent, query, asyncpgResultType)
-
-	body.WriteIndentedString(indent, fmt.Sprintf("return QueryResults[%s](%s, %s, %s", query.Returns.Type.Type, conn, query.ConstantName, decodeHook))
-	writeAsyncpgParams(body, query)
-	body.WriteLine(")")
-}
-
-// writeAsyncpgParams writes asyncpg-style parameters: ", arg1, arg2".
-func writeAsyncpgParams(w *writer.CodeWriter, query model.Query) {
-	if len(query.Params) == 0 {
-		return
-	}
-	parts := expandParams(query)
-	if len(parts) > 0 {
-		w.WriteString(", " + strings.Join(parts, ", "))
+		decodeHook := d.rows.WriteDecodeHook(body, indent, query, asyncpgResultType)
+		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
+		body.WriteWrappedCall(indent, fmt.Sprintf("return QueryResults[%s](", query.Returns.Type.Type), manyArgs, ")")
 	}
 }
 
 // writeCopyFromBody writes the body for an asyncpg :copyfrom command.
 func writeCopyFromBody(body *writer.CodeWriter, config *config.Config, query model.Query, conn string, indent int) {
-	body.WriteIndentedLine(indent, "records = [")
-
 	var paramParts []string
 	var columnParts []string
 	for _, col := range query.Params[0].Table.Columns {
@@ -193,16 +163,52 @@ func writeCopyFromBody(body *writer.CodeWriter, config *config.Config, query mod
 		columnParts = append(columnParts, fmt.Sprintf(`"%s"`, col.DBName))
 	}
 
-	body.WriteIndentedLine(indent+1, fmt.Sprintf("(%s)", strings.Join(paramParts, ", ")))
-	body.WriteIndentedLine(indent+1, fmt.Sprintf("for param in %s", query.Params[0].Name))
-	body.WriteIndentedLine(indent, "]")
-	body.WriteIndentedString(indent, fmt.Sprintf(
-		`r = await %s.copy_records_to_table("%s", columns=[%s], records=records`,
-		conn, query.Table.Name, strings.Join(columnParts, ", "),
-	))
-	if query.Table.Schema != "" {
-		body.WriteString(fmt.Sprintf(`, schema_name="%s"`, query.Table.Schema))
+	paramsName := query.Params[0].Name
+	singleComprehension := fmt.Sprintf("records = [(%s) for param in %s]", strings.Join(paramParts, ", "), paramsName)
+	switch {
+	case body.FitsLine(indent, singleComprehension):
+		body.WriteIndentedLine(indent, singleComprehension)
+	case body.FitsLine(indent+1, "("+strings.Join(paramParts, ", ")+")"):
+		body.WriteIndentedLine(indent, "records = [")
+		body.WriteIndentedLine(indent+1, fmt.Sprintf("(%s)", strings.Join(paramParts, ", ")))
+		body.WriteIndentedLine(indent+1, "for param in "+paramsName)
+		body.WriteIndentedLine(indent, "]")
+	default:
+		body.WriteIndentedLine(indent, "records = [")
+		body.WriteIndentedLine(indent+1, "(")
+		for _, part := range paramParts {
+			body.WriteIndentedLine(indent+2, part+",")
+		}
+		body.WriteIndentedLine(indent+1, ")")
+		body.WriteIndentedLine(indent+1, "for param in "+paramsName)
+		body.WriteIndentedLine(indent, "]")
 	}
-	body.WriteLine(")")
+	columnsArg := fmt.Sprintf("columns=[%s]", strings.Join(columnParts, ", "))
+	copyArgs := []string{fmt.Sprintf(`"%s"`, query.Table.Name), columnsArg, "records=records"}
+	if query.Table.Schema != "" {
+		copyArgs = append(copyArgs, fmt.Sprintf(`schema_name="%s"`, query.Table.Schema))
+	}
+
+	head := fmt.Sprintf("r = await %s.copy_records_to_table(", conn)
+	single := head + strings.Join(copyArgs, ", ") + ")"
+	switch {
+	case body.FitsLine(indent, single):
+		body.WriteIndentedLine(indent, single)
+	default:
+		body.WriteIndentedLine(indent, head)
+		for _, arg := range copyArgs {
+			if arg == columnsArg && !body.FitsLine(indent+1, arg+",") {
+				body.WriteIndentedLine(indent+1, "columns=[")
+				for _, col := range columnParts {
+					body.WriteIndentedLine(indent+2, col+",")
+				}
+				body.WriteIndentedLine(indent+1, "],")
+
+				continue
+			}
+			body.WriteIndentedLine(indent+1, arg+",")
+		}
+		body.WriteIndentedLine(indent, ")")
+	}
 	writeExecRowsReturn(body, config, indent)
 }

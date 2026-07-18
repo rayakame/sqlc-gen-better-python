@@ -16,7 +16,10 @@ type DocArg struct {
 	Extra string // optional extra description line (used by :copyfrom)
 }
 
-func (w *CodeWriter) docstringsEnabled() bool {
+// DocstringsEnabled reports whether docstring generation is active. Emitters
+// use this to add the blank line ruff format requires between a docstring and
+// a following nested function definition.
+func (w *CodeWriter) DocstringsEnabled() bool {
 	return w.docstringConvention != config.DocstringConventionNone
 }
 
@@ -24,31 +27,34 @@ func (w *CodeWriter) docstringsEnabled() bool {
 
 // WriteModelFileModuleDocstring writes the models.py module docstring.
 func (w *CodeWriter) WriteModelFileModuleDocstring() {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteLine(`"""Module containing models."""`)
+	w.NewLine()
 }
 
 // WriteEnumsFileModuleDocstring writes the enums.py module docstring.
 func (w *CodeWriter) WriteEnumsFileModuleDocstring() {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteLine(`"""Module containing enums."""`)
+	w.NewLine()
 }
 
 // WriteQueryFileModuleDocstring writes a query module docstring.
 func (w *CodeWriter) WriteQueryFileModuleDocstring(sourceName string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteLine(fmt.Sprintf(`"""Module containing queries from file %s."""`, sourceName))
+	w.NewLine()
 }
 
 // WriteInitFileModuleDocstring writes the __init__.py module docstring.
 func (w *CodeWriter) WriteInitFileModuleDocstring() {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteLine(`"""Package containing queries and models automatically generated using sqlc-gen-better-python."""`)
@@ -59,7 +65,7 @@ func (w *CodeWriter) WriteInitFileModuleDocstring() {
 // WriteModelClassDocstring writes a model/row/params class docstring with an
 // attribute list, followed by a blank line.
 func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteIndentedLine(1, `"""`+fmt.Sprintf("Model representing %s.", table.Name))
@@ -89,7 +95,7 @@ func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
 
 // WriteEnumClassDocstring writes a one-line enum class docstring.
 func (w *CodeWriter) WriteEnumClassDocstring(name string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteIndentedLine(1, fmt.Sprintf(`"""Enum representing %s."""`, name))
@@ -100,7 +106,7 @@ func (w *CodeWriter) WriteEnumClassDocstring(name string) {
 
 // WriteQueryClassDocstring writes the Querier class docstring.
 func (w *CodeWriter) WriteQueryClassDocstring(sourceName, connType string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteIndentedString(1, fmt.Sprintf(`"""Queries from file %s.`, sourceName))
@@ -120,7 +126,7 @@ func (w *CodeWriter) WriteQueryClassDocstring(sourceName, connType string) {
 
 // WriteQueryClassInitDocstring writes the Querier __init__ docstring.
 func (w *CodeWriter) WriteQueryClassInitDocstring(lvl int, connType string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteIndentedString(lvl, `"""Initialize the instance using the connection.`)
@@ -143,7 +149,7 @@ func (w *CodeWriter) WriteQueryClassInitDocstring(lvl int, connType string) {
 
 // WriteQueryClassConnDocstring writes the Querier conn property docstring.
 func (w *CodeWriter) WriteQueryClassConnDocstring(connType string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteIndentedLine(2, `"""Connection object used to make queries.`)
@@ -168,7 +174,7 @@ func (w *CodeWriter) WriteQueryClassConnDocstring(connType string) {
 
 // WriteQueryResultsClassDocstring writes the QueryResults class docstring.
 func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteIndentedString(1, `"""Helper class that allows both iteration and normal fetching of data from the db.`)
@@ -194,7 +200,7 @@ func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string
 
 // WriteQueryResultsInitDocstring writes the QueryResults __init__ docstring.
 func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	w.WriteIndentedString(2, `"""Initialize the QueryResults instance.`)
@@ -226,7 +232,7 @@ func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string)
 
 // WriteQueryResultsIterDocstring writes the __iter__/__aiter__ docstring.
 func (w *CodeWriter) WriteQueryResultsIterDocstring(async bool) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	summary := "Initialize iteration support."
@@ -256,7 +262,7 @@ func (w *CodeWriter) WriteQueryResultsIterDocstring(async bool) {
 // WriteQueryResultsNextDocstring writes the __next__/__anext__ docstring.
 // cursorPhrase is e.g. "an asyncpg cursor" or "a sqlite3 cursor".
 func (w *CodeWriter) WriteQueryResultsNextDocstring(cursorPhrase string, async bool) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	raises := "StopIteration"
@@ -294,7 +300,7 @@ func (w *CodeWriter) WriteQueryResultsNextDocstring(cursorPhrase string, async b
 
 // WriteQueryResultsFetchDocstring writes the __await__/__call__ docstring.
 func (w *CodeWriter) WriteQueryResultsFetchDocstring(async bool) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 	summary := "Allow calling the object to return all rows as a fully decoded sequence."
@@ -332,7 +338,7 @@ type retDoc struct {
 // function. retType is the return type used in the Returns section; its
 // exact value is driver-specific for some commands (e.g. :execresult).
 func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, connType string, args []DocArg, retType string) {
-	if !w.docstringsEnabled() {
+	if !w.DocstringsEnabled() {
 		return
 	}
 

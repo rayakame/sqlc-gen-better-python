@@ -4,6 +4,7 @@
 #   sqlc-gen-better-python v0.4.6
 # source file: queries.sql
 """Module containing queries from file queries.sql."""
+
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
@@ -405,9 +406,11 @@ class QueryResults(typing.Generic[T]):
         Returns:
             A sequence of decoded objects of type `T`.
         """
+
         async def _wrapper() -> collections.abc.Sequence[T]:
             result = await (await self._conn.execute(self._sql, self._args)).fetchall()
             return [self._decode_hook(row) for row in result]
+
         return _wrapper().__await__()
 
     async def __anext__(self) -> T:
@@ -431,7 +434,39 @@ class QueryResults(typing.Generic[T]):
         return self._decode_hook(record)
 
 
-async def insert_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> None:
+async def insert_one_sqlite_type(
+    conn: aiosqlite.Connection,
+    *,
+    id_: int,
+    int_test: int,
+    bigint_test: int,
+    smallint_test: int,
+    tinyint_test: int,
+    int2_test: int,
+    int8_test: int,
+    bigserial_test: int,
+    blob_test: memoryview,
+    real_test: float,
+    double_test: float,
+    double_precision_test: float,
+    float_test: float,
+    numeric_test: float,
+    decimal_test: decimal.Decimal,
+    boolean_test: bool,
+    bool_test: bool,
+    date_test: datetime.date,
+    datetime_test: datetime.datetime,
+    timestamp_test: datetime.datetime,
+    character_test: str,
+    varchar_test: str,
+    varyingcharacter_test: str,
+    nchar_test: str,
+    nativecharacter_test: str,
+    nvarchar_test: str,
+    text_test: str,
+    clob_test: str,
+    json_test: str,
+) -> None:
     """Execute SQL query with `name: InsertOneSqliteType :exec`.
 
     ```sql
@@ -482,10 +517,73 @@ async def insert_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int, int_te
         clob_test: str.
         json_test: str.
     """
-    await conn.execute(INSERT_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
+    sql_args = (
+        id_,
+        int_test,
+        bigint_test,
+        smallint_test,
+        tinyint_test,
+        int2_test,
+        int8_test,
+        bigserial_test,
+        blob_test,
+        real_test,
+        double_test,
+        double_precision_test,
+        float_test,
+        numeric_test,
+        decimal_test,
+        boolean_test,
+        bool_test,
+        date_test,
+        datetime_test,
+        timestamp_test,
+        character_test,
+        varchar_test,
+        varyingcharacter_test,
+        nchar_test,
+        nativecharacter_test,
+        nvarchar_test,
+        text_test,
+        clob_test,
+        json_test,
+    )
+    await conn.execute(INSERT_ONE_SQLITE_TYPE, sql_args)
 
 
-async def insert_one_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int, int_test: int | None, bigint_test: int | None, smallint_test: int | None, tinyint_test: int | None, int2_test: int | None, int8_test: int | None, bigserial_test: int | None, blob_test: memoryview | None, real_test: float | None, double_test: float | None, double_precision_test: float | None, float_test: float | None, numeric_test: float | None, decimal_test: decimal.Decimal | None, boolean_test: bool | None, bool_test: bool | None, date_test: datetime.date | None, datetime_test: datetime.datetime | None, timestamp_test: datetime.datetime | None, character_test: str | None, varchar_test: str | None, varyingcharacter_test: str | None, nchar_test: str | None, nativecharacter_test: str | None, nvarchar_test: str | None, text_test: str | None, clob_test: str | None, json_test: str | None) -> None:
+async def insert_one_inner_sqlite_type(
+    conn: aiosqlite.Connection,
+    *,
+    table_id: int,
+    int_test: int | None,
+    bigint_test: int | None,
+    smallint_test: int | None,
+    tinyint_test: int | None,
+    int2_test: int | None,
+    int8_test: int | None,
+    bigserial_test: int | None,
+    blob_test: memoryview | None,
+    real_test: float | None,
+    double_test: float | None,
+    double_precision_test: float | None,
+    float_test: float | None,
+    numeric_test: float | None,
+    decimal_test: decimal.Decimal | None,
+    boolean_test: bool | None,
+    bool_test: bool | None,
+    date_test: datetime.date | None,
+    datetime_test: datetime.datetime | None,
+    timestamp_test: datetime.datetime | None,
+    character_test: str | None,
+    varchar_test: str | None,
+    varyingcharacter_test: str | None,
+    nchar_test: str | None,
+    nativecharacter_test: str | None,
+    nvarchar_test: str | None,
+    text_test: str | None,
+    clob_test: str | None,
+    json_test: str | None,
+) -> None:
     """Execute SQL query with `name: InsertOneInnerSqliteType :exec`.
 
     ```sql
@@ -536,7 +634,38 @@ async def insert_one_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: 
         clob_test: str | None.
         json_test: str | None.
     """
-    await conn.execute(INSERT_ONE_INNER_SQLITE_TYPE, (table_id, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
+    sql_args = (
+        table_id,
+        int_test,
+        bigint_test,
+        smallint_test,
+        tinyint_test,
+        int2_test,
+        int8_test,
+        bigserial_test,
+        blob_test,
+        real_test,
+        double_test,
+        double_precision_test,
+        float_test,
+        numeric_test,
+        decimal_test,
+        boolean_test,
+        bool_test,
+        date_test,
+        datetime_test,
+        timestamp_test,
+        character_test,
+        varchar_test,
+        varyingcharacter_test,
+        nchar_test,
+        nativecharacter_test,
+        nvarchar_test,
+        text_test,
+        clob_test,
+        json_test,
+    )
+    await conn.execute(INSERT_ONE_INNER_SQLITE_TYPE, sql_args)
 
 
 async def get_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> models.TestSqliteType | None:
@@ -554,10 +683,40 @@ async def get_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> models
     Returns:
         Result of type `models.TestSqliteType` fetched from the db. Will be `None` if not found.
     """
-    row = await (await conn.execute(GET_ONE_SQLITE_TYPE, (id_, ))).fetchone()
+    row = await (await conn.execute(GET_ONE_SQLITE_TYPE, (id_,))).fetchone()
     if row is None:
         return None
-    return models.TestSqliteType(id_=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
+    return models.TestSqliteType(
+        id_=row[0],
+        int_test=row[1],
+        bigint_test=row[2],
+        smallint_test=row[3],
+        tinyint_test=row[4],
+        int2_test=row[5],
+        int8_test=row[6],
+        bigserial_test=row[7],
+        blob_test=row[8],
+        real_test=row[9],
+        double_test=row[10],
+        double_precision_test=row[11],
+        float_test=row[12],
+        numeric_test=row[13],
+        decimal_test=row[14],
+        boolean_test=row[15],
+        bool_test=row[16],
+        date_test=row[17],
+        datetime_test=row[18],
+        timestamp_test=row[19],
+        character_test=row[20],
+        varchar_test=row[21],
+        varyingcharacter_test=row[22],
+        nchar_test=row[23],
+        nativecharacter_test=row[24],
+        nvarchar_test=row[25],
+        text_test=row[26],
+        clob_test=row[27],
+        json_test=row[28],
+    )
 
 
 async def get_one_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> models.TestInnerSqliteType | None:
@@ -575,10 +734,40 @@ async def get_one_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int
     Returns:
         Result of type `models.TestInnerSqliteType` fetched from the db. Will be `None` if not found.
     """
-    row = await (await conn.execute(GET_ONE_INNER_SQLITE_TYPE, (table_id, ))).fetchone()
+    row = await (await conn.execute(GET_ONE_INNER_SQLITE_TYPE, (table_id,))).fetchone()
     if row is None:
         return None
-    return models.TestInnerSqliteType(table_id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
+    return models.TestInnerSqliteType(
+        table_id=row[0],
+        int_test=row[1],
+        bigint_test=row[2],
+        smallint_test=row[3],
+        tinyint_test=row[4],
+        int2_test=row[5],
+        int8_test=row[6],
+        bigserial_test=row[7],
+        blob_test=row[8],
+        real_test=row[9],
+        double_test=row[10],
+        double_precision_test=row[11],
+        float_test=row[12],
+        numeric_test=row[13],
+        decimal_test=row[14],
+        boolean_test=row[15],
+        bool_test=row[16],
+        date_test=row[17],
+        datetime_test=row[18],
+        timestamp_test=row[19],
+        character_test=row[20],
+        varchar_test=row[21],
+        varyingcharacter_test=row[22],
+        nchar_test=row[23],
+        nativecharacter_test=row[24],
+        nvarchar_test=row[25],
+        text_test=row[26],
+        clob_test=row[27],
+        json_test=row[28],
+    )
 
 
 async def get_one_date(conn: aiosqlite.Connection, *, id_: int, date_test: datetime.date) -> datetime.date | None:
@@ -750,8 +939,40 @@ def get_many_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> QueryResult
     Returns:
         Helper class of type `QueryResults[models.TestSqliteType]` that allows both iteration and normal fetching of data from the db.
     """
+
     def _decode_hook(row: sqlite3.Row) -> models.TestSqliteType:
-        return models.TestSqliteType(id_=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
+        return models.TestSqliteType(
+            id_=row[0],
+            int_test=row[1],
+            bigint_test=row[2],
+            smallint_test=row[3],
+            tinyint_test=row[4],
+            int2_test=row[5],
+            int8_test=row[6],
+            bigserial_test=row[7],
+            blob_test=row[8],
+            real_test=row[9],
+            double_test=row[10],
+            double_precision_test=row[11],
+            float_test=row[12],
+            numeric_test=row[13],
+            decimal_test=row[14],
+            boolean_test=row[15],
+            bool_test=row[16],
+            date_test=row[17],
+            datetime_test=row[18],
+            timestamp_test=row[19],
+            character_test=row[20],
+            varchar_test=row[21],
+            varyingcharacter_test=row[22],
+            nchar_test=row[23],
+            nativecharacter_test=row[24],
+            nvarchar_test=row[25],
+            text_test=row[26],
+            clob_test=row[27],
+            json_test=row[28],
+        )
+
     return QueryResults[models.TestSqliteType](conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
 
 
@@ -770,8 +991,40 @@ def get_many_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> 
     Returns:
         Helper class of type `QueryResults[models.TestInnerSqliteType]` that allows both iteration and normal fetching of data from the db.
     """
+
     def _decode_hook(row: sqlite3.Row) -> models.TestInnerSqliteType:
-        return models.TestInnerSqliteType(table_id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
+        return models.TestInnerSqliteType(
+            table_id=row[0],
+            int_test=row[1],
+            bigint_test=row[2],
+            smallint_test=row[3],
+            tinyint_test=row[4],
+            int2_test=row[5],
+            int8_test=row[6],
+            bigserial_test=row[7],
+            blob_test=row[8],
+            real_test=row[9],
+            double_test=row[10],
+            double_precision_test=row[11],
+            float_test=row[12],
+            numeric_test=row[13],
+            decimal_test=row[14],
+            boolean_test=row[15],
+            bool_test=row[16],
+            date_test=row[17],
+            datetime_test=row[18],
+            timestamp_test=row[19],
+            character_test=row[20],
+            varchar_test=row[21],
+            varyingcharacter_test=row[22],
+            nchar_test=row[23],
+            nativecharacter_test=row[24],
+            nvarchar_test=row[25],
+            text_test=row[26],
+            clob_test=row[27],
+            json_test=row[28],
+        )
+
     return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
 
 
@@ -791,8 +1044,40 @@ def get_many_nullable_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id:
     Returns:
         Helper class of type `QueryResults[models.TestInnerSqliteType]` that allows both iteration and normal fetching of data from the db.
     """
+
     def _decode_hook(row: sqlite3.Row) -> models.TestInnerSqliteType:
-        return models.TestInnerSqliteType(table_id=row[0], int_test=row[1], bigint_test=row[2], smallint_test=row[3], tinyint_test=row[4], int2_test=row[5], int8_test=row[6], bigserial_test=row[7], blob_test=row[8], real_test=row[9], double_test=row[10], double_precision_test=row[11], float_test=row[12], numeric_test=row[13], decimal_test=row[14], boolean_test=row[15], bool_test=row[16], date_test=row[17], datetime_test=row[18], timestamp_test=row[19], character_test=row[20], varchar_test=row[21], varyingcharacter_test=row[22], nchar_test=row[23], nativecharacter_test=row[24], nvarchar_test=row[25], text_test=row[26], clob_test=row[27], json_test=row[28])
+        return models.TestInnerSqliteType(
+            table_id=row[0],
+            int_test=row[1],
+            bigint_test=row[2],
+            smallint_test=row[3],
+            tinyint_test=row[4],
+            int2_test=row[5],
+            int8_test=row[6],
+            bigserial_test=row[7],
+            blob_test=row[8],
+            real_test=row[9],
+            double_test=row[10],
+            double_precision_test=row[11],
+            float_test=row[12],
+            numeric_test=row[13],
+            decimal_test=row[14],
+            boolean_test=row[15],
+            bool_test=row[16],
+            date_test=row[17],
+            datetime_test=row[18],
+            timestamp_test=row[19],
+            character_test=row[20],
+            varchar_test=row[21],
+            varyingcharacter_test=row[22],
+            nchar_test=row[23],
+            nativecharacter_test=row[24],
+            nvarchar_test=row[25],
+            text_test=row[26],
+            clob_test=row[27],
+            json_test=row[28],
+        )
+
     return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
 
 
@@ -943,7 +1228,7 @@ async def delete_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> Non
             Connection object of type `aiosqlite.Connection` used to execute the query.
         id_: int.
     """
-    await conn.execute(DELETE_ONE_SQLITE_TYPE, (id_, ))
+    await conn.execute(DELETE_ONE_SQLITE_TYPE, (id_,))
 
 
 async def delete_one_test_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> None:
@@ -959,10 +1244,42 @@ async def delete_one_test_inner_sqlite_type(conn: aiosqlite.Connection, *, table
             Connection object of type `aiosqlite.Connection` used to execute the query.
         table_id: int.
     """
-    await conn.execute(DELETE_ONE_TEST_INNER_SQLITE_TYPE, (table_id, ))
+    await conn.execute(DELETE_ONE_TEST_INNER_SQLITE_TYPE, (table_id,))
 
 
-async def insert_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> aiosqlite.Cursor:
+async def insert_result_one_sqlite_type(
+    conn: aiosqlite.Connection,
+    *,
+    id_: int,
+    int_test: int,
+    bigint_test: int,
+    smallint_test: int,
+    tinyint_test: int,
+    int2_test: int,
+    int8_test: int,
+    bigserial_test: int,
+    blob_test: memoryview,
+    real_test: float,
+    double_test: float,
+    double_precision_test: float,
+    float_test: float,
+    numeric_test: float,
+    decimal_test: decimal.Decimal,
+    boolean_test: bool,
+    bool_test: bool,
+    date_test: datetime.date,
+    datetime_test: datetime.datetime,
+    timestamp_test: datetime.datetime,
+    character_test: str,
+    varchar_test: str,
+    varyingcharacter_test: str,
+    nchar_test: str,
+    nativecharacter_test: str,
+    nvarchar_test: str,
+    text_test: str,
+    clob_test: str,
+    json_test: str,
+) -> aiosqlite.Cursor:
     """Execute and return the result of SQL query with `name: InsertResultOneSqliteType :execresult`.
 
     ```sql
@@ -1016,7 +1333,38 @@ async def insert_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int,
     Returns:
         The result of type `aiosqlite.Cursor` returned when executing the query.
     """
-    return await conn.execute(INSERT_RESULT_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))
+    sql_args = (
+        id_,
+        int_test,
+        bigint_test,
+        smallint_test,
+        tinyint_test,
+        int2_test,
+        int8_test,
+        bigserial_test,
+        blob_test,
+        real_test,
+        double_test,
+        double_precision_test,
+        float_test,
+        numeric_test,
+        decimal_test,
+        boolean_test,
+        bool_test,
+        date_test,
+        datetime_test,
+        timestamp_test,
+        character_test,
+        varchar_test,
+        varyingcharacter_test,
+        nchar_test,
+        nativecharacter_test,
+        nvarchar_test,
+        text_test,
+        clob_test,
+        json_test,
+    )
+    return await conn.execute(INSERT_RESULT_ONE_SQLITE_TYPE, sql_args)
 
 
 async def update_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> aiosqlite.Cursor:
@@ -1036,7 +1384,7 @@ async def update_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int)
     Returns:
         The result of type `aiosqlite.Cursor` returned when executing the query.
     """
-    return await conn.execute(UPDATE_RESULT_ONE_SQLITE_TYPE, (id_, ))
+    return await conn.execute(UPDATE_RESULT_ONE_SQLITE_TYPE, (id_,))
 
 
 async def delete_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> aiosqlite.Cursor:
@@ -1056,10 +1404,42 @@ async def delete_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int)
     Returns:
         The result of type `aiosqlite.Cursor` returned when executing the query.
     """
-    return await conn.execute(DELETE_RESULT_ONE_SQLITE_TYPE, (id_, ))
+    return await conn.execute(DELETE_RESULT_ONE_SQLITE_TYPE, (id_,))
 
 
-async def insert_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> int:
+async def insert_rows_one_sqlite_type(
+    conn: aiosqlite.Connection,
+    *,
+    id_: int,
+    int_test: int,
+    bigint_test: int,
+    smallint_test: int,
+    tinyint_test: int,
+    int2_test: int,
+    int8_test: int,
+    bigserial_test: int,
+    blob_test: memoryview,
+    real_test: float,
+    double_test: float,
+    double_precision_test: float,
+    float_test: float,
+    numeric_test: float,
+    decimal_test: decimal.Decimal,
+    boolean_test: bool,
+    bool_test: bool,
+    date_test: datetime.date,
+    datetime_test: datetime.datetime,
+    timestamp_test: datetime.datetime,
+    character_test: str,
+    varchar_test: str,
+    varyingcharacter_test: str,
+    nchar_test: str,
+    nativecharacter_test: str,
+    nvarchar_test: str,
+    text_test: str,
+    clob_test: str,
+    json_test: str,
+) -> int:
     """Execute SQL query with `name: InsertRowsOneSqliteType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1113,7 +1493,38 @@ async def insert_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int, i
     Returns:
         The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
-    return (await conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).rowcount
+    sql_args = (
+        id_,
+        int_test,
+        bigint_test,
+        smallint_test,
+        tinyint_test,
+        int2_test,
+        int8_test,
+        bigserial_test,
+        blob_test,
+        real_test,
+        double_test,
+        double_precision_test,
+        float_test,
+        numeric_test,
+        decimal_test,
+        boolean_test,
+        bool_test,
+        date_test,
+        datetime_test,
+        timestamp_test,
+        character_test,
+        varchar_test,
+        varyingcharacter_test,
+        nchar_test,
+        nativecharacter_test,
+        nvarchar_test,
+        text_test,
+        clob_test,
+        json_test,
+    )
+    return (await conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE, sql_args)).rowcount
 
 
 async def update_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int:
@@ -1133,7 +1544,7 @@ async def update_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -
     Returns:
         The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
-    return (await conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE, (id_, ))).rowcount
+    return (await conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE, (id_,))).rowcount
 
 
 async def delete_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int:
@@ -1153,7 +1564,7 @@ async def delete_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -
     Returns:
         The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
-    return (await conn.execute(DELETE_ROWS_ONE_SQLITE_TYPE, (id_, ))).rowcount
+    return (await conn.execute(DELETE_ROWS_ONE_SQLITE_TYPE, (id_,))).rowcount
 
 
 async def create_rows_table(conn: aiosqlite.Connection) -> int:
@@ -1177,7 +1588,39 @@ async def create_rows_table(conn: aiosqlite.Connection) -> int:
     return (await conn.execute(CREATE_ROWS_TABLE)).rowcount
 
 
-async def insert_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int, int_test: int, bigint_test: int, smallint_test: int, tinyint_test: int, int2_test: int, int8_test: int, bigserial_test: int, blob_test: memoryview, real_test: float, double_test: float, double_precision_test: float, float_test: float, numeric_test: float, decimal_test: decimal.Decimal, boolean_test: bool, bool_test: bool, date_test: datetime.date, datetime_test: datetime.datetime, timestamp_test: datetime.datetime, character_test: str, varchar_test: str, varyingcharacter_test: str, nchar_test: str, nativecharacter_test: str, nvarchar_test: str, text_test: str, clob_test: str, json_test: str) -> int | None:
+async def insert_last_id_one_sqlite_type(
+    conn: aiosqlite.Connection,
+    *,
+    id_: int,
+    int_test: int,
+    bigint_test: int,
+    smallint_test: int,
+    tinyint_test: int,
+    int2_test: int,
+    int8_test: int,
+    bigserial_test: int,
+    blob_test: memoryview,
+    real_test: float,
+    double_test: float,
+    double_precision_test: float,
+    float_test: float,
+    numeric_test: float,
+    decimal_test: decimal.Decimal,
+    boolean_test: bool,
+    bool_test: bool,
+    date_test: datetime.date,
+    datetime_test: datetime.datetime,
+    timestamp_test: datetime.datetime,
+    character_test: str,
+    varchar_test: str,
+    varyingcharacter_test: str,
+    nchar_test: str,
+    nativecharacter_test: str,
+    nvarchar_test: str,
+    text_test: str,
+    clob_test: str,
+    json_test: str,
+) -> int | None:
     """Execute SQL query with `name: InsertLastIdOneSqliteType :execlastid` and return the id of the last affected row.
 
     ```sql
@@ -1231,7 +1674,38 @@ async def insert_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int
     Returns:
         The id (`int`) of the last affected row. Will be `None` if no rows are affected.
     """
-    return (await conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE, (id_, int_test, bigint_test, smallint_test, tinyint_test, int2_test, int8_test, bigserial_test, blob_test, real_test, double_test, double_precision_test, float_test, numeric_test, decimal_test, boolean_test, bool_test, date_test, datetime_test, timestamp_test, character_test, varchar_test, varyingcharacter_test, nchar_test, nativecharacter_test, nvarchar_test, text_test, clob_test, json_test))).lastrowid
+    sql_args = (
+        id_,
+        int_test,
+        bigint_test,
+        smallint_test,
+        tinyint_test,
+        int2_test,
+        int8_test,
+        bigserial_test,
+        blob_test,
+        real_test,
+        double_test,
+        double_precision_test,
+        float_test,
+        numeric_test,
+        decimal_test,
+        boolean_test,
+        bool_test,
+        date_test,
+        datetime_test,
+        timestamp_test,
+        character_test,
+        varchar_test,
+        varyingcharacter_test,
+        nchar_test,
+        nativecharacter_test,
+        nvarchar_test,
+        text_test,
+        clob_test,
+        json_test,
+    )
+    return (await conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE, sql_args)).lastrowid
 
 
 async def update_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int | None:
@@ -1251,7 +1725,7 @@ async def update_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int
     Returns:
         The id (`int`) of the last affected row. Will be `None` if no rows are affected.
     """
-    return (await conn.execute(UPDATE_LAST_ID_ONE_SQLITE_TYPE, (id_, ))).lastrowid
+    return (await conn.execute(UPDATE_LAST_ID_ONE_SQLITE_TYPE, (id_,))).lastrowid
 
 
 async def delete_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int | None:
@@ -1271,7 +1745,7 @@ async def delete_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int
     Returns:
         The id (`int`) of the last affected row. Will be `None` if no rows are affected.
     """
-    return (await conn.execute(DELETE_LAST_ID_ONE_SQLITE_TYPE, (id_, ))).lastrowid
+    return (await conn.execute(DELETE_LAST_ID_ONE_SQLITE_TYPE, (id_,))).lastrowid
 
 
 async def insert_type_override(conn: aiosqlite.Connection, *, id_: int, text_test: UserString | None) -> None:
@@ -1307,7 +1781,7 @@ async def get_one_type_override(conn: aiosqlite.Connection, *, id_: int) -> mode
     Returns:
         Result of type `models.TestTypeOverride` fetched from the db. Will be `None` if not found.
     """
-    row = await (await conn.execute(GET_ONE_TYPE_OVERRIDE, (id_, ))).fetchone()
+    row = await (await conn.execute(GET_ONE_TYPE_OVERRIDE, (id_,))).fetchone()
     if row is None:
         return None
     return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
@@ -1328,8 +1802,10 @@ def get_many_type_override(conn: aiosqlite.Connection, *, id_: int) -> QueryResu
     Returns:
         Helper class of type `QueryResults[models.TestTypeOverride]` that allows both iteration and normal fetching of data from the db.
     """
+
     def _decode_hook(row: sqlite3.Row) -> models.TestTypeOverride:
         return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
+
     return QueryResults[models.TestTypeOverride](conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
 
@@ -1348,7 +1824,7 @@ async def get_one_text_type_override(conn: aiosqlite.Connection, *, id_: int) ->
     Returns:
         Result of type `UserString` fetched from the db. Will be `None` if not found.
     """
-    row = await (await conn.execute(GET_ONE_TEXT_TYPE_OVERRIDE, (id_, ))).fetchone()
+    row = await (await conn.execute(GET_ONE_TEXT_TYPE_OVERRIDE, (id_,))).fetchone()
     if row is None:
         return None
     return UserString(row[0])
@@ -1369,8 +1845,10 @@ def get_many_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> Quer
     Returns:
         Helper class of type `QueryResults[UserString]` that allows both iteration and normal fetching of data from the db.
     """
+
     def _decode_hook(row: sqlite3.Row) -> UserString:
         return UserString(row[0])
+
     return QueryResults[UserString](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
 
@@ -1388,4 +1866,4 @@ async def delete_type_override(conn: aiosqlite.Connection, *, id_: int) -> None:
             Connection object of type `aiosqlite.Connection` used to execute the query.
         id_: int.
     """
-    await conn.execute(DELETE_TYPE_OVERRIDE, (id_, ))
+    await conn.execute(DELETE_TYPE_OVERRIDE, (id_,))

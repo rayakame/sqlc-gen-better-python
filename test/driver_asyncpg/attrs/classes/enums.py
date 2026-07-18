@@ -3,11 +3,10 @@
 #   sqlc v1.30.0
 #   sqlc-gen-better-python v0.4.6
 """Module containing enums."""
+
 from __future__ import annotations
 
-__all__: collections.abc.Sequence[str] = (
-    "TestMood",
-)
+__all__: collections.abc.Sequence[str] = ("TestMood",)
 
 import enum
 import typing
