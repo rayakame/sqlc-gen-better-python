@@ -80,7 +80,7 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 		return "datetime.timedelta"
 	case "text", "pg_catalog.varchar", "bpchar", "pg_catalog.bpchar", "char", "string", "citext":
 		return Str
-	case "uuid":
+	case "uuid", "pg_catalog.uuid":
 		return "uuid.UUID"
 	case "inet", "cidr", "macaddr", "macaddr8":
 		// psycopg2 does have support for ipaddress objects, but it is not enabled by default

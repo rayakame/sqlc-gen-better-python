@@ -117,13 +117,19 @@ func EnumConstantName(value string, index int, seen map[string]int) string {
 	}
 
 	seen[name]++
-	if seen[name] > 1 {
-		name = fmt.Sprintf("%s_%d", name, seen[name])
-		// Reserve the suffixed name so a literal collision later gets its own suffix.
-		seen[name]++
+	if seen[name] == 1 {
+		return name
 	}
+	// Probe suffixes until an unused constant name is found, so a literal
+	// "NAME_2" seen earlier can never collide with a generated one.
+	for i := seen[name]; ; i++ {
+		candidate := fmt.Sprintf("%s_%d", name, i)
+		if seen[candidate] == 0 {
+			seen[candidate]++
 
-	return name
+			return candidate
+		}
+	}
 }
 
 func ParamName(p *plugin.Parameter) string {

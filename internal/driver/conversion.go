@@ -114,18 +114,20 @@ func sqliteNeedsConversion(sqlType string) bool {
 
 // SqliteConversionsUsed returns the Python types used by the given queries that
 // need a registered sqlite adapter/converter pair, in canonical emission order.
-// Overridden columns are excluded — those are converted inline with the override type.
+// Overridden RETURN columns are excluded — those are converted inline with the
+// override type. Overridden PARAMS are included: convertParamExpr converts
+// them back to their DefaultType, which still needs the registered adapter.
 func SqliteConversionsUsed(queries []model.Query) []string {
 	used := make(map[string]struct{})
-	add := func(typ model.PyType) {
-		if typ.DoOverride() {
+	add := func(typ model.PyType, skipOverride bool) {
+		if skipOverride && typ.DoOverride() {
 			return
 		}
 		if spec := findSqliteConversion(typ.SQLType); spec != nil {
 			used[spec.pyType] = struct{}{}
 		}
 	}
-	collect := func(qv model.QueryValue) {
+	collect := func(qv model.QueryValue, skipOverride bool) {
 		if qv.IsEmpty() {
 			return
 		}
@@ -133,22 +135,22 @@ func SqliteConversionsUsed(queries []model.Query) []string {
 			for _, col := range qv.Table.Columns {
 				if col.Embed != nil {
 					for _, embedCol := range col.Embed.Columns {
-						add(embedCol.Type)
+						add(embedCol.Type, skipOverride)
 					}
 
 					continue
 				}
-				add(col.Type)
+				add(col.Type, skipOverride)
 			}
 
 			return
 		}
-		add(qv.Type)
+		add(qv.Type, skipOverride)
 	}
 	for _, query := range queries {
-		collect(query.Returns)
+		collect(query.Returns, true)
 		for _, param := range query.Params {
-			collect(param)
+			collect(param, false)
 		}
 	}
 

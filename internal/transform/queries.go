@@ -2,6 +2,7 @@ package transform
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
@@ -93,10 +94,10 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 		// Precompute the query's column names/types once — they do not depend
 		// on the candidate table — instead of rebuilding them per candidate.
 		queryColumnNames := make([]string, len(pluginQuery.Columns))
-		queryColumnTypes := make([]string, len(pluginQuery.Columns))
+		queryColumnTypes := make([]model.PyType, len(pluginQuery.Columns))
 		for i, column := range pluginQuery.Columns {
 			queryColumnNames[i] = model.EscapedColumnName(column, i)
-			queryColumnTypes[i] = t.buildPyType(column).Type
+			queryColumnTypes[i] = t.buildPyType(column)
 		}
 
 		var tableFound bool
@@ -111,7 +112,13 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 				queryColumn := pluginQuery.Columns[i]
 
 				sameName := tableColumn.Name == queryColumnNames[i]
-				sameType := tableColumn.Type.Type == queryColumnTypes[i]
+				// Compare the full type semantics, not just the type name: a
+				// LEFT JOIN makes columns nullable, and reusing the non-null
+				// model class would produce wrongly typed fields.
+				sameType := tableColumn.Type.Type == queryColumnTypes[i].Type &&
+					tableColumn.Type.IsNullable == queryColumnTypes[i].IsNullable &&
+					tableColumn.Type.IsList == queryColumnTypes[i].IsList &&
+					tableColumn.Type.IsEnum == queryColumnTypes[i].IsEnum
 				sameTable := utils.SameTableName(queryColumn.Table, table.Identifier, t.req.Catalog.DefaultSchema)
 				if !sameName || !sameType || !sameTable {
 					same = false
@@ -158,16 +165,22 @@ type pyColumn struct {
 
 // dedupName makes repeated Python identifiers unique by appending a numeric
 // suffix ("name", "name_2", "name_3", ...), so duplicate columns or
-// parameters never generate duplicate fields or arguments.
+// parameters never generate duplicate fields or arguments. Suffixes are
+// probed until an unused identifier is found, so a literal "name_2" that
+// appeared earlier can never collide with a generated one.
 func dedupName(name string, seen map[string]int) string {
 	seen[name]++
-	if seen[name] > 1 {
-		name = fmt.Sprintf("%s_%d", name, seen[name])
-		// Reserve the suffixed name so a literal collision later gets its own suffix.
-		seen[name]++
+	if seen[name] == 1 {
+		return name
 	}
+	for i := seen[name]; ; i++ {
+		candidate := fmt.Sprintf("%s_%d", name, i)
+		if seen[candidate] == 0 {
+			seen[candidate]++
 
-	return name
+			return candidate
+		}
+	}
 }
 
 func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Table {
@@ -213,11 +226,7 @@ func (t *Transformer) newGoEmbed(embedTable *plugin.Identifier, tables []model.T
 		if !utils.SameTableName(embedTable, table.Identifier, t.req.Catalog.DefaultSchema) {
 			continue
 		}
-		columns := make([]model.Column, len(table.Columns))
-		for i, column := range table.Columns {
-			columns[i] = column
-		}
-		return utils.ToPtr(model.Embed{ModelName: table.Name, Columns: columns})
+		return utils.ToPtr(model.Embed{ModelName: table.Name, Columns: slices.Clone(table.Columns)})
 	}
 	return nil
 }

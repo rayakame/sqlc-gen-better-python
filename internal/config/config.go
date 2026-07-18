@@ -121,7 +121,7 @@ func validateConf(conf *Config, engine string) error {
 	}
 
 	if err := conf.SqlDriver.Validate(engine); err != nil {
-		return fmt.Errorf("invalid options: unknown model type: %w", err)
+		return fmt.Errorf("invalid options: invalid sql driver: %w", err)
 	}
 
 	if !conf.ModelType.Valid() {

@@ -33,7 +33,7 @@ func L() *Logger {
 }
 
 func (logger *Logger) LogErr(message string, err error) {
-	msg := errMessage{Error: fmt.Sprintf("%s: %e", message, err)}
+	msg := errMessage{Error: fmt.Sprintf("%s: %v", message, err)}
 	logger.LogAny(msg)
 }
 
@@ -45,7 +45,7 @@ func (logger *Logger) Log(message string) {
 func (logger *Logger) LogAny(message any) {
 	jsonData, err := json.Marshal(message)
 	if err != nil {
-		logger.log(fmt.Sprintf(`{"error": "Error while trying to log any: %e"}`, err))
+		logger.log(fmt.Sprintf(`{"error": "Error while trying to log any: %v"}`, err))
 	} else {
 		logger.log(string(jsonData))
 	}

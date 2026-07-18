@@ -167,13 +167,19 @@ func writeCopyFromBody(body *writer.CodeWriter, config *config.Config, query mod
 	}
 
 	paramsName := query.Params[0].Name
-	singleComprehension := fmt.Sprintf("records = [(%s) for param in %s]", strings.Join(paramParts, ", "), paramsName)
+	recordTuple := "(" + strings.Join(paramParts, ", ") + ")"
+	if len(paramParts) == 1 {
+		// A one-element tuple needs the trailing comma, otherwise the
+		// parentheses are just grouping and the record is a bare value.
+		recordTuple = "(" + paramParts[0] + ",)"
+	}
+	singleComprehension := fmt.Sprintf("records = [%s for param in %s]", recordTuple, paramsName)
 	switch {
 	case body.FitsLine(indent, singleComprehension):
 		body.WriteIndentedLine(indent, singleComprehension)
-	case body.FitsLine(indent+1, "("+strings.Join(paramParts, ", ")+")"):
+	case body.FitsLine(indent+1, recordTuple):
 		body.WriteIndentedLine(indent, "records = [")
-		body.WriteIndentedLine(indent+1, fmt.Sprintf("(%s)", strings.Join(paramParts, ", ")))
+		body.WriteIndentedLine(indent+1, recordTuple)
 		body.WriteIndentedLine(indent+1, "for param in "+paramsName)
 		body.WriteIndentedLine(indent, "]")
 	default:

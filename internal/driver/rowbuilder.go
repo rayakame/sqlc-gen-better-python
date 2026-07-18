@@ -65,17 +65,6 @@ func (rb *RowBuilder) WriteStructReturn(body *writer.CodeWriter, indent int, ret
 	body.WriteIndentedLine(indent, ")")
 }
 
-// formatEmbedConstruction returns "name=EmbedType(field1=row[i], ...)".
-func (rb *RowBuilder) formatEmbedConstruction(col model.Column, idx *int) string {
-	inner := make([]string, 0, len(col.Embed.Columns))
-	for _, embedCol := range col.Embed.Columns {
-		inner = append(inner, rb.formatColumnValue(embedCol, *idx))
-		*idx++
-	}
-
-	return fmt.Sprintf("%s=%s(%s)", col.Name, col.Type.Type, strings.Join(inner, ", "))
-}
-
 // WriteDecodeHook writes a _decode_hook function for :many queries or returns
 // "operator.itemgetter(0)" for simple non-converted scalar returns. The blank
 // lines around the nested def match ruff format's layout.
@@ -106,6 +95,17 @@ func (rb *RowBuilder) WriteScalarReturn(body *writer.CodeWriter, indent int, ret
 	} else {
 		body.WriteIndentedLine(indent, "return row[0]")
 	}
+}
+
+// formatEmbedConstruction returns "name=EmbedType(field1=row[i], ...)".
+func (rb *RowBuilder) formatEmbedConstruction(col model.Column, idx *int) string {
+	inner := make([]string, 0, len(col.Embed.Columns))
+	for _, embedCol := range col.Embed.Columns {
+		inner = append(inner, rb.formatColumnValue(embedCol, *idx))
+		*idx++
+	}
+
+	return fmt.Sprintf("%s=%s(%s)", col.Name, col.Type.Type, strings.Join(inner, ", "))
 }
 
 // convertExpr returns the Python expression converting a raw row value into

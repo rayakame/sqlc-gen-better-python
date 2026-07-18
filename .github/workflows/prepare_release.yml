@@ -42,10 +42,16 @@ jobs:
           args: latest
 
       - name: Set version
+        env:
+          NEW_VERSION: ${{ steps.latest.outputs.output }}
         run: |
-          sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"${{ steps.latest.outputs.output }}"'"/' internal/config/constants.go
-          
-          echo "✅ Updated PluginVersion to $new_version"
+          if ! [[ "$NEW_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "unexpected version format: $NEW_VERSION" >&2
+            exit 1
+          fi
+          sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"$NEW_VERSION"'"/' internal/config/constants.go
+
+          echo "✅ Updated PluginVersion to $NEW_VERSION"
 
 
       - name: Create Pull Request

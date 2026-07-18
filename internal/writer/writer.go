@@ -107,9 +107,7 @@ func (w *CodeWriter) String() string {
 }
 
 func (w *CodeWriter) WriteAll(items []string) {
-	slices.SortFunc(items, func(a, b string) int {
-		return cmp.Compare(a, b)
-	})
+	slices.SortFunc(items, cmp.Compare)
 	// A single-element tuple's trailing comma is required syntax, so ruff
 	// format collapses it onto one line; match that.
 	if len(items) == 1 {
