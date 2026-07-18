@@ -2,6 +2,7 @@ package render
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -29,7 +30,9 @@ func (r *Renderer) renderEnums(enums []model.Enum) *plugin.File {
 		fileBody.WriteLine(fmt.Sprintf("class %s(str, enum.Enum):", enum.Name))
 		fileBody.WriteEnumClassDocstring(enum.Name)
 		for _, constant := range enum.Constants {
-			fileBody.WriteIndentedLine(1, fmt.Sprintf(`%s = "%s"`, constant.Name, constant.Value))
+			value := strings.ReplaceAll(constant.Value, `\`, `\\`)
+			value = strings.ReplaceAll(value, `"`, `\"`)
+			fileBody.WriteIndentedLine(1, fmt.Sprintf(`%s = "%s"`, constant.Name, value))
 		}
 	}
 

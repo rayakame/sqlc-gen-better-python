@@ -3,7 +3,6 @@ package transform
 import (
 	"cmp"
 	"slices"
-	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
@@ -22,13 +21,14 @@ func (t *Transformer) BuildEnums() []model.Enum {
 			}
 
 			e := model.Enum{
-				Name:      model.ModelName(t.config, enum.Name, schemaName),
+				Name:      model.EnumName(t.config, enum.Name, schemaName),
 				Constants: make([]model.EnumConstants, 0, len(enum.Vals)),
 			}
 
-			for _, v := range enum.Vals {
+			seen := make(map[string]int, len(enum.Vals))
+			for i, v := range enum.Vals {
 				e.Constants = append(e.Constants, model.EnumConstants{
-					Name:  strings.ToUpper(v),
+					Name:  model.EnumConstantName(v, i, seen),
 					Value: v,
 				})
 			}

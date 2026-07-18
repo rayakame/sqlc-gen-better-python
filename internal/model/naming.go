@@ -65,21 +65,65 @@ func EscapedColumnName(pluginColumn *plugin.Column, pos int) string {
 	return Escape(ColumnName(pluginColumn, pos))
 }
 
+// ModelName builds the class name for a table. Singularization runs on the
+// raw snake_case table name (before camel-casing) so that
+// inflection_exclude_table_names entries, which users write in snake_case,
+// match correctly.
 func ModelName(config *config.Config, modelName string, schemaName string) string {
-	name := ""
-	if schemaName != "" {
-		name += schemaName + "_"
-	}
-	name += modelName
-
-	modelName = SnakeToCamel(config, name)
 	if !config.EmitExactTableNames {
 		modelName = Singular(SingularParams{
 			Name:       modelName,
 			Exclusions: config.InflectionExcludeTableNames,
 		})
 	}
-	return modelName
+
+	return qualifiedClassName(config, modelName, schemaName)
+}
+
+// EnumName builds the class name for a SQL enum. Enum type names are never
+// singularized — they are type names, not table names.
+func EnumName(config *config.Config, enumName string, schemaName string) string {
+	return qualifiedClassName(config, enumName, schemaName)
+}
+
+func qualifiedClassName(config *config.Config, name, schemaName string) string {
+	if schemaName != "" {
+		name = schemaName + "_" + name
+	}
+
+	return SnakeToCamel(config, name)
+}
+
+// EnumConstantName converts an enum value into a valid, unique Python constant
+// name: non-alphanumeric characters become underscores, empty results fall
+// back to VALUE_N, digit-leading names get an underscore prefix, and
+// duplicates get a numeric suffix. seen tracks names across one enum.
+func EnumConstantName(value string, index int, seen map[string]int) string {
+	var builder strings.Builder
+	for _, r := range value {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			builder.WriteRune(unicode.ToUpper(r))
+		} else {
+			builder.WriteRune('_')
+		}
+	}
+	name := builder.String()
+
+	if strings.Trim(name, "_") == "" {
+		name = fmt.Sprintf("VALUE_%d", index+1)
+	}
+	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) {
+		name = "_" + name
+	}
+
+	seen[name]++
+	if seen[name] > 1 {
+		name = fmt.Sprintf("%s_%d", name, seen[name])
+		// Reserve the suffixed name so a literal collision later gets its own suffix.
+		seen[name]++
+	}
+
+	return name
 }
 
 func ParamName(p *plugin.Parameter) string {

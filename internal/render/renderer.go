@@ -50,7 +50,7 @@ func (r *Renderer) RenderAll(enums []model.Enum, tables []model.Table, queries [
 	}
 
 	for module, innerQueries := range queriesModuleMap {
-		outputFiles = append(outputFiles, r.renderQueriesModule(module, innerQueries, hasTables, hasEnums))
+		outputFiles = append(outputFiles, r.renderQueriesModule(module, innerQueries))
 	}
 
 	if r.config.EmitInitFile != nil && *r.config.EmitInitFile {

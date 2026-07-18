@@ -110,10 +110,10 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 					continue
 				}
 				if schema.Name == req.Catalog.DefaultSchema {
-					return "enums." + model.ModelName(config, enum.Name, "")
+					return "enums." + model.EnumName(config, enum.Name, "")
 				}
 
-				return "enums." + model.ModelName(config, enum.Name, schema.Name)
+				return "enums." + model.EnumName(config, enum.Name, schema.Name)
 			}
 		}
 		log.L().Log("unknown PostgreSQL type: " + columnType)

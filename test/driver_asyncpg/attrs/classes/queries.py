@@ -2069,9 +2069,9 @@ class Queries:
         row = await self._conn.fetchrow(GET_ONE_TEXT_TYPE_OVERRIDE, id_)
         if row is None:
             return None
-        return UserString(row[0])
+        return UserString(row[0]) if row[0] is not None else None
 
-    def get_many_text_type_override(self, *, id_: int) -> QueryResults[UserString]:
+    def get_many_text_type_override(self, *, id_: int) -> QueryResults[UserString | None]:
         """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
 
         ```sql
@@ -2084,15 +2084,15 @@ class Queries:
 
         Returns
         -------
-        QueryResults[UserString]
+        QueryResults[UserString | None]
             Helper class that allows both iteration and normal fetching of data from the db.
 
         """
 
-        def _decode_hook(row: asyncpg.Record) -> UserString:
-            return UserString(row[0])
+        def _decode_hook(row: asyncpg.Record) -> UserString | None:
+            return UserString(row[0]) if row[0] is not None else None
 
-        return QueryResults[UserString](self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
+        return QueryResults[UserString | None](self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
     async def delete_type_override(self, *, id_: int) -> None:
         """Execute SQL query with `name: DeleteTypeOverride :exec`.

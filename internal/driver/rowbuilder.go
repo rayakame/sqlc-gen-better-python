@@ -88,11 +88,11 @@ func (rb *RowBuilder) WriteDecodeHook(body *writer.CodeWriter, indent int, query
 	if body.DocstringsEnabled() {
 		body.NewLine()
 	}
-	body.WriteIndentedLine(indent, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", resultType, query.Returns.Type.Type))
+	body.WriteIndentedLine(indent, fmt.Sprintf("def _decode_hook(row: %s) -> %s:", resultType, query.Returns.Type.Print()))
 	if query.Returns.IsStruct() {
 		rb.WriteStructReturn(body, indent+1, query.Returns)
 	} else {
-		body.WriteIndentedLine(indent+1, fmt.Sprintf("return %s(row[0])", query.Returns.Type.Type))
+		body.WriteIndentedLine(indent+1, "return "+rb.convertExpr(query.Returns.Type, "row[0]"))
 	}
 	body.NewLine()
 
@@ -102,10 +102,28 @@ func (rb *RowBuilder) WriteDecodeHook(body *writer.CodeWriter, indent int, query
 // WriteScalarReturn writes the return statement for a non-struct :one query.
 func (rb *RowBuilder) WriteScalarReturn(body *writer.CodeWriter, indent int, ret model.QueryValue) {
 	if rb.columnNeedsConversion(ret.Type) {
-		body.WriteIndentedLine(indent, fmt.Sprintf("return %s(row[0])", ret.Type.Type))
+		body.WriteIndentedLine(indent, "return "+rb.convertExpr(ret.Type, "row[0]"))
 	} else {
 		body.WriteIndentedLine(indent, "return row[0]")
 	}
+}
+
+// convertExpr returns the Python expression converting a raw row value into
+// its target type: constructor call for scalars, an element-wise comprehension
+// for lists, both guarded against None for nullable values.
+func (rb *RowBuilder) convertExpr(typ model.PyType, src string) string {
+	if !rb.columnNeedsConversion(typ) {
+		return src
+	}
+	expr := fmt.Sprintf("%s(%s)", typ.Type, src)
+	if typ.IsList {
+		expr = fmt.Sprintf("[%s(v) for v in %s]", typ.Type, src)
+	}
+	if typ.IsNullable {
+		expr = fmt.Sprintf("%s if %s is not None else None", expr, src)
+	}
+
+	return expr
 }
 
 // columnNeedsConversion reports whether a column type needs explicit conversion.
@@ -117,13 +135,5 @@ func (rb *RowBuilder) columnNeedsConversion(typ model.PyType) bool {
 
 // formatColumnValue returns the Python expression for accessing a single column from a row.
 func (rb *RowBuilder) formatColumnValue(col model.Column, idx int) string {
-	idxStr := strconv.Itoa(idx)
-	if !rb.columnNeedsConversion(col.Type) {
-		return fmt.Sprintf("%s=row[%s]", col.Name, idxStr)
-	}
-	if col.Type.IsNullable {
-		return fmt.Sprintf("%s=%s(row[%s]) if row[%s] is not None else None",
-			col.Name, col.Type.Type, idxStr, idxStr)
-	}
-	return fmt.Sprintf("%s=%s(row[%s])", col.Name, col.Type.Type, idxStr)
+	return fmt.Sprintf("%s=%s", col.Name, rb.convertExpr(col.Type, "row["+strconv.Itoa(idx)+"]"))
 }

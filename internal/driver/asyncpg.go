@@ -114,7 +114,7 @@ func (d *AsyncpgDriver) WriteQueryFunc(body *writer.CodeWriter, config *config.C
 	case metadata.CmdOne:
 		annotation, docRetType = query.Returns.Type.PrintOptional(), query.Returns.Type.Type
 	case metadata.CmdMany:
-		annotation, docRetType = "QueryResults["+query.Returns.Type.Type+"]", query.Returns.Type.Type
+		annotation, docRetType = "QueryResults["+query.Returns.Type.Print()+"]", query.Returns.Type.Print()
 	}
 
 	conn := writeFuncSignature(body, d, config, indent, query, annotation)
@@ -150,7 +150,7 @@ func (d *AsyncpgDriver) WriteQueryFunc(body *writer.CodeWriter, config *config.C
 	case metadata.CmdMany:
 		decodeHook := d.rows.WriteDecodeHook(body, indent, query, asyncpgResultType)
 		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
-		body.WriteWrappedCall(indent, fmt.Sprintf("return QueryResults[%s](", query.Returns.Type.Type), manyArgs, ")")
+		body.WriteWrappedCall(indent, fmt.Sprintf("return QueryResults[%s](", query.Returns.Type.Print()), manyArgs, ")")
 	}
 }
 

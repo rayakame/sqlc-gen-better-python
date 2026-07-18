@@ -1975,10 +1975,10 @@ async def get_one_text_type_override(conn: aiosqlite.Connection, *, id_: int) ->
     row = await (await conn.execute(GET_ONE_TEXT_TYPE_OVERRIDE, (id_,))).fetchone()
     if row is None:
         return None
-    return UserString(row[0])
+    return UserString(row[0]) if row[0] is not None else None
 
 
-def get_many_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> QueryResults[UserString]:
+def get_many_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> QueryResults[UserString | None]:
     """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
 
     ```sql
@@ -1993,15 +1993,15 @@ def get_many_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> Quer
 
     Returns
     -------
-    QueryResults[UserString]
+    QueryResults[UserString | None]
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
 
-    def _decode_hook(row: sqlite3.Row) -> UserString:
-        return UserString(row[0])
+    def _decode_hook(row: sqlite3.Row) -> UserString | None:
+        return UserString(row[0]) if row[0] is not None else None
 
-    return QueryResults[UserString](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
+    return QueryResults[UserString | None](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
 
 async def delete_type_override(conn: aiosqlite.Connection, *, id_: int) -> None:

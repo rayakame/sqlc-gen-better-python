@@ -10,7 +10,7 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
-func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query, hasTables, hasEnums bool) *plugin.File {
+func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query) *plugin.File {
 	fileBody := r.getCodeWriter()
 	fileBody.WriteSqlcHeader(utils.ToPtr(queries[0]))
 	fileBody.WriteQueryFileModuleDocstring(queries[0].FileName)
@@ -83,7 +83,7 @@ func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query,
 	}
 	fileBody.WriteAll(all)
 	fileBody.NewLine()
-	r.importResolver.QueryImports(queries, hasTables, hasEnums).Write(fileBody, r.config.OmitTypecheckingBlock, r.driver.TypeCheckingHook())
+	r.importResolver.QueryImports(queries).Write(fileBody, r.config.OmitTypecheckingBlock, r.driver.TypeCheckingHook())
 	fileBody.NNewLine(2)
 	conversionBody := r.getCodeWriter()
 	if r.driver.WriteConversionSetup(conversionBody, r.config, queries) {

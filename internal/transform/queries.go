@@ -1,6 +1,7 @@
 package transform
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
@@ -78,10 +79,11 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			}
 		} else {
 			query.Params = make([]model.QueryValue, 0, len(pluginQuery.Params))
+			seen := make(map[string]int, len(pluginQuery.Params))
 			for _, param := range pluginQuery.Params {
 				query.Params = append(query.Params, model.QueryValue{
 					Table:     nil,
-					Name:      model.ParamName(param),
+					Name:      dedupName(model.ParamName(param), seen),
 					DBName:    param.Column.GetName(),
 					Type:      t.buildPyType(param.Column),
 					EmitTable: false,
@@ -128,20 +130,33 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			continue
 		}
 
+		// Precompute the query's column names/types once — they do not depend
+		// on the candidate table — instead of rebuilding them per candidate.
+		queryColumnNames := make([]string, len(pluginQuery.Columns))
+		queryColumnTypes := make([]string, len(pluginQuery.Columns))
+		for i, column := range pluginQuery.Columns {
+			queryColumnNames[i] = model.EscapedColumnName(column, i)
+			queryColumnTypes[i] = t.buildPyType(column).Type
+		}
+
 		var tableFound bool
 		for _, table := range tables {
 			if len(table.Columns) != len(pluginQuery.Columns) {
 				continue
 			}
-			same := false
+			// A table only matches when EVERY column matches by name, type,
+			// and source table — otherwise a dedicated Row class is needed.
+			same := true
 			for i, tableColumn := range table.Columns {
 				queryColumn := pluginQuery.Columns[i]
 
-				sameName := tableColumn.Name == model.EscapedColumnName(queryColumn, i)
-				sameType := tableColumn.Type.Type == t.buildPyType(queryColumn).Type
+				sameName := tableColumn.Name == queryColumnNames[i]
+				sameType := tableColumn.Type.Type == queryColumnTypes[i]
 				sameTable := utils.SameTableName(queryColumn.Table, table.Identifier, t.req.Catalog.DefaultSchema)
-				if sameName && sameType && sameTable {
-					same = true
+				if !sameName || !sameType || !sameTable {
+					same = false
+
+					break
 				}
 			}
 			if same {
@@ -198,12 +213,27 @@ type pyColumn struct {
 	embed  *model.Embed
 }
 
+// dedupName makes repeated Python identifiers unique by appending a numeric
+// suffix ("name", "name_2", "name_3", ...), so duplicate columns or
+// parameters never generate duplicate fields or arguments.
+func dedupName(name string, seen map[string]int) string {
+	seen[name]++
+	if seen[name] > 1 {
+		name = fmt.Sprintf("%s_%d", name, seen[name])
+		// Reserve the suffixed name so a literal collision later gets its own suffix.
+		seen[name]++
+	}
+
+	return name
+}
+
 func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Table {
 	table := model.Table{
 		Name:       name,
 		Columns:    make([]model.Column, 0, len(columns)),
 		Identifier: utils.ToPtr(plugin.Identifier{}),
 	}
+	seen := make(map[string]int, len(columns))
 	for i, column := range columns {
 		columnName := model.EscapedColumnName(column.column, i)
 		if column.embed != nil {
@@ -215,7 +245,7 @@ func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Tabl
 			})
 		}
 		tableColumn := model.Column{
-			Name:   columnName,
+			Name:   dedupName(columnName, seen),
 			DBName: model.ColumnName(column.column, i),
 			Type:   model.PyType{},
 			Embed:  nil,

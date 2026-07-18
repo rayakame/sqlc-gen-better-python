@@ -2,7 +2,9 @@ package render
 
 import (
 	"fmt"
+	"slices"
 	"sort"
+	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/driver"
@@ -82,13 +84,9 @@ func (s importSpec) String() string {
 
 func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 	// "uses" checks whether any table column has a given Python type.
-	usesEnum := false
 	uses := func(name string) (bool, bool) {
 		for _, table := range tables {
 			for _, col := range table.Columns {
-				if col.Type.IsEnum {
-					usesEnum = true
-				}
 				if col.Type.Type == name {
 					return true, true
 				}
@@ -98,9 +96,16 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 		return false, false
 	}
 
+	// Scan enum/list usage in a dedicated pass: the uses closure early-returns
+	// on the first type match, so side-effect flags inside it would miss
+	// columns positioned after a match.
+	usesEnum := false
 	hasList := false
 	for _, table := range tables {
 		for _, col := range table.Columns {
+			if col.Type.IsEnum {
+				usesEnum = true
+			}
 			if col.Type.IsList {
 				hasList = true
 			}
@@ -132,7 +137,7 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 	return buildResult(std, typeChecking, local)
 }
 
-func (r *ImportResolver) QueryImports(queries []model.Query, hasTables, hasEnums bool) ImportResult {
+func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 	addCiso := false
 
 	// "uses" checks whether any query arg/return uses a given Python type.
@@ -189,17 +194,7 @@ func (r *ImportResolver) QueryImports(queries []model.Query, hasTables, hasEnums
 		return *bestUsed, *bestTC
 	}
 
-	hasList := false
-	for _, query := range queries {
-		if queryValueHasList(query.Returns) {
-			hasList = true
-		}
-		for _, param := range query.Params {
-			if queryValueHasList(param) {
-				hasList = true
-			}
-		}
-	}
+	hasList := anyQueryType(queries, func(typ model.PyType) bool { return typ.IsList })
 
 	std := r.stdImports(uses)
 	r.addOverrideImports(std, uses)
@@ -220,15 +215,60 @@ func (r *ImportResolver) QueryImports(queries []model.Query, hasTables, hasEnums
 		}
 	}
 
+	// Only import models/enums when THIS module's queries actually reference
+	// them — a global flag would emit unused imports in multi-file projects.
 	local := map[string]importSpec{}
-	if hasTables {
+	if anyQueryType(queries, func(typ model.PyType) bool { return strings.HasPrefix(typ.Type, "models.") }) {
 		local["models"] = importSpec{Module: r.conf.Package, Name: "models"}
 	}
-	if hasEnums {
+	if anyQueryType(queries, func(typ model.PyType) bool { return typ.IsEnum || strings.HasPrefix(typ.Type, "enums.") }) {
 		local["enums"] = importSpec{Module: r.conf.Package, Name: "enums"}
 	}
 
 	return r.buildQueryResult(std, typeChecking, local, queries)
+}
+
+// anyQueryType reports whether pred matches any Python type used by the
+// queries: scalar params/returns, row/params class columns, embed field types,
+// and embed columns.
+func anyQueryType(queries []model.Query, pred func(model.PyType) bool) bool {
+	checkValue := func(qv model.QueryValue) bool {
+		if qv.IsEmpty() {
+			return false
+		}
+		if pred(qv.Type) {
+			return true
+		}
+		if qv.Table == nil {
+			return false
+		}
+		for _, col := range qv.Table.Columns {
+			if pred(col.Type) {
+				return true
+			}
+			if col.Embed != nil {
+				for _, embedColumn := range col.Embed.Columns {
+					if pred(embedColumn.Type) {
+						return true
+					}
+				}
+			}
+		}
+
+		return false
+	}
+	for _, query := range queries {
+		if checkValue(query.Returns) {
+			return true
+		}
+		for _, param := range query.Params {
+			if checkValue(param) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func (r *ImportResolver) EnumImports() ImportResult {
@@ -269,33 +309,6 @@ func (r *ImportResolver) forcePydanticRuntimeImports(std map[string]importSpec, 
 		spec.TypeChecking = false
 		std[key] = spec
 	}
-}
-
-// queryValueHasList reports whether the query value contains a list type.
-func queryValueHasList(qv model.QueryValue) bool {
-	if qv.IsEmpty() {
-		return false
-	}
-	if qv.Type.IsList {
-		return true
-	}
-	if qv.Table == nil {
-		return false
-	}
-	for _, col := range qv.Table.Columns {
-		if col.Type.IsList {
-			return true
-		}
-		if col.Embed != nil {
-			for _, embedCol := range col.Embed.Columns {
-				if embedCol.Type.IsList {
-					return true
-				}
-			}
-		}
-	}
-
-	return false
 }
 
 // overrideDefaultTypeUses reports whether the query value contains an overridden
@@ -397,14 +410,35 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 	}
 
 	if queryValue.IsStruct() {
-		for _, column := range queryValue.Table.Columns {
-			if column.Type.Type == name {
-				needsConv := r.drv.NeedsConversion(column.Type.SQLType) || column.Type.DoOverride()
-				// If conversion needed → runtime import; otherwise → TYPE_CHECKING.
-				return true, !needsConv
+		// Scan ALL columns (including embed columns): any occurrence that
+		// needs runtime conversion must force a runtime import, even when an
+		// earlier annotation-only occurrence of the same type exists.
+		used := false
+		typeChecking := true
+		check := func(typ model.PyType) {
+			if typ.Type != name {
+				return
+			}
+			used = true
+			if r.drv.NeedsConversion(typ.SQLType) || typ.DoOverride() {
+				typeChecking = false
 			}
 		}
-		return false, false
+		for _, column := range queryValue.Table.Columns {
+			if column.Embed != nil {
+				for _, embedColumn := range column.Embed.Columns {
+					check(embedColumn.Type)
+				}
+
+				continue
+			}
+			check(column.Type)
+		}
+		if !used {
+			return false, false
+		}
+
+		return true, typeChecking
 	}
 
 	if queryValue.Type.Type == name {
@@ -474,7 +508,9 @@ func buildImportBlock(specs map[string]importSpec) []string {
 
 	sort.Strings(lines)
 
-	return lines
+	// Different specs can render to the same line (e.g. an override importing
+	// a module the std scan also imports) — drop exact duplicates.
+	return slices.Compact(lines)
 }
 
 // stdImports returns the base set of standard library imports.
