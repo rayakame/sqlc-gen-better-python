@@ -8,6 +8,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "TestInnerSqliteType",
+    "TestOverrideConversion",
     "TestSqliteType",
     "TestTypeOverride",
 )
@@ -89,6 +90,23 @@ class TestInnerSqliteType:
     text_test: str | None
     clob_test: str | None
     json_test: str | None
+
+
+@attrs.define()
+class TestOverrideConversion:
+    """Model representing TestOverrideConversion.
+
+    Attributes
+    ----------
+    id_ : int
+    price : float
+    happened_at : datetime.datetime
+
+    """
+
+    id_: int
+    price: float
+    happened_at: datetime.datetime
 
 
 @attrs.define()

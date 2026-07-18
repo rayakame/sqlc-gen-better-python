@@ -83,3 +83,10 @@ CREATE TABLE IF NOT EXISTS test_type_override
     id                    integer PRIMARY KEY NOT NULL,
     text_test             text
 );
+
+CREATE TABLE IF NOT EXISTS test_override_conversion
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    price                 decimal             NOT NULL,
+    happened_at           datetime            NOT NULL
+);

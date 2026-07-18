@@ -37,6 +37,7 @@ import pytest
 from test.driver_asyncpg.msgspec.functions import enums
 from test.driver_asyncpg.msgspec.functions import models
 from test.driver_asyncpg.msgspec.functions import queries
+from test.driver_asyncpg.msgspec.functions import queries_enum_override
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -788,3 +789,18 @@ class TestMsgspecFunctions:
     @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_many_enums"])
     async def test_delete_enum(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         assert await queries.delete_one_test_enum_type(conn=asyncpg_conn, id_=424242) == 1
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecFunctions::insert_enum_override")
+    async def test_insert_enum_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # The overridden parameter is a plain str; the generated code converts
+        # it back to enums.TestMood before it reaches the driver.
+        await queries_enum_override.insert_enum_override(conn=asyncpg_conn, id_=434343, mood_test="happy")
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum_override"])
+    async def test_get_enum_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        mood = await queries_enum_override.get_enum_override_mood(conn=asyncpg_conn, id_=434343)
+        assert mood is not None
+        assert isinstance(mood, str)
+        assert mood == "happy"

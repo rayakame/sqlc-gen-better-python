@@ -3,10 +3,12 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 6c9691f3906f3e654b02c3767388465415add576ae76a57f03759fc38c6173bc
+      sha256: 0a6747ccf5695237d313319170d46a84991facf040e296543be3e3658b5b051a
 sql:
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /attrs/classes
@@ -26,8 +28,13 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /attrs/functions
@@ -47,8 +54,13 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /dataclass/classes
@@ -67,8 +79,13 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /dataclass/functions
@@ -87,8 +104,13 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /msgspec/classes
@@ -107,8 +129,13 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /msgspec/functions
@@ -127,9 +154,14 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
 
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /pydantic/classes
@@ -148,8 +180,13 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
     engine: postgresql
     codegen:
       - out: /pydantic/functions
@@ -168,4 +205,7 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
 

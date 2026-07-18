@@ -95,7 +95,7 @@ def sqlite3_conn(
     conn.commit()
     yield conn
 
-    conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;""")
+    conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_override_conversion;""")
     conn.commit()
     conn.close()
 

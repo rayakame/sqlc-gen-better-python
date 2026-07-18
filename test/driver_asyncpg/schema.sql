@@ -138,6 +138,7 @@ CREATE TABLE IF NOT EXISTS test_type_override
     text_test             text
 );
 DROP TABLE IF EXISTS test_enum_types;
+DROP TABLE IF EXISTS test_enum_override;
 DROP TYPE IF EXISTS test_mood;
 CREATE TYPE test_mood AS ENUM ('sad', 'ok', 'happy');
 
@@ -146,4 +147,10 @@ CREATE TABLE test_enum_types
     id   int PRIMARY KEY NOT NULL,
     mood test_mood       NOT NULL,
     maybe_mood test_mood
+);
+
+CREATE TABLE test_enum_override
+(
+    id        int PRIMARY KEY NOT NULL,
+    mood_test test_mood       NOT NULL
 );

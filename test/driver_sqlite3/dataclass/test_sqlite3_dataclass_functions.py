@@ -31,6 +31,11 @@ import pytest
 
 from test.driver_sqlite3.dataclass.functions import models
 from test.driver_sqlite3.dataclass.functions import queries
+from test.driver_sqlite3.dataclass.functions import queries_override_adapter
+from test.driver_sqlite3.dataclass.functions import queries_override_converter
+
+OVERRIDE_PRICE = 12.5
+OVERRIDE_HAPPENED_AT = datetime.datetime(2026, 7, 19, 12, 30)
 
 
 class TestSqlite3DataclassFunctions:
@@ -932,3 +937,32 @@ class TestSqlite3DataclassFunctions:
     )
     def test_delete_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
         queries.delete_type_override(conn=sqlite3_conn, id_=override_model.id_)
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_override_conversion")
+    def test_insert_override_conversion(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The overridden price parameter is a plain float; the generated code
+        # converts it back to decimal.Decimal, which the registered adapter
+        # then serializes.
+        queries_override_adapter.insert_override_conversion(
+            conn=sqlite3_conn,
+            id_=434343,
+            price=OVERRIDE_PRICE,
+            happened_at=OVERRIDE_HAPPENED_AT,
+        )
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestDataclassFunctions::get_override_price",
+        depends=["Sqlite3TestDataclassFunctions::insert_override_conversion"],
+    )
+    def test_get_override_price(self, sqlite3_conn: sqlite3.Connection) -> None:
+        price = queries_override_adapter.get_override_price(conn=sqlite3_conn, id_=434343)
+        assert price is not None
+        assert isinstance(price, float)
+        assert price == OVERRIDE_PRICE
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_override_price"])
+    def test_get_override_happened_at(self, sqlite3_conn: sqlite3.Connection) -> None:
+        happened_at = queries_override_converter.get_override_happened_at(conn=sqlite3_conn, id_=434343)
+        assert happened_at is not None
+        assert isinstance(happened_at, datetime.datetime)
+        assert happened_at == OVERRIDE_HAPPENED_AT
