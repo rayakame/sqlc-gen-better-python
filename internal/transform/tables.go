@@ -46,7 +46,6 @@ func (t *Transformer) buildTable(pluginSchema *plugin.Schema, pluginTable *plugi
 			Name:   model.EscapedColumnName(column, i),
 			DBName: model.ColumnName(column, i),
 			Type:   t.buildPyType(column),
-			Embed:  nil,
 		})
 	}
 

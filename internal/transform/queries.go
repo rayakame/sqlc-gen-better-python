@@ -35,22 +35,10 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			FuncName:     strings.ToLower(constantName),
 			QueryName:    pluginQuery.Name,
 			Params:       make([]model.QueryValue, 0),
-			Returns: model.QueryValue{
-				Table:  nil,
-				Name:   "",
-				DBName: "",
-				Type: model.PyType{
-					SQLType:    "",
-					Type:       "None",
-					IsNullable: false,
-					IsList:     false,
-					IsEnum:     false,
-				},
-				EmitTable: false,
-			},
-			FileName:   pluginQuery.Filename,
-			ModuleName: moduleName,
-			Table:      pluginQuery.InsertIntoTable,
+			Returns:      model.QueryValue{Type: model.PyType{Type: "None"}},
+			FileName:     pluginQuery.Filename,
+			ModuleName:   moduleName,
+			Table:        pluginQuery.InsertIntoTable,
 		}
 
 		if query.Cmd == metadata.CmdCopyFrom || t.config.IsOverQueryParameterLimit(len(pluginQuery.Params)) {
@@ -64,16 +52,9 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			table := t.columnsToClass(query.QueryName+"Params", columns)
 			query.Params = []model.QueryValue{
 				{
-					Table:  utils.ToPtr(table),
-					Name:   "params",
-					DBName: "",
-					Type: model.PyType{
-						SQLType:    "",
-						Type:       table.Name,
-						IsNullable: false,
-						IsList:     query.Cmd == metadata.CmdCopyFrom,
-						IsEnum:     false,
-					},
+					Table:     utils.ToPtr(table),
+					Name:      "params",
+					Type:      model.PyType{Type: table.Name, IsList: query.Cmd == metadata.CmdCopyFrom},
 					EmitTable: true,
 				},
 			}
@@ -82,32 +63,17 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			seen := make(map[string]int, len(pluginQuery.Params))
 			for _, param := range pluginQuery.Params {
 				query.Params = append(query.Params, model.QueryValue{
-					Table:     nil,
-					Name:      dedupName(model.ParamName(param), seen),
-					DBName:    param.Column.GetName(),
-					Type:      t.buildPyType(param.Column),
-					EmitTable: false,
+					Name: dedupName(model.ParamName(param), seen),
+					Type: t.buildPyType(param.Column),
 				})
 			}
 		}
 
 		if query.Cmd == metadata.CmdExecLastId {
-			query.Returns.Type = model.PyType{
-				SQLType:    "",
-				Type:       "int",
-				IsNullable: true,
-				IsList:     false,
-				IsEnum:     false,
-			}
+			query.Returns.Type = model.PyType{Type: "int", IsNullable: true}
 		}
 		if query.Cmd == metadata.CmdExecRows || query.Cmd == metadata.CmdCopyFrom {
-			query.Returns.Type = model.PyType{
-				SQLType:    "",
-				Type:       "int",
-				IsNullable: false,
-				IsList:     false,
-				IsEnum:     false,
-			}
+			query.Returns.Type = model.PyType{Type: "int"}
 		}
 
 		if pluginQuery.Cmd != metadata.CmdOne && pluginQuery.Cmd != metadata.CmdMany {
@@ -118,13 +84,7 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 
 		if len(pluginQuery.Columns) == 1 && pluginQuery.Columns[0].EmbedTable == nil {
 			column := pluginQuery.Columns[0]
-			query.Returns = model.QueryValue{
-				Table:     nil,
-				Name:      model.EscapedColumnName(column, 0),
-				DBName:    model.ColumnName(column, 0),
-				Type:      t.buildPyType(column),
-				EmitTable: false,
-			}
+			query.Returns = model.QueryValue{Type: t.buildPyType(column)}
 			queries = append(queries, query)
 
 			continue
@@ -161,17 +121,8 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			}
 			if same {
 				query.Returns = model.QueryValue{
-					Table:  utils.ToPtr(table),
-					Name:   "i",
-					DBName: "",
-					Type: model.PyType{
-						SQLType:    "",
-						Type:       "models." + table.Name,
-						IsNullable: false,
-						IsList:     false,
-						IsEnum:     false,
-					},
-					EmitTable: false,
+					Table: utils.ToPtr(table),
+					Type:  model.PyType{Type: "models." + table.Name},
 				}
 				tableFound = true
 				break
@@ -188,16 +139,8 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			}
 			returnTable := t.columnsToClass(query.QueryName+"Row", columns)
 			query.Returns = model.QueryValue{
-				Table:  utils.ToPtr(returnTable),
-				Name:   "i",
-				DBName: "",
-				Type: model.PyType{
-					SQLType:    "",
-					Type:       returnTable.Name,
-					IsNullable: false,
-					IsList:     false,
-					IsEnum:     false,
-				},
+				Table:     utils.ToPtr(returnTable),
+				Type:      model.PyType{Type: returnTable.Name},
 				EmitTable: true,
 			}
 		}
@@ -247,8 +190,6 @@ func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Tabl
 		tableColumn := model.Column{
 			Name:   dedupName(columnName, seen),
 			DBName: model.ColumnName(column.column, i),
-			Type:   model.PyType{},
-			Embed:  nil,
 		}
 
 		if column.embed == nil {

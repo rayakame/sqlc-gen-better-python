@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
-	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 )
@@ -95,10 +94,8 @@ func (w *CodeWriter) WriteFutureImport() {
 }
 
 func (w *CodeWriter) WriteString(txt string) {
-	_, err := w.builder.WriteString(txt)
-	if err != nil {
-		log.L().LogErr("Error while trying to write string", err)
-	}
+	// strings.Builder.WriteString is documented to always return a nil error.
+	w.builder.WriteString(txt) //nolint:errcheck // never returns an error
 }
 
 func (w *CodeWriter) Bytes() []byte {

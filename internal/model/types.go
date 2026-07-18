@@ -102,7 +102,6 @@ type QueryValue struct {
 	EmitTable bool
 	Table     *Table
 	Name      string
-	DBName    string
 	Type      PyType
 }
 

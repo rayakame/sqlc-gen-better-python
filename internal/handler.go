@@ -39,11 +39,6 @@ func Handler(_ context.Context, req *plugin.GenerateRequest) (*plugin.GenerateRe
 	}
 
 	renderer := render.New(config, driver)
-	/*
-		log.L().LogAny(enums)
-		log.L().LogAny(tables)
-		log.L().LogAny(queries)
-	*/
 	outputFiles, err := renderer.RenderAll(enums, tables, queries)
 	if err != nil {
 		return nil, fmt.Errorf("error building queries: %w", err)

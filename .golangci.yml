@@ -97,7 +97,14 @@ linters:
       # For example, to match type `net/http.Cookie` regular expression should be `.*/http\.Cookie`,
       # but not `http\.Cookie`.
       # Default: []
-      exclude: []
+      exclude:
+        # Internal IR types: literals name only meaningful fields instead of
+        # restating every zero value at each construction site.
+        - '.*/internal/model\.PyType$'
+        - '.*/internal/model\.QueryValue$'
+        - '.*/internal/model\.Column$'
+        - '.*/internal/render\.importSpec$'
+        - '.*/plugin\.Identifier$'
       allow-empty: true
     tagliatelle:
       case:
