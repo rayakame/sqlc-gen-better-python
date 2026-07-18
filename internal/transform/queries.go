@@ -1,7 +1,6 @@
 package transform
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 
@@ -64,7 +63,7 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			seen := make(map[string]int, len(pluginQuery.Params))
 			for _, param := range pluginQuery.Params {
 				query.Params = append(query.Params, model.QueryValue{
-					Name: dedupName(model.ParamName(param), seen),
+					Name: model.DedupName(model.ParamName(param), seen),
 					Type: t.buildPyType(param.Column),
 				})
 			}
@@ -163,26 +162,6 @@ type pyColumn struct {
 	embed  *model.Embed
 }
 
-// dedupName makes repeated Python identifiers unique by appending a numeric
-// suffix ("name", "name_2", "name_3", ...), so duplicate columns or
-// parameters never generate duplicate fields or arguments. Suffixes are
-// probed until an unused identifier is found, so a literal "name_2" that
-// appeared earlier can never collide with a generated one.
-func dedupName(name string, seen map[string]int) string {
-	seen[name]++
-	if seen[name] == 1 {
-		return name
-	}
-	for i := seen[name]; ; i++ {
-		candidate := fmt.Sprintf("%s_%d", name, i)
-		if seen[candidate] == 0 {
-			seen[candidate]++
-
-			return candidate
-		}
-	}
-}
-
 func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Table {
 	table := model.Table{
 		Name:       name,
@@ -201,7 +180,7 @@ func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Tabl
 			})
 		}
 		tableColumn := model.Column{
-			Name:   dedupName(columnName, seen),
+			Name:   model.DedupName(columnName, seen),
 			DBName: model.ColumnName(column.column, i),
 		}
 

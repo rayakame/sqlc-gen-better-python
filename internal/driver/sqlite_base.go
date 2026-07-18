@@ -79,48 +79,49 @@ func (sb *sqliteBase) ConvertsInline(_ string) bool {
 // Values written by adapters and read back by converters require the user's
 // connection to be opened with detect_types=sqlite3.PARSE_DECLTYPES.
 func (sb *sqliteBase) WriteConversionSetup(body *writer.CodeWriter, config *config.Config, queries []model.Query) bool {
-	usedTypes := SqliteConversionsUsed(queries)
-	if len(usedTypes) == 0 {
+	usage := SqliteConversionsUsed(queries)
+	if !usage.Any() {
 		return false
 	}
-	used := make(map[string]struct{}, len(usedTypes))
-	for _, pyType := range usedTypes {
-		used[pyType] = struct{}{}
-	}
 
-	adapters := make([]string, 0, len(usedTypes))
-	converters := make([]string, 0, len(usedTypes))
-	for i := range sqliteConversions {
-		spec := &sqliteConversions[i]
-		if _, ok := used[spec.pyType]; !ok {
-			continue
-		}
+	adapters := make([]string, 0, len(usage.uses))
+	converters := make([]string, 0, len(usage.uses))
+	for _, use := range usage.uses {
+		spec := use.spec
 
-		body.WriteLine(fmt.Sprintf("def _adapt_%s(val: %s) -> %s:", spec.suffix, spec.pyType, spec.adaptRet))
-		body.WriteIndentedLine(1, "return "+spec.adaptBody)
-		body.NNewLine(2)
-
-		convBody := spec.convBody
-		if config.Speedups && spec.speedupsBody != "" {
-			convBody = spec.speedupsBody
-		}
-		body.WriteLine(fmt.Sprintf("def _convert_%s(val: bytes) -> %s:", spec.suffix, spec.pyType))
-		body.WriteIndentedLine(1, "return "+convBody)
-		body.NNewLine(2)
-
-		adapters = append(adapters, fmt.Sprintf("%s.register_adapter(%s, _adapt_%s)", sb.moduleName, spec.pyType, spec.suffix))
-		for _, key := range spec.sqlTypes {
-			converters = append(
-				converters,
-				fmt.Sprintf(`%s.register_converter("%s", _convert_%s)`, sb.moduleName, key, spec.suffix),
+		if use.adapter {
+			body.WriteLine(fmt.Sprintf("def _adapt_%s(val: %s) -> %s:", spec.suffix, spec.pyType, spec.adaptRet))
+			body.WriteIndentedLine(1, "return "+spec.adaptBody)
+			body.NNewLine(2)
+			adapters = append(
+				adapters,
+				fmt.Sprintf("%s.register_adapter(%s, _adapt_%s)", sb.moduleName, spec.pyType, spec.suffix),
 			)
+		}
+
+		if use.converter {
+			convBody := spec.convBody
+			if config.Speedups && spec.speedupsBody != "" {
+				convBody = spec.speedupsBody
+			}
+			body.WriteLine(fmt.Sprintf("def _convert_%s(val: bytes) -> %s:", spec.suffix, spec.pyType))
+			body.WriteIndentedLine(1, "return "+convBody)
+			body.NNewLine(2)
+			for _, key := range spec.sqlTypes {
+				converters = append(
+					converters,
+					fmt.Sprintf(`%s.register_converter("%s", _convert_%s)`, sb.moduleName, key, spec.suffix),
+				)
+			}
 		}
 	}
 
 	for _, line := range adapters {
 		body.WriteLine(line)
 	}
-	body.NewLine()
+	if len(adapters) != 0 && len(converters) != 0 {
+		body.NewLine()
+	}
 	for _, line := range converters {
 		body.WriteLine(line)
 	}

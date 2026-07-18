@@ -55,7 +55,9 @@ func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query)
 	}
 
 	for _, query := range queries {
-		constantsBody.WriteLine(fmt.Sprintf(`%s: typing.Final[str] = """-- name: %s %s`, query.ConstantName, query.QueryName, query.Cmd))
+		constantsBody.WriteLine(
+			fmt.Sprintf(`%s: typing.Final[str] = """-- name: %s %s`, query.ConstantName, query.QueryName, query.Cmd),
+		)
 		constantsBody.WriteLine(query.SQL)
 		constantsBody.WriteLine(`"""`)
 		constantsBody.NewLine()

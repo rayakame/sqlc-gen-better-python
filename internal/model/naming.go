@@ -116,12 +116,18 @@ func EnumConstantName(value string, index int, seen map[string]int) string {
 		name = "_" + name
 	}
 
+	return DedupName(name, seen)
+}
+
+// DedupName makes repeated Python identifiers unique by appending a numeric
+// suffix ("name", "name_2", "name_3", ...). Suffixes are probed until an
+// unused identifier is found, so a literal "name_2" that appeared earlier can
+// never collide with a generated one. seen tracks usage counts per scope.
+func DedupName(name string, seen map[string]int) string {
 	seen[name]++
 	if seen[name] == 1 {
 		return name
 	}
-	// Probe suffixes until an unused constant name is found, so a literal
-	// "NAME_2" seen earlier can never collide with a generated one.
 	for i := seen[name]; ; i++ {
 		candidate := fmt.Sprintf("%s_%d", name, i)
 		if seen[candidate] == 0 {

@@ -14,7 +14,12 @@ func NewQueryResultsWriter(writer *CodeWriter) *QueryResultsWriter {
 	return utils.ToPtr(QueryResultsWriter{writer: writer})
 }
 
-func (w *QueryResultsWriter) WriteQueryResultsClassHeader(connType string, initFields []string, driverReturnType string, async bool) {
+func (w *QueryResultsWriter) WriteQueryResultsClassHeader(
+	connType string,
+	initFields []string,
+	driverReturnType string,
+	async bool,
+) {
 	w.writer.WriteLine(`T = typing.TypeVar("T")`)
 	w.writer.NNewLine(2)
 	w.writer.WriteLine("class QueryResults(typing.Generic[T]):")

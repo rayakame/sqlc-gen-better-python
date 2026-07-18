@@ -138,8 +138,6 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 }
 
 func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
-	addCiso := false
-
 	// "uses" checks whether any query arg/return uses a given Python type.
 	// Returns (isUsed, goesInTypeChecking).
 	uses := func(name string) (bool, bool) {
@@ -159,19 +157,10 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		for _, query := range queries {
 			if used, tc := r.queryValueUses(name, query.Returns); used {
 				update(used, tc)
-				// The datetime import stays at runtime even with speedups:
-				// register_adapter(datetime.date, ...) needs it at import time.
-				// ciso8601 is only used inside the converter bodies.
-				if !tc && r.isSpeedupDatetime(name) {
-					addCiso = true
-				}
 			}
 			for _, arg := range query.Params {
 				if used, tc := r.queryValueUses(name, arg); used {
 					update(used, tc)
-					if !tc && r.isSpeedupDatetime(name) {
-						addCiso = true
-					}
 				}
 				// Overridden params are converted back to their DefaultType at
 				// runtime (e.g. "decimal.Decimal(params.rating)"), so that
@@ -195,9 +184,18 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 	r.forcePydanticRuntimeImports(std, hasList)
 
 	std, typeChecking := splitTypeChecking(std)
-	r.addDriverImports(std, typeChecking, queries)
 
-	if addCiso {
+	// The conversion usage decides two runtime imports below: the sqlite
+	// module itself (register_adapter/register_converter run at import time)
+	// and ciso8601 (referenced only inside emitted converter bodies when
+	// speedups are on) — mirroring exactly what WriteConversionSetup emits.
+	var conversions driver.SqliteConversionUsage
+	if r.conf.SqlDriver == config.SQLDriverAioSQLite || r.conf.SqlDriver == config.SQLDriverSQLite {
+		conversions = driver.SqliteConversionsUsed(queries)
+	}
+	r.addDriverImports(std, typeChecking, queries, conversions)
+
+	if r.conf.Speedups && conversions.SpeedupConverterUsed() {
 		std["ciso8601"] = importSpec{Module: "ciso8601"}
 	}
 
@@ -211,52 +209,77 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 
 	// Only import models/enums when THIS module's queries actually reference
 	// them — a global flag would emit unused imports in multi-file projects.
+	// Overridden enum PARAMS count too: their annotation is the override type,
+	// but convertParamExpr emits an "enums.X(arg)" call at runtime. Overridden
+	// enum RETURNS don't — they convert via the override type only.
 	local := map[string]importSpec{}
 	if anyQueryType(queries, func(typ model.PyType) bool { return strings.HasPrefix(typ.Type, "models.") }) {
 		local["models"] = importSpec{Module: r.conf.Package, Name: "models"}
 	}
-	if anyQueryType(queries, func(typ model.PyType) bool { return typ.IsEnum || strings.HasPrefix(typ.Type, "enums.") }) {
+	usesEnums := anyQueryType(queries, func(typ model.PyType) bool {
+		return typ.IsEnum || strings.HasPrefix(typ.Type, "enums.")
+	}) || anyParamType(queries, func(typ model.PyType) bool {
+		return typ.DoOverride() && strings.HasPrefix(typ.DefaultType, "enums.")
+	})
+	if usesEnums {
 		local["enums"] = importSpec{Module: r.conf.Package, Name: "enums"}
 	}
 
 	return r.buildQueryResult(std, typeChecking, local, queries)
 }
 
-// anyQueryType reports whether pred matches any Python type used by the
-// queries: scalar params/returns, row/params class columns, embed field types,
-// and embed columns.
-func anyQueryType(queries []model.Query, pred func(model.PyType) bool) bool {
-	checkValue := func(qv model.QueryValue) bool {
-		if qv.IsEmpty() {
-			return false
-		}
-		if pred(qv.Type) {
+// queryValueMatches reports whether pred matches any Python type in the query
+// value: the scalar type, row/params class columns, embed field types, and
+// embed columns.
+func queryValueMatches(qv model.QueryValue, pred func(model.PyType) bool) bool {
+	if qv.IsEmpty() {
+		return false
+	}
+	if pred(qv.Type) {
+		return true
+	}
+	if qv.Table == nil {
+		return false
+	}
+	for _, col := range qv.Table.Columns {
+		if pred(col.Type) {
 			return true
 		}
-		if qv.Table == nil {
-			return false
-		}
-		for _, col := range qv.Table.Columns {
-			if pred(col.Type) {
-				return true
-			}
-			if col.Embed != nil {
-				for _, embedColumn := range col.Embed.Columns {
-					if pred(embedColumn.Type) {
-						return true
-					}
+		if col.Embed != nil {
+			for _, embedColumn := range col.Embed.Columns {
+				if pred(embedColumn.Type) {
+					return true
 				}
 			}
 		}
-
-		return false
 	}
+
+	return false
+}
+
+// anyQueryType reports whether pred matches any Python type used by the
+// queries, in both returns and parameters.
+func anyQueryType(queries []model.Query, pred func(model.PyType) bool) bool {
 	for _, query := range queries {
-		if checkValue(query.Returns) {
+		if queryValueMatches(query.Returns, pred) {
 			return true
 		}
 		for _, param := range query.Params {
-			if checkValue(param) {
+			if queryValueMatches(param, pred) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// anyParamType is anyQueryType restricted to query parameters — for imports
+// that only the runtime parameter conversion needs.
+func anyParamType(queries []model.Query, pred func(model.PyType) bool) bool {
+	for _, query := range queries {
+		for _, param := range query.Params {
+			if queryValueMatches(param, pred) {
 				return true
 			}
 		}
@@ -274,17 +297,6 @@ func (r *ImportResolver) EnumImports() ImportResult {
 	std, typeChecking := splitTypeChecking(std)
 
 	return buildResult(std, typeChecking, nil)
-}
-
-// isSpeedupDatetime checks if speedups are enabled and this is a datetime type
-// on a sqlite driver (where ciso8601 replaces datetime at runtime).
-func (r *ImportResolver) isSpeedupDatetime(name string) bool {
-	if !r.conf.Speedups {
-		return false
-	}
-	isSqlite := r.conf.SqlDriver == config.SQLDriverAioSQLite || r.conf.SqlDriver == config.SQLDriverSQLite
-	isDatetime := name == "datetime.datetime" || name == "datetime.date"
-	return isSqlite && isDatetime
 }
 
 // forcePydanticRuntimeImports moves every type import to runtime for pydantic
@@ -340,7 +352,12 @@ func (r *ImportResolver) addOverrideImports(std map[string]importSpec, uses func
 }
 
 // addDriverImports adds driver-specific imports to the std/typeChecking maps.
-func (r *ImportResolver) addDriverImports(std, typeChecking map[string]importSpec, queries []model.Query) {
+// conversions is only meaningful for the sqlite drivers.
+func (r *ImportResolver) addDriverImports(
+	std, typeChecking map[string]importSpec,
+	queries []model.Query,
+	conversions driver.SqliteConversionUsage,
+) {
 	driverName := string(r.conf.SqlDriver)
 	hasMany := isAnyQueryMany(queries)
 
@@ -356,7 +373,7 @@ func (r *ImportResolver) addDriverImports(std, typeChecking map[string]importSpe
 
 	case config.SQLDriverAioSQLite:
 		// register_adapter/register_converter calls need the module at runtime.
-		if len(driver.SqliteConversionsUsed(queries)) > 0 {
+		if conversions.Any() {
 			std[driverName] = importSpec{Module: driverName}
 		} else {
 			typeChecking[driverName] = importSpec{Module: driverName}
@@ -369,7 +386,7 @@ func (r *ImportResolver) addDriverImports(std, typeChecking map[string]importSpe
 		}
 
 	case config.SQLDriverSQLite:
-		if len(driver.SqliteConversionsUsed(queries)) > 0 {
+		if conversions.Any() {
 			std[driverName] = importSpec{Module: driverName}
 		} else {
 			typeChecking[driverName] = importSpec{Module: driverName}

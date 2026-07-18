@@ -9,7 +9,14 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 )
 
-func writeFuncSignature(body *writer.CodeWriter, d Driver, config *config.Config, indent int, query model.Query, returnAnnotation string) string {
+func writeFuncSignature(
+	body *writer.CodeWriter,
+	d Driver,
+	config *config.Config,
+	indent int,
+	query model.Query,
+	returnAnnotation string,
+) string {
 	conn := "conn"
 	first := fmt.Sprintf("conn: %s", d.ConnType())
 	if config.EmitClasses {

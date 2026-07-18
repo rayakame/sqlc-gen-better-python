@@ -95,13 +95,10 @@ func findSqliteConversion(sqlType string) *sqliteConversion {
 			}
 		}
 	}
-	// Precision variants like "decimal(10,5)" keep their prefix.
+	// Precision variants like "decimal(10,5)" keep their prefix; resolve them
+	// through the exact "decimal" key.
 	if strings.HasPrefix(sqlType, "decimal") {
-		for i := range sqliteConversions {
-			if sqliteConversions[i].pyType == "decimal.Decimal" {
-				return &sqliteConversions[i]
-			}
-		}
+		return findSqliteConversion("decimal")
 	}
 
 	return nil
@@ -112,22 +109,65 @@ func sqliteNeedsConversion(sqlType string) bool {
 	return findSqliteConversion(sqlType) != nil
 }
 
-// SqliteConversionsUsed returns the Python types used by the given queries that
-// need a registered sqlite adapter/converter pair, in canonical emission order.
-// Overridden RETURN columns are excluded — those are converted inline with the
-// override type. Overridden PARAMS are included: convertParamExpr converts
-// them back to their DefaultType, which still needs the registered adapter.
-func SqliteConversionsUsed(queries []model.Query) []string {
-	used := make(map[string]struct{})
-	add := func(typ model.PyType, skipOverride bool) {
-		if skipOverride && typ.DoOverride() {
+// sqliteConversionUse marks which half of a conversion spec's adapter/converter
+// pair the queries actually need.
+type sqliteConversionUse struct {
+	spec      *sqliteConversion
+	adapter   bool
+	converter bool
+}
+
+// SqliteConversionUsage lists the conversion specs a module's queries need, in
+// canonical emission order, split by direction: parameters need a registered
+// adapter (Python value → SQL), returns need a registered converter (SQL value
+// → Python). Registering only what is needed matters because sqlite3
+// converters are global: an unnecessary register_converter would change what
+// overridden return columns receive under PARSE_DECLTYPES.
+type SqliteConversionUsage struct {
+	uses []sqliteConversionUse
+}
+
+// Any reports whether at least one adapter or converter must be registered.
+func (u SqliteConversionUsage) Any() bool {
+	return len(u.uses) > 0
+}
+
+// SpeedupConverterUsed reports whether any needed converter has a speedups
+// variant — i.e. whether the generated module references ciso8601 when the
+// speedups option is enabled.
+func (u SqliteConversionUsage) SpeedupConverterUsed() bool {
+	for _, use := range u.uses {
+		if use.converter && use.spec.speedupsBody != "" {
+			return true
+		}
+	}
+
+	return false
+}
+
+// SqliteConversionsUsed collects the conversion specs used by the queries.
+// Overridden RETURN columns need no converter — they are converted inline with
+// the override type, and registering one anyway would hand the override
+// constructor an already-converted value. Overridden PARAMS do need the
+// adapter: convertParamExpr converts them back to their DefaultType before
+// they reach the driver.
+func SqliteConversionsUsed(queries []model.Query) SqliteConversionUsage {
+	adapters := make(map[string]struct{})
+	converters := make(map[string]struct{})
+	addParam := func(typ model.PyType) {
+		if spec := findSqliteConversion(typ.SQLType); spec != nil {
+			adapters[spec.pyType] = struct{}{}
+		}
+	}
+	addReturn := func(typ model.PyType) {
+		if typ.DoOverride() {
 			return
 		}
 		if spec := findSqliteConversion(typ.SQLType); spec != nil {
-			used[spec.pyType] = struct{}{}
+			converters[spec.pyType] = struct{}{}
 		}
 	}
-	collect := func(qv model.QueryValue, skipOverride bool) {
+	collect := func(qv model.QueryValue, add func(model.PyType)) {
 		if qv.IsEmpty() {
 			return
 		}
@@ -135,31 +175,34 @@ func SqliteConversionsUsed(queries []model.Query) []string {
 			for _, col := range qv.Table.Columns {
 				if col.Embed != nil {
 					for _, embedCol := range col.Embed.Columns {
-						add(embedCol.Type, skipOverride)
+						add(embedCol.Type)
 					}
 
 					continue
 				}
-				add(col.Type, skipOverride)
+				add(col.Type)
 			}
 
 			return
 		}
-		add(qv.Type, skipOverride)
+		add(qv.Type)
 	}
 	for _, query := range queries {
-		collect(query.Returns, true)
+		collect(query.Returns, addReturn)
 		for _, param := range query.Params {
-			collect(param, false)
+			collect(param, addParam)
 		}
 	}
 
-	result := make([]string, 0, len(used))
+	usage := SqliteConversionUsage{uses: make([]sqliteConversionUse, 0, len(adapters)+len(converters))}
 	for i := range sqliteConversions {
-		if _, ok := used[sqliteConversions[i].pyType]; ok {
-			result = append(result, sqliteConversions[i].pyType)
+		spec := &sqliteConversions[i]
+		_, adapter := adapters[spec.pyType]
+		_, converter := converters[spec.pyType]
+		if adapter || converter {
+			usage.uses = append(usage.uses, sqliteConversionUse{spec: spec, adapter: adapter, converter: converter})
 		}
 	}
 
-	return result
+	return usage
 }

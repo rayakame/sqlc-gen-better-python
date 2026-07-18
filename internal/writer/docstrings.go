@@ -224,7 +224,10 @@ func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string)
 		w.WriteIndentedLine(2, "Arguments:")
 		w.WriteIndentedLine(2, fmt.Sprintf("conn -- The connection object of type `%s` used to execute queries.", connType))
 		w.WriteIndentedLine(2, "sql -- The SQL statement that will be executed when fetching/iterating.")
-		w.WriteIndentedLine(2, fmt.Sprintf("decode_hook -- A callback that turns an `%s` object into `T` that will be returned.", resultType))
+		w.WriteIndentedLine(
+			2,
+			fmt.Sprintf("decode_hook -- A callback that turns an `%s` object into `T` that will be returned.", resultType),
+		)
 		w.WriteIndentedLine(2, "*args -- Arguments that should be sent when executing the sql query.")
 		w.WriteIndentedLine(2, `"""`)
 	}
@@ -357,7 +360,11 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		ret = &retDoc{
 			numpyType: retType,
 			text:      fmt.Sprintf("The number of affected rows. This will be %s for queries like `CREATE TABLE`.", noRows),
-			google:    fmt.Sprintf("The number (`%s`) of affected rows. This will be %s for queries like `CREATE TABLE`.", retType, noRows),
+			google: fmt.Sprintf(
+				"The number (`%s`) of affected rows. This will be %s for queries like `CREATE TABLE`.",
+				retType,
+				noRows,
+			),
 		}
 	case metadata.CmdCopyFrom:
 		summaryFmt = "Execute COPY FROM query to insert rows into a table with `name: %s %s` and return the number of affected rows."
@@ -393,7 +400,10 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		ret = &retDoc{
 			numpyType: "QueryResults[" + retType + "]",
 			text:      "Helper class that allows both iteration and normal fetching of data from the db.",
-			google:    fmt.Sprintf("Helper class of type `QueryResults[%s]` that allows both iteration and normal fetching of data from the db.", retType),
+			google: fmt.Sprintf(
+				"Helper class of type `QueryResults[%s]` that allows both iteration and normal fetching of data from the db.",
+				retType,
+			),
 		}
 	default:
 		return
