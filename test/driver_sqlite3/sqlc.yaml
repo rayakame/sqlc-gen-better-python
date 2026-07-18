@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 6dfcbf5ef11fffb933542ec9973865ca54c3cf115ab6fd21ebc7305b9d555df4
+      sha256: 985b5af439488daa79c3968d5ffa53341ba8176e1afae4ce2d455cd91b843301
 sql:
   - schema: schema.sql
     queries: queries.sql
@@ -16,6 +16,7 @@ sql:
           sql_driver: sqlite3
           model_type: attrs
           emit_classes: true
+          omit_kwargs_limit: 0
           omit_unused_models: false
           emit_init_file: true
           query_parameter_limit: 9999
@@ -38,6 +39,7 @@ sql:
           sql_driver: sqlite3
           model_type: attrs
           emit_classes: false
+          omit_kwargs_limit: 0
           omit_unused_models: true
           emit_init_file: true
           query_parameter_limit: 9999

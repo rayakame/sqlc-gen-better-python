@@ -432,7 +432,6 @@ class QueryResults(typing.Generic[T]):
 
 async def insert_one_sqlite_type(
     conn: aiosqlite.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -548,7 +547,6 @@ async def insert_one_sqlite_type(
 
 async def insert_one_inner_sqlite_type(
     conn: aiosqlite.Connection,
-    *,
     table_id: int,
     int_test: int | None,
     bigint_test: int | None,
@@ -662,7 +660,7 @@ async def insert_one_inner_sqlite_type(
     await conn.execute(INSERT_ONE_INNER_SQLITE_TYPE, sql_args)
 
 
-async def get_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> models.TestSqliteType | None:
+async def get_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> models.TestSqliteType | None:
     """Fetch one from the db using the SQL query with `name: GetOneSqliteType :one`.
 
     ```sql
@@ -712,7 +710,7 @@ async def get_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> models
     )
 
 
-async def get_one_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> models.TestInnerSqliteType | None:
+async def get_one_inner_sqlite_type(conn: aiosqlite.Connection, table_id: int) -> models.TestInnerSqliteType | None:
     """Fetch one from the db using the SQL query with `name: GetOneInnerSqliteType :one`.
 
     ```sql
@@ -762,7 +760,7 @@ async def get_one_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int
     )
 
 
-async def get_one_date(conn: aiosqlite.Connection, *, id_: int, date_test: datetime.date) -> datetime.date | None:
+async def get_one_date(conn: aiosqlite.Connection, id_: int, date_test: datetime.date) -> datetime.date | None:
     """Fetch one from the db using the SQL query with `name: GetOneDate :one`.
 
     ```sql
@@ -783,7 +781,7 @@ async def get_one_date(conn: aiosqlite.Connection, *, id_: int, date_test: datet
     return row[0]
 
 
-async def get_one_datetime(conn: aiosqlite.Connection, *, id_: int, datetime_test: datetime.datetime) -> datetime.datetime | None:
+async def get_one_datetime(conn: aiosqlite.Connection, id_: int, datetime_test: datetime.datetime) -> datetime.datetime | None:
     """Fetch one from the db using the SQL query with `name: GetOneDatetime :one`.
 
     ```sql
@@ -804,7 +802,7 @@ async def get_one_datetime(conn: aiosqlite.Connection, *, id_: int, datetime_tes
     return row[0]
 
 
-async def get_one_timestamp(conn: aiosqlite.Connection, *, id_: int, timestamp_test: datetime.datetime) -> datetime.datetime | None:
+async def get_one_timestamp(conn: aiosqlite.Connection, id_: int, timestamp_test: datetime.datetime) -> datetime.datetime | None:
     """Fetch one from the db using the SQL query with `name: GetOneTimestamp :one`.
 
     ```sql
@@ -825,7 +823,7 @@ async def get_one_timestamp(conn: aiosqlite.Connection, *, id_: int, timestamp_t
     return row[0]
 
 
-async def get_one_bool(conn: aiosqlite.Connection, *, id_: int, bool_test: bool) -> bool | None:
+async def get_one_bool(conn: aiosqlite.Connection, id_: int, bool_test: bool) -> bool | None:
     """Fetch one from the db using the SQL query with `name: GetOneBool :one`.
 
     ```sql
@@ -846,7 +844,7 @@ async def get_one_bool(conn: aiosqlite.Connection, *, id_: int, bool_test: bool)
     return row[0]
 
 
-async def get_one_boolean(conn: aiosqlite.Connection, *, id_: int, boolean_test: bool) -> bool | None:
+async def get_one_boolean(conn: aiosqlite.Connection, id_: int, boolean_test: bool) -> bool | None:
     """Fetch one from the db using the SQL query with `name: GetOneBoolean :one`.
 
     ```sql
@@ -867,7 +865,7 @@ async def get_one_boolean(conn: aiosqlite.Connection, *, id_: int, boolean_test:
     return row[0]
 
 
-async def get_one_decimal(conn: aiosqlite.Connection, *, id_: int, decimal_test: decimal.Decimal) -> decimal.Decimal | None:
+async def get_one_decimal(conn: aiosqlite.Connection, id_: int, decimal_test: decimal.Decimal) -> decimal.Decimal | None:
     """Fetch one from the db using the SQL query with `name: GetOneDecimal :one`.
 
     ```sql
@@ -888,7 +886,7 @@ async def get_one_decimal(conn: aiosqlite.Connection, *, id_: int, decimal_test:
     return row[0]
 
 
-async def get_one_blob(conn: aiosqlite.Connection, *, id_: int, blob_test: memoryview) -> memoryview | None:
+async def get_one_blob(conn: aiosqlite.Connection, id_: int, blob_test: memoryview) -> memoryview | None:
     """Fetch one from the db using the SQL query with `name: GetOneBlob :one`.
 
     ```sql
@@ -909,7 +907,7 @@ async def get_one_blob(conn: aiosqlite.Connection, *, id_: int, blob_test: memor
     return row[0]
 
 
-def get_many_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> QueryResults[models.TestSqliteType]:
+def get_many_sqlite_type(conn: aiosqlite.Connection, id_: int) -> QueryResults[models.TestSqliteType]:
     """Fetch many from the db using the SQL query with `name: GetManySqliteType :many`.
 
     ```sql
@@ -960,7 +958,7 @@ def get_many_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> QueryResult
     return QueryResults[models.TestSqliteType](conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
 
 
-def get_many_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
+def get_many_inner_sqlite_type(conn: aiosqlite.Connection, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
     """Fetch many from the db using the SQL query with `name: GetManyInnerSqliteType :many`.
 
     ```sql
@@ -1011,7 +1009,7 @@ def get_many_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> 
     return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
 
 
-def get_many_nullable_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int, int_test: int | None) -> QueryResults[models.TestInnerSqliteType]:
+def get_many_nullable_inner_sqlite_type(conn: aiosqlite.Connection, table_id: int, int_test: int | None) -> QueryResults[models.TestInnerSqliteType]:
     """Fetch many from the db using the SQL query with `name: GetManyNullableInnerSqliteType :many`.
 
     ```sql
@@ -1063,7 +1061,7 @@ def get_many_nullable_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id:
     return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
 
 
-def get_many_date(conn: aiosqlite.Connection, *, id_: int, date_test: datetime.date) -> QueryResults[datetime.date]:
+def get_many_date(conn: aiosqlite.Connection, id_: int, date_test: datetime.date) -> QueryResults[datetime.date]:
     """Fetch many from the db using the SQL query with `name: GetManyDate :many`.
 
     ```sql
@@ -1081,7 +1079,7 @@ def get_many_date(conn: aiosqlite.Connection, *, id_: int, date_test: datetime.d
     return QueryResults[datetime.date](conn, GET_MANY_DATE, operator.itemgetter(0), id_, date_test)
 
 
-def get_many_datetime(conn: aiosqlite.Connection, *, id_: int, datetime_test: datetime.datetime) -> QueryResults[datetime.datetime]:
+def get_many_datetime(conn: aiosqlite.Connection, id_: int, datetime_test: datetime.datetime) -> QueryResults[datetime.datetime]:
     """Fetch many from the db using the SQL query with `name: GetManyDatetime :many`.
 
     ```sql
@@ -1099,7 +1097,7 @@ def get_many_datetime(conn: aiosqlite.Connection, *, id_: int, datetime_test: da
     return QueryResults[datetime.datetime](conn, GET_MANY_DATETIME, operator.itemgetter(0), id_, datetime_test)
 
 
-def get_many_timestamp(conn: aiosqlite.Connection, *, id_: int, timestamp_test: datetime.datetime) -> QueryResults[datetime.datetime]:
+def get_many_timestamp(conn: aiosqlite.Connection, id_: int, timestamp_test: datetime.datetime) -> QueryResults[datetime.datetime]:
     """Fetch many from the db using the SQL query with `name: GetManyTimestamp :many`.
 
     ```sql
@@ -1117,7 +1115,7 @@ def get_many_timestamp(conn: aiosqlite.Connection, *, id_: int, timestamp_test: 
     return QueryResults[datetime.datetime](conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
 
 
-def get_many_bool(conn: aiosqlite.Connection, *, id_: int, bool_test: bool) -> QueryResults[bool]:
+def get_many_bool(conn: aiosqlite.Connection, id_: int, bool_test: bool) -> QueryResults[bool]:
     """Fetch many from the db using the SQL query with `name: GetManyBool :many`.
 
     ```sql
@@ -1135,7 +1133,7 @@ def get_many_bool(conn: aiosqlite.Connection, *, id_: int, bool_test: bool) -> Q
     return QueryResults[bool](conn, GET_MANY_BOOL, operator.itemgetter(0), id_, bool_test)
 
 
-def get_many_boolean(conn: aiosqlite.Connection, *, id_: int, boolean_test: bool) -> QueryResults[bool]:
+def get_many_boolean(conn: aiosqlite.Connection, id_: int, boolean_test: bool) -> QueryResults[bool]:
     """Fetch many from the db using the SQL query with `name: GetManyBoolean :many`.
 
     ```sql
@@ -1153,7 +1151,7 @@ def get_many_boolean(conn: aiosqlite.Connection, *, id_: int, boolean_test: bool
     return QueryResults[bool](conn, GET_MANY_BOOLEAN, operator.itemgetter(0), id_, boolean_test)
 
 
-def get_many_decimal(conn: aiosqlite.Connection, *, id_: int, decimal_test: decimal.Decimal) -> QueryResults[decimal.Decimal]:
+def get_many_decimal(conn: aiosqlite.Connection, id_: int, decimal_test: decimal.Decimal) -> QueryResults[decimal.Decimal]:
     """Fetch many from the db using the SQL query with `name: GetManyDecimal :many`.
 
     ```sql
@@ -1171,7 +1169,7 @@ def get_many_decimal(conn: aiosqlite.Connection, *, id_: int, decimal_test: deci
     return QueryResults[decimal.Decimal](conn, GET_MANY_DECIMAL, operator.itemgetter(0), id_, decimal_test)
 
 
-def get_many_blob(conn: aiosqlite.Connection, *, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
+def get_many_blob(conn: aiosqlite.Connection, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
     """Fetch many from the db using the SQL query with `name: GetManyBlob :many`.
 
     ```sql
@@ -1189,7 +1187,7 @@ def get_many_blob(conn: aiosqlite.Connection, *, id_: int, blob_test: memoryview
     return QueryResults[memoryview](conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
 
 
-async def delete_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> None:
+async def delete_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> None:
     """Execute SQL query with `name: DeleteOneSqliteType :exec`.
 
     ```sql
@@ -1205,7 +1203,7 @@ async def delete_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> Non
     await conn.execute(DELETE_ONE_SQLITE_TYPE, (id_,))
 
 
-async def delete_one_test_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> None:
+async def delete_one_test_inner_sqlite_type(conn: aiosqlite.Connection, table_id: int) -> None:
     """Execute SQL query with `name: DeleteOneTestInnerSqliteType :exec`.
 
     ```sql
@@ -1222,7 +1220,6 @@ async def delete_one_test_inner_sqlite_type(conn: aiosqlite.Connection, *, table
 
 async def insert_result_one_sqlite_type(
     conn: aiosqlite.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -1339,7 +1336,7 @@ async def insert_result_one_sqlite_type(
     return await conn.execute(INSERT_RESULT_ONE_SQLITE_TYPE, sql_args)
 
 
-async def update_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> aiosqlite.Cursor:
+async def update_result_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> aiosqlite.Cursor:
     """Execute and return the result of SQL query with `name: UpdateResultOneSqliteType :execresult`.
 
     ```sql
@@ -1358,7 +1355,7 @@ async def update_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int)
     return await conn.execute(UPDATE_RESULT_ONE_SQLITE_TYPE, (id_,))
 
 
-async def delete_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> aiosqlite.Cursor:
+async def delete_result_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> aiosqlite.Cursor:
     """Execute and return the result of SQL query with `name: DeleteResultOneSqliteType :execresult`.
 
     ```sql
@@ -1379,7 +1376,6 @@ async def delete_result_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int)
 
 async def insert_rows_one_sqlite_type(
     conn: aiosqlite.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -1496,7 +1492,7 @@ async def insert_rows_one_sqlite_type(
     return (await conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE, sql_args)).rowcount
 
 
-async def update_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int:
+async def update_rows_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> int:
     """Execute SQL query with `name: UpdateRowsOneSqliteType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1515,7 +1511,7 @@ async def update_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -
     return (await conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE, (id_,))).rowcount
 
 
-async def delete_rows_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int:
+async def delete_rows_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> int:
     """Execute SQL query with `name: DeleteRowsOneSqliteType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1556,7 +1552,6 @@ async def create_rows_table(conn: aiosqlite.Connection) -> int:
 
 async def insert_last_id_one_sqlite_type(
     conn: aiosqlite.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -1673,7 +1668,7 @@ async def insert_last_id_one_sqlite_type(
     return (await conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE, sql_args)).lastrowid
 
 
-async def update_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int | None:
+async def update_last_id_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> int | None:
     """Execute SQL query with `name: UpdateLastIdOneSqliteType :execlastid` and return the id of the last affected row.
 
     ```sql
@@ -1692,7 +1687,7 @@ async def update_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int
     return (await conn.execute(UPDATE_LAST_ID_ONE_SQLITE_TYPE, (id_,))).lastrowid
 
 
-async def delete_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> int | None:
+async def delete_last_id_one_sqlite_type(conn: aiosqlite.Connection, id_: int) -> int | None:
     """Execute SQL query with `name: DeleteLastIdOneSqliteType :execlastid` and return the id of the last affected row.
 
     ```sql
@@ -1711,7 +1706,7 @@ async def delete_last_id_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int
     return (await conn.execute(DELETE_LAST_ID_ONE_SQLITE_TYPE, (id_,))).lastrowid
 
 
-async def insert_type_override(conn: aiosqlite.Connection, *, id_: int, text_test: UserString | None) -> None:
+async def insert_type_override(conn: aiosqlite.Connection, id_: int, text_test: UserString | None) -> None:
     """Execute SQL query with `name: InsertTypeOverride :exec`.
 
     ```sql
@@ -1728,7 +1723,7 @@ async def insert_type_override(conn: aiosqlite.Connection, *, id_: int, text_tes
     await conn.execute(INSERT_TYPE_OVERRIDE, (id_, str(text_test) if text_test is not None else None))
 
 
-async def get_one_type_override(conn: aiosqlite.Connection, *, id_: int) -> models.TestTypeOverride | None:
+async def get_one_type_override(conn: aiosqlite.Connection, id_: int) -> models.TestTypeOverride | None:
     """Fetch one from the db using the SQL query with `name: GetOneTypeOverride :one`.
 
     ```sql
@@ -1748,7 +1743,7 @@ async def get_one_type_override(conn: aiosqlite.Connection, *, id_: int) -> mode
     return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
 
 
-def get_many_type_override(conn: aiosqlite.Connection, *, id_: int) -> QueryResults[models.TestTypeOverride]:
+def get_many_type_override(conn: aiosqlite.Connection, id_: int) -> QueryResults[models.TestTypeOverride]:
     """Fetch many from the db using the SQL query with `name: GetManyTypeOverride :many`.
 
     ```sql
@@ -1769,7 +1764,7 @@ def get_many_type_override(conn: aiosqlite.Connection, *, id_: int) -> QueryResu
     return QueryResults[models.TestTypeOverride](conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
 
-async def get_one_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> UserString | None:
+async def get_one_text_type_override(conn: aiosqlite.Connection, id_: int) -> UserString | None:
     """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
 
     ```sql
@@ -1789,7 +1784,7 @@ async def get_one_text_type_override(conn: aiosqlite.Connection, *, id_: int) ->
     return UserString(row[0])
 
 
-def get_many_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> QueryResults[UserString]:
+def get_many_text_type_override(conn: aiosqlite.Connection, id_: int) -> QueryResults[UserString]:
     """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
 
     ```sql
@@ -1810,7 +1805,7 @@ def get_many_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> Quer
     return QueryResults[UserString](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
 
-async def delete_type_override(conn: aiosqlite.Connection, *, id_: int) -> None:
+async def delete_type_override(conn: aiosqlite.Connection, id_: int) -> None:
     """Execute SQL query with `name: DeleteTypeOverride :exec`.
 
     ```sql

@@ -666,7 +666,7 @@ class Queries:
         )
         await self._conn.execute(INSERT_ONE_INNER_SQLITE_TYPE, sql_args)
 
-    async def get_one_sqlite_type(self, id_: int) -> models.TestSqliteType | None:
+    async def get_one_sqlite_type(self, *, id_: int) -> models.TestSqliteType | None:
         """Fetch one from the db using the SQL query with `name: GetOneSqliteType :one`.
 
         ```sql
@@ -718,7 +718,7 @@ class Queries:
             json_test=row[28],
         )
 
-    async def get_one_inner_sqlite_type(self, table_id: int) -> models.TestInnerSqliteType | None:
+    async def get_one_inner_sqlite_type(self, *, table_id: int) -> models.TestInnerSqliteType | None:
         """Fetch one from the db using the SQL query with `name: GetOneInnerSqliteType :one`.
 
         ```sql
@@ -931,7 +931,7 @@ class Queries:
             return None
         return row[0]
 
-    def get_many_sqlite_type(self, id_: int) -> QueryResults[models.TestSqliteType]:
+    def get_many_sqlite_type(self, *, id_: int) -> QueryResults[models.TestSqliteType]:
         """Fetch many from the db using the SQL query with `name: GetManySqliteType :many`.
 
         ```sql
@@ -984,7 +984,7 @@ class Queries:
 
         return QueryResults[models.TestSqliteType](self._conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
 
-    def get_many_inner_sqlite_type(self, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
+    def get_many_inner_sqlite_type(self, *, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
         """Fetch many from the db using the SQL query with `name: GetManyInnerSqliteType :many`.
 
         ```sql
@@ -1231,7 +1231,7 @@ class Queries:
         """
         return QueryResults[memoryview](self._conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
 
-    async def delete_one_sqlite_type(self, id_: int) -> None:
+    async def delete_one_sqlite_type(self, *, id_: int) -> None:
         """Execute SQL query with `name: DeleteOneSqliteType :exec`.
 
         ```sql
@@ -1247,7 +1247,7 @@ class Queries:
         """
         await self._conn.execute(DELETE_ONE_SQLITE_TYPE, (id_,))
 
-    async def delete_one_test_inner_sqlite_type(self, table_id: int) -> None:
+    async def delete_one_test_inner_sqlite_type(self, *, table_id: int) -> None:
         """Execute SQL query with `name: DeleteOneTestInnerSqliteType :exec`.
 
         ```sql
@@ -1383,7 +1383,7 @@ class Queries:
         )
         return await self._conn.execute(INSERT_RESULT_ONE_SQLITE_TYPE, sql_args)
 
-    async def update_result_one_sqlite_type(self, id_: int) -> aiosqlite.Cursor:
+    async def update_result_one_sqlite_type(self, *, id_: int) -> aiosqlite.Cursor:
         """Execute and return the result of SQL query with `name: UpdateResultOneSqliteType :execresult`.
 
         ```sql
@@ -1404,7 +1404,7 @@ class Queries:
         """
         return await self._conn.execute(UPDATE_RESULT_ONE_SQLITE_TYPE, (id_,))
 
-    async def delete_result_one_sqlite_type(self, id_: int) -> aiosqlite.Cursor:
+    async def delete_result_one_sqlite_type(self, *, id_: int) -> aiosqlite.Cursor:
         """Execute and return the result of SQL query with `name: DeleteResultOneSqliteType :execresult`.
 
         ```sql
@@ -1546,7 +1546,7 @@ class Queries:
         )
         return (await self._conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE, sql_args)).rowcount
 
-    async def update_rows_one_sqlite_type(self, id_: int) -> int:
+    async def update_rows_one_sqlite_type(self, *, id_: int) -> int:
         """Execute SQL query with `name: UpdateRowsOneSqliteType :execrows` and return the number of affected rows.
 
         ```sql
@@ -1567,7 +1567,7 @@ class Queries:
         """
         return (await self._conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE, (id_,))).rowcount
 
-    async def delete_rows_one_sqlite_type(self, id_: int) -> int:
+    async def delete_rows_one_sqlite_type(self, *, id_: int) -> int:
         """Execute SQL query with `name: DeleteRowsOneSqliteType :execrows` and return the number of affected rows.
 
         ```sql
@@ -1728,7 +1728,7 @@ class Queries:
         )
         return (await self._conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE, sql_args)).lastrowid
 
-    async def update_last_id_one_sqlite_type(self, id_: int) -> int | None:
+    async def update_last_id_one_sqlite_type(self, *, id_: int) -> int | None:
         """Execute SQL query with `name: UpdateLastIdOneSqliteType :execlastid` and return the id of the last affected row.
 
         ```sql
@@ -1749,7 +1749,7 @@ class Queries:
         """
         return (await self._conn.execute(UPDATE_LAST_ID_ONE_SQLITE_TYPE, (id_,))).lastrowid
 
-    async def delete_last_id_one_sqlite_type(self, id_: int) -> int | None:
+    async def delete_last_id_one_sqlite_type(self, *, id_: int) -> int | None:
         """Execute SQL query with `name: DeleteLastIdOneSqliteType :execlastid` and return the id of the last affected row.
 
         ```sql
@@ -1787,7 +1787,7 @@ class Queries:
         """
         await self._conn.execute(INSERT_TYPE_OVERRIDE, (id_, str(text_test) if text_test is not None else None))
 
-    async def get_one_type_override(self, id_: int) -> models.TestTypeOverride | None:
+    async def get_one_type_override(self, *, id_: int) -> models.TestTypeOverride | None:
         """Fetch one from the db using the SQL query with `name: GetOneTypeOverride :one`.
 
         ```sql
@@ -1809,7 +1809,7 @@ class Queries:
             return None
         return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
 
-    def get_many_type_override(self, id_: int) -> QueryResults[models.TestTypeOverride]:
+    def get_many_type_override(self, *, id_: int) -> QueryResults[models.TestTypeOverride]:
         """Fetch many from the db using the SQL query with `name: GetManyTypeOverride :many`.
 
         ```sql
@@ -1832,7 +1832,7 @@ class Queries:
 
         return QueryResults[models.TestTypeOverride](self._conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
-    async def get_one_text_type_override(self, id_: int) -> UserString | None:
+    async def get_one_text_type_override(self, *, id_: int) -> UserString | None:
         """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
 
         ```sql
@@ -1854,7 +1854,7 @@ class Queries:
             return None
         return UserString(row[0])
 
-    def get_many_text_type_override(self, id_: int) -> QueryResults[UserString]:
+    def get_many_text_type_override(self, *, id_: int) -> QueryResults[UserString]:
         """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
 
         ```sql
@@ -1877,7 +1877,7 @@ class Queries:
 
         return QueryResults[UserString](self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
-    async def delete_type_override(self, id_: int) -> None:
+    async def delete_type_override(self, *, id_: int) -> None:
         """Execute SQL query with `name: DeleteTypeOverride :exec`.
 
         ```sql

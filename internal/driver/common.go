@@ -22,7 +22,7 @@ func writeFuncSignature(body *writer.CodeWriter, d Driver, config *config.Config
 	}
 
 	args := []string{first}
-	if len(query.Params) > config.OmitKwargsLimit {
+	if config.KwargsOnly(len(query.Params)) {
 		args = append(args, "*")
 	}
 	for _, param := range query.Params {

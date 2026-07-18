@@ -41,6 +41,7 @@ ignore = [
     "CPY001", # Missing copyright notice at top of file
     "I001", # Import block is un-sorted or un-formatted
     "FBT001", # Boolean-typed positional argument in function definition
+    "PLR0917", # Too many positional arguments (query functions mirror their SQL parameters)
 ]
 "**/{msgspec}/{classes,functions}/*.py" = [
     "DOC501", # Raised exception `StopIteration` missing from docstring

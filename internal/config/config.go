@@ -20,7 +20,7 @@ type Config struct {
 	OmitUnusedModels            bool                `json:"omit_unused_models"                       yaml:"omit_unused_models"`
 	OmitTypecheckingBlock       bool                `json:"omit_typechecking_block"                  yaml:"omit_typechecking_block"`
 	QueryParameterLimit         *int                `json:"query_parameter_limit,omitempty"          yaml:"query_parameter_limit"`
-	OmitKwargsLimit             int                 `json:"omit_kwargs_limit,omitempty"              yaml:"omit_kwargs_limit"`
+	OmitKwargsLimit             *int                `json:"omit_kwargs_limit,omitempty"              yaml:"omit_kwargs_limit"`
 	EmitInitFile                *bool               `json:"emit_init_file"                           yaml:"emit_init_file"`
 	EmitDocstrings              DocstringConvention `json:"docstrings"                               yaml:"docstrings"`
 	EmitDocstringsSQL           *bool               `json:"docstrings_emit_sql"                      yaml:"docstrings_emit_sql"`
@@ -46,6 +46,18 @@ func NewConfig(req *plugin.GenerateRequest) (*Config, error) {
 	}
 
 	return config, nil
+}
+
+// KwargsOnly reports whether a query with numParams parameters should take
+// keyword-only arguments. This is opt-in: it only applies when
+// omit_kwargs_limit is explicitly set to a non-negative value and the query
+// has more parameters than the limit.
+func (config *Config) KwargsOnly(numParams int) bool {
+	if config.OmitKwargsLimit == nil || *config.OmitKwargsLimit < 0 {
+		return false
+	}
+
+	return numParams > *config.OmitKwargsLimit
 }
 
 func (config *Config) IsOverQueryParameterLimit(num int) bool {
@@ -109,9 +121,6 @@ func parseConfig(req *plugin.GenerateRequest) (*Config, error) {
 func validateConf(conf *Config, engine string) error {
 	if *conf.QueryParameterLimit < 0 {
 		return errors.New("invalid options: query parameter limit must not be negative")
-	}
-	if conf.OmitKwargsLimit < 0 {
-		return errors.New("invalid options: omit kwarg limit must not be negative")
 	}
 
 	if conf.EmitInitFile == nil {

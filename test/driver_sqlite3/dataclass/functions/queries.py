@@ -431,7 +431,6 @@ class QueryResults(typing.Generic[T]):
 
 def insert_one_sqlite_type(
     conn: sqlite3.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -548,7 +547,6 @@ def insert_one_sqlite_type(
 
 def insert_one_inner_sqlite_type(
     conn: sqlite3.Connection,
-    *,
     table_id: int,
     int_test: int | None,
     bigint_test: int | None,
@@ -663,7 +661,7 @@ def insert_one_inner_sqlite_type(
     conn.execute(INSERT_ONE_INNER_SQLITE_TYPE, sql_args)
 
 
-def get_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> models.TestSqliteType | None:
+def get_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> models.TestSqliteType | None:
     """Fetch one from the db using the SQL query with `name: GetOneSqliteType :one`.
 
     ```sql
@@ -714,7 +712,7 @@ def get_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> models.TestSql
     )
 
 
-def get_one_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: int) -> models.TestInnerSqliteType | None:
+def get_one_inner_sqlite_type(conn: sqlite3.Connection, table_id: int) -> models.TestInnerSqliteType | None:
     """Fetch one from the db using the SQL query with `name: GetOneInnerSqliteType :one`.
 
     ```sql
@@ -765,7 +763,7 @@ def get_one_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: int) -> mod
     )
 
 
-def get_one_date(conn: sqlite3.Connection, *, id_: int, date_test: datetime.date) -> datetime.date | None:
+def get_one_date(conn: sqlite3.Connection, id_: int, date_test: datetime.date) -> datetime.date | None:
     """Fetch one from the db using the SQL query with `name: GetOneDate :one`.
 
     ```sql
@@ -787,7 +785,7 @@ def get_one_date(conn: sqlite3.Connection, *, id_: int, date_test: datetime.date
     return row[0]
 
 
-def get_one_datetime(conn: sqlite3.Connection, *, id_: int, datetime_test: datetime.datetime) -> datetime.datetime | None:
+def get_one_datetime(conn: sqlite3.Connection, id_: int, datetime_test: datetime.datetime) -> datetime.datetime | None:
     """Fetch one from the db using the SQL query with `name: GetOneDatetime :one`.
 
     ```sql
@@ -809,7 +807,7 @@ def get_one_datetime(conn: sqlite3.Connection, *, id_: int, datetime_test: datet
     return row[0]
 
 
-def get_one_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: datetime.datetime) -> datetime.datetime | None:
+def get_one_timestamp(conn: sqlite3.Connection, id_: int, timestamp_test: datetime.datetime) -> datetime.datetime | None:
     """Fetch one from the db using the SQL query with `name: GetOneTimestamp :one`.
 
     ```sql
@@ -831,7 +829,7 @@ def get_one_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: dat
     return row[0]
 
 
-def get_one_bool(conn: sqlite3.Connection, *, id_: int, bool_test: bool) -> bool | None:
+def get_one_bool(conn: sqlite3.Connection, id_: int, bool_test: bool) -> bool | None:
     """Fetch one from the db using the SQL query with `name: GetOneBool :one`.
 
     ```sql
@@ -853,7 +851,7 @@ def get_one_bool(conn: sqlite3.Connection, *, id_: int, bool_test: bool) -> bool
     return row[0]
 
 
-def get_one_boolean(conn: sqlite3.Connection, *, id_: int, boolean_test: bool) -> bool | None:
+def get_one_boolean(conn: sqlite3.Connection, id_: int, boolean_test: bool) -> bool | None:
     """Fetch one from the db using the SQL query with `name: GetOneBoolean :one`.
 
     ```sql
@@ -875,7 +873,7 @@ def get_one_boolean(conn: sqlite3.Connection, *, id_: int, boolean_test: bool) -
     return row[0]
 
 
-def get_one_decimal(conn: sqlite3.Connection, *, id_: int, decimal_test: decimal.Decimal) -> decimal.Decimal | None:
+def get_one_decimal(conn: sqlite3.Connection, id_: int, decimal_test: decimal.Decimal) -> decimal.Decimal | None:
     """Fetch one from the db using the SQL query with `name: GetOneDecimal :one`.
 
     ```sql
@@ -897,7 +895,7 @@ def get_one_decimal(conn: sqlite3.Connection, *, id_: int, decimal_test: decimal
     return row[0]
 
 
-def get_one_blob(conn: sqlite3.Connection, *, id_: int, blob_test: memoryview) -> memoryview | None:
+def get_one_blob(conn: sqlite3.Connection, id_: int, blob_test: memoryview) -> memoryview | None:
     """Fetch one from the db using the SQL query with `name: GetOneBlob :one`.
 
     ```sql
@@ -919,7 +917,7 @@ def get_one_blob(conn: sqlite3.Connection, *, id_: int, blob_test: memoryview) -
     return row[0]
 
 
-def get_many_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> QueryResults[models.TestSqliteType]:
+def get_many_sqlite_type(conn: sqlite3.Connection, id_: int) -> QueryResults[models.TestSqliteType]:
     """Fetch many from the db using the SQL query with `name: GetManySqliteType :many`.
 
     ```sql
@@ -971,7 +969,7 @@ def get_many_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> QueryResults[
     return QueryResults[models.TestSqliteType](conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
 
 
-def get_many_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
+def get_many_inner_sqlite_type(conn: sqlite3.Connection, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
     """Fetch many from the db using the SQL query with `name: GetManyInnerSqliteType :many`.
 
     ```sql
@@ -1023,7 +1021,7 @@ def get_many_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: int) -> Qu
     return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
 
 
-def get_many_nullable_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: int, int_test: int | None) -> QueryResults[models.TestInnerSqliteType]:
+def get_many_nullable_inner_sqlite_type(conn: sqlite3.Connection, table_id: int, int_test: int | None) -> QueryResults[models.TestInnerSqliteType]:
     """Fetch many from the db using the SQL query with `name: GetManyNullableInnerSqliteType :many`.
 
     ```sql
@@ -1076,7 +1074,7 @@ def get_many_nullable_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: i
     return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
 
 
-def get_many_date(conn: sqlite3.Connection, *, id_: int, date_test: datetime.date) -> QueryResults[datetime.date]:
+def get_many_date(conn: sqlite3.Connection, id_: int, date_test: datetime.date) -> QueryResults[datetime.date]:
     """Fetch many from the db using the SQL query with `name: GetManyDate :many`.
 
     ```sql
@@ -1095,7 +1093,7 @@ def get_many_date(conn: sqlite3.Connection, *, id_: int, date_test: datetime.dat
     return QueryResults[datetime.date](conn, GET_MANY_DATE, operator.itemgetter(0), id_, date_test)
 
 
-def get_many_datetime(conn: sqlite3.Connection, *, id_: int, datetime_test: datetime.datetime) -> QueryResults[datetime.datetime]:
+def get_many_datetime(conn: sqlite3.Connection, id_: int, datetime_test: datetime.datetime) -> QueryResults[datetime.datetime]:
     """Fetch many from the db using the SQL query with `name: GetManyDatetime :many`.
 
     ```sql
@@ -1114,7 +1112,7 @@ def get_many_datetime(conn: sqlite3.Connection, *, id_: int, datetime_test: date
     return QueryResults[datetime.datetime](conn, GET_MANY_DATETIME, operator.itemgetter(0), id_, datetime_test)
 
 
-def get_many_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: datetime.datetime) -> QueryResults[datetime.datetime]:
+def get_many_timestamp(conn: sqlite3.Connection, id_: int, timestamp_test: datetime.datetime) -> QueryResults[datetime.datetime]:
     """Fetch many from the db using the SQL query with `name: GetManyTimestamp :many`.
 
     ```sql
@@ -1133,7 +1131,7 @@ def get_many_timestamp(conn: sqlite3.Connection, *, id_: int, timestamp_test: da
     return QueryResults[datetime.datetime](conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
 
 
-def get_many_bool(conn: sqlite3.Connection, *, id_: int, bool_test: bool) -> QueryResults[bool]:
+def get_many_bool(conn: sqlite3.Connection, id_: int, bool_test: bool) -> QueryResults[bool]:
     """Fetch many from the db using the SQL query with `name: GetManyBool :many`.
 
     ```sql
@@ -1152,7 +1150,7 @@ def get_many_bool(conn: sqlite3.Connection, *, id_: int, bool_test: bool) -> Que
     return QueryResults[bool](conn, GET_MANY_BOOL, operator.itemgetter(0), id_, bool_test)
 
 
-def get_many_boolean(conn: sqlite3.Connection, *, id_: int, boolean_test: bool) -> QueryResults[bool]:
+def get_many_boolean(conn: sqlite3.Connection, id_: int, boolean_test: bool) -> QueryResults[bool]:
     """Fetch many from the db using the SQL query with `name: GetManyBoolean :many`.
 
     ```sql
@@ -1171,7 +1169,7 @@ def get_many_boolean(conn: sqlite3.Connection, *, id_: int, boolean_test: bool) 
     return QueryResults[bool](conn, GET_MANY_BOOLEAN, operator.itemgetter(0), id_, boolean_test)
 
 
-def get_many_decimal(conn: sqlite3.Connection, *, id_: int, decimal_test: decimal.Decimal) -> QueryResults[decimal.Decimal]:
+def get_many_decimal(conn: sqlite3.Connection, id_: int, decimal_test: decimal.Decimal) -> QueryResults[decimal.Decimal]:
     """Fetch many from the db using the SQL query with `name: GetManyDecimal :many`.
 
     ```sql
@@ -1190,7 +1188,7 @@ def get_many_decimal(conn: sqlite3.Connection, *, id_: int, decimal_test: decima
     return QueryResults[decimal.Decimal](conn, GET_MANY_DECIMAL, operator.itemgetter(0), id_, decimal_test)
 
 
-def get_many_blob(conn: sqlite3.Connection, *, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
+def get_many_blob(conn: sqlite3.Connection, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
     """Fetch many from the db using the SQL query with `name: GetManyBlob :many`.
 
     ```sql
@@ -1209,7 +1207,7 @@ def get_many_blob(conn: sqlite3.Connection, *, id_: int, blob_test: memoryview) 
     return QueryResults[memoryview](conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
 
 
-def delete_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> None:
+def delete_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> None:
     """Execute SQL query with `name: DeleteOneSqliteType :exec`.
 
     ```sql
@@ -1226,7 +1224,7 @@ def delete_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> None:
     conn.execute(DELETE_ONE_SQLITE_TYPE, (id_,))
 
 
-def delete_one_test_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: int) -> None:
+def delete_one_test_inner_sqlite_type(conn: sqlite3.Connection, table_id: int) -> None:
     """Execute SQL query with `name: DeleteOneTestInnerSqliteType :exec`.
 
     ```sql
@@ -1244,7 +1242,6 @@ def delete_one_test_inner_sqlite_type(conn: sqlite3.Connection, *, table_id: int
 
 def insert_result_one_sqlite_type(
     conn: sqlite3.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -1362,7 +1359,7 @@ def insert_result_one_sqlite_type(
     return conn.execute(INSERT_RESULT_ONE_SQLITE_TYPE, sql_args)
 
 
-def update_result_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> sqlite3.Cursor:
+def update_result_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> sqlite3.Cursor:
     """Execute and return the result of SQL query with `name: UpdateResultOneSqliteType :execresult`.
 
     ```sql
@@ -1382,7 +1379,7 @@ def update_result_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> sqli
     return conn.execute(UPDATE_RESULT_ONE_SQLITE_TYPE, (id_,))
 
 
-def delete_result_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> sqlite3.Cursor:
+def delete_result_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> sqlite3.Cursor:
     """Execute and return the result of SQL query with `name: DeleteResultOneSqliteType :execresult`.
 
     ```sql
@@ -1404,7 +1401,6 @@ def delete_result_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> sqli
 
 def insert_rows_one_sqlite_type(
     conn: sqlite3.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -1522,7 +1518,7 @@ def insert_rows_one_sqlite_type(
     return conn.execute(INSERT_ROWS_ONE_SQLITE_TYPE, sql_args).rowcount
 
 
-def update_rows_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int:
+def update_rows_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> int:
     """Execute SQL query with `name: UpdateRowsOneSqliteType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1542,7 +1538,7 @@ def update_rows_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int:
     return conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE, (id_,)).rowcount
 
 
-def delete_rows_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int:
+def delete_rows_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> int:
     """Execute SQL query with `name: DeleteRowsOneSqliteType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1585,7 +1581,6 @@ def create_rows_table(conn: sqlite3.Connection) -> int:
 
 def insert_last_id_one_sqlite_type(
     conn: sqlite3.Connection,
-    *,
     id_: int,
     int_test: int,
     bigint_test: int,
@@ -1703,7 +1698,7 @@ def insert_last_id_one_sqlite_type(
     return conn.execute(INSERT_LAST_ID_ONE_SQLITE_TYPE, sql_args).lastrowid
 
 
-def update_last_id_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int | None:
+def update_last_id_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> int | None:
     """Execute SQL query with `name: UpdateLastIdOneSqliteType :execlastid` and return the id of the last affected row.
 
     ```sql
@@ -1723,7 +1718,7 @@ def update_last_id_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int
     return conn.execute(UPDATE_LAST_ID_ONE_SQLITE_TYPE, (id_,)).lastrowid
 
 
-def delete_last_id_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int | None:
+def delete_last_id_one_sqlite_type(conn: sqlite3.Connection, id_: int) -> int | None:
     """Execute SQL query with `name: DeleteLastIdOneSqliteType :execlastid` and return the id of the last affected row.
 
     ```sql
@@ -1743,7 +1738,7 @@ def delete_last_id_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int
     return conn.execute(DELETE_LAST_ID_ONE_SQLITE_TYPE, (id_,)).lastrowid
 
 
-def insert_type_override(conn: sqlite3.Connection, *, id_: int, text_test: UserString | None) -> None:
+def insert_type_override(conn: sqlite3.Connection, id_: int, text_test: UserString | None) -> None:
     """Execute SQL query with `name: InsertTypeOverride :exec`.
 
     ```sql
@@ -1761,7 +1756,7 @@ def insert_type_override(conn: sqlite3.Connection, *, id_: int, text_test: UserS
     conn.execute(INSERT_TYPE_OVERRIDE, (id_, str(text_test) if text_test is not None else None))
 
 
-def get_one_type_override(conn: sqlite3.Connection, *, id_: int) -> models.TestTypeOverride | None:
+def get_one_type_override(conn: sqlite3.Connection, id_: int) -> models.TestTypeOverride | None:
     """Fetch one from the db using the SQL query with `name: GetOneTypeOverride :one`.
 
     ```sql
@@ -1782,7 +1777,7 @@ def get_one_type_override(conn: sqlite3.Connection, *, id_: int) -> models.TestT
     return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
 
 
-def get_many_type_override(conn: sqlite3.Connection, *, id_: int) -> QueryResults[models.TestTypeOverride]:
+def get_many_type_override(conn: sqlite3.Connection, id_: int) -> QueryResults[models.TestTypeOverride]:
     """Fetch many from the db using the SQL query with `name: GetManyTypeOverride :many`.
 
     ```sql
@@ -1804,7 +1799,7 @@ def get_many_type_override(conn: sqlite3.Connection, *, id_: int) -> QueryResult
     return QueryResults[models.TestTypeOverride](conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
 
-def get_one_text_type_override(conn: sqlite3.Connection, *, id_: int) -> UserString | None:
+def get_one_text_type_override(conn: sqlite3.Connection, id_: int) -> UserString | None:
     """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
 
     ```sql
@@ -1825,7 +1820,7 @@ def get_one_text_type_override(conn: sqlite3.Connection, *, id_: int) -> UserStr
     return UserString(row[0])
 
 
-def get_many_text_type_override(conn: sqlite3.Connection, *, id_: int) -> QueryResults[UserString]:
+def get_many_text_type_override(conn: sqlite3.Connection, id_: int) -> QueryResults[UserString]:
     """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
 
     ```sql
@@ -1847,7 +1842,7 @@ def get_many_text_type_override(conn: sqlite3.Connection, *, id_: int) -> QueryR
     return QueryResults[UserString](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
 
-def delete_type_override(conn: sqlite3.Connection, *, id_: int) -> None:
+def delete_type_override(conn: sqlite3.Connection, id_: int) -> None:
     """Execute SQL query with `name: DeleteTypeOverride :exec`.
 
     ```sql
