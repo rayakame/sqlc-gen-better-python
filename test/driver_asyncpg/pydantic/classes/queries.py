@@ -807,7 +807,7 @@ class Queries:
                 ltxtquery_test=row[35],
             )
 
-        return QueryResults[models.TestPostgresType](self._conn, GET_MANY_TEST_POSTGRES_TYPE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_TEST_POSTGRES_TYPE, _decode_hook, id_)
 
     def get_many_test_iterator_postgres_type(self, *, id_: int) -> QueryResults[models.TestPostgresType]:
         """Fetch many from the db using the SQL query with `name: GetManyTestIteratorPostgresType :many`.
@@ -865,7 +865,7 @@ class Queries:
                 ltxtquery_test=row[35],
             )
 
-        return QueryResults[models.TestPostgresType](self._conn, GET_MANY_TEST_ITERATOR_POSTGRES_TYPE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_TEST_ITERATOR_POSTGRES_TYPE, _decode_hook, id_)
 
     def get_many_test_timestamp_postgres_type(self, *, id_: int) -> QueryResults[datetime.datetime]:
         """Fetch many from the db using the SQL query with `name: GetManyTestTimestampPostgresType :many`.
@@ -882,7 +882,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[datetime.datetime]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[datetime.datetime](self._conn, GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE, operator.itemgetter(0), id_)
+        return QueryResults(self._conn, GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE, operator.itemgetter(0), id_)
 
     def get_many_test_bytea_postgres_type(self, *, id_: int) -> QueryResults[memoryview]:
         """Fetch many from the db using the SQL query with `name: GetManyTestByteaPostgresType :many`.
@@ -903,7 +903,7 @@ class Queries:
         def _decode_hook(row: asyncpg.Record) -> memoryview:
             return memoryview(row[0])
 
-        return QueryResults[memoryview](self._conn, GET_MANY_TEST_BYTEA_POSTGRES_TYPE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_TEST_BYTEA_POSTGRES_TYPE, _decode_hook, id_)
 
     async def get_embedded_test_postgres_type(self, *, id_: int) -> GetEmbeddedTestPostgresTypeRow | None:
         """Fetch one from the db using the SQL query with `name: GetEmbeddedTestPostgresType :one`.
@@ -1941,7 +1941,7 @@ class Queries:
         def _decode_hook(row: asyncpg.Record) -> models.TestTypeOverride:
             return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
 
-        return QueryResults[models.TestTypeOverride](self._conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
     async def get_one_text_type_override(self, *, id_: int) -> UserString | None:
         """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
@@ -1978,7 +1978,7 @@ class Queries:
         def _decode_hook(row: asyncpg.Record) -> UserString | None:
             return UserString(row[0]) if row[0] is not None else None
 
-        return QueryResults[UserString | None](self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
     async def delete_type_override(self, *, id_: int) -> None:
         """Execute SQL query with `name: DeleteTypeOverride :exec`.
@@ -2065,7 +2065,7 @@ class Queries:
         def _decode_hook(row: asyncpg.Record) -> models.TestEnumType:
             return models.TestEnumType(id_=row[0], mood=enums.TestMood(row[1]), maybe_mood=enums.TestMood(row[2]) if row[2] is not None else None)
 
-        return QueryResults[models.TestEnumType](self._conn, GET_MANY_TEST_ENUM_TYPES, _decode_hook)
+        return QueryResults(self._conn, GET_MANY_TEST_ENUM_TYPES, _decode_hook)
 
     async def delete_one_test_enum_type(self, *, id_: int) -> int:
         """Execute SQL query with `name: DeleteOneTestEnumType :execrows` and return the number of affected rows.

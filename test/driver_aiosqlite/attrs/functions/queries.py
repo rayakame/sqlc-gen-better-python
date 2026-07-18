@@ -1027,7 +1027,7 @@ def get_many_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> QueryResult
             json_test=row[28],
         )
 
-    return QueryResults[models.TestSqliteType](conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
+    return QueryResults(conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
 
 
 def get_many_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
@@ -1083,7 +1083,7 @@ def get_many_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int) -> 
             json_test=row[28],
         )
 
-    return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
+    return QueryResults(conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
 
 
 def get_many_nullable_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id: int, int_test: int | None) -> QueryResults[models.TestInnerSqliteType]:
@@ -1140,7 +1140,7 @@ def get_many_nullable_inner_sqlite_type(conn: aiosqlite.Connection, *, table_id:
             json_test=row[28],
         )
 
-    return QueryResults[models.TestInnerSqliteType](conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
+    return QueryResults(conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
 
 
 def get_many_date(conn: aiosqlite.Connection, *, id_: int, date_test: datetime.date) -> QueryResults[datetime.date]:
@@ -1163,7 +1163,7 @@ def get_many_date(conn: aiosqlite.Connection, *, id_: int, date_test: datetime.d
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
-    return QueryResults[datetime.date](conn, GET_MANY_DATE, operator.itemgetter(0), id_, date_test)
+    return QueryResults(conn, GET_MANY_DATE, operator.itemgetter(0), id_, date_test)
 
 
 def get_many_datetime(conn: aiosqlite.Connection, *, id_: int, datetime_test: datetime.datetime) -> QueryResults[datetime.datetime]:
@@ -1186,7 +1186,7 @@ def get_many_datetime(conn: aiosqlite.Connection, *, id_: int, datetime_test: da
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
-    return QueryResults[datetime.datetime](conn, GET_MANY_DATETIME, operator.itemgetter(0), id_, datetime_test)
+    return QueryResults(conn, GET_MANY_DATETIME, operator.itemgetter(0), id_, datetime_test)
 
 
 def get_many_timestamp(conn: aiosqlite.Connection, *, id_: int, timestamp_test: datetime.datetime) -> QueryResults[datetime.datetime]:
@@ -1209,7 +1209,7 @@ def get_many_timestamp(conn: aiosqlite.Connection, *, id_: int, timestamp_test: 
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
-    return QueryResults[datetime.datetime](conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
+    return QueryResults(conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
 
 
 def get_many_bool(conn: aiosqlite.Connection, *, id_: int, bool_test: bool) -> QueryResults[bool]:
@@ -1232,7 +1232,7 @@ def get_many_bool(conn: aiosqlite.Connection, *, id_: int, bool_test: bool) -> Q
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
-    return QueryResults[bool](conn, GET_MANY_BOOL, operator.itemgetter(0), id_, bool_test)
+    return QueryResults(conn, GET_MANY_BOOL, operator.itemgetter(0), id_, bool_test)
 
 
 def get_many_boolean(conn: aiosqlite.Connection, *, id_: int, boolean_test: bool) -> QueryResults[bool]:
@@ -1255,7 +1255,7 @@ def get_many_boolean(conn: aiosqlite.Connection, *, id_: int, boolean_test: bool
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
-    return QueryResults[bool](conn, GET_MANY_BOOLEAN, operator.itemgetter(0), id_, boolean_test)
+    return QueryResults(conn, GET_MANY_BOOLEAN, operator.itemgetter(0), id_, boolean_test)
 
 
 def get_many_decimal(conn: aiosqlite.Connection, *, id_: int, decimal_test: decimal.Decimal) -> QueryResults[decimal.Decimal]:
@@ -1278,7 +1278,7 @@ def get_many_decimal(conn: aiosqlite.Connection, *, id_: int, decimal_test: deci
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
-    return QueryResults[decimal.Decimal](conn, GET_MANY_DECIMAL, operator.itemgetter(0), id_, decimal_test)
+    return QueryResults(conn, GET_MANY_DECIMAL, operator.itemgetter(0), id_, decimal_test)
 
 
 def get_many_blob(conn: aiosqlite.Connection, *, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
@@ -1301,7 +1301,7 @@ def get_many_blob(conn: aiosqlite.Connection, *, id_: int, blob_test: memoryview
         Helper class that allows both iteration and normal fetching of data from the db.
 
     """
-    return QueryResults[memoryview](conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
+    return QueryResults(conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
 
 
 async def delete_one_sqlite_type(conn: aiosqlite.Connection, *, id_: int) -> None:
@@ -1950,7 +1950,7 @@ def get_many_type_override(conn: aiosqlite.Connection, *, id_: int) -> QueryResu
     def _decode_hook(row: sqlite3.Row) -> models.TestTypeOverride:
         return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
 
-    return QueryResults[models.TestTypeOverride](conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
+    return QueryResults(conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
 
 async def get_one_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> UserString | None:
@@ -2001,7 +2001,7 @@ def get_many_text_type_override(conn: aiosqlite.Connection, *, id_: int) -> Quer
     def _decode_hook(row: sqlite3.Row) -> UserString | None:
         return UserString(row[0]) if row[0] is not None else None
 
-    return QueryResults[UserString | None](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
+    return QueryResults(conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
 
 async def delete_type_override(conn: aiosqlite.Connection, *, id_: int) -> None:

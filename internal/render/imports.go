@@ -158,12 +158,6 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 
 		for _, query := range queries {
 			if used, tc := r.queryValueUses(name, query.Returns); used {
-				// Scalar :many returns subscript QueryResults[T] at runtime,
-				// so the type itself must be imported at runtime. Struct
-				// returns only reference the type inside annotations.
-				if query.Cmd == metadata.CmdMany && !query.Returns.IsStruct() {
-					update(used, false)
-				}
 				update(used, tc)
 				// The datetime import stays at runtime even with speedups:
 				// register_adapter(datetime.date, ...) needs it at import time.

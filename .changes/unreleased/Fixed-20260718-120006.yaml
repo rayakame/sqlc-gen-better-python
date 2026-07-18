@@ -1,0 +1,6 @@
+kind: Fixed
+body: '`:many` query functions no longer subscript the generic at runtime (`QueryResults(...)` instead of `QueryResults[T](...)`). The subscripted call went through `typing`''s `_GenericAlias.__call__` and raised-and-swallowed an `AttributeError` on every invocation (the class uses `__slots__`, so `__orig_class__` was never actually stored), costing roughly 10x the plain constructor call while providing no runtime or type-checking benefit — the function''s return annotation already carries the full `QueryResults[T]` type'
+time: 2026-07-18T12:00:06.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"

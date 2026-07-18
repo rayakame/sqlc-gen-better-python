@@ -103,6 +103,9 @@ func (d *AiosqliteDriver) WriteQueryFunc(body *writer.CodeWriter, config *config
 	case metadata.CmdMany:
 		decodeHook := d.rows.WriteDecodeHook(body, indent, query, sqliteResultType)
 		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
-		body.WriteWrappedCall(indent, fmt.Sprintf("return QueryResults[%s](", query.Returns.Type.Print()), manyArgs, ")")
+		// Deliberately unsubscripted: QueryResults[T](...) would go through
+		// typing's _GenericAlias.__call__ on every invocation (~10x call
+		// overhead) for zero benefit — the return annotation carries the type.
+		body.WriteWrappedCall(indent, "return QueryResults(", manyArgs, ")")
 	}
 }

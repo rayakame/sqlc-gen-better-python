@@ -918,7 +918,7 @@ class Queries:
                 json_test=row[28],
             )
 
-        return QueryResults[models.TestSqliteType](self._conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_SQLITE_TYPE, _decode_hook, id_)
 
     def get_many_inner_sqlite_type(self, *, table_id: int) -> QueryResults[models.TestInnerSqliteType]:
         """Fetch many from the db using the SQL query with `name: GetManyInnerSqliteType :many`.
@@ -967,7 +967,7 @@ class Queries:
                 json_test=row[28],
             )
 
-        return QueryResults[models.TestInnerSqliteType](self._conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
+        return QueryResults(self._conn, GET_MANY_INNER_SQLITE_TYPE, _decode_hook, table_id)
 
     def get_many_nullable_inner_sqlite_type(self, *, table_id: int, int_test: int | None) -> QueryResults[models.TestInnerSqliteType]:
         """Fetch many from the db using the SQL query with `name: GetManyNullableInnerSqliteType :many`.
@@ -1017,7 +1017,7 @@ class Queries:
                 json_test=row[28],
             )
 
-        return QueryResults[models.TestInnerSqliteType](self._conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
+        return QueryResults(self._conn, GET_MANY_NULLABLE_INNER_SQLITE_TYPE, _decode_hook, table_id, int_test)
 
     def get_many_date(self, *, id_: int, date_test: datetime.date) -> QueryResults[datetime.date]:
         """Fetch many from the db using the SQL query with `name: GetManyDate :many`.
@@ -1033,7 +1033,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[datetime.date]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[datetime.date](self._conn, GET_MANY_DATE, operator.itemgetter(0), id_, date_test)
+        return QueryResults(self._conn, GET_MANY_DATE, operator.itemgetter(0), id_, date_test)
 
     def get_many_datetime(self, *, id_: int, datetime_test: datetime.datetime) -> QueryResults[datetime.datetime]:
         """Fetch many from the db using the SQL query with `name: GetManyDatetime :many`.
@@ -1049,7 +1049,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[datetime.datetime]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[datetime.datetime](self._conn, GET_MANY_DATETIME, operator.itemgetter(0), id_, datetime_test)
+        return QueryResults(self._conn, GET_MANY_DATETIME, operator.itemgetter(0), id_, datetime_test)
 
     def get_many_timestamp(self, *, id_: int, timestamp_test: datetime.datetime) -> QueryResults[datetime.datetime]:
         """Fetch many from the db using the SQL query with `name: GetManyTimestamp :many`.
@@ -1065,7 +1065,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[datetime.datetime]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[datetime.datetime](self._conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
+        return QueryResults(self._conn, GET_MANY_TIMESTAMP, operator.itemgetter(0), id_, timestamp_test)
 
     def get_many_bool(self, *, id_: int, bool_test: bool) -> QueryResults[bool]:
         """Fetch many from the db using the SQL query with `name: GetManyBool :many`.
@@ -1081,7 +1081,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[bool]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[bool](self._conn, GET_MANY_BOOL, operator.itemgetter(0), id_, bool_test)
+        return QueryResults(self._conn, GET_MANY_BOOL, operator.itemgetter(0), id_, bool_test)
 
     def get_many_boolean(self, *, id_: int, boolean_test: bool) -> QueryResults[bool]:
         """Fetch many from the db using the SQL query with `name: GetManyBoolean :many`.
@@ -1097,7 +1097,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[bool]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[bool](self._conn, GET_MANY_BOOLEAN, operator.itemgetter(0), id_, boolean_test)
+        return QueryResults(self._conn, GET_MANY_BOOLEAN, operator.itemgetter(0), id_, boolean_test)
 
     def get_many_decimal(self, *, id_: int, decimal_test: decimal.Decimal) -> QueryResults[decimal.Decimal]:
         """Fetch many from the db using the SQL query with `name: GetManyDecimal :many`.
@@ -1113,7 +1113,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[decimal.Decimal]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[decimal.Decimal](self._conn, GET_MANY_DECIMAL, operator.itemgetter(0), id_, decimal_test)
+        return QueryResults(self._conn, GET_MANY_DECIMAL, operator.itemgetter(0), id_, decimal_test)
 
     def get_many_blob(self, *, id_: int, blob_test: memoryview) -> QueryResults[memoryview]:
         """Fetch many from the db using the SQL query with `name: GetManyBlob :many`.
@@ -1129,7 +1129,7 @@ class Queries:
         Returns:
             Helper class of type `QueryResults[memoryview]` that allows both iteration and normal fetching of data from the db.
         """
-        return QueryResults[memoryview](self._conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
+        return QueryResults(self._conn, GET_MANY_BLOB, operator.itemgetter(0), id_, blob_test)
 
     def delete_one_sqlite_type(self, *, id_: int) -> None:
         """Execute SQL query with `name: DeleteOneSqliteType :exec`.
@@ -1677,7 +1677,7 @@ class Queries:
         def _decode_hook(row: sqlite3.Row) -> models.TestTypeOverride:
             return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
 
-        return QueryResults[models.TestTypeOverride](self._conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
     def get_one_text_type_override(self, *, id_: int) -> UserString | None:
         """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
@@ -1714,7 +1714,7 @@ class Queries:
         def _decode_hook(row: sqlite3.Row) -> UserString | None:
             return UserString(row[0]) if row[0] is not None else None
 
-        return QueryResults[UserString | None](self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
+        return QueryResults(self._conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
     def delete_type_override(self, *, id_: int) -> None:
         """Execute SQL query with `name: DeleteTypeOverride :exec`.
