@@ -10,7 +10,7 @@ import (
 )
 
 func SqliteTypeToPython(_ *plugin.GenerateRequest, _ *config.Config, pluginType *plugin.Identifier) string {
-	columnType := sdk.DataType(pluginType)
+	columnType := strings.ToLower(sdk.DataType(pluginType))
 
 	switch columnType {
 	case Int, "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":

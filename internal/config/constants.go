@@ -2,7 +2,11 @@ package config
 
 import "fmt"
 
-const PluginVersion = "v0.4.5"
+const PluginVersion = "v0.4.6"
+
+// defaultQueryParameterLimit is the default for query_parameter_limit:
+// queries with more parameters get them bundled into a <Query>Params class.
+const defaultQueryParameterLimit = 4
 
 type (
 	SQLDriver           string
@@ -24,13 +28,8 @@ const (
 	ModelTypeDataclass ModelType = "dataclass"
 	ModelTypeAttrs     ModelType = "attrs"
 	ModelTypeMsgspec   ModelType = "msgspec"
+	ModelTypePydantic  ModelType = "pydantic"
 )
-
-var asyncDrivers = map[SQLDriver]bool{
-	SQLDriverSQLite:    false,
-	SQLDriverAioSQLite: true,
-	SQLDriverAsyncpg:   true,
-}
 
 var driversEngine = map[SQLDriver]string{
 	SQLDriverSQLite:    "sqlite",
@@ -44,15 +43,6 @@ const (
 	DocstringConventionNumpy  DocstringConvention = "numpy"
 	DocstringConventionPEP257 DocstringConvention = "pep257"
 )
-
-func (dr SQLDriver) Async() bool {
-	val, found := asyncDrivers[dr]
-	if !found {
-		return false
-	}
-
-	return val
-}
 
 func (dr SQLDriver) Validate(engine string) error {
 	val, found := driversEngine[dr]
@@ -68,7 +58,7 @@ func (dr SQLDriver) Validate(engine string) error {
 
 func (modelType ModelType) Valid() bool {
 	switch modelType {
-	case ModelTypeDataclass, ModelTypeMsgspec, ModelTypeAttrs:
+	case ModelTypeDataclass, ModelTypeMsgspec, ModelTypeAttrs, ModelTypePydantic:
 		return true
 	default:
 		return false

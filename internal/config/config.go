@@ -19,13 +19,13 @@ type Config struct {
 	InflectionExcludeTableNames []string            `json:"inflection_exclude_table_names,omitempty" yaml:"inflection_exclude_table_names,omitempty"`
 	OmitUnusedModels            bool                `json:"omit_unused_models"                       yaml:"omit_unused_models"`
 	OmitTypecheckingBlock       bool                `json:"omit_typechecking_block"                  yaml:"omit_typechecking_block"`
-	QueryParameterLimit         *int32              `json:"query_parameter_limit,omitempty"          yaml:"query_parameter_limit"`
-	OmitKwargsLimit             *int32              `json:"omit_kwargs_limit,omitempty"              yaml:"omit_kwargs_limit"`
+	QueryParameterLimit         *int                `json:"query_parameter_limit,omitempty"          yaml:"query_parameter_limit"`
+	OmitKwargsLimit             int                 `json:"omit_kwargs_limit,omitempty"              yaml:"omit_kwargs_limit"`
 	EmitInitFile                *bool               `json:"emit_init_file"                           yaml:"emit_init_file"`
 	EmitDocstrings              DocstringConvention `json:"docstrings"                               yaml:"docstrings"`
-	OmitDocstringsSQL           bool                `json:"docstrings_emit_sql"                      yaml:"docstrings_emit_sql"`
+	EmitDocstringsSQL           *bool               `json:"docstrings_emit_sql"                      yaml:"docstrings_emit_sql"`
 	Speedups                    bool                `json:"speedups"                                 yaml:"speedups"`
-	// Overrides                   []Override          `json:"overrides,omitempty" yaml:"overrides"`
+	Overrides                   []Override          `json:"overrides,omitempty"                      yaml:"overrides,omitempty"`
 
 	Debug bool `json:"debug" yaml:"debug"`
 
@@ -33,7 +33,6 @@ type Config struct {
 	CharsPerIndentLevel int    `json:"chars_per_indent_level" yaml:"chars_per_indent_level"`
 
 	InitialismsMap map[string]struct{} `json:"-" yaml:"-"`
-	Async          bool                `json:"-" yaml:"-"`
 }
 
 func NewConfig(req *plugin.GenerateRequest) (*Config, error) {
@@ -49,6 +48,19 @@ func NewConfig(req *plugin.GenerateRequest) (*Config, error) {
 	return config, nil
 }
 
+func (config *Config) IsOverQueryParameterLimit(num int) bool {
+	switch {
+	case config.QueryParameterLimit == nil:
+		return false
+	case *config.QueryParameterLimit < 0:
+		return false
+	case *config.QueryParameterLimit >= num:
+		return false
+	default:
+		return true
+	}
+}
+
 func parseConfig(req *plugin.GenerateRequest) (*Config, error) {
 	var config Config
 	if len(req.PluginOptions) == 0 {
@@ -57,23 +69,18 @@ func parseConfig(req *plugin.GenerateRequest) (*Config, error) {
 	if err := json.Unmarshal(req.PluginOptions, &config); err != nil {
 		return nil, fmt.Errorf("unmarshalling plugin options: %w", err)
 	}
-	config.Async = config.SqlDriver.Async()
 
-	/*
-		for i := range config.Overrides {
-			if err := config.Overrides[i].parse(req); err != nil {
-				return nil, err
-			}
-		}*/
+	for i := range config.Overrides {
+		if err := config.Overrides[i].parse(req); err != nil {
+			return nil, err
+		}
+	}
 
 	if config.ModelType == "" {
 		config.ModelType = ModelTypeDataclass
 	}
 	if config.QueryParameterLimit == nil {
-		config.QueryParameterLimit = utils.ToPtr(int32(1))
-	}
-	if config.OmitKwargsLimit == nil {
-		config.OmitKwargsLimit = new(int32)
+		config.QueryParameterLimit = utils.ToPtr(defaultQueryParameterLimit)
 	}
 	if config.Initialisms == nil {
 		config.Initialisms = utils.ToPtr([]string{"id"})
@@ -86,6 +93,9 @@ func parseConfig(req *plugin.GenerateRequest) (*Config, error) {
 	}
 	if config.EmitDocstrings == "" {
 		config.EmitDocstrings = DocstringConventionNone
+	}
+	if config.EmitDocstringsSQL == nil {
+		config.EmitDocstringsSQL = utils.ToPtr(true)
 	}
 
 	config.InitialismsMap = map[string]struct{}{}
@@ -100,7 +110,7 @@ func validateConf(conf *Config, engine string) error {
 	if *conf.QueryParameterLimit < 0 {
 		return errors.New("invalid options: query parameter limit must not be negative")
 	}
-	if *conf.OmitKwargsLimit < 0 {
+	if conf.OmitKwargsLimit < 0 {
 		return errors.New("invalid options: omit kwarg limit must not be negative")
 	}
 

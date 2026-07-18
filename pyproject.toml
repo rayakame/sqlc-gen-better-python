@@ -9,6 +9,7 @@ dependencies = [
     "attrs>=25.3.0",
     "ciso8601>=2.3.2",
     "msgspec>=0.19.0",
+    "pydantic>=2.9.0",
 ]
 
 [dependency-groups]

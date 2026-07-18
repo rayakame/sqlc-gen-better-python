@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
@@ -8,6 +11,29 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
+
+func parseIdentifierString(name string) (*plugin.Identifier, error) {
+	parts := strings.Split(name, ".")
+	switch len(parts) {
+	case 1:
+		return &plugin.Identifier{
+			Name: parts[0],
+		}, nil
+	case 2:
+		return &plugin.Identifier{
+			Schema: parts[0],
+			Name:   parts[1],
+		}, nil
+	case 3:
+		return &plugin.Identifier{
+			Catalog: parts[0],
+			Schema:  parts[1],
+			Name:    parts[2],
+		}, nil
+	default:
+		return nil, fmt.Errorf("invalid name: %s", name)
+	}
+}
 
 func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pluginType *plugin.Identifier) string {
 	columnType := sdk.DataType(pluginType)
@@ -64,18 +90,23 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 	case "ltree", "lquery", "ltxtquery":
 		return Str
 	default:
-		if pluginType.Schema == "" {
-			pluginType.Schema = req.Catalog.DefaultSchema
+		columnRelation, err := parseIdentifierString(columnType)
+		if err != nil {
+			log.L().LogErr("error trying to parse identifier string", err)
+			return "typing.Any"
+		}
+		if columnRelation.Schema == "" {
+			columnRelation.Schema = req.Catalog.DefaultSchema
 		}
 		for _, schema := range req.Catalog.Schemas {
 			if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
 				continue
 			}
-			if schema.Name != pluginType.Schema {
+			if schema.Name != columnRelation.Schema {
 				continue
 			}
 			for _, enum := range schema.Enums {
-				if pluginType.Name != enum.Name {
+				if columnRelation.Name != enum.Name {
 					continue
 				}
 				if schema.Name == req.Catalog.DefaultSchema {

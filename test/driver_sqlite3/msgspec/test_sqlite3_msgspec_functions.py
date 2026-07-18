@@ -36,12 +36,12 @@ from test.driver_sqlite3.msgspec.functions import queries
 class TestSqlite3MsgspecFunctions:
     @pytest.fixture(scope="session")
     def override_model(self) -> models.TestTypeOverride:
-        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+        return models.TestTypeOverride(id_=random.randint(1, 10000000), text_test=UserString("Test"))
 
     @pytest.fixture(scope="session")
     def model(self) -> models.TestSqliteType:
         return models.TestSqliteType(
-            id=random.randint(1, 10000000),
+            id_=random.randint(1, 10000000),
             int_test=42,
             bigint_test=9_007_199_254_740_991,
             smallint_test=32_767,
@@ -75,7 +75,7 @@ class TestSqlite3MsgspecFunctions:
     @pytest.fixture(scope="session")
     def inner_model(self, model: models.TestSqliteType) -> models.TestInnerSqliteType:
         return models.TestInnerSqliteType(
-            table_id=model.id,
+            table_id=model.id_,
             int_test=None,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -114,7 +114,7 @@ class TestSqlite3MsgspecFunctions:
     ) -> None:
         queries.insert_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id,
+            id_=model.id_,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -194,7 +194,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_sqlite_type(conn=sqlite3_conn, id_=model.id)
+        result = queries.get_one_sqlite_type(conn=sqlite3_conn, id_=model.id_)
 
         assert result is not None
 
@@ -247,7 +247,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_date(conn=sqlite3_conn, id_=model.id, date_test=model.date_test)
+        result = queries.get_one_date(conn=sqlite3_conn, id_=model.id_, date_test=model.date_test)
 
         assert result is not None
 
@@ -273,7 +273,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_datetime(conn=sqlite3_conn, id_=model.id, datetime_test=model.datetime_test)
+        result = queries.get_one_datetime(conn=sqlite3_conn, id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
 
@@ -299,7 +299,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_timestamp(conn=sqlite3_conn, id_=model.id, timestamp_test=model.timestamp_test)
+        result = queries.get_one_timestamp(conn=sqlite3_conn, id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
 
@@ -325,7 +325,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_bool(conn=sqlite3_conn, id_=model.id, bool_test=model.bool_test)
+        result = queries.get_one_bool(conn=sqlite3_conn, id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
 
@@ -351,7 +351,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_boolean(conn=sqlite3_conn, id_=model.id, boolean_test=model.boolean_test)
+        result = queries.get_one_boolean(conn=sqlite3_conn, id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
 
@@ -377,7 +377,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_decimal(conn=sqlite3_conn, id_=model.id, decimal_test=model.decimal_test)
+        result = queries.get_one_decimal(conn=sqlite3_conn, id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
 
@@ -403,7 +403,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_blob(conn=sqlite3_conn, id_=model.id, blob_test=model.blob_test)
+        result = queries.get_one_blob(conn=sqlite3_conn, id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
 
@@ -425,7 +425,7 @@ class TestSqlite3MsgspecFunctions:
         name="Sqlite3TestMsgspecFunctions::get_many", depends=["Sqlite3TestMsgspecFunctions::get_blob_none"]
     )
     def test_get_many(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id)
+        result = queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -442,7 +442,7 @@ class TestSqlite3MsgspecFunctions:
         name="Sqlite3TestMsgspecFunctions::get_many_iter", depends=["Sqlite3TestMsgspecFunctions::get_many"]
     )
     def test_get_many_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id):
+        for result in queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id_):
             assert result is not None
             assert isinstance(result, models.TestSqliteType)
 
@@ -513,7 +513,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_nullable_inner_iter"],
     )
     def test_get_many_date(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_date(conn=sqlite3_conn, id_=model.id, date_test=model.date_test)
+        result = queries.get_many_date(conn=sqlite3_conn, id_=model.id_, date_test=model.date_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -526,7 +526,7 @@ class TestSqlite3MsgspecFunctions:
         name="Sqlite3TestMsgspecFunctions::get_many_date_iter", depends=["Sqlite3TestMsgspecFunctions::get_many_date"]
     )
     def test_get_many_date_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_date(conn=sqlite3_conn, id_=model.id, date_test=model.date_test):
+        for result in queries.get_many_date(conn=sqlite3_conn, id_=model.id_, date_test=model.date_test):
             assert result is not None
             assert isinstance(result, datetime.date)
 
@@ -537,7 +537,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_date_iter"],
     )
     def test_get_many_datetime(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_datetime(conn=sqlite3_conn, id_=model.id, datetime_test=model.datetime_test)
+        result = queries.get_many_datetime(conn=sqlite3_conn, id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -551,7 +551,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_datetime"],
     )
     def test_get_many_datetime_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_datetime(conn=sqlite3_conn, id_=model.id, datetime_test=model.datetime_test):
+        for result in queries.get_many_datetime(conn=sqlite3_conn, id_=model.id_, datetime_test=model.datetime_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
@@ -562,7 +562,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_datetime_iter"],
     )
     def test_get_many_timestamp(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id, timestamp_test=model.timestamp_test)
+        result = queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -576,7 +576,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_timestamp"],
     )
     def test_get_many_timestamp_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id, timestamp_test=model.timestamp_test):
+        for result in queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id_, timestamp_test=model.timestamp_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
@@ -587,7 +587,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_timestamp_iter"],
     )
     def test_get_many_bool(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_bool(conn=sqlite3_conn, id_=model.id, bool_test=model.bool_test)
+        result = queries.get_many_bool(conn=sqlite3_conn, id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -600,7 +600,7 @@ class TestSqlite3MsgspecFunctions:
         name="Sqlite3TestMsgspecFunctions::get_many_bool_iter", depends=["Sqlite3TestMsgspecFunctions::get_many_bool"]
     )
     def test_get_many_bool_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_bool(conn=sqlite3_conn, id_=model.id, bool_test=model.bool_test):
+        for result in queries.get_many_bool(conn=sqlite3_conn, id_=model.id_, bool_test=model.bool_test):
             assert result is not None
             assert isinstance(result, bool)
 
@@ -611,7 +611,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_bool_iter"],
     )
     def test_get_many_boolean(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_boolean(conn=sqlite3_conn, id_=model.id, boolean_test=model.boolean_test)
+        result = queries.get_many_boolean(conn=sqlite3_conn, id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -625,7 +625,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_boolean"],
     )
     def test_get_many_boolean_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_boolean(conn=sqlite3_conn, id_=model.id, boolean_test=model.boolean_test):
+        for result in queries.get_many_boolean(conn=sqlite3_conn, id_=model.id_, boolean_test=model.boolean_test):
             assert result is not None
             assert isinstance(result, bool)
 
@@ -636,7 +636,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_boolean_iter"],
     )
     def test_get_many_decimal(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_decimal(conn=sqlite3_conn, id_=model.id, decimal_test=model.decimal_test)
+        result = queries.get_many_decimal(conn=sqlite3_conn, id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -650,7 +650,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_decimal"],
     )
     def test_get_many_decimal_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_decimal(conn=sqlite3_conn, id_=model.id, decimal_test=model.decimal_test):
+        for result in queries.get_many_decimal(conn=sqlite3_conn, id_=model.id_, decimal_test=model.decimal_test):
             assert result is not None
             assert isinstance(result, decimal.Decimal)
 
@@ -661,7 +661,7 @@ class TestSqlite3MsgspecFunctions:
         depends=["Sqlite3TestMsgspecFunctions::get_many_decimal_iter"],
     )
     def test_get_many_blob(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_blob(conn=sqlite3_conn, id_=model.id, blob_test=model.blob_test)
+        result = queries.get_many_blob(conn=sqlite3_conn, id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -674,7 +674,7 @@ class TestSqlite3MsgspecFunctions:
         name="Sqlite3TestMsgspecFunctions::get_many_blob_iter", depends=["Sqlite3TestMsgspecFunctions::get_many_blob"]
     )
     def test_get_many_blob_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_blob(conn=sqlite3_conn, id_=model.id, blob_test=model.blob_test):
+        for result in queries.get_many_blob(conn=sqlite3_conn, id_=model.id_, blob_test=model.blob_test):
             assert result is not None
             assert isinstance(result, memoryview)
 
@@ -690,7 +690,7 @@ class TestSqlite3MsgspecFunctions:
     ) -> None:
         result = queries.insert_result_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -730,7 +730,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.update_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 1)
+        result = queries.update_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
     @pytest.mark.dependency(
@@ -741,7 +741,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.delete_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 1)
+        result = queries.delete_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
     @pytest.mark.dependency(
@@ -754,7 +754,7 @@ class TestSqlite3MsgspecFunctions:
     ) -> None:
         result = queries.insert_rows_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id + 2,
+            id_=model.id_ + 2,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -795,7 +795,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.update_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 2)
+        result = queries.update_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
@@ -807,7 +807,7 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.delete_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 2)
+        result = queries.delete_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
@@ -834,7 +834,7 @@ class TestSqlite3MsgspecFunctions:
     ) -> None:
         result = queries.insert_last_id_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id + 3,
+            id_=model.id_ + 3,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -865,7 +865,7 @@ class TestSqlite3MsgspecFunctions:
             json_test=model.json_test,
         )
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
     @pytest.mark.dependency(
         name="Sqlite3TestMsgspecFunctions::update_last_id", depends=["Sqlite3TestMsgspecFunctions::insert_last_id"]
@@ -875,9 +875,9 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.update_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 3)
+        result = queries.update_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
     @pytest.mark.dependency(
         name="Sqlite3TestMsgspecFunctions::delete_last_id", depends=["Sqlite3TestMsgspecFunctions::update_last_id"]
@@ -887,15 +887,15 @@ class TestSqlite3MsgspecFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.delete_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 3)
+        result = queries.delete_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
     @pytest.mark.dependency(
         name="Sqlite3TestMsgspecFunctions::delete_sqlite_type", depends=["Sqlite3TestMsgspecFunctions::delete_last_id"]
     )
     def test_delete_sqlite_type(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        queries.delete_one_sqlite_type(conn=sqlite3_conn, id_=model.id)
+        queries.delete_one_sqlite_type(conn=sqlite3_conn, id_=model.id_)
 
     @pytest.mark.dependency(
         name="Sqlite3TestMsgspecFunctions::delete_inner_sqlite_type",
@@ -912,7 +912,7 @@ class TestSqlite3MsgspecFunctions:
     def test_insert_type_override(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        queries.insert_type_override(conn=sqlite3_conn, id_=override_model.id, text_test=override_model.text_test)
+        queries.insert_type_override(conn=sqlite3_conn, id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.dependency(
         name="Sqlite3TestMsgspecFunctions::get_one_type_override",
@@ -921,7 +921,7 @@ class TestSqlite3MsgspecFunctions:
     def test_get_one_type_override(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id)
+        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model
 
@@ -932,7 +932,7 @@ class TestSqlite3MsgspecFunctions:
     def test_get_one_type_override_none(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id - 1)
+        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.dependency(
@@ -942,7 +942,7 @@ class TestSqlite3MsgspecFunctions:
     def test_get_many_type_override(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        result = queries.get_many_type_override(conn=sqlite3_conn, id_=override_model.id)
+        result = queries.get_many_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = list(result)
@@ -962,7 +962,7 @@ class TestSqlite3MsgspecFunctions:
     def test_get_one_text_type_override(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id)
+        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
 
@@ -973,7 +973,7 @@ class TestSqlite3MsgspecFunctions:
     def test_get_one_text_type_override_none(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id - 1)
+        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.dependency(
@@ -983,7 +983,7 @@ class TestSqlite3MsgspecFunctions:
     def test_get_many_text_type_override(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        result = queries.get_many_text_type_override(conn=sqlite3_conn, id_=override_model.id)
+        result = queries.get_many_text_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = list(result)
@@ -1003,4 +1003,4 @@ class TestSqlite3MsgspecFunctions:
     def test_delete_type_override(
         self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
     ) -> None:
-        queries.delete_type_override(conn=sqlite3_conn, id_=override_model.id)
+        queries.delete_type_override(conn=sqlite3_conn, id_=override_model.id_)

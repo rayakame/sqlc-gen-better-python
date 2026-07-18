@@ -1,0 +1,6 @@
+kind: Breaking
+body: '`query_parameter_limit` is now implemented: queries with more than 4 parameters (configurable) take a single `params: <Query>Params` argument instead of expanded keyword arguments'
+time: 2026-07-18T12:00:02.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"

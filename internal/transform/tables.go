@@ -32,20 +32,21 @@ func (t *Transformer) buildTable(pluginSchema *plugin.Schema, pluginTable *plugi
 		schemaName = pluginSchema.Name
 	}
 	tableName := model.ModelName(t.config, pluginTable.Rel.Name, schemaName)
-	if !t.config.EmitExactTableNames {
-		tableName = model.Singular(model.SingularParams{
-			Name:       tableName,
-			Exclusions: t.config.InflectionExcludeTableNames,
-		})
-	}
 	table := model.Table{
 		Name:    tableName,
 		Columns: make([]model.Column, 0, len(pluginTable.Columns)),
+		Identifier: utils.ToPtr(plugin.Identifier{
+			Catalog: "",
+			Schema:  pluginSchema.Name,
+			Name:    pluginTable.Rel.Name,
+		}),
 	}
 	for i, column := range pluginTable.Columns {
 		table.Columns = append(table.Columns, model.Column{
-			Name: model.ColumnName(column, i),
-			Type: t.buildPyType(column),
+			Name:   model.EscapedColumnName(column, i),
+			DBName: model.ColumnName(column, i),
+			Type:   t.buildPyType(column),
+			Embed:  nil,
 		})
 	}
 

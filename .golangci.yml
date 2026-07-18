@@ -86,6 +86,9 @@ linters:
     - whitespace
     - exhaustruct
   settings:
+    mnd:
+      ignored-functions:
+        - '^.*NNewLine$'
     exhaustruct:
       # List of regular expressions to match type names that should be excluded from processing.
       # Anonymous structs can be matched by '<anonymous>' alias.

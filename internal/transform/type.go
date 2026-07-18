@@ -1,6 +1,7 @@
 package transform
 
 import (
+	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -17,15 +18,19 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 
 	isEnum := false
 
-	if pluginColumn.Type.Schema == "" {
-		pluginColumn.Type.Schema = t.req.Catalog.DefaultSchema
+	// Never mutate pluginColumn: buildPyType runs repeatedly on the same
+	// shared columns (e.g. during table matching), and writing the default
+	// schema back would change sdk.DataType results on later calls.
+	typeSchema := pluginColumn.Type.Schema
+	if typeSchema == "" {
+		typeSchema = t.req.Catalog.DefaultSchema
 	}
 
 	for _, schema := range t.req.Catalog.Schemas {
 		if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
 			continue
 		}
-		if pluginColumn.Type.Schema != schema.GetName() {
+		if typeSchema != schema.GetName() {
 			continue
 		}
 
@@ -36,11 +41,50 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 		}
 	}
 
-	return model.PyType{
-		SQLType:    columnType,
-		Type:       strType,
-		IsNullable: !pluginColumn.GetNotNull(),
-		IsList:     pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
-		IsEnum:     isEnum,
+	if override := t.matchOverride(pluginColumn, columnType); override != nil {
+		return model.PyType{
+			SQLType:     columnType,
+			Type:        override.PyType.Type,
+			IsNullable:  !pluginColumn.GetNotNull(),
+			IsList:      pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
+			IsEnum:      false,
+			IsOverride:  true,
+			DefaultType: strType,
+		}
 	}
+
+	return model.PyType{
+		SQLType:     columnType,
+		Type:        strType,
+		IsNullable:  !pluginColumn.GetNotNull(),
+		IsList:      pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
+		IsEnum:      isEnum,
+		IsOverride:  false,
+		DefaultType: strType,
+	}
+}
+
+// matchOverride returns the first configured override matching the column,
+// either by column pattern or by exact SQL type.
+func (t *Transformer) matchOverride(pluginColumn *plugin.Column, columnType string) *config.Override {
+	for i := range t.config.Overrides {
+		override := &t.config.Overrides[i]
+		if override.PyType.Type == "" {
+			continue
+		}
+		if override.Column != "" {
+			columnName := pluginColumn.Name
+			if pluginColumn.OriginalName != "" {
+				columnName = pluginColumn.OriginalName
+			}
+			if override.ColumnName.MatchString(columnName) && override.Matches(pluginColumn.Table, t.req.Catalog.DefaultSchema) {
+				return override
+			}
+		}
+		if override.DBType != "" && override.DBType == columnType {
+			return override
+		}
+	}
+
+	return nil
 }

@@ -34,6 +34,7 @@ import math
 
 import pytest
 
+from test.driver_asyncpg.msgspec.functions import enums
 from test.driver_asyncpg.msgspec.functions import models
 from test.driver_asyncpg.msgspec.functions import queries
 
@@ -42,12 +43,12 @@ from test.driver_asyncpg.msgspec.functions import queries
 class TestMsgspecFunctions:
     @pytest.fixture(scope="session")
     def override_model(self) -> models.TestTypeOverride:
-        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+        return models.TestTypeOverride(id_=random.randint(1, 10000000), text_test=UserString("Test"))
 
     @pytest.fixture(scope="session")
     def model(self) -> models.TestPostgresType:
         return models.TestPostgresType(
-            id=random.randint(1, 1000000),
+            id_=random.randint(1, 1000000),
             serial_test=1,
             serial4_test=2,
             bigserial_test=3,
@@ -88,7 +89,7 @@ class TestMsgspecFunctions:
     @pytest.fixture(scope="session")
     def inner_model(self, model: models.TestPostgresType) -> models.TestInnerPostgresType:
         return models.TestInnerPostgresType(
-            table_id=model.id,
+            table_id=model.id_,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -135,7 +136,7 @@ class TestMsgspecFunctions:
     ) -> None:
         await queries.create_one_test_postgres_type(
             conn=asyncpg_conn,
-            id_=model.id,
+            id_=model.id_,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -227,7 +228,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.get_one_test_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_one_test_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, models.TestPostgresType)
@@ -280,7 +281,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.get_one_test_timestamp_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_one_test_timestamp_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, datetime.datetime)
@@ -308,7 +309,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.get_one_test_bytea_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_one_test_bytea_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, memoryview)
@@ -333,7 +334,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.get_many_test_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_many_test_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -352,7 +353,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.get_many_test_timestamp_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_many_test_timestamp_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -370,7 +371,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.get_many_test_bytea_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_many_test_bytea_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -389,13 +390,13 @@ class TestMsgspecFunctions:
         model: models.TestPostgresType,
         inner_model: models.TestInnerPostgresType,
     ) -> None:
-        result = await queries.get_embedded_test_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_embedded_test_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, queries.GetEmbeddedTestPostgresTypeRow)
         assert isinstance(result.test_inner_postgres_type, models.TestInnerPostgresType)
 
-        assert result.id == model.id
+        assert result.id_ == model.id_
         assert result.serial_test == model.serial_test
         assert result.serial4_test == model.serial4_test
         assert result.bigserial_test == model.bigserial_test
@@ -457,7 +458,7 @@ class TestMsgspecFunctions:
         model: models.TestPostgresType,
         inner_model: models.TestInnerPostgresType,
     ) -> None:
-        result = await queries.get_all_embedded_test_postgres_type(conn=asyncpg_conn, id_=model.id)
+        result = await queries.get_all_embedded_test_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, queries.GetAllEmbeddedTestPostgresTypeRow)
@@ -490,7 +491,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        results = queries.get_many_test_iterator_postgres_type(conn=asyncpg_conn, id_=model.id)
+        results = queries.get_many_test_iterator_postgres_type(conn=asyncpg_conn, id_=model.id_)
         async with asyncpg_conn.transaction():
             async for result in results:
                 assert result is not None
@@ -505,7 +506,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        await queries.delete_one_test_postgres_type(conn=asyncpg_conn, id_=model.id)
+        await queries.delete_one_test_postgres_type(conn=asyncpg_conn, id_=model.id_)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecFunctions::delete"], name="TestMsgspecFunctions::delete_inner")
@@ -525,7 +526,7 @@ class TestMsgspecFunctions:
     ) -> None:
         result = await queries.create_result_one_test_postgres_type(
             conn=asyncpg_conn,
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -572,7 +573,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.update_result_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
+        result = await queries.update_result_test_postgres_type(conn=asyncpg_conn, id_=model.id_ + 1)
 
         assert result == "UPDATE 1"
 
@@ -583,7 +584,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.delete_one_result_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
+        result = await queries.delete_one_result_test_postgres_type(conn=asyncpg_conn, id_=model.id_ + 1)
 
         assert result == "DELETE 1"
 
@@ -596,7 +597,7 @@ class TestMsgspecFunctions:
     ) -> None:
         result = await queries.create_rows_one_test_postgres_type(
             conn=asyncpg_conn,
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -643,7 +644,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.update_rows_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
+        result = await queries.update_rows_test_postgres_type(conn=asyncpg_conn, id_=model.id_ + 1)
 
         assert result == 1
 
@@ -654,7 +655,7 @@ class TestMsgspecFunctions:
         asyncpg_conn: asyncpg.Connection[asyncpg.Record],
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries.delete_one_rows_test_postgres_type(conn=asyncpg_conn, id_=model.id + 1)
+        result = await queries.delete_one_rows_test_postgres_type(conn=asyncpg_conn, id_=model.id_ + 1)
 
         assert result == 1
 
@@ -668,7 +669,7 @@ class TestMsgspecFunctions:
         num = 3
         rows: list[queries.TestCopyFromParams] = [
             queries.TestCopyFromParams(
-                id=i,
+                id_=i,
                 int_test=model.int_test,
                 float_test=model.float_test,
             )
@@ -697,7 +698,9 @@ class TestMsgspecFunctions:
     async def test_insert_type_override(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        await queries.insert_type_override(conn=asyncpg_conn, id_=override_model.id, text_test=override_model.text_test)
+        await queries.insert_type_override(
+            conn=asyncpg_conn, id_=override_model.id_, text_test=override_model.text_test
+        )
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
@@ -707,7 +710,7 @@ class TestMsgspecFunctions:
     async def test_get_one_type_override(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id)
+        result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model
 
@@ -719,7 +722,7 @@ class TestMsgspecFunctions:
     async def test_get_one_type_override_none(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id - 1)
+        result = await queries.get_one_type_override(conn=asyncpg_conn, id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
@@ -730,7 +733,7 @@ class TestMsgspecFunctions:
     async def test_get_many_type_override(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        result = await queries.get_many_type_override(conn=asyncpg_conn, id_=override_model.id)
+        result = await queries.get_many_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model
 
@@ -742,7 +745,7 @@ class TestMsgspecFunctions:
     async def test_get_one_text_type_override(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id)
+        result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
 
@@ -754,7 +757,7 @@ class TestMsgspecFunctions:
     async def test_get_one_text_type_override_none(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id - 1)
+        result = await queries.get_one_text_type_override(conn=asyncpg_conn, id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
@@ -765,7 +768,7 @@ class TestMsgspecFunctions:
     async def test_get_many_text_type_override(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        result = await queries.get_many_text_type_override(conn=asyncpg_conn, id_=override_model.id)
+        result = await queries.get_many_text_type_override(conn=asyncpg_conn, id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model.text_test
 
@@ -777,4 +780,41 @@ class TestMsgspecFunctions:
     async def test_delete_type_override(
         self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride
     ) -> None:
-        await queries.delete_type_override(conn=asyncpg_conn, id_=override_model.id)
+        await queries.delete_type_override(conn=asyncpg_conn, id_=override_model.id_)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecFunctions::insert_enum")
+    async def test_insert_enum(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        await queries.insert_one_test_enum_type(
+            conn=asyncpg_conn, id_=424242, mood=enums.TestMood.HAPPY, maybe_mood=None
+        )
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecFunctions::get_enum", depends=["TestMsgspecFunctions::insert_enum"])
+    async def test_get_enum(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        result = await queries.get_one_test_enum_type(conn=asyncpg_conn, id_=424242)
+        assert result is not None
+        assert isinstance(result.mood, enums.TestMood)
+        assert result.mood is enums.TestMood.HAPPY
+        assert result.maybe_mood is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecFunctions::get_enum_value", depends=["TestMsgspecFunctions::get_enum"])
+    async def test_get_enum_value(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        mood = await queries.get_one_test_enum_value(conn=asyncpg_conn, id_=424242)
+        assert isinstance(mood, enums.TestMood)
+        assert mood is enums.TestMood.HAPPY
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="TestMsgspecFunctions::get_many_enums", depends=["TestMsgspecFunctions::get_enum_value"]
+    )
+    async def test_get_many_enums(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        result = await queries.get_many_test_enum_types(conn=asyncpg_conn)
+        assert len(result) >= 1
+        assert all(isinstance(row.mood, enums.TestMood) for row in result)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::get_many_enums"])
+    async def test_delete_enum(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        assert await queries.delete_one_test_enum_type(conn=asyncpg_conn, id_=424242) == 1

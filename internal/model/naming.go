@@ -61,12 +61,34 @@ func ColumnName(pluginColumn *plugin.Column, pos int) string {
 	return fmt.Sprintf("column_%d", pos+1)
 }
 
-func ModelName(conf *config.Config, modelName string, schemaName string) string {
+func EscapedColumnName(pluginColumn *plugin.Column, pos int) string {
+	return Escape(ColumnName(pluginColumn, pos))
+}
+
+func ModelName(config *config.Config, modelName string, schemaName string) string {
 	name := ""
 	if schemaName != "" {
 		name += schemaName + "_"
 	}
 	name += modelName
 
-	return SnakeToCamel(conf, name)
+	modelName = SnakeToCamel(config, name)
+	if !config.EmitExactTableNames {
+		modelName = Singular(SingularParams{
+			Name:       modelName,
+			Exclusions: config.InflectionExcludeTableNames,
+		})
+	}
+	return modelName
+}
+
+func ParamName(p *plugin.Parameter) string {
+	var name string
+	if p.Column.GetName() != "" {
+		name = p.Column.Name
+	} else {
+		name = fmt.Sprintf("dollar_%d", p.GetNumber())
+	}
+
+	return Escape(name)
 }

@@ -12,11 +12,9 @@ A WASM plugin for SQLC allowing the generation of Python code.
 > Every Release before `v1.0.0`, including this one is an beta release. 
 > These versions are primarly released for interested people who want to test this plugin and help make it better.
 >
-> I want to be very open about the current state of the project. Everything that is implemented works, and is beeing used
-> in production envirouments already. But there are some drivers and features that are sadly not implemented yet, biggest one
-> beeing that enums don't have support yet. I am working on that but I have a lot of stuff todo at the moment so I can't give a clear
-> estimate on how long this is going to take. Feel free to lmk any wanted features and I'm going to do my best on implementing them with
-> the time I have rn.
+> Everything that is implemented works and is being used in production environments already.
+> Since `v0.5.0` this includes full support for PostgreSQL enums and a fourth model type, `pydantic`.
+> Feel free to lmk any wanted features and I'm going to do my best on implementing them with the time I have rn.
 
 
 ## Example Config
@@ -52,8 +50,8 @@ More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/re
 |----------------------------------|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `package`                        | string         | yes      | The name of the package where the generated files will be located                                                                                                                                                         |
 | `emit_init_file`                 | bool           | yes      | If set to to `false` there will be no `__init__.py` file created in the package that you specified. Only set this to false if you know that you already have a `__init__.py` file otherwise the generated code wont work. |
-| `sql_driver`                     | string         | no       | The name of the sql driver you want to use. Defaults to `aiosqlite`. Valid options are listed [here](#feature-support)                                                                                                    |
-| `model_type`                     | string         | no       | The model type you want to use. This can be one of `dataclass`, `msgspec` or `attrs`. Defaults to `dataclass`                                                                                                             |
+| `sql_driver`                     | string         | yes      | The name of the sql driver you want to use. Valid options are listed [here](#feature-support)                                                                                                                             |
+| `model_type`                     | string         | no       | The model type you want to use. This can be one of `dataclass`, `msgspec`, `attrs` or [`pydantic`](#pydantic-models). Defaults to `dataclass`                                                                             |
 | `initialisms`                    | list[string]   | no       | An array of [initialisms](https://google.github.io/styleguide/go/decisions.html#initialisms) to upper-case. For example, `app_id` becomes `AppID`. Defaults to `["id"]`.                                                  |
 | `emit_exact_table_names`         | bool           | no       | If `true`, model names will mirror table names. Otherwise sqlc attempts to singularize plural table names.                                                                                                                |
 | `emit_classes`                   | bool           | no       | If `true`, every query function will be put into a class called `Querier`. Otherwise every function will be a standalone function.                                                                                        |
@@ -62,7 +60,7 @@ More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/re
 | `omit_typechecking_block`        | bool           | no       | If set to `true`, will not wrap all non-builtin types behind a `typing.TYPE_CHECKING` block. Defaults to `false`                                                                                                          |
 | `docstrings`                     | string         | no       | If set, there will be docstrings generated in the selected format. This can be one of `google`, `numpy`, `pep257` and `none`. `none` will not generate any docstrings.                                                    |
 | `docstrings_emit_sql`            | bool           | no       | If set to `false` the SQL code for each query wont be included in the docstrings. This defaults to `true` but is not used when `docstrings` is not set or set to `none`                                                   |
-| `query_parameter_limit`          | integer        | no       | Not yet implemented.                                                                                                                                                                                                      |
+| `query_parameter_limit`          | integer        | no       | Queries with more parameters than this limit get them bundled into a single `params: <Query>Params` argument instead of expanded keyword arguments. Defaults to `4`.                                                     |
 | `omit_kwargs_limit`              | integer        | no       | This can be used to set a limit where any query with less or equal amounts of parameters will not require kwargs for the parameters. This defaults to `0` which makes every query require kwargs for their parameters.    |
 | `speedups`                       | bool           | no       | If set to `true` the plugin will use other librarys for type conversion. Needs extra dependecys to be installed. This option currently only affects `sqlite3` & `aiosqlite` and uses the library `ciso8601`               |
 | `overrides`                      | list[Override] | no       | A list of [type overrides](#type-overrides).                                                                                                                                                                              |
@@ -89,6 +87,46 @@ options:
         import: collections
         type: collections.UserString
 
+```
+
+### Enums
+
+PostgreSQL enum types generate an `enums.py` module containing `str`-based enum classes:
+
+```python
+class Mood(str, enum.Enum):
+    SAD = "sad"
+    OK = "ok"
+    HAPPY = "happy"
+```
+
+Enum columns are typed with these classes in models and query functions, and values read
+from the database are coerced into them. Enums in non-default schemas get schema-qualified
+class names (e.g. `CustomMood` for `custom.mood`), so same-named enums never collide.
+
+### Pydantic models
+
+With `model_type: pydantic`, models are generated as `pydantic.BaseModel` subclasses
+(requires `pydantic >= 2.9`). Two things to be aware of:
+
+- Every generated class sets `model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)`.
+  This is required for field types pydantic has no core schema for (e.g. `memoryview` for
+  `bytea`/`blob` columns and custom override types); those fields are still validated with
+  an `isinstance` check, and all other fields get full pydantic validation on construction.
+- Unlike the other model types, pydantic resolves field annotations at runtime, so the
+  generated files import the referenced modules at runtime instead of inside
+  `if typing.TYPE_CHECKING:` blocks. If you lint generated code with ruff, set
+  `lint.flake8-type-checking.runtime-evaluated-base-classes = ["pydantic.BaseModel"]`.
+
+### SQLite type conversion
+
+For the `sqlite3` and `aiosqlite` drivers, the generated code registers adapters and
+converters (for `date`, `datetime`/`timestamp`, `decimal`, `bool` and `blob` columns) via
+`register_adapter`/`register_converter`. For these to work, you must open your connection
+with declared-type parsing enabled:
+
+```python
+conn = sqlite3.connect(dsn, detect_types=sqlite3.PARSE_DECLTYPES)
 ```
 
 ## Feature Support

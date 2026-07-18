@@ -4,9 +4,12 @@ import (
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
+	"github.com/sqlc-dev/plugin-sdk-go/metadata"
+	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
-func (t *Transformer) BuildQueries() []model.Query {
+func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 	queries := make([]model.Query, 0, len(t.req.Queries))
 	for _, pluginQuery := range t.req.Queries {
 		if pluginQuery.Name == "" {
@@ -18,15 +21,232 @@ func (t *Transformer) BuildQueries() []model.Query {
 
 		constantName := model.UpperSnakeCase(pluginQuery.Name)
 
+		moduleName := pluginQuery.Filename
+		lastDot := strings.LastIndex(moduleName, ".")
+		if lastDot != -1 {
+			moduleName = moduleName[:lastDot]
+		}
+
 		query := model.Query{
 			Cmd:          pluginQuery.Cmd,
 			SQL:          pluginQuery.Text,
 			ConstantName: constantName,
 			FuncName:     strings.ToLower(constantName),
+			QueryName:    pluginQuery.Name,
+			Params:       make([]model.QueryValue, 0),
+			Returns: model.QueryValue{
+				Table:  nil,
+				Name:   "",
+				DBName: "",
+				Type: model.PyType{
+					SQLType:    "",
+					Type:       "None",
+					IsNullable: false,
+					IsList:     false,
+					IsEnum:     false,
+				},
+				EmitTable: false,
+			},
+			FileName:   pluginQuery.Filename,
+			ModuleName: moduleName,
+			Table:      pluginQuery.InsertIntoTable,
+		}
+
+		if query.Cmd == metadata.CmdCopyFrom || t.config.IsOverQueryParameterLimit(len(pluginQuery.Params)) {
+			columns := make([]pyColumn, 0, len(pluginQuery.Params))
+			for _, param := range pluginQuery.Params {
+				columns = append(columns, pyColumn{
+					column: param.Column,
+					embed:  nil,
+				})
+			}
+			table := t.columnsToClass(query.QueryName+"Params", columns)
+			query.Params = []model.QueryValue{
+				{
+					Table:  utils.ToPtr(table),
+					Name:   "params",
+					DBName: "",
+					Type: model.PyType{
+						SQLType:    "",
+						Type:       table.Name,
+						IsNullable: false,
+						IsList:     query.Cmd == metadata.CmdCopyFrom,
+						IsEnum:     false,
+					},
+					EmitTable: true,
+				},
+			}
+		} else {
+			query.Params = make([]model.QueryValue, 0, len(pluginQuery.Params))
+			for _, param := range pluginQuery.Params {
+				query.Params = append(query.Params, model.QueryValue{
+					Table:     nil,
+					Name:      model.ParamName(param),
+					DBName:    param.Column.GetName(),
+					Type:      t.buildPyType(param.Column),
+					EmitTable: false,
+				})
+			}
+		}
+
+		if query.Cmd == metadata.CmdExecLastId {
+			query.Returns.Type = model.PyType{
+				SQLType:    "",
+				Type:       "int",
+				IsNullable: true,
+				IsList:     false,
+				IsEnum:     false,
+			}
+		}
+		if query.Cmd == metadata.CmdExecRows || query.Cmd == metadata.CmdCopyFrom {
+			query.Returns.Type = model.PyType{
+				SQLType:    "",
+				Type:       "int",
+				IsNullable: false,
+				IsList:     false,
+				IsEnum:     false,
+			}
+		}
+
+		if pluginQuery.Cmd != metadata.CmdOne && pluginQuery.Cmd != metadata.CmdMany {
+			queries = append(queries, query)
+
+			continue
+		}
+
+		if len(pluginQuery.Columns) == 1 && pluginQuery.Columns[0].EmbedTable == nil {
+			column := pluginQuery.Columns[0]
+			query.Returns = model.QueryValue{
+				Table:     nil,
+				Name:      model.EscapedColumnName(column, 0),
+				DBName:    model.ColumnName(column, 0),
+				Type:      t.buildPyType(column),
+				EmitTable: false,
+			}
+			queries = append(queries, query)
+
+			continue
+		}
+
+		var tableFound bool
+		for _, table := range tables {
+			if len(table.Columns) != len(pluginQuery.Columns) {
+				continue
+			}
+			same := false
+			for i, tableColumn := range table.Columns {
+				queryColumn := pluginQuery.Columns[i]
+
+				sameName := tableColumn.Name == model.EscapedColumnName(queryColumn, i)
+				sameType := tableColumn.Type.Type == t.buildPyType(queryColumn).Type
+				sameTable := utils.SameTableName(queryColumn.Table, table.Identifier, t.req.Catalog.DefaultSchema)
+				if sameName && sameType && sameTable {
+					same = true
+				}
+			}
+			if same {
+				query.Returns = model.QueryValue{
+					Table:  utils.ToPtr(table),
+					Name:   "i",
+					DBName: "",
+					Type: model.PyType{
+						SQLType:    "",
+						Type:       "models." + table.Name,
+						IsNullable: false,
+						IsList:     false,
+						IsEnum:     false,
+					},
+					EmitTable: false,
+				}
+				tableFound = true
+				break
+			}
+		}
+
+		if !tableFound {
+			columns := make([]pyColumn, 0, len(pluginQuery.Columns))
+			for _, column := range pluginQuery.Columns {
+				columns = append(columns, pyColumn{
+					column: column,
+					embed:  t.newGoEmbed(column.EmbedTable, tables),
+				})
+			}
+			returnTable := t.columnsToClass(query.QueryName+"Row", columns)
+			query.Returns = model.QueryValue{
+				Table:  utils.ToPtr(returnTable),
+				Name:   "i",
+				DBName: "",
+				Type: model.PyType{
+					SQLType:    "",
+					Type:       returnTable.Name,
+					IsNullable: false,
+					IsList:     false,
+					IsEnum:     false,
+				},
+				EmitTable: true,
+			}
 		}
 
 		queries = append(queries, query)
 	}
 
 	return queries
+}
+
+type pyColumn struct {
+	column *plugin.Column
+	embed  *model.Embed
+}
+
+func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Table {
+	table := model.Table{
+		Name:       name,
+		Columns:    make([]model.Column, 0, len(columns)),
+		Identifier: utils.ToPtr(plugin.Identifier{}),
+	}
+	for i, column := range columns {
+		columnName := model.EscapedColumnName(column.column, i)
+		if column.embed != nil {
+			// Embed fields are named after their table; use the singular
+			// form ("test_inner_postgres_type"), matching the model naming.
+			columnName = model.Singular(model.SingularParams{
+				Name:       columnName,
+				Exclusions: t.config.InflectionExcludeTableNames,
+			})
+		}
+		tableColumn := model.Column{
+			Name:   columnName,
+			DBName: model.ColumnName(column.column, i),
+			Type:   model.PyType{},
+			Embed:  nil,
+		}
+
+		if column.embed == nil {
+			tableColumn.Type = t.buildPyType(column.column)
+		} else {
+			tableColumn.Embed = column.embed
+			tableColumn.Type.Type = "models." + column.embed.ModelName
+		}
+
+		table.Columns = append(table.Columns, tableColumn)
+	}
+	return table
+}
+
+func (t *Transformer) newGoEmbed(embedTable *plugin.Identifier, tables []model.Table) *model.Embed {
+	if embedTable == nil {
+		return nil
+	}
+
+	for _, table := range tables {
+		if !utils.SameTableName(embedTable, table.Identifier, t.req.Catalog.DefaultSchema) {
+			continue
+		}
+		columns := make([]model.Column, len(table.Columns))
+		for i, column := range table.Columns {
+			columns[i] = column
+		}
+		return utils.ToPtr(model.Embed{ModelName: table.Name, Columns: columns})
+	}
+	return nil
 }

@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: a44d4e6a61b821cc908cc054e285dc17d250cb354a03417213b9b11407b6450e
+      sha256: fc688be73172ed9e3b7040b72a7731cea7c07411dd725c21f031fb346be64eeb
 sql:
   - schema: schema.sql
     queries: queries.sql
@@ -19,6 +19,7 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
+          query_parameter_limit: 9999
           docstrings: numpy
           speedups: true
           overrides:
@@ -40,6 +41,7 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
+          query_parameter_limit: 9999
           docstrings: numpy
           overrides:
             - column: test_type_override.text_test
@@ -60,6 +62,7 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
+          query_parameter_limit: 9999
           docstrings: google
           overrides:
             - column: test_type_override.text_test
@@ -80,6 +83,7 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
+          query_parameter_limit: 9999
           docstrings: google
           overrides:
             - column: test_type_override.text_test
@@ -100,6 +104,7 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
+          query_parameter_limit: 9999
           docstrings: pep257
           overrides:
             - column: test_type_override.text_test
@@ -120,7 +125,52 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
+          query_parameter_limit: 9999
           docstrings: pep257
+
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /pydantic/classes
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.pydantic.classes
+          sql_driver: aiosqlite
+          model_type: pydantic
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          query_parameter_limit: 9999
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+  - schema: schema.sql
+    queries: queries.sql
+    engine: sqlite
+    codegen:
+      - out: /pydantic/functions
+        plugin: python
+        options:
+          package: test.driver_aiosqlite.pydantic.functions
+          sql_driver: aiosqlite
+          model_type: pydantic
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          query_parameter_limit: 9999
+          docstrings: google
 
           overrides:
             - column: test_type_override.text_test

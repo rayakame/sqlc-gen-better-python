@@ -1,0 +1,6 @@
+kind: Breaking
+body: Model and row class fields now escape reserved names like function parameters already did — a column named `id` generates the field `id_`
+time: 2026-07-18T12:00:03.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"

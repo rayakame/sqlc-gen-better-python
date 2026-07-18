@@ -43,7 +43,7 @@ jobs:
 
       - name: Set version
         run: |
-          sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"${{ steps.latest.outputs.output }}"'"/' internal/core/config.go
+          sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"${{ steps.latest.outputs.output }}"'"/' internal/config/constants.go
           
           echo "✅ Updated PluginVersion to $new_version"
 
