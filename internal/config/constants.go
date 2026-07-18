@@ -4,10 +4,6 @@ import "fmt"
 
 const PluginVersion = "v0.4.6"
 
-// defaultQueryParameterLimit is the default for query_parameter_limit:
-// queries with more parameters get them bundled into a <Query>Params class.
-const defaultQueryParameterLimit = 4
-
 type (
 	SQLDriver           string
 	DocstringConvention string

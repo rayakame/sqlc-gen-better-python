@@ -1,6 +1,0 @@
-kind: Breaking
-body: '`omit_kwargs_limit` is now opt-in: generated functions use regular positional-or-keyword parameters unless the option is explicitly set to a non-negative value (previously every query with parameters was keyword-only by default)'
-time: 2026-07-18T12:00:05.0000000Z
-custom:
-    Author: rayakame
-    PR: "148"

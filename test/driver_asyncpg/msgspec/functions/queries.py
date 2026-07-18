@@ -596,7 +596,7 @@ class QueryResults(typing.Generic[T]):
         return self._decode_hook(record)
 
 
-async def get_one_test_postgres_type(conn: ConnectionLike, id_: int) -> models.TestPostgresType | None:
+async def get_one_test_postgres_type(conn: ConnectionLike, *, id_: int) -> models.TestPostgresType | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestPostgresType :one`.
 
     ```sql
@@ -655,7 +655,7 @@ async def get_one_test_postgres_type(conn: ConnectionLike, id_: int) -> models.T
     )
 
 
-async def get_one_inner_test_postgres_type(conn: ConnectionLike, table_id: int) -> models.TestInnerPostgresType | None:
+async def get_one_inner_test_postgres_type(conn: ConnectionLike, *, table_id: int) -> models.TestInnerPostgresType | None:
     """Fetch one from the db using the SQL query with `name: GetOneInnerTestPostgresType :one`.
 
     ```sql
@@ -714,7 +714,7 @@ async def get_one_inner_test_postgres_type(conn: ConnectionLike, table_id: int) 
     )
 
 
-async def get_one_test_timestamp_postgres_type(conn: ConnectionLike, id_: int) -> datetime.datetime | None:
+async def get_one_test_timestamp_postgres_type(conn: ConnectionLike, *, id_: int) -> datetime.datetime | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestTimestampPostgresType :one`.
 
     ```sql
@@ -736,7 +736,7 @@ async def get_one_test_timestamp_postgres_type(conn: ConnectionLike, id_: int) -
     return row[0]
 
 
-async def get_one_test_bytea_postgres_type(conn: ConnectionLike, id_: int) -> memoryview | None:
+async def get_one_test_bytea_postgres_type(conn: ConnectionLike, *, id_: int) -> memoryview | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestByteaPostgresType :one`.
 
     ```sql
@@ -758,7 +758,7 @@ async def get_one_test_bytea_postgres_type(conn: ConnectionLike, id_: int) -> me
     return memoryview(row[0])
 
 
-def get_many_test_postgres_type(conn: ConnectionLike, id_: int) -> QueryResults[models.TestPostgresType]:
+def get_many_test_postgres_type(conn: ConnectionLike, *, id_: int) -> QueryResults[models.TestPostgresType]:
     """Fetch many from the db using the SQL query with `name: GetManyTestPostgresType :many`.
 
     ```sql
@@ -818,7 +818,7 @@ def get_many_test_postgres_type(conn: ConnectionLike, id_: int) -> QueryResults[
     return QueryResults[models.TestPostgresType](conn, GET_MANY_TEST_POSTGRES_TYPE, _decode_hook, id_)
 
 
-def get_many_test_iterator_postgres_type(conn: ConnectionLike, id_: int) -> QueryResults[models.TestPostgresType]:
+def get_many_test_iterator_postgres_type(conn: ConnectionLike, *, id_: int) -> QueryResults[models.TestPostgresType]:
     """Fetch many from the db using the SQL query with `name: GetManyTestIteratorPostgresType :many`.
 
     ```sql
@@ -878,7 +878,7 @@ def get_many_test_iterator_postgres_type(conn: ConnectionLike, id_: int) -> Quer
     return QueryResults[models.TestPostgresType](conn, GET_MANY_TEST_ITERATOR_POSTGRES_TYPE, _decode_hook, id_)
 
 
-def get_many_test_timestamp_postgres_type(conn: ConnectionLike, id_: int) -> QueryResults[datetime.datetime]:
+def get_many_test_timestamp_postgres_type(conn: ConnectionLike, *, id_: int) -> QueryResults[datetime.datetime]:
     """Fetch many from the db using the SQL query with `name: GetManyTestTimestampPostgresType :many`.
 
     ```sql
@@ -897,7 +897,7 @@ def get_many_test_timestamp_postgres_type(conn: ConnectionLike, id_: int) -> Que
     return QueryResults[datetime.datetime](conn, GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE, operator.itemgetter(0), id_)
 
 
-def get_many_test_bytea_postgres_type(conn: ConnectionLike, id_: int) -> QueryResults[memoryview]:
+def get_many_test_bytea_postgres_type(conn: ConnectionLike, *, id_: int) -> QueryResults[memoryview]:
     """Fetch many from the db using the SQL query with `name: GetManyTestByteaPostgresType :many`.
 
     ```sql
@@ -920,7 +920,7 @@ def get_many_test_bytea_postgres_type(conn: ConnectionLike, id_: int) -> QueryRe
     return QueryResults[memoryview](conn, GET_MANY_TEST_BYTEA_POSTGRES_TYPE, _decode_hook, id_)
 
 
-async def get_embedded_test_postgres_type(conn: ConnectionLike, id_: int) -> GetEmbeddedTestPostgresTypeRow | None:
+async def get_embedded_test_postgres_type(conn: ConnectionLike, *, id_: int) -> GetEmbeddedTestPostgresTypeRow | None:
     """Fetch one from the db using the SQL query with `name: GetEmbeddedTestPostgresType :one`.
 
     ```sql
@@ -1018,7 +1018,7 @@ async def get_embedded_test_postgres_type(conn: ConnectionLike, id_: int) -> Get
     )
 
 
-async def get_all_embedded_test_postgres_type(conn: ConnectionLike, id_: int) -> GetAllEmbeddedTestPostgresTypeRow | None:
+async def get_all_embedded_test_postgres_type(conn: ConnectionLike, *, id_: int) -> GetAllEmbeddedTestPostgresTypeRow | None:
     """Fetch one from the db using the SQL query with `name: GetAllEmbeddedTestPostgresType :one`.
 
     ```sql
@@ -1120,6 +1120,7 @@ async def get_all_embedded_test_postgres_type(conn: ConnectionLike, id_: int) ->
 
 async def create_one_test_postgres_type(
     conn: ConnectionLike,
+    *,
     id_: int,
     serial_test: int,
     serial4_test: int,
@@ -1285,6 +1286,7 @@ async def create_one_test_postgres_type(
 
 async def create_one_test_postgres_inner_type(
     conn: ConnectionLike,
+    *,
     table_id: int,
     serial_test: int | None,
     serial4_test: int | None,
@@ -1448,7 +1450,7 @@ async def create_one_test_postgres_inner_type(
     )
 
 
-async def delete_one_test_postgres_type(conn: ConnectionLike, id_: int) -> None:
+async def delete_one_test_postgres_type(conn: ConnectionLike, *, id_: int) -> None:
     """Execute SQL query with `name: DeleteOneTestPostgresType :exec`.
 
     ```sql
@@ -1464,7 +1466,7 @@ async def delete_one_test_postgres_type(conn: ConnectionLike, id_: int) -> None:
     await conn.execute(DELETE_ONE_TEST_POSTGRES_TYPE, id_)
 
 
-async def delete_one_test_postgres_inner_type(conn: ConnectionLike, table_id: int) -> None:
+async def delete_one_test_postgres_inner_type(conn: ConnectionLike, *, table_id: int) -> None:
     """Execute SQL query with `name: DeleteOneTestPostgresInnerType :exec`.
 
     ```sql
@@ -1482,6 +1484,7 @@ async def delete_one_test_postgres_inner_type(conn: ConnectionLike, table_id: in
 
 async def create_result_one_test_postgres_type(
     conn: ConnectionLike,
+    *,
     id_: int,
     serial_test: int,
     serial4_test: int,
@@ -1648,7 +1651,7 @@ async def create_result_one_test_postgres_type(
     )
 
 
-async def update_result_test_postgres_type(conn: ConnectionLike, id_: int) -> str:
+async def update_result_test_postgres_type(conn: ConnectionLike, *, id_: int) -> str:
     """Execute and return the result of SQL query with `name: UpdateResultTestPostgresType :execresult`.
 
     ```sql
@@ -1667,7 +1670,7 @@ async def update_result_test_postgres_type(conn: ConnectionLike, id_: int) -> st
     return await conn.execute(UPDATE_RESULT_TEST_POSTGRES_TYPE, id_)
 
 
-async def delete_one_result_test_postgres_type(conn: ConnectionLike, id_: int) -> str:
+async def delete_one_result_test_postgres_type(conn: ConnectionLike, *, id_: int) -> str:
     """Execute and return the result of SQL query with `name: DeleteOneResultTestPostgresType :execresult`.
 
     ```sql
@@ -1688,6 +1691,7 @@ async def delete_one_result_test_postgres_type(conn: ConnectionLike, id_: int) -
 
 async def create_rows_one_test_postgres_type(
     conn: ConnectionLike,
+    *,
     id_: int,
     serial_test: int,
     serial4_test: int,
@@ -1855,7 +1859,7 @@ async def create_rows_one_test_postgres_type(
     return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0
 
 
-async def update_rows_test_postgres_type(conn: ConnectionLike, id_: int) -> int:
+async def update_rows_test_postgres_type(conn: ConnectionLike, *, id_: int) -> int:
     """Execute SQL query with `name: UpdateRowsTestPostgresType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1875,7 +1879,7 @@ async def update_rows_test_postgres_type(conn: ConnectionLike, id_: int) -> int:
     return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0
 
 
-async def delete_one_rows_test_postgres_type(conn: ConnectionLike, id_: int) -> int:
+async def delete_one_rows_test_postgres_type(conn: ConnectionLike, *, id_: int) -> int:
     """Execute SQL query with `name: DeleteOneRowsTestPostgresType :execrows` and return the number of affected rows.
 
     ```sql
@@ -1916,7 +1920,7 @@ async def create_rows_table(conn: ConnectionLike) -> int:
     return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0
 
 
-async def test_copy_from(conn: ConnectionLike, params: collections.abc.Sequence[TestCopyFromParams]) -> int:
+async def test_copy_from(conn: ConnectionLike, *, params: collections.abc.Sequence[TestCopyFromParams]) -> int:
     """Execute COPY FROM query to insert rows into a table with `name: TestCopyFrom :copyfrom` and return the number of affected rows.
 
     Arguments:
@@ -1931,7 +1935,7 @@ async def test_copy_from(conn: ConnectionLike, params: collections.abc.Sequence[
     return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0
 
 
-async def insert_type_override(conn: ConnectionLike, id_: int, text_test: UserString | None) -> None:
+async def insert_type_override(conn: ConnectionLike, *, id_: int, text_test: UserString | None) -> None:
     """Execute SQL query with `name: InsertTypeOverride :exec`.
 
     ```sql
@@ -1948,7 +1952,7 @@ async def insert_type_override(conn: ConnectionLike, id_: int, text_test: UserSt
     await conn.execute(INSERT_TYPE_OVERRIDE, id_, str(text_test) if text_test is not None else None)
 
 
-async def get_one_type_override(conn: ConnectionLike, id_: int) -> models.TestTypeOverride | None:
+async def get_one_type_override(conn: ConnectionLike, *, id_: int) -> models.TestTypeOverride | None:
     """Fetch one from the db using the SQL query with `name: GetOneTypeOverride :one`.
 
     ```sql
@@ -1968,7 +1972,7 @@ async def get_one_type_override(conn: ConnectionLike, id_: int) -> models.TestTy
     return models.TestTypeOverride(id_=row[0], text_test=UserString(row[1]) if row[1] is not None else None)
 
 
-def get_many_type_override(conn: ConnectionLike, id_: int) -> QueryResults[models.TestTypeOverride]:
+def get_many_type_override(conn: ConnectionLike, *, id_: int) -> QueryResults[models.TestTypeOverride]:
     """Fetch many from the db using the SQL query with `name: GetManyTypeOverride :many`.
 
     ```sql
@@ -1989,7 +1993,7 @@ def get_many_type_override(conn: ConnectionLike, id_: int) -> QueryResults[model
     return QueryResults[models.TestTypeOverride](conn, GET_MANY_TYPE_OVERRIDE, _decode_hook, id_)
 
 
-async def get_one_text_type_override(conn: ConnectionLike, id_: int) -> UserString | None:
+async def get_one_text_type_override(conn: ConnectionLike, *, id_: int) -> UserString | None:
     """Fetch one from the db using the SQL query with `name: GetOneTextTypeOverride :one`.
 
     ```sql
@@ -2009,7 +2013,7 @@ async def get_one_text_type_override(conn: ConnectionLike, id_: int) -> UserStri
     return UserString(row[0])
 
 
-def get_many_text_type_override(conn: ConnectionLike, id_: int) -> QueryResults[UserString]:
+def get_many_text_type_override(conn: ConnectionLike, *, id_: int) -> QueryResults[UserString]:
     """Fetch many from the db using the SQL query with `name: GetManyTextTypeOverride :many`.
 
     ```sql
@@ -2030,7 +2034,7 @@ def get_many_text_type_override(conn: ConnectionLike, id_: int) -> QueryResults[
     return QueryResults[UserString](conn, GET_MANY_TEXT_TYPE_OVERRIDE, _decode_hook, id_)
 
 
-async def delete_type_override(conn: ConnectionLike, id_: int) -> None:
+async def delete_type_override(conn: ConnectionLike, *, id_: int) -> None:
     """Execute SQL query with `name: DeleteTypeOverride :exec`.
 
     ```sql
@@ -2046,7 +2050,7 @@ async def delete_type_override(conn: ConnectionLike, id_: int) -> None:
     await conn.execute(DELETE_TYPE_OVERRIDE, id_)
 
 
-async def insert_one_test_enum_type(conn: ConnectionLike, id_: int, mood: enums.TestMood, maybe_mood: enums.TestMood | None) -> None:
+async def insert_one_test_enum_type(conn: ConnectionLike, *, id_: int, mood: enums.TestMood, maybe_mood: enums.TestMood | None) -> None:
     """Execute SQL query with `name: InsertOneTestEnumType :exec`.
 
     ```sql
@@ -2063,7 +2067,7 @@ async def insert_one_test_enum_type(conn: ConnectionLike, id_: int, mood: enums.
     await conn.execute(INSERT_ONE_TEST_ENUM_TYPE, id_, mood, maybe_mood)
 
 
-async def get_one_test_enum_type(conn: ConnectionLike, id_: int) -> models.TestEnumType | None:
+async def get_one_test_enum_type(conn: ConnectionLike, *, id_: int) -> models.TestEnumType | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestEnumType :one`.
 
     ```sql
@@ -2085,7 +2089,7 @@ async def get_one_test_enum_type(conn: ConnectionLike, id_: int) -> models.TestE
     return models.TestEnumType(id_=row[0], mood=enums.TestMood(row[1]), maybe_mood=enums.TestMood(row[2]) if row[2] is not None else None)
 
 
-async def get_one_test_enum_value(conn: ConnectionLike, id_: int) -> enums.TestMood | None:
+async def get_one_test_enum_value(conn: ConnectionLike, *, id_: int) -> enums.TestMood | None:
     """Fetch one from the db using the SQL query with `name: GetOneTestEnumValue :one`.
 
     ```sql
@@ -2129,7 +2133,7 @@ def get_many_test_enum_types(conn: ConnectionLike) -> QueryResults[models.TestEn
     return QueryResults[models.TestEnumType](conn, GET_MANY_TEST_ENUM_TYPES, _decode_hook)
 
 
-async def delete_one_test_enum_type(conn: ConnectionLike, id_: int) -> int:
+async def delete_one_test_enum_type(conn: ConnectionLike, *, id_: int) -> int:
     """Execute SQL query with `name: DeleteOneTestEnumType :execrows` and return the number of affected rows.
 
     ```sql

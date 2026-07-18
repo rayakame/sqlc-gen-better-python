@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 985b5af439488daa79c3968d5ffa53341ba8176e1afae4ce2d455cd91b843301
+      sha256: b12cd8b8d1400113e64634651a4f344fbf4c2fdc942b0a0146d90c14f2f35fed
 sql:
   - schema: schema.sql
     queries: queries.sql
@@ -16,10 +16,8 @@ sql:
           sql_driver: sqlite3
           model_type: attrs
           emit_classes: true
-          omit_kwargs_limit: 0
           omit_unused_models: false
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: numpy
           speedups: true
           overrides:
@@ -39,10 +37,8 @@ sql:
           sql_driver: sqlite3
           model_type: attrs
           emit_classes: false
-          omit_kwargs_limit: 0
           omit_unused_models: true
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: numpy
           overrides:
             - column: test_type_override.text_test
@@ -63,7 +59,6 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: google
           overrides:
             - column: test_type_override.text_test
@@ -84,7 +79,6 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: google
           overrides:
             - column: test_type_override.text_test
@@ -105,7 +99,6 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: pep257
           overrides:
             - column: test_type_override.text_test
@@ -126,7 +119,6 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: pep257
           overrides:
             - column: test_type_override.text_test
@@ -148,7 +140,6 @@ sql:
           emit_classes: true
           omit_unused_models: true
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: google
           overrides:
             - column: test_type_override.text_test
@@ -169,7 +160,6 @@ sql:
           emit_classes: false
           omit_unused_models: true
           emit_init_file: true
-          query_parameter_limit: 9999
           docstrings: google
           overrides:
             - column: test_type_override.text_test
