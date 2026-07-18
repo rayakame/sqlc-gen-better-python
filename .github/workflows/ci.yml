@@ -26,7 +26,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: testdb
         ports:
-          - 5432/tcp              # host‑port is picked automatically
+          - 5432/tcp              # host-port is picked automatically
         options: >-
           --health-cmd="pg_isready -U postgres -d testdb"
           --health-interval=10s
@@ -52,7 +52,7 @@ jobs:
 
       - name: Run tests via nox
         env:
-          # GitHub tells you which host‑port was assigned via the `job.services` context
+          # GitHub tells you which host-port was assigned via the `job.services` context
           POSTGRES_URI: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports['5432'] }}/testdb
         run: |
           uv run nox -s pytest -- --coverage

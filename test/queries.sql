@@ -1,4 +1,4 @@
--- ─── :exec / :execresult / :execrows / :copyfrom ────────────────────────
+-- --- :exec / :execresult / :execrows / :copyfrom ------------------------
 
 -- name: InsertAuthor :exec
 INSERT INTO authors (id, name, bio, mood, tags, avatar, rating, created)
@@ -15,7 +15,7 @@ INSERT INTO authors (id, name, mood, tags, rating, created)
 VALUES ($1, $2, $3, $4, $5, $6);
 
 
--- ─── :one returning a tracked table (should reference models.X) ─────────
+-- --- :one returning a tracked table (should reference models.X) ---------
 
 -- name: GetAuthor :one
 SELECT * FROM authors WHERE id = $1;
@@ -27,7 +27,7 @@ SELECT * FROM books WHERE id = $1;
 SELECT * FROM custom.reviews WHERE id = $1;
 
 
--- ─── :one returning a scalar ────────────────────────────────────────────
+-- --- :one returning a scalar --------------------------------------------
 
 -- name: GetAuthorName :one
 SELECT name FROM authors WHERE id = $1;
@@ -45,7 +45,7 @@ SELECT tags FROM authors WHERE id = $1;
 SELECT avatar FROM authors WHERE id = $1;
 
 
--- ─── :one returning an inline-defined struct (no table match) ───────────
+-- --- :one returning an inline-defined struct (no table match) -----------
 
 -- name: GetAuthorIdAndName :one
 SELECT id, name FROM authors WHERE id = $1;
@@ -57,7 +57,7 @@ FROM books b
 WHERE b.id = $1;
 
 
--- ─── sqlc.embed() ───────────────────────────────────────────────────────
+-- --- sqlc.embed() -------------------------------------------------------
 
 -- name: GetBookWithAuthor :one
 SELECT sqlc.embed(books), sqlc.embed(authors)
@@ -71,7 +71,7 @@ FROM books
          JOIN authors ON authors.id = books.author_id;
 
 
--- ─── :many ──────────────────────────────────────────────────────────────
+-- --- :many --------------------------------------------------------------
 
 -- name: ListAuthors :many
 SELECT * FROM authors;
@@ -92,7 +92,7 @@ WHERE a.id = $1;
 SELECT * FROM custom.reviews WHERE book_id = $1;
 
 
--- ─── Misc ───────────────────────────────────────────────────────────────
+-- --- Misc ---------------------------------------------------------------
 
 -- name: InsertReview :exec
 INSERT INTO custom.reviews (id, book_id, mood)

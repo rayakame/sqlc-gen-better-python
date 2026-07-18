@@ -81,7 +81,7 @@ func ModelName(config *config.Config, modelName string, schemaName string) strin
 }
 
 // EnumName builds the class name for a SQL enum. Enum type names are never
-// singularized — they are type names, not table names.
+// singularized - they are type names, not table names.
 func EnumName(config *config.Config, enumName string, schemaName string) string {
 	return qualifiedClassName(config, enumName, schemaName)
 }

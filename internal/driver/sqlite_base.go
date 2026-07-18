@@ -12,7 +12,7 @@ import (
 
 const sqliteResultType = "sqlite3.Row"
 
-// sqliteBase is the complete driver implementation for both sqlite modules —
+// sqliteBase is the complete driver implementation for both sqlite modules -
 // sqlite3 (sync) and aiosqlite (async). All emission differences between the
 // two are derived from moduleName and the async flag.
 type sqliteBase struct {
@@ -248,7 +248,7 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call
-		// overhead) for zero benefit — the return annotation carries the type.
+		// overhead) for zero benefit - the return annotation carries the type.
 		body.WriteWrappedCall(indent, "return QueryResults(", manyArgs, ")")
 	}
 }

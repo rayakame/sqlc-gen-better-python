@@ -47,7 +47,7 @@ func writeFuncSignature(
 // expandParams returns the Python argument expressions for a query's parameters.
 // Bundled Params classes (query_parameter_limit) are expanded into their fields
 // ("params.a, params.b") so drivers receive positional values. :copyfrom params
-// are never passed through here — writeCopyFromBody builds its own records list.
+// are never passed through here - writeCopyFromBody builds its own records list.
 func expandParams(query model.Query) []string {
 	parts := make([]string, 0, len(query.Params))
 	for _, param := range query.Params {

@@ -1,7 +1,7 @@
 -- Public-schema enum
 CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
 
--- Primary table — exercises non-null, nullable, enum, array, and the
+-- Primary table - exercises non-null, nullable, enum, array, and the
 -- three types that need runtime conversion (bytea, numeric, timestamptz).
 CREATE TABLE authors
 (
@@ -15,7 +15,7 @@ CREATE TABLE authors
     created timestamptz     NOT NULL
 );
 
--- Secondary table — gives us something to JOIN / sqlc.embed against.
+-- Secondary table - gives us something to JOIN / sqlc.embed against.
 CREATE TABLE books
 (
     id        int PRIMARY KEY NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE books
     title     text            NOT NULL
 );
 
--- Custom schema — same enum name in a different schema (tests
+-- Custom schema - same enum name in a different schema (tests
 -- schema-qualified naming and that the generator doesn't collide).
 CREATE SCHEMA IF NOT EXISTS custom;
 CREATE TYPE custom.mood AS ENUM ('sad', 'ok', 'happy');

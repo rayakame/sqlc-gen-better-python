@@ -90,8 +90,8 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			continue
 		}
 
-		// Precompute the query's column names/types once — they do not depend
-		// on the candidate table — instead of rebuilding them per candidate.
+		// Precompute the query's column names/types once - they do not depend
+		// on the candidate table - instead of rebuilding them per candidate.
 		queryColumnNames := make([]string, len(pluginQuery.Columns))
 		queryColumnTypes := make([]model.PyType, len(pluginQuery.Columns))
 		for i, column := range pluginQuery.Columns {
@@ -105,7 +105,7 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 				continue
 			}
 			// A table only matches when EVERY column matches by name, type,
-			// and source table — otherwise a dedicated Row class is needed.
+			// and source table - otherwise a dedicated Row class is needed.
 			same := true
 			for i, tableColumn := range table.Columns {
 				queryColumn := pluginQuery.Columns[i]

@@ -119,8 +119,8 @@ type sqliteConversionUse struct {
 
 // SqliteConversionUsage lists the conversion specs a module's queries need, in
 // canonical emission order, split by direction: parameters need a registered
-// adapter (Python value → SQL), returns need a registered converter (SQL value
-// → Python). Registering only what is needed matters because sqlite3
+// adapter (Python value -> SQL), returns need a registered converter (SQL value
+// -> Python). Registering only what is needed matters because sqlite3
 // converters are global: an unnecessary register_converter would change what
 // overridden return columns receive under PARSE_DECLTYPES.
 type SqliteConversionUsage struct {
@@ -153,7 +153,7 @@ func (u SqliteConversionUsage) RuntimeModules(speedups bool) map[string]struct{}
 }
 
 // SpeedupConverterUsed reports whether any needed converter has a speedups
-// variant — i.e. whether the generated module references ciso8601 when the
+// variant - i.e. whether the generated module references ciso8601 when the
 // speedups option is enabled.
 func (u SqliteConversionUsage) SpeedupConverterUsed() bool {
 	for _, use := range u.uses {
@@ -166,7 +166,7 @@ func (u SqliteConversionUsage) SpeedupConverterUsed() bool {
 }
 
 // SqliteConversionsUsed collects the conversion specs used by the queries.
-// Overridden RETURN columns need no converter — they are converted inline with
+// Overridden RETURN columns need no converter - they are converted inline with
 // the override type, and registering one anyway would hand the override
 // constructor an already-converted value. Overridden PARAMS do need the
 // adapter: convertParamExpr converts them back to their DefaultType before

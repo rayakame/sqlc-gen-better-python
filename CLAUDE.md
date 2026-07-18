@@ -52,20 +52,20 @@ Every PR needs a changie fragment: `make changelog` (or `changie new`).
 
 ## Architecture
 
-Entry point: `plugin/main.go` → `codegen.Run(internal.Handler)`. The whole generation pipeline lives in `internal/handler.go`:
+Entry point: `plugin/main.go` -> `codegen.Run(internal.Handler)`. The whole generation pipeline lives in `internal/handler.go`:
 
-1. **`internal/config`** — parses and validates plugin options from the `GenerateRequest` (driver, model type, docstrings, overrides, …). Enum-like constants in `constants.go`.
-2. **`internal/types`** — engine-specific SQL-type → Python-type mapping (`postgresql.go`, `sqlite.go`), selected by `GetTypeConversionFunc(engine)`.
-3. **`internal/transform`** — turns the sqlc catalog/queries into the IR: `BuildEnums()`, `BuildTables()`, `BuildQueries(tables)`.
-4. **`internal/model`** — the IR structs (`Enum`, `Table`, `Query`, …) plus naming logic: initialisms, table-name singularization (jinzhu/inflection), and Python reserved-word escaping (`reserved.go`).
-5. **`internal/driver`** — the `Driver` interface (`driver.go`) with one implementation per Python driver (`asyncpg.go`, `aiosqlite.go`/`sqlite3.go` sharing `sqlite_base.go`). A driver knows whether it is async, its connection type, which query commands (`:one`, `:many`, `:copyfrom`, …) it supports, and emits the query function bodies and the `QueryResults` helper class.
-6. **`internal/render`** — file-level orchestration: produces `models.py`, `enums.py`, and one queries module per query file, resolves imports (`imports.go`, including the `typing.TYPE_CHECKING` block), returns `[]*plugin.File`.
-7. **`internal/writer`** — `CodeWriter`, the low-level indented-Python emitter (lines, headers, docstrings in google/numpy/pep257 conventions).
+1. **`internal/config`** - parses and validates plugin options from the `GenerateRequest` (driver, model type, docstrings, overrides, ...). Enum-like constants in `constants.go`.
+2. **`internal/types`** - engine-specific SQL-type -> Python-type mapping (`postgresql.go`, `sqlite.go`), selected by `GetTypeConversionFunc(engine)`.
+3. **`internal/transform`** - turns the sqlc catalog/queries into the IR: `BuildEnums()`, `BuildTables()`, `BuildQueries(tables)`.
+4. **`internal/model`** - the IR structs (`Enum`, `Table`, `Query`, ...) plus naming logic: initialisms, table-name singularization (jinzhu/inflection), and Python reserved-word escaping (`reserved.go`).
+5. **`internal/driver`** - the `Driver` interface (`driver.go`) with one implementation per Python driver (`asyncpg.go`, `aiosqlite.go`/`sqlite3.go` sharing `sqlite_base.go`). A driver knows whether it is async, its connection type, which query commands (`:one`, `:many`, `:copyfrom`, ...) it supports, and emits the query function bodies and the `QueryResults` helper class.
+6. **`internal/render`** - file-level orchestration: produces `models.py`, `enums.py`, and one queries module per query file, resolves imports (`imports.go`, including the `typing.TYPE_CHECKING` block), returns `[]*plugin.File`.
+7. **`internal/writer`** - `CodeWriter`, the low-level indented-Python emitter (lines, headers, docstrings in google/numpy/pep257 conventions).
 
 `internal/log` is a debug logger; with the `debug: true` plugin option its buffer is emitted as an extra `log.txt` output file.
 
 ### Test layout
 
-`test/driver_<driver>/` each contain a `sqlc.yaml` that generates the full matrix — 3 model types × (`classes`/`functions`, i.e. `emit_classes` on/off) — into committed subdirectories like `msgspec/classes/`. The generated Python is committed on purpose: CI regenerates it (`*_check` sessions use `sqlc diff`), type-checks it with pyright in strict mode, lints it with ruff, and runs runtime pytest suites (`test_*.py` next to the generated packages). When a Go change alters generated output, rebuild the wasm, rerun the driver sessions, and commit the regenerated files.
+`test/driver_<driver>/` each contain a `sqlc.yaml` that generates the full matrix - 3 model types x (`classes`/`functions`, i.e. `emit_classes` on/off) - into committed subdirectories like `msgspec/classes/`. The generated Python is committed on purpose: CI regenerates it (`*_check` sessions use `sqlc diff`), type-checks it with pyright in strict mode, lints it with ruff, and runs runtime pytest suites (`test_*.py` next to the generated packages). When a Go change alters generated output, rebuild the wasm, rerun the driver sessions, and commit the regenerated files.
 
 The root `sqlc.yaml` generating into `test/` directly is a scratch config for quick manual `sqlc generate` runs during development.

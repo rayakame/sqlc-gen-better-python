@@ -152,7 +152,7 @@ func (d *AsyncpgDriver) WriteQueryFunc(body *writer.CodeWriter, config *config.C
 		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call
-		// overhead) for zero benefit — the return annotation carries the type.
+		// overhead) for zero benefit - the return annotation carries the type.
 		body.WriteWrappedCall(indent, "return QueryResults(", manyArgs, ")")
 	}
 }

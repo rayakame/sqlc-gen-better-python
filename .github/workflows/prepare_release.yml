@@ -51,7 +51,7 @@ jobs:
           fi
           sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"$NEW_VERSION"'"/' internal/config/constants.go
 
-          echo "✅ Updated PluginVersion to $NEW_VERSION"
+          echo "OK: Updated PluginVersion to $NEW_VERSION"
 
 
       - name: Create Pull Request

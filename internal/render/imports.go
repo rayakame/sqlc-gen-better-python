@@ -49,7 +49,7 @@ func (r ImportResult) Write(body *writer.CodeWriter, omitTypeChecking bool, type
 }
 
 // ImportResolver computes Python import statements for generated files.
-// It is stateless — all data is passed as arguments.
+// It is stateless - all data is passed as arguments.
 type ImportResolver struct {
 	conf *config.Config
 	drv  driver.Driver
@@ -222,10 +222,10 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 	}
 
 	// Only import models/enums when THIS module's queries actually reference
-	// them — a global flag would emit unused imports in multi-file projects.
+	// them - a global flag would emit unused imports in multi-file projects.
 	// Overridden enum PARAMS count too: their annotation is the override type,
 	// but convertParamExpr emits an "enums.X(arg)" call at runtime. Overridden
-	// enum RETURNS don't — they convert via the override type only.
+	// enum RETURNS don't - they convert via the override type only.
 	local := map[string]importSpec{}
 	if anyQueryType(queries, func(typ model.PyType) bool { return strings.HasPrefix(typ.Type, "models.") }) {
 		local["models"] = importSpec{Module: r.conf.Package, Name: "models"}
@@ -288,7 +288,7 @@ func anyQueryType(queries []model.Query, pred func(model.PyType) bool) bool {
 	return false
 }
 
-// anyParamType is anyQueryType restricted to query parameters — for imports
+// anyParamType is anyQueryType restricted to query parameters - for imports
 // that only the runtime parameter conversion needs.
 func anyParamType(queries []model.Query, pred func(model.PyType) bool) bool {
 	for _, query := range queries {
@@ -332,7 +332,7 @@ func (r *ImportResolver) forcePydanticRuntimeImports(std map[string]importSpec, 
 }
 
 // overrideDefaultTypeUses reports whether the query value contains an overridden
-// type whose DefaultType is `name` — those are converted back to DefaultType at
+// type whose DefaultType is `name` - those are converted back to DefaultType at
 // runtime when passed to the driver (see driver.convertParamExpr).
 func overrideDefaultTypeUses(name string, qv model.QueryValue) bool {
 	if qv.IsEmpty() {
@@ -534,7 +534,7 @@ func buildImportBlock(specs map[string]importSpec) []string {
 	sort.Strings(lines)
 
 	// Different specs can render to the same line (e.g. an override importing
-	// a module the std scan also imports) — drop exact duplicates.
+	// a module the std scan also imports) - drop exact duplicates.
 	return slices.Compact(lines)
 }
 

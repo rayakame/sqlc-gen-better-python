@@ -12,7 +12,7 @@ import (
 // OverridePyType describes the Python type that replaces the default mapping.
 // Import is the module to import (e.g. "collections"); Type is the type
 // expression used in annotations (e.g. "UserString" or "collections.UserString");
-// Package is the name imported from Import ("from <import> import <package>") —
+// Package is the name imported from Import ("from <import> import <package>") -
 // if empty, Import is imported as a plain module ("import <import>").
 type OverridePyType struct {
 	Import  string `json:"import"  yaml:"import"`
