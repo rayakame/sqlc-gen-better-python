@@ -110,10 +110,11 @@ class names (e.g. `CustomMood` for `custom.mood`), so same-named enums never col
 ### Identifier sanitization
 
 SQL identifiers that are not valid Python names are sanitized: invalid characters become
-underscores, digit-leading columns/parameters get a `column_` prefix, digit-leading table
-names get a `Model` class prefix, digit- or underscore-leading enum values get a `VALUE_`
-prefix, and colliding results are deduplicated with numeric suffixes. Field names also
-prefix leading underscores, since attrs and pydantic treat such fields as private.
+underscores, digit-leading columns/parameters get a `column_` prefix, table names that
+would produce a digit-leading, keyword or empty class name get a `Model` prefix, digit-
+or underscore-leading enum values get a `VALUE_` prefix, and colliding results are
+deduplicated with numeric suffixes. Field names also prefix leading underscores, since
+attrs and pydantic treat such fields as private.
 
 One caveat: sanitization checks characters with Go's Unicode tables, which differ from
 Python's identifier rules in exotic cases (e.g. characters that may not START an

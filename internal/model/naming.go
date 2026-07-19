@@ -136,8 +136,8 @@ func qualifiedClassName(config *config.Config, name, schemaName string) string {
 
 // EnumConstantName converts an enum value into a valid, unique Python constant
 // name: non-alphanumeric characters become underscores, empty results fall
-// back to VALUE_N, digit-leading names get an underscore prefix, and
-// duplicates get a numeric suffix. seen tracks names across one enum.
+// back to VALUE_N, digit- and underscore-leading names get a VALUE_ prefix,
+// and duplicates get a numeric suffix. seen tracks names across one enum.
 func EnumConstantName(value string, index int, seen map[string]int) string {
 	name := strings.ToUpper(sanitizeIdentifier(value))
 
