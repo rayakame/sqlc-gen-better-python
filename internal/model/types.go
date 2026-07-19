@@ -28,6 +28,7 @@ func (t PyType) Print() string {
 	if t.IsNullable {
 		type_ += " | None"
 	}
+
 	return type_
 }
 
@@ -95,6 +96,7 @@ func (q Query) EmitsTable() bool {
 			return true
 		}
 	}
+
 	return false
 }
 

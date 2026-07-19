@@ -6,4 +6,6 @@ const (
 	Str     = "str"
 	Int     = "int"
 	Float   = "float"
+	Decimal = "decimal.Decimal"
+	Any     = "typing.Any"
 )

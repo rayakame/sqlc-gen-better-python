@@ -3,6 +3,7 @@ package log
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
@@ -52,17 +53,12 @@ func (logger *Logger) LogAny(message any) {
 }
 
 func (logger *Logger) Export() (string, []byte) {
-	loggedMessages := "[\n"
-	for i, message := range logger.messages {
-		if i == len(logger.messages)-1 {
-			loggedMessages += message + "\n"
-		} else {
-			loggedMessages += message + ",\n"
-		}
+	joined := strings.Join(logger.messages, ",\n")
+	if joined != "" {
+		joined += "\n"
 	}
-	loggedMessages += "]"
 
-	return "log.json", []byte(loggedMessages)
+	return "log.json", []byte("[\n" + joined + "]")
 }
 
 func (logger *Logger) log(data string) {

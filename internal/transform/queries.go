@@ -142,6 +142,7 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 					Type:  model.PyType{Type: "models." + table.Name},
 				}
 				tableFound = true
+
 				break
 			}
 		}
@@ -204,6 +205,7 @@ func (t *Transformer) columnsToClass(name string, columns []pyColumn) model.Tabl
 
 		table.Columns = append(table.Columns, tableColumn)
 	}
+
 	return table
 }
 
@@ -216,7 +218,9 @@ func (t *Transformer) newGoEmbed(embedTable *plugin.Identifier, tables []model.T
 		if !utils.SameTableName(embedTable, table.Identifier, t.req.Catalog.DefaultSchema) {
 			continue
 		}
+
 		return utils.ToPtr(model.Embed{ModelName: table.Name, Columns: slices.Clone(table.Columns)})
 	}
+
 	return nil
 }

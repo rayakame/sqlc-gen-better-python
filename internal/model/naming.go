@@ -13,24 +13,22 @@ import (
 )
 
 func SnakeToCamel(conf *config.Config, s string) string {
-	out := ""
+	var builder strings.Builder
 	s = strings.Map(func(r rune) rune {
-		if unicode.IsLetter(r) {
-			return r
-		}
-		if unicode.IsDigit(r) {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			return r
 		}
 
-		return rune('_')
+		return '_'
 	}, s)
-	for _, p := range strings.Split(s, "_") {
+	for p := range strings.SplitSeq(s, "_") {
 		if _, found := conf.InitialismsMap[p]; found {
-			out += strings.ToUpper(p)
+			builder.WriteString(strings.ToUpper(p))
 		} else {
-			out += cases.Title(language.Und, cases.NoLower).String(p)
+			builder.WriteString(cases.Title(language.Und, cases.NoLower).String(p))
 		}
 	}
+	out := builder.String()
 	// A Model prefix, not an underscore: pyright strict flags references to
 	// leading-underscore class names as private. IsReserved catches the only
 	// CapWords-shaped keywords (True/False/None).
@@ -44,17 +42,15 @@ func SnakeToCamel(conf *config.Config, s string) string {
 }
 
 func UpperSnakeCase(s string) string {
-	result := ""
+	var result strings.Builder
 	for i, r := range s {
 		if unicode.IsUpper(r) && i != 0 {
-			result += "_" + string(r)
-		} else {
-			result += string(r)
+			result.WriteByte('_')
 		}
+		result.WriteRune(r)
 	}
-	result = strings.ToUpper(result)
 
-	return result
+	return strings.ToUpper(result.String())
 }
 
 func ColumnName(pluginColumn *plugin.Column, pos int) string {

@@ -87,8 +87,11 @@ linters:
     - exhaustruct
   settings:
     mnd:
+      # The int argument of these is an indent level / newline count.
       ignored-functions:
         - '^.*NNewLine$'
+        - '^.*WriteIndentedLine$'
+        - '^.*WriteIndentedString$'
     exhaustruct:
       # List of regular expressions to match type names that should be excluded from processing.
       # Anonymous structs can be matched by '<anonymous>' alias.
@@ -117,6 +120,11 @@ linters:
       check-type-assertions: true
       check-blank: true
       disable-default-exclusions: true
+      # These are documented to always return a nil error.
+      exclude-functions:
+        - '(*strings.Builder).WriteString'
+        - '(*strings.Builder).WriteRune'
+        - '(*strings.Builder).WriteByte'
     exhaustive:
       default-signifies-exhaustive: true
     depguard:

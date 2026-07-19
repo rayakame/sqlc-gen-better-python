@@ -9,8 +9,15 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/driver"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
+)
+
+const (
+	moduleEnums    = "enums"
+	moduleOperator = "operator"
+	moduleDatetime = "datetime"
 )
 
 type ImportResult struct {
@@ -156,9 +163,9 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 	if usesEnum {
 		if r.conf.ModelType == config.ModelTypePydantic {
 			// pydantic evaluates field annotations when building schemas.
-			local["enum"] = importSpec{Module: r.conf.Package, Name: "enums", Alias: "", TypeChecking: false}
+			local["enum"] = importSpec{Module: r.conf.Package, Name: moduleEnums, Alias: "", TypeChecking: false}
 		} else {
-			typeChecking["enums"] = importSpec{Module: r.conf.Package, Name: "enums", Alias: "", TypeChecking: true}
+			typeChecking["enums"] = importSpec{Module: r.conf.Package, Name: moduleEnums, Alias: "", TypeChecking: true}
 		}
 	}
 	if r.conf.ModelType == config.ModelTypePydantic && len(typeChecking) == 0 {
@@ -168,7 +175,7 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 	if r.conf.OmitTypecheckingBlock {
 		// No TYPE_CHECKING guard is emitted; typing is then only referenced
 		// when a column falls back to the typing.Any annotation.
-		if used, _ := uses("typing.Any"); !used {
+		if used, _ := uses(types.Any); !used {
 			delete(std, "typing")
 		}
 	}
@@ -213,6 +220,7 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		if bestUsed == nil {
 			return false, false
 		}
+
 		return *bestUsed, *bestTC
 	}
 
@@ -261,6 +269,7 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 	for _, query := range queries {
 		if (query.EmitsTable()) || query.Cmd == metadata.CmdCopyFrom {
 			r.addModelImport(std)
+
 			break
 		}
 	}
@@ -280,7 +289,7 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		return typ.DoOverride() && strings.HasPrefix(typ.DefaultType, "enums.")
 	})
 	if usesEnums {
-		local["enums"] = importSpec{Module: r.conf.Package, Name: "enums"}
+		local["enums"] = importSpec{Module: r.conf.Package, Name: moduleEnums}
 	}
 
 	return r.buildQueryResult(std, typeChecking, local, queries)
@@ -463,7 +472,7 @@ func (r *ImportResolver) addDriverImports(
 		if hasMany {
 			typeChecking[driverName+".cursor"] = importSpec{Module: driverName + ".cursor"}
 			if r.hasSimpleReturn(queries) {
-				std["operator"] = importSpec{Module: "operator"}
+				std["operator"] = importSpec{Module: moduleOperator}
 			}
 		}
 
@@ -477,7 +486,7 @@ func (r *ImportResolver) addDriverImports(
 		if hasMany {
 			typeChecking["sqlite3"] = importSpec{Module: "sqlite3"}
 			if r.hasSimpleReturn(queries) {
-				std["operator"] = importSpec{Module: "operator"}
+				std["operator"] = importSpec{Module: moduleOperator}
 			}
 		}
 
@@ -488,7 +497,7 @@ func (r *ImportResolver) addDriverImports(
 			typeChecking[driverName] = importSpec{Module: driverName}
 		}
 		if hasMany && r.hasSimpleReturn(queries) {
-			std["operator"] = importSpec{Module: "operator"}
+			std["operator"] = importSpec{Module: moduleOperator}
 		}
 	}
 }
@@ -508,6 +517,7 @@ func (r *ImportResolver) hasSimpleReturn(queries []model.Query) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -550,6 +560,7 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 
 	if queryValue.Type.Type == name {
 		needsConv := r.drv.ConvertsInline(queryValue.Type.SQLType) || queryValue.Type.DoOverride()
+
 		return true, !needsConv
 	}
 
@@ -593,7 +604,7 @@ func (r *ImportResolver) buildQueryResult(std, typeChecking, local map[string]im
 		if _, ok := allSpecs["uuid"]; ok {
 			members += " | uuid.UUID"
 		}
-		if _, ok := allSpecs["datetime"]; ok {
+		if _, ok := allSpecs[moduleDatetime]; ok {
 			members += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
 		}
 		// Array/sqlc.slice params are forwarded into QueryResults too, so the
@@ -635,11 +646,11 @@ func (r *ImportResolver) stdImports(uses func(string) (bool, bool)) map[string]i
 
 	// Check which standard types are used.
 	for _, check := range []struct{ typeName, module string }{
-		{"decimal.Decimal", "decimal"},
-		{"datetime.date", "datetime"},
-		{"datetime.time", "datetime"},
-		{"datetime.datetime", "datetime"},
-		{"datetime.timedelta", "datetime"},
+		{types.Decimal, "decimal"},
+		{"datetime.date", moduleDatetime},
+		{"datetime.time", moduleDatetime},
+		{"datetime.datetime", moduleDatetime},
+		{"datetime.timedelta", moduleDatetime},
 		{"uuid.UUID", "uuid"},
 	} {
 		if used, tc := uses(check.typeName); used {
@@ -681,5 +692,6 @@ func mergeMaps(maps ...map[string]importSpec) map[string]importSpec {
 			result[k] = v
 		}
 	}
+
 	return result
 }

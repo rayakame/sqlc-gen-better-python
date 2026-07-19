@@ -145,12 +145,12 @@ func (sb *sqliteBase) WriteQueryResultsClass(body *writer.CodeWriter) string {
 	if sb.async {
 		body.QueryResults.WriteQueryResultsAwaitFunction([]string{
 			"result = await (await self._conn.execute(self._sql, self._args)).fetchall()",
-			"return [self._decode_hook(row) for row in result]",
+			decodeRowsExpr,
 		})
 	} else {
 		body.QueryResults.WriteQueryResultsCallFunction([]string{
 			"result = self._conn.execute(self._sql, self._args).fetchall()",
-			"return [self._decode_hook(row) for row in result]",
+			decodeRowsExpr,
 		})
 	}
 	body.NewLine()
