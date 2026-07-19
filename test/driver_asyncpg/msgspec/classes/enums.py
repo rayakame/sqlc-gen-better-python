@@ -22,3 +22,4 @@ class TestMood(enum.StrEnum):
     OK = "ok"
     HAPPY = "happy"
     VALUE_24H = "24h"
+    VALUE__HIDDEN = "_hidden"

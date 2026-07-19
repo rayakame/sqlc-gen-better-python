@@ -25,7 +25,7 @@ INSERT INTO test_invalid_identifiers (id, "3p%", "new notes") VALUES ($1, $2, $3
 """
 
 GET_INVALID_IDENTIFIERS: typing.Final[str] = """-- name: GetInvalidIdentifiers :one
-SELECT id, "3p%", "new notes" FROM test_invalid_identifiers WHERE id = $1
+SELECT id, "3p%", "new notes", "%pct" FROM test_invalid_identifiers WHERE id = $1
 """
 
 
@@ -70,7 +70,7 @@ class QueriesInvalidIdentifiers:
         """Fetch one from the db using the SQL query with `name: GetInvalidIdentifiers :one`.
 
         ```sql
-        SELECT id, "3p%", "new notes" FROM test_invalid_identifiers WHERE id = $1
+        SELECT id, "3p%", "new notes", "%pct" FROM test_invalid_identifiers WHERE id = $1
         ```
 
         Args:
@@ -82,4 +82,4 @@ class QueriesInvalidIdentifiers:
         row = await self._conn.fetchrow(GET_INVALID_IDENTIFIERS, id_)
         if row is None:
             return None
-        return models.TestInvalidIdentifier(id_=row[0], column_3p_=row[1], new_notes=row[2])
+        return models.TestInvalidIdentifier(id_=row[0], column_3p_=row[1], new_notes=row[2], column__pct=row[3])

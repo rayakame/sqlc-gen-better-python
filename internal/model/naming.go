@@ -61,24 +61,28 @@ func ColumnName(pluginColumn *plugin.Column, pos int) string {
 	return fmt.Sprintf("column_%d", pos+1)
 }
 
+func writeRune(builder *strings.Builder, r rune) {
+	builder.WriteRune(r) //nolint:errcheck // never returns an error
+}
+
 // sanitizePyIdentifier maps invalid runes to "_" and returns "" when nothing
-// usable remains. Digit-leading results get digitPrefix, not "_": attrs and
+// usable remains. Digit- and underscore-leading results get prefix: attrs and
 // pydantic treat leading-underscore fields specially.
-func sanitizePyIdentifier(name, digitPrefix string) string {
+func sanitizePyIdentifier(name, prefix string) string {
 	var builder strings.Builder
 	for _, r := range name {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
-			builder.WriteRune(r)
+			writeRune(&builder, r)
 		} else {
-			builder.WriteRune('_')
+			writeRune(&builder, '_')
 		}
 	}
 	sanitized := builder.String()
 	if strings.Trim(sanitized, "_") == "" {
 		return ""
 	}
-	if r, _ := utf8.DecodeRuneInString(sanitized); unicode.IsDigit(r) {
-		return digitPrefix + "_" + sanitized
+	if r, _ := utf8.DecodeRuneInString(sanitized); unicode.IsDigit(r) || r == '_' {
+		return prefix + "_" + sanitized
 	}
 
 	return sanitized
@@ -149,9 +153,9 @@ func EnumConstantName(value string, index int, seen map[string]int) string {
 	var builder strings.Builder
 	for _, r := range value {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			builder.WriteRune(unicode.ToUpper(r))
+			writeRune(&builder, unicode.ToUpper(r))
 		} else {
-			builder.WriteRune('_')
+			writeRune(&builder, '_')
 		}
 	}
 	name := builder.String()
@@ -159,9 +163,8 @@ func EnumConstantName(value string, index int, seen map[string]int) string {
 	if strings.Trim(name, "_") == "" {
 		name = fmt.Sprintf("VALUE_%d", index+1)
 	}
-	// A VALUE_ prefix, not an underscore: enum treats leading-underscore
-	// names as private attributes instead of members.
-	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) {
+	// enum treats leading-underscore names as private, not as members.
+	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) || r == '_' {
 		name = "VALUE_" + name
 	}
 

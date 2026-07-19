@@ -162,6 +162,7 @@ class TestInvalidIdentifier(pydantic.BaseModel):
         id_: int
         column_3p_: str | None
         new_notes: str
+        column__pct: str | None
     """
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
@@ -169,6 +170,7 @@ class TestInvalidIdentifier(pydantic.BaseModel):
     id_: int
     column_3p_: str | None
     new_notes: str
+    column__pct: str | None
 
 
 class TestPostgresType(pydantic.BaseModel):

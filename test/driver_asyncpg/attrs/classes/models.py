@@ -167,12 +167,14 @@ class TestInvalidIdentifier:
     id_ : int
     column_3p_ : str | None
     new_notes : str
+    column__pct : str | None
 
     """
 
     id_: int
     column_3p_: str | None
     new_notes: str
+    column__pct: str | None
 
 
 @attrs.define()

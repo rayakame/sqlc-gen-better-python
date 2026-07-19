@@ -140,8 +140,8 @@ CREATE TABLE IF NOT EXISTS test_type_override
 DROP TABLE IF EXISTS test_enum_types;
 DROP TABLE IF EXISTS test_enum_override;
 DROP TYPE IF EXISTS test_mood;
--- '24h' pins the digit-leading constant name (VALUE_24H).
-CREATE TYPE test_mood AS ENUM ('sad', 'ok', 'happy', '24h');
+-- '24h' and '_hidden' pin the digit- and underscore-leading constant names.
+CREATE TYPE test_mood AS ENUM ('sad', 'ok', 'happy', '24h', '_hidden');
 
 CREATE TABLE test_enum_types
 (
@@ -177,5 +177,6 @@ CREATE TABLE IF NOT EXISTS test_invalid_identifiers
 (
     id          bigint PRIMARY KEY NOT NULL,
     "3p%"       text,
-    "new notes" text NOT NULL
+    "new notes" text NOT NULL,
+    "%pct"      text
 );

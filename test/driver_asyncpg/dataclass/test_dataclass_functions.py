@@ -788,6 +788,7 @@ class TestDataclassFunctions:
         assert row is not None
         assert row.column_3p_ == "3%"
         assert row.new_notes == "hello"
+        assert row.column__pct is None
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_invalid_identifiers"])

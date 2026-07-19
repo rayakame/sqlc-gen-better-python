@@ -760,9 +760,10 @@ class TestMsgspecFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     async def test_digit_leading_enum_constant_is_member(self) -> None:
-        # A "_24H" name would be treated as private by enum, not as a member.
+        # "_24H" or "_HIDDEN" names would be treated as private by enum.
         assert enums.TestMood.VALUE_24H.value == "24h"
         assert enums.TestMood("24h") is enums.TestMood.VALUE_24H
+        assert enums.TestMood.VALUE__HIDDEN.value == "_hidden"
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestMsgspecFunctions::insert_enum")
