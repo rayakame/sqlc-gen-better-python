@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "Model3RdPartyStat",
     "TestEnumOverride",
     "TestEnumType",
     "TestFieldNaming",
@@ -26,6 +27,19 @@ if typing.TYPE_CHECKING:
     import datetime
     import decimal
     import uuid
+
+
+@dataclasses.dataclass()
+class Model3RdPartyStat:
+    """Model representing Model3RdPartyStat.
+
+    Attributes:
+        id_: int
+        total: int
+    """
+
+    id_: int
+    total: int
 
 
 @dataclasses.dataclass()

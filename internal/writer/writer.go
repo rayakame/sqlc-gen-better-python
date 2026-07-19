@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
@@ -157,4 +158,16 @@ func (w *CodeWriter) WriteWrappedCall(indent int, head string, args []string, ta
 // indent returns the indentation string for the given level.
 func (w *CodeWriter) indent(level int) string {
 	return strings.Repeat(w.indentChar, level*w.charsPerIndentLevel)
+}
+
+// PyQuote returns a complete Python string literal. Go's Quote escaping is a
+// compatible subset of Python's; outer quotes flip to single when that
+// avoids escaping inner double quotes (ruff Q003).
+func PyQuote(value string) string {
+	quoted := strconv.Quote(value)
+	if strings.Contains(value, `"`) && !strings.Contains(value, "'") {
+		return "'" + strings.ReplaceAll(quoted[1:len(quoted)-1], `\"`, `"`) + "'"
+	}
+
+	return quoted
 }

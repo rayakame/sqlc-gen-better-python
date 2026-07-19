@@ -32,14 +32,16 @@ class CopyOverrideRowsParams:
     Attributes:
         id_: int
         amount: float
+        co_l: str
     """
 
     id_: int
     amount: float
+    co_l: str
 
 
 COPY_OVERRIDE_ROWS: typing.Final[str] = """-- name: CopyOverrideRows :copyfrom
-INSERT INTO test_copy_override (id, amount) VALUES ($1, $2)
+INSERT INTO test_copy_override (id, amount, "co""l") VALUES ($1, $2, $3)
 """
 
 COUNT_COPY_OVERRIDE_ROWS: typing.Final[str] = """-- name: CountCopyOverrideRows :one
@@ -63,8 +65,8 @@ async def copy_override_rows(conn: ConnectionLike, *, params: collections.abc.Se
     Returns:
         The number (`int`) of affected rows.
     """
-    records = [(param.id_, decimal.Decimal(param.amount)) for param in params]
-    r = await conn.copy_records_to_table("test_copy_override", columns=["id", "amount"], records=records)
+    records = [(param.id_, decimal.Decimal(param.amount), param.co_l) for param in params]
+    r = await conn.copy_records_to_table("test_copy_override", columns=["id", "amount", 'co"l'], records=records)
     return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0
 
 

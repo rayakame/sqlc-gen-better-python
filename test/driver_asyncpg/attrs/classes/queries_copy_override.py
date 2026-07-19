@@ -31,15 +31,17 @@ class CopyOverrideRowsParams:
     ----------
     id_ : int
     amount : float
+    co_l : str
 
     """
 
     id_: int
     amount: float
+    co_l: str
 
 
 COPY_OVERRIDE_ROWS: typing.Final[str] = """-- name: CopyOverrideRows :copyfrom
-INSERT INTO test_copy_override (id, amount) VALUES ($1, $2)
+INSERT INTO test_copy_override (id, amount, "co""l") VALUES ($1, $2, $3)
 """
 
 COUNT_COPY_OVERRIDE_ROWS: typing.Final[str] = """-- name: CountCopyOverrideRows :one
@@ -92,8 +94,8 @@ class QueriesCopyOverride:
             The number of affected rows.
 
         """
-        records = [(param.id_, decimal.Decimal(param.amount)) for param in params]
-        r = await self._conn.copy_records_to_table("test_copy_override", columns=["id", "amount"], records=records)
+        records = [(param.id_, decimal.Decimal(param.amount), param.co_l) for param in params]
+        r = await self._conn.copy_records_to_table("test_copy_override", columns=["id", "amount", 'co"l'], records=records)
         return int(n) if (n := r.split()[-1]).isdigit() else 0
 
     async def count_copy_override_rows(self) -> int | None:

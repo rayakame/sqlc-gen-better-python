@@ -834,8 +834,8 @@ class TestMsgspecFunctions:
         # The overridden float values must be converted back to Decimal before
         # copy_records_to_table.
         params = [
-            queries_copy_override.CopyOverrideRowsParams(id_=1, amount=12.5),
-            queries_copy_override.CopyOverrideRowsParams(id_=2, amount=0.25),
+            queries_copy_override.CopyOverrideRowsParams(id_=1, amount=12.5, co_l="a"),
+            queries_copy_override.CopyOverrideRowsParams(id_=2, amount=0.25, co_l="b"),
         ]
         inserted = await queries_copy_override.copy_override_rows(conn=asyncpg_conn, params=params)
         assert inserted == len(params)

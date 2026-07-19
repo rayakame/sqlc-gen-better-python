@@ -779,7 +779,7 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestDataclassFunctions::insert_invalid_identifiers")
     async def test_insert_invalid_identifiers(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
-        await queries_invalid_identifiers.insert_invalid_identifiers(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID, arg_3p_="3%", new_notes="hello")
+        await queries_invalid_identifiers.insert_invalid_identifiers(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID, column_3p_="3%", new_notes="hello")
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_invalid_identifiers"])
@@ -794,3 +794,21 @@ class TestDataclassFunctions:
     @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_invalid_identifiers"])
     async def test_get_invalid_identifiers_not_found(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         assert await queries_invalid_identifiers.get_invalid_identifiers(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID - 1) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::insert_third_party_stat")
+    async def test_insert_third_party_stat(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        await queries_invalid_identifiers.insert_third_party_stat(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID, total=7)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_third_party_stat"])
+    async def test_get_third_party_stat(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        stat = await queries_invalid_identifiers.get_third_party_stat(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID)
+        assert stat is not None
+        assert isinstance(stat, models.Model3RdPartyStat)
+        assert stat.total == 7  # noqa: PLR2004
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_third_party_stat"])
+    async def test_get_third_party_stat_not_found(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        assert await queries_invalid_identifiers.get_third_party_stat(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID - 1) is None

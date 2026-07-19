@@ -28,6 +28,14 @@ GET_INVALID_IDENTIFIERS: typing.Final[str] = """-- name: GetInvalidIdentifiers :
 SELECT id, "3p%", "new notes", "%pct" FROM test_invalid_identifiers WHERE id = $1
 """
 
+INSERT_THIRD_PARTY_STAT: typing.Final[str] = """-- name: InsertThirdPartyStat :exec
+INSERT INTO "3rd_party_stats" (id, total) VALUES ($1, $2)
+"""
+
+GET_THIRD_PARTY_STAT: typing.Final[str] = """-- name: GetThirdPartyStat :one
+SELECT id, total FROM "3rd_party_stats" WHERE id = $1
+"""
+
 
 class QueriesInvalidIdentifiers:
     """Queries from file queries_invalid_identifiers.sql.
@@ -56,7 +64,7 @@ class QueriesInvalidIdentifiers:
         """
         return self._conn
 
-    async def insert_invalid_identifiers(self, *, id_: int, arg_3p_: str | None, new_notes: str) -> None:
+    async def insert_invalid_identifiers(self, *, id_: int, column_3p_: str | None, new_notes: str) -> None:
         """Execute SQL query with `name: InsertInvalidIdentifiers :exec`.
 
         ```sql
@@ -66,11 +74,11 @@ class QueriesInvalidIdentifiers:
         Parameters
         ----------
         id_ : int
-        arg_3p_ : str | None
+        column_3p_ : str | None
         new_notes : str
 
         """
-        await self._conn.execute(INSERT_INVALID_IDENTIFIERS, id_, arg_3p_, new_notes)
+        await self._conn.execute(INSERT_INVALID_IDENTIFIERS, id_, column_3p_, new_notes)
 
     async def get_invalid_identifiers(self, *, id_: int) -> models.TestInvalidIdentifier | None:
         """Fetch one from the db using the SQL query with `name: GetInvalidIdentifiers :one`.
@@ -93,3 +101,40 @@ class QueriesInvalidIdentifiers:
         if row is None:
             return None
         return models.TestInvalidIdentifier(id_=row[0], column_3p_=row[1], new_notes=row[2], column__pct=row[3])
+
+    async def insert_third_party_stat(self, *, id_: int, total: int) -> None:
+        """Execute SQL query with `name: InsertThirdPartyStat :exec`.
+
+        ```sql
+        INSERT INTO "3rd_party_stats" (id, total) VALUES ($1, $2)
+        ```
+
+        Parameters
+        ----------
+        id_ : int
+        total : int
+
+        """
+        await self._conn.execute(INSERT_THIRD_PARTY_STAT, id_, total)
+
+    async def get_third_party_stat(self, *, id_: int) -> models.Model3RdPartyStat | None:
+        """Fetch one from the db using the SQL query with `name: GetThirdPartyStat :one`.
+
+        ```sql
+        SELECT id, total FROM "3rd_party_stats" WHERE id = $1
+        ```
+
+        Parameters
+        ----------
+        id_ : int
+
+        Returns
+        -------
+        models.Model3RdPartyStat
+            Result fetched from the db. Will be `None` if not found.
+
+        """
+        row = await self._conn.fetchrow(GET_THIRD_PARTY_STAT, id_)
+        if row is None:
+            return None
+        return models.Model3RdPartyStat(id_=row[0], total=row[1])

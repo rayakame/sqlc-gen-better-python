@@ -107,6 +107,19 @@ Enum columns are typed with these classes in models and query functions, and val
 from the database are coerced into them. Enums in non-default schemas get schema-qualified
 class names (e.g. `CustomMood` for `custom.mood`), so same-named enums never collide.
 
+### Identifier sanitization
+
+SQL identifiers that are not valid Python names are sanitized: invalid characters become
+underscores, digit-leading columns/parameters get a `column_` prefix, digit-leading table
+names get a `Model` class prefix, digit- or underscore-leading enum values get a `VALUE_`
+prefix, and colliding results are deduplicated with numeric suffixes. Field names also
+prefix leading underscores, since attrs and pydantic treat such fields as private.
+
+One caveat: sanitization checks characters with Go's Unicode tables, which differ from
+Python's identifier rules in exotic cases (e.g. characters that may not START an
+identifier in Python, or two names that Python normalizes to the same identifier via
+NFKC). Such schemas are not detected; stick to ASCII identifiers if in doubt.
+
 ### Pydantic models
 
 With `model_type: pydantic`, models are generated as `pydantic.BaseModel` subclasses

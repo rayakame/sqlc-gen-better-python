@@ -157,11 +157,13 @@ CREATE TABLE test_enum_override
 );
 
 -- :copyfrom into a table with an overridden column: the records must be
--- converted back to the driver type before copy_records_to_table.
+-- converted back to the driver type before copy_records_to_table. The
+-- quoted "co""l" column pins string escaping in the emitted columns list.
 CREATE TABLE IF NOT EXISTS test_copy_override
 (
     id     bigint  NOT NULL,
-    amount numeric NOT NULL
+    amount numeric NOT NULL,
+    "co""l" text   NOT NULL
 );
 
 -- Plural column name: field names must NOT be singularized (only table
@@ -179,4 +181,11 @@ CREATE TABLE IF NOT EXISTS test_invalid_identifiers
     "3p%"       text,
     "new notes" text NOT NULL,
     "%pct"      text
+);
+
+-- Digit-leading table name: the class gets a Model prefix (Model3RdPartyStat).
+CREATE TABLE IF NOT EXISTS "3rd_party_stats"
+(
+    id    bigint PRIMARY KEY NOT NULL,
+    total bigint NOT NULL
 );

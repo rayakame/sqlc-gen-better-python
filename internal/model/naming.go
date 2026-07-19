@@ -31,10 +31,15 @@ func SnakeToCamel(conf *config.Config, s string) string {
 			out += cases.Title(language.Und, cases.NoLower).String(p)
 		}
 	}
+	// A Model prefix, not an underscore: pyright strict flags references to
+	// leading-underscore class names as private.
 	r, _ := utf8.DecodeRuneInString(out)
-	if unicode.IsDigit(r) {
-		return "_" + out
-	} else {
+	switch {
+	case out == "":
+		return "Model"
+	case unicode.IsDigit(r):
+		return "Model" + out
+	default:
 		return out
 	}
 }
@@ -61,37 +66,22 @@ func ColumnName(pluginColumn *plugin.Column, pos int) string {
 	return fmt.Sprintf("column_%d", pos+1)
 }
 
-func writeRune(builder *strings.Builder, r rune) {
-	builder.WriteRune(r) //nolint:errcheck // never returns an error
-}
-
-// sanitizePyIdentifier maps invalid runes to "_" and returns "" when nothing
-// usable remains. Digit- and underscore-leading results get prefix: attrs and
-// pydantic treat leading-underscore fields specially.
-func sanitizePyIdentifier(name, prefix string) string {
-	var builder strings.Builder
-	for _, r := range name {
+func sanitizeIdentifier(name string) string {
+	return strings.Map(func(r rune) rune {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
-			writeRune(&builder, r)
-		} else {
-			writeRune(&builder, '_')
+			return r
 		}
-	}
-	sanitized := builder.String()
-	if strings.Trim(sanitized, "_") == "" {
-		return ""
-	}
-	if r, _ := utf8.DecodeRuneInString(sanitized); unicode.IsDigit(r) || r == '_' {
-		return prefix + "_" + sanitized
-	}
 
-	return sanitized
+		return '_'
+	}, name)
 }
 
 func EscapedColumnName(pluginColumn *plugin.Column, pos int) string {
-	name := sanitizePyIdentifier(ColumnName(pluginColumn, pos), "column")
-	if name == "" {
-		name = fmt.Sprintf("column_%d", pos+1)
+	name := sanitizeIdentifier(ColumnName(pluginColumn, pos))
+	// attrs strips leading underscores from init params and pydantic treats
+	// such fields as private, so they get the column_ prefix like digits.
+	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) || r == '_' {
+		name = "column_" + name
 	}
 
 	return Escape(name)
@@ -150,21 +140,13 @@ func qualifiedClassName(config *config.Config, name, schemaName string) string {
 // back to VALUE_N, digit-leading names get an underscore prefix, and
 // duplicates get a numeric suffix. seen tracks names across one enum.
 func EnumConstantName(value string, index int, seen map[string]int) string {
-	var builder strings.Builder
-	for _, r := range value {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			writeRune(&builder, unicode.ToUpper(r))
-		} else {
-			writeRune(&builder, '_')
-		}
-	}
-	name := builder.String()
+	name := strings.ToUpper(sanitizeIdentifier(value))
 
 	if strings.Trim(name, "_") == "" {
 		name = fmt.Sprintf("VALUE_%d", index+1)
-	}
-	// enum treats leading-underscore names as private, not as members.
-	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) || r == '_' {
+	} else if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) || r == '_' {
+		// pyright strict flags references to leading-underscore members as
+		// private; at runtime they would work fine.
 		name = "VALUE_" + name
 	}
 
@@ -190,10 +172,14 @@ func DedupName(name string, seen map[string]int) string {
 	}
 }
 
+// ParamName allows leading underscores: parameters are plain kwargs, never
+// attrs/pydantic fields, so only digit-leading names need the prefix.
 func ParamName(p *plugin.Parameter) string {
-	name := sanitizePyIdentifier(p.Column.GetName(), "arg")
-	if name == "" {
+	name := sanitizeIdentifier(p.Column.GetName())
+	if r, _ := utf8.DecodeRuneInString(name); name == "" {
 		name = fmt.Sprintf("dollar_%d", p.GetNumber())
+	} else if unicode.IsDigit(r) {
+		name = "column_" + name
 	}
 
 	return Escape(name)

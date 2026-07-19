@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "Model3RdPartyStat",
     "TestEnumOverride",
     "TestEnumType",
     "TestFieldNaming",
@@ -27,6 +28,20 @@ if typing.TYPE_CHECKING:
     import collections.abc
 
 from test.driver_asyncpg.pydantic.functions import enums
+
+
+class Model3RdPartyStat(pydantic.BaseModel):
+    """Model representing Model3RdPartyStat.
+
+    Attributes:
+        id_: int
+        total: int
+    """
+
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    total: int
 
 
 class TestEnumOverride(pydantic.BaseModel):

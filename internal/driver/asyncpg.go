@@ -170,7 +170,7 @@ func writeCopyFromBody(body *writer.CodeWriter, config *config.Config, query mod
 		// copy_records_to_table receives the raw record values, so this is
 		// the only place the conversion can happen for :copyfrom.
 		paramParts = append(paramParts, convertParamExpr(fmt.Sprintf("param.%s", col.Name), col.Type))
-		columnParts = append(columnParts, fmt.Sprintf(`"%s"`, col.DBName))
+		columnParts = append(columnParts, writer.PyQuote(col.DBName))
 	}
 
 	paramsName := query.Params[0].Name
@@ -200,9 +200,9 @@ func writeCopyFromBody(body *writer.CodeWriter, config *config.Config, query mod
 		body.WriteIndentedLine(indent, "]")
 	}
 	columnsArg := fmt.Sprintf("columns=[%s]", strings.Join(columnParts, ", "))
-	copyArgs := []string{fmt.Sprintf(`"%s"`, query.Table.Name), columnsArg, "records=records"}
+	copyArgs := []string{writer.PyQuote(query.Table.Name), columnsArg, "records=records"}
 	if query.Table.Schema != "" {
-		copyArgs = append(copyArgs, fmt.Sprintf(`schema_name="%s"`, query.Table.Schema))
+		copyArgs = append(copyArgs, "schema_name="+writer.PyQuote(query.Table.Schema))
 	}
 
 	head := fmt.Sprintf("r = await %s.copy_records_to_table(", conn)
