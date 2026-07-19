@@ -1,6 +1,6 @@
 module github.com/rayakame/sqlc-gen-better-python
 
-go 1.25.0
+go 1.26.5
 
 require (
 	github.com/jinzhu/inflection v1.0.0
