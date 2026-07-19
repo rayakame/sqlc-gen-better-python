@@ -231,7 +231,7 @@ jobs:
           go-version-file: './go.mod'
 
       - name: Run go tests
-        run: go test -shuffle=on -coverprofile=coverage.out -coverpkg=./internal/... ./...
+        run: go test -shuffle=on -coverprofile=coverage.out -coverpkg=./internal/...,./plugin/... ./...
 
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v7

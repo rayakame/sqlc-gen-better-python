@@ -87,10 +87,12 @@ linters:
     - exhaustruct
   exclusions:
     rules:
-      # Partially initialized fixture structs are the point of table tests.
+      # Partially initialized fixture structs and repeated fixture literals
+      # are the point of table tests.
       - path: _test\.go
         linters:
           - exhaustruct
+          - goconst
   settings:
     mnd:
       # The int argument of these is an indent level / newline count.

@@ -7,20 +7,16 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
 
-const (
-	tableUsers   = "users"
-	schemaPublic = "public"
-)
-
 func TestToPtr(t *testing.T) {
 	t.Parallel()
 	value := "hello"
 	ptr := utils.ToPtr(value)
-	if ptr == nil || *ptr != value {
-		t.Fatalf("ToPtr(%q) = %v, want pointer to %q", value, ptr, value)
+	if *ptr != value {
+		t.Fatalf("ToPtr(%q) points at %q, want %q", value, *ptr, value)
 	}
-	if ptr == &value {
-		t.Fatal("ToPtr must return a pointer to a copy, not to the argument")
+	*ptr = "changed"
+	if value != "hello" {
+		t.Fatal("ToPtr must return a pointer to a copy; mutating it changed the original")
 	}
 }
 
@@ -36,64 +32,78 @@ func TestSameTableName(t *testing.T) {
 		{
 			name: "nil first table",
 			table2: &plugin.Identifier{
-				Name: tableUsers,
+				Name: "users",
 			},
-			defaultSchema: schemaPublic,
+			defaultSchema: "public",
 			want:          false,
 		},
 		{
 			name: "nil second table",
 			table1: &plugin.Identifier{
-				Name: tableUsers,
+				Name: "users",
 			},
-			defaultSchema: schemaPublic,
+			defaultSchema: "public",
 			want:          false,
 		},
 		{
 			name:          "both nil",
-			defaultSchema: schemaPublic,
+			defaultSchema: "public",
 			want:          false,
 		},
 		{
 			name:          "equal fully qualified",
-			table1:        &plugin.Identifier{Catalog: "db", Schema: schemaPublic, Name: tableUsers},
-			table2:        &plugin.Identifier{Catalog: "db", Schema: schemaPublic, Name: tableUsers},
-			defaultSchema: schemaPublic,
+			table1:        &plugin.Identifier{Catalog: "db", Schema: "public", Name: "users"},
+			table2:        &plugin.Identifier{Catalog: "db", Schema: "public", Name: "users"},
+			defaultSchema: "public",
 			want:          true,
 		},
 		{
 			name:          "empty schema falls back to default on first",
-			table1:        &plugin.Identifier{Name: tableUsers},
-			table2:        &plugin.Identifier{Schema: schemaPublic, Name: tableUsers},
-			defaultSchema: schemaPublic,
+			table1:        &plugin.Identifier{Name: "users"},
+			table2:        &plugin.Identifier{Schema: "public", Name: "users"},
+			defaultSchema: "public",
 			want:          true,
 		},
 		{
 			name:          "empty schema falls back to default on second",
-			table1:        &plugin.Identifier{Schema: schemaPublic, Name: tableUsers},
-			table2:        &plugin.Identifier{Name: tableUsers},
-			defaultSchema: schemaPublic,
+			table1:        &plugin.Identifier{Schema: "public", Name: "users"},
+			table2:        &plugin.Identifier{Name: "users"},
+			defaultSchema: "public",
 			want:          true,
 		},
 		{
+			name:          "empty default schema with both schemas empty",
+			table1:        &plugin.Identifier{Name: "users"},
+			table2:        &plugin.Identifier{Name: "users"},
+			defaultSchema: "",
+			want:          true,
+		},
+		{
+			name:          "catalog has no default fallback",
+			table1:        &plugin.Identifier{Catalog: "db", Schema: "public", Name: "users"},
+			table2:        &plugin.Identifier{Schema: "public", Name: "users"},
+			defaultSchema: "public",
+			want:          false,
+		},
+		{
 			name:          "different schemas",
-			table1:        &plugin.Identifier{Schema: schemaPublic, Name: tableUsers},
-			table2:        &plugin.Identifier{Schema: "audit", Name: tableUsers},
-			defaultSchema: schemaPublic,
+			table1:        &plugin.Identifier{Schema: "public", Name: "users"},
+			table2:        &plugin.Identifier{Schema: "audit", Name: "users"},
+			defaultSchema: "public",
 			want:          false,
 		},
 		{
 			name:          "different catalogs",
-			table1:        &plugin.Identifier{Catalog: "db1", Schema: schemaPublic, Name: tableUsers},
-			table2:        &plugin.Identifier{Catalog: "db2", Schema: schemaPublic, Name: tableUsers},
-			defaultSchema: schemaPublic,
+			table1:        &plugin.Identifier{Catalog: "db1", Schema: "public", Name: "users"},
+			table2:        &plugin.Identifier{Catalog: "db2", Schema: "public", Name: "users"},
+			defaultSchema: "public",
 			want:          false,
 		},
 		{
 			name:          "different names",
-			table1:        &plugin.Identifier{Schema: schemaPublic, Name: tableUsers},
-			table2:        &plugin.Identifier{Schema: schemaPublic, Name: "orders"},
-			defaultSchema: schemaPublic,
+			table1:        &plugin.Identifier{Schema: "public", Name: "users"},
+			table2:        &plugin.Identifier{Schema: "public", Name: "orders"},
+			defaultSchema: "public",
 			want:          false,
 		},
 	}
