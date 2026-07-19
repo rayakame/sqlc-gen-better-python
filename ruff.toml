@@ -1,5 +1,8 @@
-target-version = "py310"
-line-length = 120
+# Generated code targets Python 3.12+ (PEP 695 type aliases and generics).
+target-version = "py312"
+# 320 is ruff's maximum. Generated code emits anything longer than this
+# exploded with magic trailing commas, so ruff format is a no-op on it.
+line-length = 320
 
 [lint]
 preview = true
@@ -40,6 +43,11 @@ ignore = [
     "I001", # Import block is un-sorted or un-formatted
     "FBT001", # Boolean-typed positional argument in function definition
 ]
+# With omit_typechecking_block the annotation-only imports are deliberately
+# emitted at runtime so annotations stay introspectable.
+"**/omit_tc/{classes,functions}/*.py" = [
+    "TC003", # Move standard library import into a type-checking block
+]
 "**/{msgspec}/{classes,functions}/*.py" = [
     "DOC501", # Raised exception `StopIteration` missing from docstring
     # Ruff doesn't understand that we actually documented the exceptions raised when using pep257
@@ -53,8 +61,3 @@ force-single-line = true
 [lint.pydocstyle]
 convention = "numpy"
 
-[format]
-exclude = [
-    "models.py",
-    "queries.py",
-]

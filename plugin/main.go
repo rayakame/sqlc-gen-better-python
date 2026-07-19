@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	codegen.Run(python.Generate)
+	codegen.Run(python.Handler)
 }

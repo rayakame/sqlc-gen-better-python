@@ -1,15 +1,36 @@
-CREATE TABLE test_postgres_types
+-- Public-schema enum
+CREATE TYPE mood AS ENUM ('sad', 'ok', 'happy');
+
+-- Primary table - exercises non-null, nullable, enum, array, and the
+-- three types that need runtime conversion (bytea, numeric, timestamptz).
+CREATE TABLE authors
 (
-    /* ───────────── Integer family ───────────── */
-    id                    int PRIMARY KEY  NOT NULL,
-    serial_test           serial           NOT NULL,
-    timestamp_test        timestamp        NOT NULL
+    id      int PRIMARY KEY NOT NULL,
+    name    text            NOT NULL,
+    bio     text,
+    mood    mood            NOT NULL,
+    tags    text[]          NOT NULL,
+    avatar  bytea,
+    rating  numeric(3, 2)   NOT NULL,
+    created timestamptz     NOT NULL
 );
 
-CREATE TABLE test_inner_postgres_types
+-- Secondary table - gives us something to JOIN / sqlc.embed against.
+CREATE TABLE books
 (
-    /* ───────────── Integer family ───────────── */
-    table_id              int              NOT NULL,
-    /* ───────────── Boolean ───────────── */
-    bool_test             boolean          NOT NULL
+    id        int PRIMARY KEY NOT NULL,
+    author_id int             NOT NULL,
+    title     text            NOT NULL
+);
+
+-- Custom schema - same enum name in a different schema (tests
+-- schema-qualified naming and that the generator doesn't collide).
+CREATE SCHEMA IF NOT EXISTS custom;
+CREATE TYPE custom.mood AS ENUM ('sad', 'ok', 'happy');
+
+CREATE TABLE custom.reviews
+(
+    id      int PRIMARY KEY NOT NULL,
+    book_id int             NOT NULL,
+    mood    custom.mood     NOT NULL
 );
