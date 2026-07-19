@@ -31,10 +31,14 @@ func SnakeToCamel(conf *config.Config, s string) string {
 			out += cases.Title(language.Und, cases.NoLower).String(p)
 		}
 	}
+	// A Model prefix, not an underscore: pyright strict flags references to
+	// leading-underscore class names as private. IsReserved catches the only
+	// CapWords-shaped keywords (True/False/None).
 	r, _ := utf8.DecodeRuneInString(out)
-	if unicode.IsDigit(r) {
-		return "_" + out
-	} else {
+	switch {
+	case out == "", unicode.IsDigit(r), IsReserved(out):
+		return "Model" + out
+	default:
 		return out
 	}
 }
@@ -61,8 +65,25 @@ func ColumnName(pluginColumn *plugin.Column, pos int) string {
 	return fmt.Sprintf("column_%d", pos+1)
 }
 
+func sanitizeIdentifier(name string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
+			return r
+		}
+
+		return '_'
+	}, name)
+}
+
 func EscapedColumnName(pluginColumn *plugin.Column, pos int) string {
-	return Escape(ColumnName(pluginColumn, pos))
+	name := sanitizeIdentifier(ColumnName(pluginColumn, pos))
+	// attrs strips leading underscores from init params and pydantic treats
+	// such fields as private, so they get the column_ prefix like digits.
+	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) || r == '_' {
+		name = "column_" + name
+	}
+
+	return Escape(name)
 }
 
 // ModelName builds the class name for a table. Singularization runs on the
@@ -115,24 +136,17 @@ func qualifiedClassName(config *config.Config, name, schemaName string) string {
 
 // EnumConstantName converts an enum value into a valid, unique Python constant
 // name: non-alphanumeric characters become underscores, empty results fall
-// back to VALUE_N, digit-leading names get an underscore prefix, and
-// duplicates get a numeric suffix. seen tracks names across one enum.
+// back to VALUE_N, digit- and underscore-leading names get a VALUE_ prefix,
+// and duplicates get a numeric suffix. seen tracks names across one enum.
 func EnumConstantName(value string, index int, seen map[string]int) string {
-	var builder strings.Builder
-	for _, r := range value {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			builder.WriteRune(unicode.ToUpper(r))
-		} else {
-			builder.WriteRune('_')
-		}
-	}
-	name := builder.String()
+	name := strings.ToUpper(sanitizeIdentifier(value))
 
 	if strings.Trim(name, "_") == "" {
 		name = fmt.Sprintf("VALUE_%d", index+1)
-	}
-	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) {
-		name = "_" + name
+	} else if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) || r == '_' {
+		// pyright strict flags references to leading-underscore members as
+		// private; at runtime they would work fine.
+		name = "VALUE_" + name
 	}
 
 	return DedupName(name, seen)
@@ -143,12 +157,22 @@ func EnumConstantName(value string, index int, seen map[string]int) string {
 // unused identifier is found, so a literal "name_2" that appeared earlier can
 // never collide with a generated one. seen tracks usage counts per scope.
 func DedupName(name string, seen map[string]int) string {
+	return dedup(name, "%s_%d", seen)
+}
+
+// DedupClassName is DedupName with a bare digit suffix ("Name", "Name2",
+// ...): an underscore suffix would violate the CapWords convention (N801).
+func DedupClassName(name string, seen map[string]int) string {
+	return dedup(name, "%s%d", seen)
+}
+
+func dedup(name, format string, seen map[string]int) string {
 	seen[name]++
 	if seen[name] == 1 {
 		return name
 	}
 	for i := seen[name]; ; i++ {
-		candidate := fmt.Sprintf("%s_%d", name, i)
+		candidate := fmt.Sprintf(format, name, i)
 		if seen[candidate] == 0 {
 			seen[candidate]++
 
@@ -157,12 +181,14 @@ func DedupName(name string, seen map[string]int) string {
 	}
 }
 
+// ParamName allows leading underscores: parameters are plain kwargs, never
+// attrs/pydantic fields, so only digit-leading names need the prefix.
 func ParamName(p *plugin.Parameter) string {
-	var name string
-	if p.Column.GetName() != "" {
-		name = p.Column.Name
-	} else {
+	name := sanitizeIdentifier(p.Column.GetName())
+	if r, _ := utf8.DecodeRuneInString(name); name == "" {
 		name = fmt.Sprintf("dollar_%d", p.GetNumber())
+	} else if unicode.IsDigit(r) {
+		name = "column_" + name
 	}
 
 	return Escape(name)

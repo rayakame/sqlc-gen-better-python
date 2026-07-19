@@ -7,10 +7,12 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "Model3RdPartyStat",
     "TestEnumOverride",
     "TestEnumType",
     "TestFieldNaming",
     "TestInnerPostgresType",
+    "TestInvalidIdentifier",
     "TestPostgresType",
     "TestTypeOverride",
 )
@@ -25,6 +27,18 @@ if typing.TYPE_CHECKING:
     import datetime
     import decimal
     import uuid
+
+
+class Model3RdPartyStat(msgspec.Struct):
+    """Model representing Model3RdPartyStat.
+
+    Attributes:
+    id_ -- int
+    total -- int
+    """
+
+    id_: int
+    total: int
 
 
 class TestEnumOverride(msgspec.Struct):
@@ -143,6 +157,22 @@ class TestInnerPostgresType(msgspec.Struct):
     ltree_test: str | None
     lquery_test: str | None
     ltxtquery_test: str | None
+
+
+class TestInvalidIdentifier(msgspec.Struct):
+    """Model representing TestInvalidIdentifier.
+
+    Attributes:
+    id_ -- int
+    column_3p_ -- str | None
+    new_notes -- str
+    column__pct -- str | None
+    """
+
+    id_: int
+    column_3p_: str | None
+    new_notes: str
+    column__pct: str | None
 
 
 class TestPostgresType(msgspec.Struct):

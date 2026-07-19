@@ -101,10 +101,12 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 
 		// Precompute the query's column names/types once - they do not depend
 		// on the candidate table - instead of rebuilding them per candidate.
+		// Dedup mirrors buildTable so colliding sanitized names still match.
 		queryColumnNames := make([]string, len(pluginQuery.Columns))
 		queryColumnTypes := make([]model.PyType, len(pluginQuery.Columns))
+		seenColumns := make(map[string]int, len(pluginQuery.Columns))
 		for i, column := range pluginQuery.Columns {
-			queryColumnNames[i] = model.EscapedColumnName(column, i)
+			queryColumnNames[i] = model.DedupName(model.EscapedColumnName(column, i), seenColumns)
 			queryColumnTypes[i] = t.buildPyType(column)
 		}
 

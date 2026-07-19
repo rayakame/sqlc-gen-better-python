@@ -7,10 +7,12 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "Model3RdPartyStat",
     "TestEnumOverride",
     "TestEnumType",
     "TestFieldNaming",
     "TestInnerPostgresType",
+    "TestInvalidIdentifier",
     "TestPostgresType",
     "TestTypeOverride",
 )
@@ -26,6 +28,20 @@ if typing.TYPE_CHECKING:
     import collections.abc
 
 from test.driver_asyncpg.pydantic.classes import enums
+
+
+class Model3RdPartyStat(pydantic.BaseModel):
+    """Model representing Model3RdPartyStat.
+
+    Attributes:
+        id_: int
+        total: int
+    """
+
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    total: int
 
 
 class TestEnumOverride(pydantic.BaseModel):
@@ -152,6 +168,24 @@ class TestInnerPostgresType(pydantic.BaseModel):
     ltree_test: str | None
     lquery_test: str | None
     ltxtquery_test: str | None
+
+
+class TestInvalidIdentifier(pydantic.BaseModel):
+    """Model representing TestInvalidIdentifier.
+
+    Attributes:
+        id_: int
+        column_3p_: str | None
+        new_notes: str
+        column__pct: str | None
+    """
+
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    column_3p_: str | None
+    new_notes: str
+    column__pct: str | None
 
 
 class TestPostgresType(pydantic.BaseModel):

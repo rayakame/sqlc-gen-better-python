@@ -11,12 +11,17 @@ import (
 
 func (t *Transformer) BuildTables() []model.Table {
 	tables := make([]model.Table, 0)
+	// Distinct tables can sanitize to the same class name ("%a" and "a", or
+	// digit-leading names sharing the Model prefix).
+	seen := make(map[string]int)
 	for _, schema := range t.req.Catalog.Schemas {
 		if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
 			continue
 		}
 		for _, table := range schema.Tables {
-			tables = append(tables, t.buildTable(schema, table))
+			built := t.buildTable(schema, table)
+			built.Name = model.DedupClassName(built.Name, seen)
+			tables = append(tables, built)
 		}
 	}
 	slices.SortFunc(tables, func(a, b model.Table) int {
@@ -41,9 +46,11 @@ func (t *Transformer) buildTable(pluginSchema *plugin.Schema, pluginTable *plugi
 			Name:    pluginTable.Rel.Name,
 		}),
 	}
+	// Sanitized names can collide ("a b" and "a_b" both become a_b).
+	seen := make(map[string]int, len(pluginTable.Columns))
 	for i, column := range pluginTable.Columns {
 		table.Columns = append(table.Columns, model.Column{
-			Name:   model.EscapedColumnName(column, i),
+			Name:   model.DedupName(model.EscapedColumnName(column, i), seen),
 			DBName: model.ColumnName(column, i),
 			Type:   t.buildPyType(column),
 		})

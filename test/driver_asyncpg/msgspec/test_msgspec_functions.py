@@ -759,6 +759,13 @@ class TestMsgspecFunctions:
         await queries.delete_type_override(conn=asyncpg_conn, id_=override_model.id_)
 
     @pytest.mark.asyncio(loop_scope="session")
+    async def test_digit_leading_enum_constant_is_member(self) -> None:
+        # "_24H" or "_HIDDEN" names would be treated as private by enum.
+        assert enums.TestMood.VALUE_24H.value == "24h"
+        assert enums.TestMood("24h") is enums.TestMood.VALUE_24H
+        assert enums.TestMood.VALUE__HIDDEN.value == "_hidden"
+
+    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestMsgspecFunctions::insert_enum")
     async def test_insert_enum(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         await queries.insert_one_test_enum_type(conn=asyncpg_conn, id_=424242, mood=enums.TestMood.HAPPY, maybe_mood=None)
@@ -827,8 +834,8 @@ class TestMsgspecFunctions:
         # The overridden float values must be converted back to Decimal before
         # copy_records_to_table.
         params = [
-            queries_copy_override.CopyOverrideRowsParams(id_=1, amount=12.5),
-            queries_copy_override.CopyOverrideRowsParams(id_=2, amount=0.25),
+            queries_copy_override.CopyOverrideRowsParams(id_=1, amount=12.5, co_l="a"),
+            queries_copy_override.CopyOverrideRowsParams(id_=2, amount=0.25, co_l="b"),
         ]
         inserted = await queries_copy_override.copy_override_rows(conn=asyncpg_conn, params=params)
         assert inserted == len(params)
