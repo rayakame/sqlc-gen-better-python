@@ -4,7 +4,7 @@ early_access: false
 enable_free_tier: true
 inheritance: false
 reviews:
-  profile: chill
+  profile: assertive
   request_changes_workflow: false
   high_level_summary: true
   high_level_summary_instructions: ''
