@@ -11,6 +11,7 @@ __all__: collections.abc.Sequence[str] = (
     "TestEnumType",
     "TestFieldNaming",
     "TestInnerPostgresType",
+    "TestInvalidIdentifier",
     "TestPostgresType",
     "TestTypeOverride",
 )
@@ -143,6 +144,20 @@ class TestInnerPostgresType(msgspec.Struct):
     ltree_test: str | None
     lquery_test: str | None
     ltxtquery_test: str | None
+
+
+class TestInvalidIdentifier(msgspec.Struct):
+    """Model representing TestInvalidIdentifier.
+
+    Attributes:
+    id_ -- int
+    column_3p_ -- str | None
+    new_notes -- str
+    """
+
+    id_: int
+    column_3p_: str | None
+    new_notes: str
 
 
 class TestPostgresType(msgspec.Struct):

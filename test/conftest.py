@@ -82,6 +82,7 @@ async def asyncpg_conn(
         DELETE FROM test_inner_postgres_types;
         DELETE FROM test_copy_from;
         DELETE FROM test_copy_override;
+        DELETE FROM test_invalid_identifiers;
     """)
     await conn.close()
 
@@ -124,6 +125,7 @@ async def asyncpg_delete_all(dsn: str) -> None:
     DELETE FROM test_inner_postgres_types;
         DELETE FROM test_copy_from;
         DROP TABLE IF EXISTS test_copy_override;
+        DROP TABLE IF EXISTS test_invalid_identifiers;
     """)
     await conn.close()
 

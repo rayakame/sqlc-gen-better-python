@@ -61,8 +61,42 @@ func ColumnName(pluginColumn *plugin.Column, pos int) string {
 	return fmt.Sprintf("column_%d", pos+1)
 }
 
+// sanitizePyIdentifier maps every rune that cannot appear in a Python
+// identifier to an underscore. Returns "" when nothing identifier-worthy
+// remains; digitPrefix (plus an underscore) is prepended when the result
+// starts with a digit - a bare underscore prefix would break attrs and
+// pydantic, which treat leading-underscore fields specially.
+func sanitizePyIdentifier(name, digitPrefix string) string {
+	var builder strings.Builder
+	for _, r := range name {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
+			builder.WriteRune(r)
+		} else {
+			builder.WriteRune('_')
+		}
+	}
+	sanitized := builder.String()
+	if strings.Trim(sanitized, "_") == "" {
+		return ""
+	}
+	if r, _ := utf8.DecodeRuneInString(sanitized); unicode.IsDigit(r) {
+		return digitPrefix + "_" + sanitized
+	}
+
+	return sanitized
+}
+
+// EscapedColumnName builds the Python field name for a column: quoted SQL
+// identifiers like "3p%" or "new notes" sanitize to valid Python
+// identifiers, empty results fall back to the positional column_N name, and
+// reserved words are escaped.
 func EscapedColumnName(pluginColumn *plugin.Column, pos int) string {
-	return Escape(ColumnName(pluginColumn, pos))
+	name := sanitizePyIdentifier(ColumnName(pluginColumn, pos), "column")
+	if name == "" {
+		name = fmt.Sprintf("column_%d", pos+1)
+	}
+
+	return Escape(name)
 }
 
 // ModelName builds the class name for a table. Singularization runs on the
@@ -131,8 +165,10 @@ func EnumConstantName(value string, index int, seen map[string]int) string {
 	if strings.Trim(name, "_") == "" {
 		name = fmt.Sprintf("VALUE_%d", index+1)
 	}
+	// A VALUE_ prefix, not an underscore: enum treats leading-underscore
+	// names as private attributes instead of members.
 	if r, _ := utf8.DecodeRuneInString(name); unicode.IsDigit(r) {
-		name = "_" + name
+		name = "VALUE_" + name
 	}
 
 	return DedupName(name, seen)
@@ -158,10 +194,8 @@ func DedupName(name string, seen map[string]int) string {
 }
 
 func ParamName(p *plugin.Parameter) string {
-	var name string
-	if p.Column.GetName() != "" {
-		name = p.Column.Name
-	} else {
+	name := sanitizePyIdentifier(p.Column.GetName(), "arg")
+	if name == "" {
 		name = fmt.Sprintf("dollar_%d", p.GetNumber())
 	}
 

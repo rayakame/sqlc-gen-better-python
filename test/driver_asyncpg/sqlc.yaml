@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 0218cb2dc296069b6bde9bf98db60d4a21feff2ff5123f5c401ad36a357d3578
+      sha256: b1f30e969823173847c7599b88115cb109a5c8a84e0282015c1ce3f7de05616c
 sql:
   - schema: schema.sql
     queries:
@@ -11,6 +11,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /attrs/classes
@@ -42,6 +43,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /attrs/functions
@@ -73,6 +75,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /dataclass/classes
@@ -103,6 +106,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /dataclass/functions
@@ -133,6 +137,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /msgspec/classes
@@ -163,6 +168,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /msgspec/functions
@@ -194,6 +200,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /pydantic/classes
@@ -224,6 +231,7 @@ sql:
       - queries_enum_override.sql
       - queries_copy_override.sql
       - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
     engine: postgresql
     codegen:
       - out: /pydantic/functions

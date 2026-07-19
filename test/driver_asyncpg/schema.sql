@@ -140,7 +140,9 @@ CREATE TABLE IF NOT EXISTS test_type_override
 DROP TABLE IF EXISTS test_enum_types;
 DROP TABLE IF EXISTS test_enum_override;
 DROP TYPE IF EXISTS test_mood;
-CREATE TYPE test_mood AS ENUM ('sad', 'ok', 'happy');
+-- '24h' pins the digit-leading constant name (VALUE_24H): a leading
+-- underscore would make enum treat the name as private, not a member.
+CREATE TYPE test_mood AS ENUM ('sad', 'ok', 'happy', '24h');
 
 CREATE TABLE test_enum_types
 (
@@ -169,4 +171,14 @@ CREATE TABLE IF NOT EXISTS test_field_namings
 (
     id      bigint PRIMARY KEY NOT NULL,
     outputs jsonb              NOT NULL
+);
+
+-- Quoted identifiers that are not valid Python names (issue 160): fields
+-- and parameters sanitize to column_3p_ / new_notes instead of emitting
+-- invalid Python.
+CREATE TABLE IF NOT EXISTS test_invalid_identifiers
+(
+    id          bigint PRIMARY KEY NOT NULL,
+    "3p%"       text,
+    "new notes" text NOT NULL
 );

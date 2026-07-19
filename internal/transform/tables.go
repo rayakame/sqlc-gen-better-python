@@ -41,9 +41,12 @@ func (t *Transformer) buildTable(pluginSchema *plugin.Schema, pluginTable *plugi
 			Name:    pluginTable.Rel.Name,
 		}),
 	}
+	// Sanitized names can collide (e.g. "a b" and "a_b" both become a_b);
+	// a duplicate dataclass field would silently shadow the first one.
+	seen := make(map[string]int, len(pluginTable.Columns))
 	for i, column := range pluginTable.Columns {
 		table.Columns = append(table.Columns, model.Column{
-			Name:   model.EscapedColumnName(column, i),
+			Name:   model.DedupName(model.EscapedColumnName(column, i), seen),
 			DBName: model.ColumnName(column, i),
 			Type:   t.buildPyType(column),
 		})

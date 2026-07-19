@@ -36,6 +36,9 @@ import pytest
 
 from test.driver_asyncpg.dataclass.functions import models
 from test.driver_asyncpg.dataclass.functions import queries
+from test.driver_asyncpg.dataclass.functions import queries_invalid_identifiers
+
+INVALID_IDENTIFIER_ID = 606060
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -772,3 +775,23 @@ class TestDataclassFunctions:
     )
     async def test_delete_type_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record], override_model: models.TestTypeOverride) -> None:
         await queries.delete_type_override(conn=asyncpg_conn, id_=override_model.id_)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::insert_invalid_identifiers")
+    async def test_insert_invalid_identifiers(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # Columns named "3p%" and "new notes" sanitize to valid Python
+        # parameter and field names instead of emitting a SyntaxError.
+        await queries_invalid_identifiers.insert_invalid_identifiers(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID, arg_3p_="3%", new_notes="hello")
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_invalid_identifiers"])
+    async def test_get_invalid_identifiers(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        row = await queries_invalid_identifiers.get_invalid_identifiers(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID)
+        assert row is not None
+        assert row.column_3p_ == "3%"
+        assert row.new_notes == "hello"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_invalid_identifiers"])
+    async def test_get_invalid_identifiers_not_found(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        assert await queries_invalid_identifiers.get_invalid_identifiers(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID - 1) is None
