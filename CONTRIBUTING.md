@@ -32,8 +32,8 @@ After any Go change the plugin must be rebuilt, otherwise `sqlc generate` keeps 
 binary:
 
 ```bash
-./scripts/build/build.sh    # Linux/macOS
-scripts\build\build.bat     # Windows
+./scripts/build/build.sh      # Linux/macOS
+.\scripts\build\build.bat     # Windows
 ```
 
 The script builds with `GOOS=wasip1 GOARCH=wasm`, computes the SHA-256 of the new binary, patches
@@ -65,7 +65,9 @@ The pipelines are built with `nox`. Run everything with `uv run nox`, or single 
 | `pytest`                                            | Runtime tests against real databases                                                   |
 
 The `pytest` session needs a local PostgreSQL. The connection URI is read from the
-`POSTGRES_URI` environment variable. To start a matching instance with docker, run
+`POSTGRES_URI` environment variable and defaults to
+`postgresql://root:187187@localhost:5432/root`; set the variable only if your instance
+differs from that. To start a matching instance with docker, run
 
 ```bash
 docker run --name sqlc-gen-better-python-postgres \
@@ -110,8 +112,8 @@ make changelog    # or: go tool changie new
 
 Changie will ask you for the following fields:
 
-- Kind: The kind of changes, should be self explanatory
-- Body: A short description about the made changes.
+- Kind: The kind of changes, should be self-explanatory
+- Body: A short description of the changes.
 - PR: The number of the pull request associated to the changes.
 - Github Name: The **username** of the github account that made the changes. This is used for
   giving credits to contributors in the changelog. When a fix was diagnosed by someone else
