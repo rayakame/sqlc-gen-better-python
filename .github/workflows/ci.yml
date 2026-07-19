@@ -216,9 +216,13 @@ jobs:
   go-test:
     runs-on: ubuntu-latest
     name: "Run go tests"
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -231,9 +235,13 @@ jobs:
   go-lint:
     runs-on: ubuntu-latest
     name: "Run golangci-lint"
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v7

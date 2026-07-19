@@ -101,6 +101,8 @@ Extra pytest arguments pass through after `--`, e.g.
 2. Rebuild the WASM plugin (see above).
 3. `uv run nox` - regenerates the fixtures and runs every check on them. The default
    sessions include `pytest`, so have the PostgreSQL from the section above running.
+   The `_check` sessions are not needed locally: they verify committed fixtures
+   against a fresh regeneration, which is what CI does with the files you commit.
 4. If your change affects generated output, add coverage: a query/schema case in the test matrix
    that pins the new behavior, plus a runtime test where it makes sense. CI gates pull requests
    on patch coverage, so aim for covering every branch of code your PR adds.
