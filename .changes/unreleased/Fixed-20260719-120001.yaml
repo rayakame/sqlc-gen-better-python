@@ -1,6 +1,0 @@
-kind: Fixed
-body: 'Type overrides now convert correctly in every position: array parameters convert element-wise instead of passing the whole list into the driver-type constructor, and `:copyfrom` records convert overridden columns back to the driver type before `copy_records_to_table` (previously the raw override value was sent and failed to encode)'
-time: 2026-07-19T12:00:01.0000000Z
-custom:
-    Author: rayakame
-    PR: "148"

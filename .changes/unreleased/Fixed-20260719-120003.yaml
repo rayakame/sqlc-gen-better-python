@@ -1,6 +1,0 @@
-kind: Fixed
-body: 'A SQL column named `conn` (or `self` with `emit_classes`) no longer generates a duplicate function parameter (a `SyntaxError` in the generated module); the parameter is renamed `conn_2`. `:many` query functions with array parameters now type-check: `QueryResultsArgsType` gained a `Sequence` member. The `:execrows` docstring on the sqlite3 driver now correctly documents `-1` for non-DML statements'
-time: 2026-07-19T12:00:03.0000000Z
-custom:
-    Author: rayakame
-    PR: "148"
