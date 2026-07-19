@@ -39,12 +39,12 @@ from test.driver_aiosqlite.msgspec.classes import queries
 class TestMsgspecClasses:
     @pytest.fixture(scope="session")
     def override_model(self) -> models.TestTypeOverride:
-        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+        return models.TestTypeOverride(id_=random.randint(1, 10000000), text_test=UserString("Test"))
 
     @pytest.fixture(scope="session")
     def model(self) -> models.TestSqliteType:
         return models.TestSqliteType(
-            id=random.randint(1, 10000000),
+            id_=random.randint(1, 10000000),
             int_test=42,
             bigint_test=9_007_199_254_740_991,
             smallint_test=32_767,
@@ -78,7 +78,7 @@ class TestMsgspecClasses:
     @pytest.fixture(scope="session")
     def inner_model(self, model: models.TestSqliteType) -> models.TestInnerSqliteType:
         return models.TestInnerSqliteType(
-            table_id=model.id,
+            table_id=model.id_,
             int_test=None,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -125,7 +125,7 @@ class TestMsgspecClasses:
         model: models.TestSqliteType,
     ) -> None:
         await queries_obj.insert_one_sqlite_type(
-            id_=model.id,
+            id_=model.id_,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -157,9 +157,7 @@ class TestMsgspecClasses:
         )
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::inner_insert", depends=["AiosqliteTestMsgspecClasses::insert"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::inner_insert", depends=["AiosqliteTestMsgspecClasses::insert"])
     async def test_inner_insert(
         self,
         queries_obj: queries.Queries,
@@ -198,15 +196,13 @@ class TestMsgspecClasses:
         )
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_one", depends=["AiosqliteTestMsgspecClasses::inner_insert"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_one", depends=["AiosqliteTestMsgspecClasses::inner_insert"])
     async def test_get_one(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_sqlite_type(id_=model.id)
+        result = await queries_obj.get_one_sqlite_type(id_=model.id_)
 
         assert result is not None
 
@@ -215,9 +211,7 @@ class TestMsgspecClasses:
         assert result == model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_one_none", depends=["AiosqliteTestMsgspecClasses::get_one"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_one_none", depends=["AiosqliteTestMsgspecClasses::get_one"])
     async def test_get_one_none(
         self,
         queries_obj: queries.Queries,
@@ -227,9 +221,7 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_one_inner", depends=["AiosqliteTestMsgspecClasses::get_one_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_one_inner", depends=["AiosqliteTestMsgspecClasses::get_one_none"])
     async def test_get_one_inner(
         self,
         queries_obj: queries.Queries,
@@ -243,9 +235,7 @@ class TestMsgspecClasses:
         assert result == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_one_inner_none", depends=["AiosqliteTestMsgspecClasses::get_one_inner"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_one_inner_none", depends=["AiosqliteTestMsgspecClasses::get_one_inner"])
     async def test_get_one_inner_none(
         self,
         queries_obj: queries.Queries,
@@ -255,15 +245,13 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_date", depends=["AiosqliteTestMsgspecClasses::get_one_inner_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_date", depends=["AiosqliteTestMsgspecClasses::get_one_inner_none"])
     async def test_get_date(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_date(id_=model.id, date_test=model.date_test)
+        result = await queries_obj.get_one_date(id_=model.id_, date_test=model.date_test)
 
         assert result is not None
 
@@ -271,9 +259,7 @@ class TestMsgspecClasses:
         assert result == model.date_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_date_none", depends=["AiosqliteTestMsgspecClasses::get_date"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_date_none", depends=["AiosqliteTestMsgspecClasses::get_date"])
     async def test_get_date_none(
         self,
         queries_obj: queries.Queries,
@@ -283,15 +269,13 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_datetime", depends=["AiosqliteTestMsgspecClasses::get_date_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_datetime", depends=["AiosqliteTestMsgspecClasses::get_date_none"])
     async def test_get_datetime(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_datetime(id_=model.id, datetime_test=model.datetime_test)
+        result = await queries_obj.get_one_datetime(id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
 
@@ -299,9 +283,7 @@ class TestMsgspecClasses:
         assert result == model.datetime_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_datetime_none", depends=["AiosqliteTestMsgspecClasses::get_datetime"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_datetime_none", depends=["AiosqliteTestMsgspecClasses::get_datetime"])
     async def test_get_datetime_none(
         self,
         queries_obj: queries.Queries,
@@ -311,15 +293,13 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_timestamp", depends=["AiosqliteTestMsgspecClasses::get_datetime_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_timestamp", depends=["AiosqliteTestMsgspecClasses::get_datetime_none"])
     async def test_get_timestamp(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_timestamp(id_=model.id, timestamp_test=model.timestamp_test)
+        result = await queries_obj.get_one_timestamp(id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
 
@@ -327,9 +307,7 @@ class TestMsgspecClasses:
         assert result == model.timestamp_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_timestamp_none", depends=["AiosqliteTestMsgspecClasses::get_timestamp"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_timestamp_none", depends=["AiosqliteTestMsgspecClasses::get_timestamp"])
     async def test_get_timestamp_none(
         self,
         queries_obj: queries.Queries,
@@ -339,15 +317,13 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_bool", depends=["AiosqliteTestMsgspecClasses::get_timestamp_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_bool", depends=["AiosqliteTestMsgspecClasses::get_timestamp_none"])
     async def test_get_bool(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_bool(id_=model.id, bool_test=model.bool_test)
+        result = await queries_obj.get_one_bool(id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
 
@@ -355,9 +331,7 @@ class TestMsgspecClasses:
         assert result == model.bool_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_bool_none", depends=["AiosqliteTestMsgspecClasses::get_bool"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_bool_none", depends=["AiosqliteTestMsgspecClasses::get_bool"])
     async def test_get_bool_none(
         self,
         queries_obj: queries.Queries,
@@ -367,15 +341,13 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_boolean", depends=["AiosqliteTestMsgspecClasses::get_bool_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_boolean", depends=["AiosqliteTestMsgspecClasses::get_bool_none"])
     async def test_get_boolean(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_boolean(id_=model.id, boolean_test=model.boolean_test)
+        result = await queries_obj.get_one_boolean(id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
 
@@ -383,9 +355,7 @@ class TestMsgspecClasses:
         assert result == model.boolean_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_boolean_none", depends=["AiosqliteTestMsgspecClasses::get_boolean"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_boolean_none", depends=["AiosqliteTestMsgspecClasses::get_boolean"])
     async def test_get_boolean_none(
         self,
         queries_obj: queries.Queries,
@@ -395,15 +365,13 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_decimal", depends=["AiosqliteTestMsgspecClasses::get_boolean_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_decimal", depends=["AiosqliteTestMsgspecClasses::get_boolean_none"])
     async def test_get_decimal(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_decimal(id_=model.id, decimal_test=model.decimal_test)
+        result = await queries_obj.get_one_decimal(id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
 
@@ -411,9 +379,7 @@ class TestMsgspecClasses:
         assert result == model.decimal_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_decimal_none", depends=["AiosqliteTestMsgspecClasses::get_decimal"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_decimal_none", depends=["AiosqliteTestMsgspecClasses::get_decimal"])
     async def test_get_decimal_none(
         self,
         queries_obj: queries.Queries,
@@ -423,15 +389,13 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_blob", depends=["AiosqliteTestMsgspecClasses::get_decimal_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_blob", depends=["AiosqliteTestMsgspecClasses::get_decimal_none"])
     async def test_get_blob(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.get_one_blob(id_=model.id, blob_test=model.blob_test)
+        result = await queries_obj.get_one_blob(id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
 
@@ -439,9 +403,7 @@ class TestMsgspecClasses:
         assert result == model.blob_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_blob_none", depends=["AiosqliteTestMsgspecClasses::get_blob"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_blob_none", depends=["AiosqliteTestMsgspecClasses::get_blob"])
     async def test_get_blob_none(
         self,
         queries_obj: queries.Queries,
@@ -451,11 +413,9 @@ class TestMsgspecClasses:
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_many", depends=["AiosqliteTestMsgspecClasses::get_blob_none"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_many", depends=["AiosqliteTestMsgspecClasses::get_blob_none"])
     async def test_get_many(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_sqlite_type(id_=model.id)
+        result = await queries_obj.get_many_sqlite_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -464,20 +424,16 @@ class TestMsgspecClasses:
         assert result[0] == model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_many_iter", depends=["AiosqliteTestMsgspecClasses::get_many"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_many_iter", depends=["AiosqliteTestMsgspecClasses::get_many"])
     async def test_get_many_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_sqlite_type(id_=model.id):
+        async for result in queries_obj.get_many_sqlite_type(id_=model.id_):
             assert result is not None
             assert isinstance(result, models.TestSqliteType)
 
             assert result == model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_many_inner", depends=["AiosqliteTestMsgspecClasses::get_many_iter"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_many_inner", depends=["AiosqliteTestMsgspecClasses::get_many_iter"])
     async def test_get_many_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         result = await queries_obj.get_many_inner_sqlite_type(table_id=inner_model.table_id)
 
@@ -488,12 +444,8 @@ class TestMsgspecClasses:
         assert result[0] == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_many_inner_iter", depends=["AiosqliteTestMsgspecClasses::get_many_inner"]
-    )
-    async def test_get_many_inner_iter(
-        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_many_inner_iter", depends=["AiosqliteTestMsgspecClasses::get_many_inner"])
+    async def test_get_many_inner_iter(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         async for result in queries_obj.get_many_inner_sqlite_type(table_id=inner_model.table_id):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
@@ -505,9 +457,7 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::get_many_nullable_inner",
         depends=["AiosqliteTestMsgspecClasses::get_many_inner_iter"],
     )
-    async def test_get_many_nullable_inner(
-        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    async def test_get_many_nullable_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         result = await queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=None)
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -520,12 +470,8 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::get_many_nullable_inner_iter",
         depends=["AiosqliteTestMsgspecClasses::get_many_nullable_inner"],
     )
-    async def test_get_many_nullable_inner_iter(
-        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
-    ) -> None:
-        async for result in queries_obj.get_many_nullable_inner_sqlite_type(
-            table_id=inner_model.table_id, int_test=inner_model.int_test
-        ):
+    async def test_get_many_nullable_inner_iter(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
+        async for result in queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=inner_model.int_test):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
 
@@ -537,7 +483,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_nullable_inner_iter"],
     )
     async def test_get_many_date(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_date(id_=model.id, date_test=model.date_test)
+        result = await queries_obj.get_many_date(id_=model.id_, date_test=model.date_test)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -546,11 +492,9 @@ class TestMsgspecClasses:
         assert result[0] == model.date_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_many_date_iter", depends=["AiosqliteTestMsgspecClasses::get_many_date"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_many_date_iter", depends=["AiosqliteTestMsgspecClasses::get_many_date"])
     async def test_get_many_date_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_date(id_=model.id, date_test=model.date_test):
+        async for result in queries_obj.get_many_date(id_=model.id_, date_test=model.date_test):
             assert result is not None
             assert isinstance(result, datetime.date)
 
@@ -562,7 +506,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_date_iter"],
     )
     async def test_get_many_datetime(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_datetime(id_=model.id, datetime_test=model.datetime_test)
+        result = await queries_obj.get_many_datetime(id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -576,7 +520,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_datetime"],
     )
     async def test_get_many_datetime_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_datetime(id_=model.id, datetime_test=model.datetime_test):
+        async for result in queries_obj.get_many_datetime(id_=model.id_, datetime_test=model.datetime_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
@@ -588,7 +532,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_datetime_iter"],
     )
     async def test_get_many_timestamp(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_timestamp(id_=model.id, timestamp_test=model.timestamp_test)
+        result = await queries_obj.get_many_timestamp(id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -602,7 +546,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_timestamp"],
     )
     async def test_get_many_timestamp_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_timestamp(id_=model.id, timestamp_test=model.timestamp_test):
+        async for result in queries_obj.get_many_timestamp(id_=model.id_, timestamp_test=model.timestamp_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
@@ -614,7 +558,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_timestamp_iter"],
     )
     async def test_get_many_bool(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_bool(id_=model.id, bool_test=model.bool_test)
+        result = await queries_obj.get_many_bool(id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -623,11 +567,9 @@ class TestMsgspecClasses:
         assert result[0] == model.bool_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_many_bool_iter", depends=["AiosqliteTestMsgspecClasses::get_many_bool"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_many_bool_iter", depends=["AiosqliteTestMsgspecClasses::get_many_bool"])
     async def test_get_many_bool_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_bool(id_=model.id, bool_test=model.bool_test):
+        async for result in queries_obj.get_many_bool(id_=model.id_, bool_test=model.bool_test):
             assert result is not None
             assert isinstance(result, bool)
 
@@ -639,7 +581,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_bool_iter"],
     )
     async def test_get_many_boolean(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_boolean(id_=model.id, boolean_test=model.boolean_test)
+        result = await queries_obj.get_many_boolean(id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -653,7 +595,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_boolean"],
     )
     async def test_get_many_boolean_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_boolean(id_=model.id, boolean_test=model.boolean_test):
+        async for result in queries_obj.get_many_boolean(id_=model.id_, boolean_test=model.boolean_test):
             assert result is not None
             assert isinstance(result, bool)
 
@@ -665,7 +607,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_boolean_iter"],
     )
     async def test_get_many_decimal(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_decimal(id_=model.id, decimal_test=model.decimal_test)
+        result = await queries_obj.get_many_decimal(id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -679,7 +621,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_decimal"],
     )
     async def test_get_many_decimal_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_decimal(id_=model.id, decimal_test=model.decimal_test):
+        async for result in queries_obj.get_many_decimal(id_=model.id_, decimal_test=model.decimal_test):
             assert result is not None
             assert isinstance(result, decimal.Decimal)
 
@@ -691,7 +633,7 @@ class TestMsgspecClasses:
         depends=["AiosqliteTestMsgspecClasses::get_many_decimal_iter"],
     )
     async def test_get_many_blob(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = await queries_obj.get_many_blob(id_=model.id, blob_test=model.blob_test)
+        result = await queries_obj.get_many_blob(id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -700,27 +642,23 @@ class TestMsgspecClasses:
         assert result[0] == model.blob_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::get_many_blob_iter", depends=["AiosqliteTestMsgspecClasses::get_many_blob"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::get_many_blob_iter", depends=["AiosqliteTestMsgspecClasses::get_many_blob"])
     async def test_get_many_blob_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        async for result in queries_obj.get_many_blob(id_=model.id, blob_test=model.blob_test):
+        async for result in queries_obj.get_many_blob(id_=model.id_, blob_test=model.blob_test):
             assert result is not None
             assert isinstance(result, memoryview)
 
             assert result == model.blob_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::insert_result", depends=["AiosqliteTestMsgspecClasses::get_many_blob_iter"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::insert_result", depends=["AiosqliteTestMsgspecClasses::get_many_blob_iter"])
     async def test_insert_result(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
         result = await queries_obj.insert_result_one_sqlite_type(
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -753,40 +691,34 @@ class TestMsgspecClasses:
         assert isinstance(result, aiosqlite.Cursor)
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::update_result", depends=["AiosqliteTestMsgspecClasses::insert_result"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::update_result", depends=["AiosqliteTestMsgspecClasses::insert_result"])
     async def test_update_result(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.update_result_one_sqlite_type(id_=model.id + 1)
+        result = await queries_obj.update_result_one_sqlite_type(id_=model.id_ + 1)
         assert isinstance(result, aiosqlite.Cursor)
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::delete_result", depends=["AiosqliteTestMsgspecClasses::update_result"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::delete_result", depends=["AiosqliteTestMsgspecClasses::update_result"])
     async def test_delete_result(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.delete_result_one_sqlite_type(id_=model.id + 1)
+        result = await queries_obj.delete_result_one_sqlite_type(id_=model.id_ + 1)
         assert isinstance(result, aiosqlite.Cursor)
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::insert_rows", depends=["AiosqliteTestMsgspecClasses::delete_result"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::insert_rows", depends=["AiosqliteTestMsgspecClasses::delete_result"])
     async def test_insert_rows(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
         result = await queries_obj.insert_rows_one_sqlite_type(
-            id_=model.id + 2,
+            id_=model.id_ + 2,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -820,35 +752,29 @@ class TestMsgspecClasses:
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::update_rows", depends=["AiosqliteTestMsgspecClasses::insert_rows"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::update_rows", depends=["AiosqliteTestMsgspecClasses::insert_rows"])
     async def test_update_rows(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.update_rows_one_sqlite_type(id_=model.id + 2)
+        result = await queries_obj.update_rows_one_sqlite_type(id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::delete_rows", depends=["AiosqliteTestMsgspecClasses::update_rows"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::delete_rows", depends=["AiosqliteTestMsgspecClasses::update_rows"])
     async def test_delete_rows(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.delete_rows_one_sqlite_type(id_=model.id + 2)
+        result = await queries_obj.delete_rows_one_sqlite_type(id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::create_table_rows", depends=["AiosqliteTestMsgspecClasses::delete_rows"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::create_table_rows", depends=["AiosqliteTestMsgspecClasses::delete_rows"])
     async def test_create_table_rows(
         self,
         queries_obj: queries.Queries,
@@ -861,16 +787,14 @@ class TestMsgspecClasses:
         assert result == -1
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::insert_last_id", depends=["AiosqliteTestMsgspecClasses::create_table_rows"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::insert_last_id", depends=["AiosqliteTestMsgspecClasses::create_table_rows"])
     async def test_insert_last_id(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
         result = await queries_obj.insert_last_id_one_sqlite_type(
-            id_=model.id + 3,
+            id_=model.id_ + 3,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -901,69 +825,57 @@ class TestMsgspecClasses:
             json_test=model.json_test,
         )
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::update_last_id", depends=["AiosqliteTestMsgspecClasses::insert_last_id"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::update_last_id", depends=["AiosqliteTestMsgspecClasses::insert_last_id"])
     async def test_update_last_id(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.update_last_id_one_sqlite_type(id_=model.id + 3)
+        result = await queries_obj.update_last_id_one_sqlite_type(id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::delete_last_id", depends=["AiosqliteTestMsgspecClasses::update_last_id"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::delete_last_id", depends=["AiosqliteTestMsgspecClasses::update_last_id"])
     async def test_delete_last_id(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = await queries_obj.delete_last_id_one_sqlite_type(id_=model.id + 3)
+        result = await queries_obj.delete_last_id_one_sqlite_type(id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        name="AiosqliteTestMsgspecClasses::delete_sqlite_type", depends=["AiosqliteTestMsgspecClasses::delete_last_id"]
-    )
+    @pytest.mark.dependency(name="AiosqliteTestMsgspecClasses::delete_sqlite_type", depends=["AiosqliteTestMsgspecClasses::delete_last_id"])
     async def test_delete_sqlite_type(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        await queries_obj.delete_one_sqlite_type(id_=model.id)
+        await queries_obj.delete_one_sqlite_type(id_=model.id_)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="AiosqliteTestMsgspecClasses::delete_inner_sqlite_type",
         depends=["AiosqliteTestMsgspecClasses::delete_sqlite_type"],
     )
-    async def test_delete_inner_sqlite_type(
-        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    async def test_delete_inner_sqlite_type(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         await queries_obj.delete_one_test_inner_sqlite_type(table_id=inner_model.table_id)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="AiosqliteTestMsgspecClasses::insert_type_override",
     )
-    async def test_insert_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        await queries_obj.insert_type_override(id_=override_model.id, text_test=override_model.text_test)
+    async def test_insert_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        await queries_obj.insert_type_override(id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="AiosqliteTestMsgspecClasses::get_one_type_override",
         depends=["AiosqliteTestMsgspecClasses::insert_type_override"],
     )
-    async def test_get_one_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_type_override(id_=override_model.id)
+    async def test_get_one_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model
 
@@ -972,10 +884,8 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::get_one_type_override_none",
         depends=["AiosqliteTestMsgspecClasses::get_one_type_override"],
     )
-    async def test_get_one_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_type_override(id_=override_model.id - 1)
+    async def test_get_one_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_type_override(id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
@@ -983,10 +893,8 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::get_many_type_override",
         depends=["AiosqliteTestMsgspecClasses::get_one_type_override_none"],
     )
-    async def test_get_many_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_many_type_override(id_=override_model.id)
+    async def test_get_many_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_many_type_override(id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model
 
@@ -995,10 +903,8 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::get_one_text_type_override",
         depends=["AiosqliteTestMsgspecClasses::get_many_type_override"],
     )
-    async def test_get_one_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_text_type_override(id_=override_model.id)
+    async def test_get_one_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_text_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
 
@@ -1007,10 +913,8 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::get_one_text_type_override_none",
         depends=["AiosqliteTestMsgspecClasses::get_one_text_type_override"],
     )
-    async def test_get_one_text_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_text_type_override(id_=override_model.id - 1)
+    async def test_get_one_text_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_text_type_override(id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
@@ -1018,10 +922,8 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::get_many_text_type_override",
         depends=["AiosqliteTestMsgspecClasses::get_one_text_type_override_none"],
     )
-    async def test_get_many_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_many_text_type_override(id_=override_model.id)
+    async def test_get_many_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_many_text_type_override(id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model.text_test
 
@@ -1030,7 +932,5 @@ class TestMsgspecClasses:
         name="AiosqliteTestMsgspecClasses::delete_type_override",
         depends=["AiosqliteTestMsgspecClasses::get_many_text_type_override"],
     )
-    async def test_delete_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        await queries_obj.delete_type_override(id_=override_model.id)
+    async def test_delete_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        await queries_obj.delete_type_override(id_=override_model.id_)

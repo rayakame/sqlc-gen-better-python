@@ -27,13 +27,13 @@ jobs:
           
           for file in $changelog_fragments; do
             if grep -qE "PR: *\"?$pr_number\"?" "$file"; then
-              echo "✅ Found PR number $pr_number in $file"
+              echo "OK: Found PR number $pr_number in $file"
               found_match=true
             fi
           done
           
           if [ "$found_match" = false ]; then
-            echo "❌ No matching PR number found in changelog fragments."
+            echo "ERROR: No matching PR number found in changelog fragments."
             exit 1
           fi
 

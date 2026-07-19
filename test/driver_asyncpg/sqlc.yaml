@@ -3,10 +3,13 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: ee7bd0c07b784b80ea8c5853d9a6a04c51a7abbfd2663f470e9a5d2f623b967e
+      sha256: 0d564b87865b4733c9a41bd318277973c130fc02c32b5bfdb2a0b662f36148da
 sql:
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
     engine: postgresql
     codegen:
       - out: /attrs/classes
@@ -26,8 +29,17 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
     engine: postgresql
     codegen:
       - out: /attrs/functions
@@ -47,8 +59,17 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
     engine: postgresql
     codegen:
       - out: /dataclass/classes
@@ -67,8 +88,17 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
     engine: postgresql
     codegen:
       - out: /dataclass/functions
@@ -87,8 +117,17 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
     engine: postgresql
     codegen:
       - out: /msgspec/classes
@@ -107,8 +146,17 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
     engine: postgresql
     codegen:
       - out: /msgspec/functions
@@ -127,4 +175,110 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+    engine: postgresql
+    codegen:
+      - out: /pydantic/classes
+        plugin: python
+        options:
+          package: test.driver_asyncpg.pydantic.classes
+          sql_driver: asyncpg
+          model_type: pydantic
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+    engine: postgresql
+    codegen:
+      - out: /pydantic/functions
+        plugin: python
+        options:
+          package: test.driver_asyncpg.pydantic.functions
+          sql_driver: asyncpg
+          model_type: pydantic
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  # omit_typechecking_block coverage: the driver hook and QueryResultsArgsType
+  # must stay runtime-safe when emitted at module level (PEP 695 aliases are
+  # lazy). Both modules are import-tested at runtime.
+  - schema: schema.sql
+    queries: queries_enum_override.sql
+    engine: postgresql
+    codegen:
+      - out: /omit_tc/classes
+        plugin: python
+        options:
+          package: test.driver_asyncpg.omit_tc.classes
+          sql_driver: asyncpg
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          omit_typechecking_block: true
+          docstrings: google
+          overrides:
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries: queries_enum_override.sql
+    engine: postgresql
+    codegen:
+      - out: /omit_tc/functions
+        plugin: python
+        options:
+          package: test.driver_asyncpg.omit_tc.functions
+          sql_driver: asyncpg
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          omit_typechecking_block: true
+          docstrings: google
+          overrides:
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
 

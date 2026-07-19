@@ -3,10 +3,14 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: ee7bd0c07b784b80ea8c5853d9a6a04c51a7abbfd2663f470e9a5d2f623b967e
+      sha256: 0d564b87865b4733c9a41bd318277973c130fc02c32b5bfdb2a0b662f36148da
 sql:
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
     engine: sqlite
     codegen:
       - out: /attrs/classes
@@ -26,8 +30,15 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
     engine: sqlite
     codegen:
       - out: /attrs/functions
@@ -46,8 +57,15 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
     engine: sqlite
     codegen:
       - out: /dataclass/classes
@@ -66,8 +84,15 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
     engine: sqlite
     codegen:
       - out: /dataclass/functions
@@ -86,8 +111,15 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
     engine: sqlite
     codegen:
       - out: /msgspec/classes
@@ -106,8 +138,15 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
   - schema: schema.sql
-    queries: queries.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
     engine: sqlite
     codegen:
       - out: /msgspec/functions
@@ -126,4 +165,62 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+    engine: sqlite
+    codegen:
+      - out: /pydantic/classes
+        plugin: python
+        options:
+          package: test.driver_sqlite3.pydantic.classes
+          sql_driver: sqlite3
+          model_type: pydantic
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+    engine: sqlite
+    codegen:
+      - out: /pydantic/functions
+        plugin: python
+        options:
+          package: test.driver_sqlite3.pydantic.functions
+          sql_driver: sqlite3
+          model_type: pydantic
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
 

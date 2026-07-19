@@ -288,3 +288,27 @@ SELECT text_test FROM test_type_override WHERE test_type_override.id = $1;
 DELETE
 FROM test_type_override
 WHERE test_type_override.id = $1;
+
+-- name: InsertOneTestEnumType :exec
+INSERT INTO test_enum_types (id, mood, maybe_mood)
+VALUES ($1, $2, $3);
+
+-- name: GetOneTestEnumType :one
+SELECT *
+FROM test_enum_types
+WHERE id = $1;
+
+-- name: GetOneTestEnumValue :one
+SELECT mood
+FROM test_enum_types
+WHERE id = $1;
+
+-- name: GetManyTestEnumTypes :many
+SELECT *
+FROM test_enum_types
+ORDER BY id;
+
+-- name: DeleteOneTestEnumType :execrows
+DELETE
+FROM test_enum_types
+WHERE id = $1;
