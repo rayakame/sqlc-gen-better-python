@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'Row and Params class field names are no longer singularized: a plural column like `outputs` generated an `output` field on v0.4.x, so the field no longer matched the column. Only table names and embed fields (which hold one row of the joined table) are singularized. Note for upgrades: plural-named columns get their actual names back. Diagnosed by Mic92 in PR 164'
+time: 2026-07-19T17:00:00.0000000Z
+custom:
+    Author: Mic92
+    PR: "172"
