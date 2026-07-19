@@ -27,7 +27,7 @@ func (r *Renderer) renderEnums(enums []model.Enum) *plugin.File {
 
 	for _, enum := range enums {
 		fileBody.NNewLine(2)
-		fileBody.WriteLine(fmt.Sprintf("class %s(str, enum.Enum):", enum.Name))
+		fileBody.WriteLine(fmt.Sprintf("class %s(enum.StrEnum):", enum.Name))
 		fileBody.WriteEnumClassDocstring(enum.Name)
 		for _, constant := range enum.Constants {
 			fileBody.WriteIndentedLine(1, fmt.Sprintf(`%s = "%s"`, constant.Name, escapePyString(constant.Value)))

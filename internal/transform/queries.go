@@ -60,7 +60,16 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			}
 		} else {
 			query.Params = make([]model.QueryValue, 0, len(pluginQuery.Params))
-			seen := make(map[string]int, len(pluginQuery.Params))
+			seen := make(map[string]int, len(pluginQuery.Params)+1)
+			// The implicit first argument of every generated function must
+			// never collide with a parameter name: a column literally named
+			// "conn" (or "self" in classes mode) would otherwise produce a
+			// duplicate argument and a SyntaxError in the generated module.
+			if t.config.EmitClasses {
+				seen["self"]++
+			} else {
+				seen["conn"]++
+			}
 			for _, param := range pluginQuery.Params {
 				query.Params = append(query.Params, model.QueryValue{
 					Name: model.DedupName(model.ParamName(param), seen),

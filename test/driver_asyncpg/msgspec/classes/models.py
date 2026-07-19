@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "TestEnumOverride",
     "TestEnumType",
     "TestInnerPostgresType",
     "TestPostgresType",
@@ -23,6 +24,18 @@ if typing.TYPE_CHECKING:
     import datetime
     import decimal
     import uuid
+
+
+class TestEnumOverride(msgspec.Struct):
+    """Model representing TestEnumOverride.
+
+    Attributes:
+    id_ -- int
+    mood_test -- str
+    """
+
+    id_: int
+    mood_test: str
 
 
 class TestEnumType(msgspec.Struct):

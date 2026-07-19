@@ -108,6 +108,11 @@ func (w *CodeWriter) String() string {
 
 func (w *CodeWriter) WriteAll(items []string) {
 	slices.SortFunc(items, cmp.Compare)
+	if len(items) == 0 {
+		w.WriteLine(`__all__: collections.abc.Sequence[str] = ()`)
+
+		return
+	}
 	// A single-element tuple's trailing comma is required syntax, so ruff
 	// format collapses it onto one line; match that.
 	if len(items) == 1 {

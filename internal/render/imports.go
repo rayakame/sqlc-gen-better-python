@@ -20,6 +20,34 @@ type ImportResult struct {
 }
 
 func (r ImportResult) Write(body *writer.CodeWriter, omitTypeChecking bool, typeCheckingLines []string) {
+	if omitTypeChecking {
+		// Everything is emitted at module level. The TypeChecking slice can
+		// carry statements besides imports (the QueryResultsArgsType alias);
+		// those and the hook lines must follow ALL imports, otherwise the
+		// imports after them violate E402.
+		var statements []string
+		for _, line := range append(append([]string{}, r.Std...), r.TypeChecking...) {
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "import ") || strings.HasPrefix(trimmed, "from ") {
+				body.WriteLine(line)
+			} else if trimmed != "" {
+				statements = append(statements, trimmed)
+			}
+		}
+		for i, line := range r.Package {
+			if i == 0 {
+				body.NewLine()
+			}
+			body.WriteLine(line)
+		}
+		for _, line := range append(statements, typeCheckingLines...) {
+			body.NewLine()
+			body.WriteLine(line)
+		}
+
+		return
+	}
+
 	for _, line := range r.Std {
 		body.WriteLine(line)
 	}
@@ -27,7 +55,7 @@ func (r ImportResult) Write(body *writer.CodeWriter, omitTypeChecking bool, type
 		body.NewLine()
 	}
 	indentLevel := 0
-	if (len(r.TypeChecking) != 0 || len(typeCheckingLines) != 0) && !omitTypeChecking {
+	if len(r.TypeChecking) != 0 || len(typeCheckingLines) != 0 {
 		body.WriteLine("if typing.TYPE_CHECKING:")
 		indentLevel = 1
 	}
@@ -118,7 +146,11 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 
 	std, typeChecking := splitTypeChecking(std)
 
-	r.addModelImport(std)
+	// An empty models.py (all tables filtered) defines no classes, so the
+	// model-library import would be unused.
+	if len(tables) > 0 {
+		r.addModelImport(std)
+	}
 
 	local := make(map[string]importSpec)
 	if usesEnum {
@@ -132,6 +164,13 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 	if r.conf.ModelType == config.ModelTypePydantic && len(typeChecking) == 0 {
 		// Without a TYPE_CHECKING block, typing itself is unused in models.py.
 		delete(std, "typing")
+	}
+	if r.conf.OmitTypecheckingBlock {
+		// No TYPE_CHECKING guard is emitted; typing is then only referenced
+		// when a column falls back to the typing.Any annotation.
+		if used, _ := uses("typing.Any"); !used {
+			delete(std, "typing")
+		}
 	}
 
 	return buildResult(std, typeChecking, local)
@@ -177,11 +216,16 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		return *bestUsed, *bestTC
 	}
 
-	hasList := anyQueryType(queries, func(typ model.PyType) bool { return typ.IsList })
+	emitsModels, hasListField := emittedModelFields(queries)
 
 	std := r.stdImports(uses)
 	r.addOverrideImports(std, uses)
-	r.forcePydanticRuntimeImports(std, hasList)
+	// pydantic evaluates FIELD annotations of emitted Params/Row classes at
+	// class-build time; plain function annotations stay lazy strings, so
+	// modules without emitted classes need no runtime forcing.
+	if emitsModels {
+		r.forcePydanticRuntimeImports(std, hasListField)
+	}
 
 	std, typeChecking := splitTypeChecking(std)
 
@@ -288,6 +332,40 @@ func anyQueryType(queries []model.Query, pred func(model.PyType) bool) bool {
 	return false
 }
 
+// emittedModelFields reports whether the module emits Params/Row model
+// classes and whether any of their FIELDS (embed fields included) is a list
+// type. Only class fields matter for pydantic's runtime annotation
+// evaluation - the bundle value itself being a list (:copyfrom) does not.
+func emittedModelFields(queries []model.Query) (bool, bool) {
+	var emitsModels, hasListField bool
+	check := func(qv model.QueryValue) {
+		if qv.Table == nil || !qv.EmitTable {
+			return
+		}
+		emitsModels = true
+		for _, col := range qv.Table.Columns {
+			if col.Type.IsList {
+				hasListField = true
+			}
+			if col.Embed != nil {
+				for _, embedColumn := range col.Embed.Columns {
+					if embedColumn.Type.IsList {
+						hasListField = true
+					}
+				}
+			}
+		}
+	}
+	for _, query := range queries {
+		check(query.Returns)
+		for _, param := range query.Params {
+			check(param)
+		}
+	}
+
+	return emitsModels, hasListField
+}
+
 // anyParamType is anyQueryType restricted to query parameters - for imports
 // that only the runtime parameter conversion needs.
 func anyParamType(queries []model.Query, pred func(model.PyType) bool) bool {
@@ -308,6 +386,10 @@ func (r *ImportResolver) EnumImports() ImportResult {
 	}
 	std := r.stdImports(uses)
 	std["enum"] = importSpec{Module: "enum", Name: "", Alias: "", TypeChecking: false}
+	if r.conf.OmitTypecheckingBlock {
+		// enums.py references typing only for the TYPE_CHECKING guard.
+		delete(std, "typing")
+	}
 	std, typeChecking := splitTypeChecking(std)
 
 	return buildResult(std, typeChecking, nil)
@@ -503,18 +585,22 @@ func (r *ImportResolver) buildQueryResult(std, typeChecking, local map[string]im
 		if len(result.TypeChecking) != 0 {
 			result.TypeChecking[len(result.TypeChecking)-1] += "\n"
 		}
-		argsType := "QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview"
+		members := "int | float | str | memoryview"
 		allSpecs := mergeMaps(std, typeChecking)
 		if _, ok := allSpecs["decimal"]; ok {
-			argsType += " | decimal.Decimal"
+			members += " | decimal.Decimal"
 		}
 		if _, ok := allSpecs["uuid"]; ok {
-			argsType += " | uuid.UUID"
+			members += " | uuid.UUID"
 		}
 		if _, ok := allSpecs["datetime"]; ok {
-			argsType += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
+			members += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
 		}
-		argsType += " | None"
+		// Array/sqlc.slice params are forwarded into QueryResults too, so the
+		// union needs a recursive Sequence member. The PEP 695 alias is lazy,
+		// so it is also safe at module level with omit_typechecking_block.
+		argsType := "type QueryResultsArgsType = " + members +
+			" | collections.abc.Sequence[QueryResultsArgsType] | None"
 		result.TypeChecking = append(result.TypeChecking, argsType)
 	}
 

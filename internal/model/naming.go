@@ -68,16 +68,35 @@ func EscapedColumnName(pluginColumn *plugin.Column, pos int) string {
 // ModelName builds the class name for a table. Singularization runs on the
 // raw snake_case table name (before camel-casing) so that
 // inflection_exclude_table_names entries, which users write in snake_case,
-// match correctly.
+// match correctly. For non-default-schema tables exclusions match BOTH the
+// bare table name ("events") and the schema-qualified form
+// ("analytics_events") - v0.4.x singularized the qualified string, so
+// existing configs use the qualified spelling.
 func ModelName(config *config.Config, modelName string, schemaName string) string {
-	if !config.EmitExactTableNames {
+	if !config.EmitExactTableNames && !inflectionExcluded(config, modelName, schemaName) {
 		modelName = Singular(SingularParams{
 			Name:       modelName,
-			Exclusions: config.InflectionExcludeTableNames,
+			Exclusions: nil,
 		})
 	}
 
 	return qualifiedClassName(config, modelName, schemaName)
+}
+
+// inflectionExcluded reports whether the table name is excluded from
+// singularization, matching the bare or schema-qualified form.
+func inflectionExcluded(config *config.Config, modelName, schemaName string) bool {
+	qualified := modelName
+	if schemaName != "" {
+		qualified = schemaName + "_" + modelName
+	}
+	for _, exclusion := range config.InflectionExcludeTableNames {
+		if strings.EqualFold(exclusion, modelName) || strings.EqualFold(exclusion, qualified) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // EnumName builds the class name for a SQL enum. Enum type names are never

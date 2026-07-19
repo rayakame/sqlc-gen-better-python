@@ -51,11 +51,15 @@ func (d *AsyncpgDriver) WriteConversionSetup(_ *writer.CodeWriter, _ *config.Con
 	return false
 }
 
-// TypeCheckingHook returns the ConnectionLike type alias for the TYPE_CHECKING block.
+// TypeCheckingHook returns the ConnectionLike type alias. The PEP 695 form
+// is lazy by design, which matters here: asyncpg.Connection[...] is a
+// stub-only generic that raises TypeError when subscripted at runtime, and
+// with omit_typechecking_block the alias is emitted at module level where it
+// actually executes.
 func (d *AsyncpgDriver) TypeCheckingHook() []string {
 	return []string{
 		fmt.Sprintf(
-			"ConnectionLike: typing.TypeAlias = asyncpg.Connection[%[1]s] | asyncpg.pool.PoolConnectionProxy[%[1]s]",
+			"type ConnectionLike = asyncpg.Connection[%[1]s] | asyncpg.pool.PoolConnectionProxy[%[1]s]",
 			asyncpgResultType,
 		),
 	}
@@ -162,7 +166,10 @@ func writeCopyFromBody(body *writer.CodeWriter, config *config.Config, query mod
 	var paramParts []string
 	var columnParts []string
 	for _, col := range query.Params[0].Table.Columns {
-		paramParts = append(paramParts, fmt.Sprintf("param.%s", col.Name))
+		// Overridden columns convert back to their DefaultType here too:
+		// copy_records_to_table receives the raw record values, so this is
+		// the only place the conversion can happen for :copyfrom.
+		paramParts = append(paramParts, convertParamExpr(fmt.Sprintf("param.%s", col.Name), col.Type))
 		columnParts = append(columnParts, fmt.Sprintf(`"%s"`, col.DBName))
 	}
 

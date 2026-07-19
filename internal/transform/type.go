@@ -1,6 +1,8 @@
 package transform
 
 import (
+	"strings"
+
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
@@ -13,7 +15,10 @@ func (t *Transformer) convertType(columnType *plugin.Identifier) string {
 }
 
 func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
-	columnType := sdk.DataType(pluginColumn.Type)
+	// SQL type names are matched case-insensitively everywhere downstream
+	// (conversion registration, docstrings): sqlite DDL keeps the author's
+	// casing ("DATETIME"), so normalize once here instead of in every consumer.
+	columnType := strings.ToLower(sdk.DataType(pluginColumn.Type))
 	strType := t.convertType(pluginColumn.Type)
 
 	isEnum := false

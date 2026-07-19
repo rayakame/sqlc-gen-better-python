@@ -154,3 +154,11 @@ CREATE TABLE test_enum_override
     id        int PRIMARY KEY NOT NULL,
     mood_test test_mood       NOT NULL
 );
+
+-- :copyfrom into a table with an overridden column: the records must be
+-- converted back to the driver type before copy_records_to_table.
+CREATE TABLE IF NOT EXISTS test_copy_override
+(
+    id     bigint  NOT NULL,
+    amount numeric NOT NULL
+);

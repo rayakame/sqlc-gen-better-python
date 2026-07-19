@@ -31,11 +31,15 @@ import pytest
 
 from test.driver_sqlite3.dataclass.functions import models
 from test.driver_sqlite3.dataclass.functions import queries
+from test.driver_sqlite3.dataclass.functions import queries_case
 from test.driver_sqlite3.dataclass.functions import queries_override_adapter
 from test.driver_sqlite3.dataclass.functions import queries_override_converter
 
 OVERRIDE_PRICE = 12.5
 OVERRIDE_HAPPENED_AT = datetime.datetime(2026, 7, 19, 12, 30)
+CASE_DT = datetime.datetime(2026, 7, 19, 8, 15)
+CASE_DEC = decimal.Decimal("12.34")
+RESERVED_ARG_ID = 525252
 
 
 class TestSqlite3DataclassFunctions:
@@ -966,3 +970,29 @@ class TestSqlite3DataclassFunctions:
         assert happened_at is not None
         assert isinstance(happened_at, datetime.datetime)
         assert happened_at == OVERRIDE_HAPPENED_AT
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_case_row")
+    def test_insert_case_row(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The schema declares the columns as DATETIME and decimal(10,2); both
+        # must round-trip through the registered adapters and converters.
+        queries_case.insert_case_row(conn=sqlite3_conn, id_=515151, upper_dt=CASE_DT, prec_dec=CASE_DEC)
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_case_row"])
+    def test_get_case_row(self, sqlite3_conn: sqlite3.Connection) -> None:
+        row = queries_case.get_case_row(conn=sqlite3_conn, id_=515151)
+        assert row is not None
+        assert isinstance(row.upper_dt, datetime.datetime)
+        assert row.upper_dt == CASE_DT
+        assert isinstance(row.prec_dec, decimal.Decimal)
+        assert row.prec_dec == CASE_DEC
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_reserved_arg")
+    def test_insert_reserved_arg(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The column is literally named "conn"; the generated parameter must
+        # be deduplicated against the implicit connection argument.
+        queries_case.insert_reserved_arg(conn=sqlite3_conn, id_=RESERVED_ARG_ID, conn_2="reserved-arg-value")
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_reserved_arg"])
+    def test_get_reserved_arg(self, sqlite3_conn: sqlite3.Connection) -> None:
+        found_id = queries_case.get_reserved_arg(conn=sqlite3_conn, conn_2="reserved-arg-value")
+        assert found_id == RESERVED_ARG_ID

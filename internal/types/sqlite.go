@@ -41,6 +41,11 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, _ *config.Config, pluginType 
 		columnType == "json":
 		return Str
 
+	// Precision variants like "decimal(10,5)" keep their prefix; must agree
+	// with the conversion registration in driver/conversion.go.
+	case strings.HasPrefix(columnType, "decimal"):
+		return "decimal.Decimal"
+
 	default:
 		log.L().Log("unknown SQLite type: " + columnType)
 

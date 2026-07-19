@@ -8,19 +8,26 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "QueryResults",
+    "count_enum_override_by_moods",
     "get_enum_override_mood",
     "insert_enum_override",
+    "list_enum_override_by_ids",
 )
 
 import typing
 
 if typing.TYPE_CHECKING:
     import asyncpg
+    import asyncpg.cursor
     import collections.abc
 
-    ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+    type QueryResultsArgsType = int | float | str | memoryview | collections.abc.Sequence[QueryResultsArgsType] | None
+
+    type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
 from test.driver_asyncpg.attrs.functions import enums
+from test.driver_asyncpg.attrs.functions import models
 
 
 INSERT_ENUM_OVERRIDE: typing.Final[str] = """-- name: InsertEnumOverride :exec
@@ -30,6 +37,99 @@ INSERT INTO test_enum_override (id, mood_test) VALUES ($1, $2)
 GET_ENUM_OVERRIDE_MOOD: typing.Final[str] = """-- name: GetEnumOverrideMood :one
 SELECT mood_test FROM test_enum_override WHERE id = $1
 """
+
+LIST_ENUM_OVERRIDE_BY_IDS: typing.Final[str] = """-- name: ListEnumOverrideByIds :many
+SELECT id, mood_test FROM test_enum_override WHERE id = ANY($1::int[])
+"""
+
+COUNT_ENUM_OVERRIDE_BY_MOODS: typing.Final[str] = """-- name: CountEnumOverrideByMoods :one
+SELECT count(*) FROM test_enum_override WHERE mood_test = ANY($1::test_mood[])
+"""
+
+
+class QueryResults[T]:
+    """Helper class that allows both iteration and normal fetching of data from the db.
+
+    Parameters
+    ----------
+    conn
+        The connection object of type `ConnectionLike` used to execute queries.
+    sql
+        The SQL statement that will be executed when fetching/iterating.
+    decode_hook
+        A callback that turns an `asyncpg.Record` object into `T` that will be returned.
+    *args
+        Arguments that should be sent when executing the sql query.
+
+    """
+
+    __slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")
+
+    def __init__(
+        self,
+        conn: ConnectionLike,
+        sql: str,
+        decode_hook: collections.abc.Callable[[asyncpg.Record], T],
+        *args: QueryResultsArgsType,
+    ) -> None:
+        """Initialize the QueryResults instance."""
+        self._conn = conn
+        self._sql = sql
+        self._decode_hook = decode_hook
+        self._args = args
+        self._cursor: asyncpg.cursor.CursorFactory[asyncpg.Record] | None = None
+        self._iterator: asyncpg.cursor.CursorIterator[asyncpg.Record] | None = None
+
+    def __aiter__(self) -> QueryResults[T]:
+        """Initialize iteration support for `async for`.
+
+        Returns
+        -------
+        QueryResults[T]
+            Self as an asynchronous iterator.
+        """
+        return self
+
+    def __await__(
+        self,
+    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
+        """Allow `await` on the object to return all rows as a fully decoded sequence.
+
+        Returns
+        -------
+        collections.abc.Sequence[T]
+            A sequence of decoded objects of type `T`.
+        """
+
+        async def _wrapper() -> collections.abc.Sequence[T]:
+            result = await self._conn.fetch(self._sql, *self._args)
+            return [self._decode_hook(row) for row in result]
+
+        return _wrapper().__await__()
+
+    async def __anext__(self) -> T:
+        """Yield the next item in the query result using an asyncpg cursor.
+
+        Returns
+        -------
+        T
+            The next decoded result.
+
+        Raises
+        ------
+        StopAsyncIteration
+            When no more records are available.
+        """
+        if self._cursor is None or self._iterator is None:
+            self._cursor = self._conn.cursor(self._sql, *self._args)
+            self._iterator = self._cursor.__aiter__()
+        try:
+            record = await self._iterator.__anext__()
+        except StopAsyncIteration:
+            self._cursor = None
+            self._iterator = None
+            raise
+        return self._decode_hook(record)
 
 
 async def insert_enum_override(conn: ConnectionLike, *, id_: int, mood_test: str) -> None:
@@ -73,3 +173,54 @@ async def get_enum_override_mood(conn: ConnectionLike, *, id_: int) -> str | Non
     if row is None:
         return None
     return str(row[0])
+
+
+def list_enum_override_by_ids(conn: ConnectionLike, *, dollar_1: collections.abc.Sequence[int]) -> QueryResults[models.TestEnumOverride]:
+    """Fetch many from the db using the SQL query with `name: ListEnumOverrideByIds :many`.
+
+    ```sql
+    SELECT id, mood_test FROM test_enum_override WHERE id = ANY($1::int[])
+    ```
+
+    Parameters
+    ----------
+    conn : ConnectionLike
+        Connection object of type `ConnectionLike` used to execute the query.
+    dollar_1 : collections.abc.Sequence[int]
+
+    Returns
+    -------
+    QueryResults[models.TestEnumOverride]
+        Helper class that allows both iteration and normal fetching of data from the db.
+
+    """
+
+    def _decode_hook(row: asyncpg.Record) -> models.TestEnumOverride:
+        return models.TestEnumOverride(id_=row[0], mood_test=str(row[1]))
+
+    return QueryResults(conn, LIST_ENUM_OVERRIDE_BY_IDS, _decode_hook, dollar_1)
+
+
+async def count_enum_override_by_moods(conn: ConnectionLike, *, dollar_1: collections.abc.Sequence[enums.TestMood]) -> int | None:
+    """Fetch one from the db using the SQL query with `name: CountEnumOverrideByMoods :one`.
+
+    ```sql
+    SELECT count(*) FROM test_enum_override WHERE mood_test = ANY($1::test_mood[])
+    ```
+
+    Parameters
+    ----------
+    conn : ConnectionLike
+        Connection object of type `ConnectionLike` used to execute the query.
+    dollar_1 : collections.abc.Sequence[enums.TestMood]
+
+    Returns
+    -------
+    int
+        Result fetched from the db. Will be `None` if not found.
+
+    """
+    row = await conn.fetchrow(COUNT_ENUM_OVERRIDE_BY_MOODS, dollar_1)
+    if row is None:
+        return None
+    return row[0]

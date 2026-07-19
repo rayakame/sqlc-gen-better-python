@@ -60,9 +60,9 @@ if typing.TYPE_CHECKING:
     import decimal
     import uuid
 
-    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | uuid.UUID | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | None
+    type QueryResultsArgsType = int | float | str | memoryview | decimal.Decimal | uuid.UUID | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | collections.abc.Sequence[QueryResultsArgsType] | None
 
-    ConnectionLike: typing.TypeAlias = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+    type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
 from test.driver_asyncpg.dataclass.functions import enums
 from test.driver_asyncpg.dataclass.functions import models
@@ -525,10 +525,7 @@ WHERE id = $1
 """
 
 
-T = typing.TypeVar("T")
-
-
-class QueryResults(typing.Generic[T]):
+class QueryResults[T]:
     """Helper class that allows both iteration and normal fetching of data from the db."""
 
     __slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")

@@ -24,7 +24,7 @@ if typing.TYPE_CHECKING:
     import collections.abc
     import sqlite3
 
-    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | None
+    type QueryResultsArgsType = int | float | str | memoryview | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | collections.abc.Sequence[QueryResultsArgsType] | None
 
 from test.driver_aiosqlite.attrs.classes import models
 
@@ -319,10 +319,7 @@ WHERE test_type_override.id = ?
 """
 
 
-T = typing.TypeVar("T")
-
-
-class QueryResults(typing.Generic[T]):
+class QueryResults[T]:
     """Helper class that allows both iteration and normal fetching of data from the db.
 
     Parameters

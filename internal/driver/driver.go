@@ -41,7 +41,9 @@ type Driver interface {
 	// Returns the class name (typically "QueryResults").
 	WriteQueryResultsClass(w *writer.CodeWriter) string
 
-	// TypeCheckingHook returns additional lines to emit in the TYPE_CHECKING block.
+	// TypeCheckingHook returns additional lines to emit in the TYPE_CHECKING
+	// block. The lines must also be runtime-safe: with omit_typechecking_block
+	// they are emitted at module level and actually execute.
 	TypeCheckingHook() []string
 }
 

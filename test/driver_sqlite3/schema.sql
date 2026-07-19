@@ -90,3 +90,19 @@ CREATE TABLE IF NOT EXISTS test_override_conversion
     price                 decimal             NOT NULL,
     happened_at           datetime            NOT NULL
 );
+
+-- Uppercase type names and precision variants exercise the SQL-type
+-- normalization: annotation and conversion registration must agree.
+CREATE TABLE IF NOT EXISTS test_case_sensitivity
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    upper_dt              DATETIME            NOT NULL,
+    prec_dec              decimal(10,2)       NOT NULL
+);
+
+-- A column named like the implicit first argument of generated functions.
+CREATE TABLE IF NOT EXISTS test_reserved_args
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    conn                  text                NOT NULL
+);

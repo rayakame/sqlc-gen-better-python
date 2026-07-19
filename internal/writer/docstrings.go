@@ -353,8 +353,11 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		summaryFmt = "Execute SQL query with `name: %s %s`."
 	case metadata.CmdExecRows:
 		summaryFmt = "Execute SQL query with `name: %s %s` and return the number of affected rows."
+		// Both sqlite drivers return cursor.rowcount, which is -1 for
+		// non-DML statements per DB-API; only asyncpg's status-string parse
+		// falls back to 0.
 		noRows := "0"
-		if w.docstringDriver == config.SQLDriverAioSQLite {
+		if w.docstringDriver == config.SQLDriverAioSQLite || w.docstringDriver == config.SQLDriverSQLite {
 			noRows = "-1"
 		}
 		ret = &retDoc{

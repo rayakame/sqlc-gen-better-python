@@ -37,6 +37,7 @@ import pytest
 from test.driver_asyncpg.msgspec.functions import enums
 from test.driver_asyncpg.msgspec.functions import models
 from test.driver_asyncpg.msgspec.functions import queries
+from test.driver_asyncpg.msgspec.functions import queries_copy_override
 from test.driver_asyncpg.msgspec.functions import queries_enum_override
 
 
@@ -68,9 +69,9 @@ class TestMsgspecFunctions:
             bytea_test=memoryview(b"\x00\x01\x02hello"),
             date_test=datetime.date(2025, 1, 1),
             time_test=datetime.time(14, 30, 0),
-            timetz_test=datetime.time(14, 30, 0, tzinfo=datetime.timezone.utc),
+            timetz_test=datetime.time(14, 30, 0, tzinfo=datetime.UTC),
             timestamp_test=datetime.datetime(2025, 1, 1, 14, 30, 0),
-            timestamptz_test=datetime.datetime(2025, 1, 1, 14, 30, 0, tzinfo=datetime.timezone.utc),
+            timestamptz_test=datetime.datetime(2025, 1, 1, 14, 30, 0, tzinfo=datetime.UTC),
             interval_test=datetime.timedelta(days=1, hours=2, minutes=30),
             text_test="Lorem ipsum",
             varchar_test="Example varchar",
@@ -804,3 +805,40 @@ class TestMsgspecFunctions:
         assert mood is not None
         assert isinstance(mood, str)
         assert mood == "happy"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecFunctions::list_enum_override", depends=["TestMsgspecFunctions::insert_enum_override"])
+    async def test_list_enum_override_by_ids(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # :many with an array parameter: the Sequence must pass both pyright
+        # (QueryResultsArgsType) and the runtime QueryResults plumbing.
+        rows = await queries_enum_override.list_enum_override_by_ids(conn=asyncpg_conn, dollar_1=[434343])
+        assert len(rows) == 1
+        assert rows[0].mood_test == "happy"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum_override"])
+    async def test_count_enum_override_by_moods(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        count = await queries_enum_override.count_enum_override_by_moods(conn=asyncpg_conn, dollar_1=[enums.TestMood.HAPPY, enums.TestMood.SAD])
+        assert count == 1
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecFunctions::copy_override")
+    async def test_copy_override_rows(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # The overridden float values must be converted back to Decimal before
+        # copy_records_to_table.
+        params = [
+            queries_copy_override.CopyOverrideRowsParams(id_=1, amount=12.5),
+            queries_copy_override.CopyOverrideRowsParams(id_=2, amount=0.25),
+        ]
+        inserted = await queries_copy_override.copy_override_rows(conn=asyncpg_conn, params=params)
+        assert inserted == len(params)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::copy_override"])
+    async def test_count_and_delete_copy_override_rows(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        copied_rows = 2
+        count = await queries_copy_override.count_copy_override_rows(conn=asyncpg_conn)
+        assert count == copied_rows
+        await queries_copy_override.delete_copy_override_rows(conn=asyncpg_conn)
+        count = await queries_copy_override.count_copy_override_rows(conn=asyncpg_conn)
+        assert count == 0

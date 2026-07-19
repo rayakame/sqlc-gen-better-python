@@ -20,9 +20,9 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeader(
 	driverReturnType string,
 	async bool,
 ) {
-	w.writer.WriteLine(`T = typing.TypeVar("T")`)
-	w.writer.NNewLine(2)
-	w.writer.WriteLine("class QueryResults(typing.Generic[T]):")
+	// PEP 695 class-scoped type parameter: no module-level TypeVar and no
+	// typing.Generic base needed on Python 3.12+.
+	w.writer.WriteLine("class QueryResults[T]:")
 	w.writer.WriteQueryResultsClassDocstring(connType, driverReturnType)
 	w.writer.WriteIndentedLine(1, `__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")`)
 	w.writer.NewLine()

@@ -7,8 +7,10 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "TestCaseSensitivity",
     "TestInnerSqliteType",
     "TestOverrideConversion",
+    "TestReservedArg",
     "TestSqliteType",
     "TestTypeOverride",
 )
@@ -21,6 +23,23 @@ if typing.TYPE_CHECKING:
     import collections.abc
     import datetime
     import decimal
+
+
+@attrs.define()
+class TestCaseSensitivity:
+    """Model representing TestCaseSensitivity.
+
+    Attributes
+    ----------
+    id_ : int
+    upper_dt : datetime.datetime
+    prec_dec : decimal.Decimal
+
+    """
+
+    id_: int
+    upper_dt: datetime.datetime
+    prec_dec: decimal.Decimal
 
 
 @attrs.define()
@@ -107,6 +126,21 @@ class TestOverrideConversion:
     id_: int
     price: float
     happened_at: datetime.datetime
+
+
+@attrs.define()
+class TestReservedArg:
+    """Model representing TestReservedArg.
+
+    Attributes
+    ----------
+    id_ : int
+    conn : str
+
+    """
+
+    id_: int
+    conn: str
 
 
 @attrs.define()

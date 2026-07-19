@@ -90,16 +90,21 @@ func writeQueryDocstring(body *writer.CodeWriter, d Driver, cfg *config.Config, 
 }
 
 // convertParamExpr converts an overridden argument back to the type the driver
-// expects (its DefaultType) before passing it on.
+// expects (its DefaultType) before passing it on. List values convert
+// element-wise, mirroring RowBuilder.convertExpr on the return side.
 func convertParamExpr(expr string, typ model.PyType) string {
 	if !typ.DoOverride() {
 		return expr
 	}
+	converted := fmt.Sprintf("%s(%s)", typ.DefaultType, expr)
+	if typ.IsList {
+		converted = fmt.Sprintf("[%s(v) for v in %s]", typ.DefaultType, expr)
+	}
 	if typ.IsNullable {
-		return fmt.Sprintf("%s(%s) if %s is not None else None", typ.DefaultType, expr, expr)
+		return fmt.Sprintf("%s if %s is not None else None", converted, expr)
 	}
 
-	return fmt.Sprintf("%s(%s)", typ.DefaultType, expr)
+	return converted
 }
 
 func writeExecRowsReturn(body *writer.CodeWriter, config *config.Config, indent int) {

@@ -7,6 +7,9 @@
 
 A WASM plugin for SQLC allowing the generation of Python code.
 
+The generated code requires **Python 3.12 or newer** (it uses PEP 695 type
+aliases and generics, and `enum.StrEnum`).
+
 
 > [!NOTE]  
 > Every Release before `v1.0.0`, including this one is an beta release. 
@@ -91,10 +94,10 @@ options:
 
 ### Enums
 
-PostgreSQL enum types generate an `enums.py` module containing `str`-based enum classes:
+PostgreSQL enum types generate an `enums.py` module containing `enum.StrEnum` classes:
 
 ```python
-class Mood(str, enum.Enum):
+class Mood(enum.StrEnum):
     SAD = "sad"
     OK = "ok"
     HAPPY = "happy"

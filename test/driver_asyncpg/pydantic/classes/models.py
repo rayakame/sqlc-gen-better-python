@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "TestEnumOverride",
     "TestEnumType",
     "TestInnerPostgresType",
     "TestPostgresType",
@@ -24,6 +25,20 @@ if typing.TYPE_CHECKING:
     import collections.abc
 
 from test.driver_asyncpg.pydantic.classes import enums
+
+
+class TestEnumOverride(pydantic.BaseModel):
+    """Model representing TestEnumOverride.
+
+    Attributes:
+        id_: int
+        mood_test: str
+    """
+
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    mood_test: str
 
 
 class TestEnumType(pydantic.BaseModel):

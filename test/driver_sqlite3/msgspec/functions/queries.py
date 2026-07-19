@@ -60,7 +60,7 @@ import typing
 if typing.TYPE_CHECKING:
     import collections.abc
 
-    QueryResultsArgsType: typing.TypeAlias = int | float | str | memoryview | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | None
+    type QueryResultsArgsType = int | float | str | memoryview | decimal.Decimal | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | collections.abc.Sequence[QueryResultsArgsType] | None
 
 from test.driver_sqlite3.msgspec.functions import models
 
@@ -355,10 +355,7 @@ WHERE test_type_override.id = ?
 """
 
 
-T = typing.TypeVar("T")
-
-
-class QueryResults(typing.Generic[T]):
+class QueryResults[T]:
     """Helper class that allows both iteration and normal fetching of data from the db."""
 
     __slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")
@@ -1455,7 +1452,7 @@ def insert_rows_one_sqlite_type(
     json_test -- str.
 
     Returns:
-    int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+    int -- The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     sql_args = (
         id_,
@@ -1505,7 +1502,7 @@ def update_rows_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int:
     id_ -- int.
 
     Returns:
-    int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+    int -- The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     return conn.execute(UPDATE_ROWS_ONE_SQLITE_TYPE, (id_,)).rowcount
 
@@ -1524,7 +1521,7 @@ def delete_rows_one_sqlite_type(conn: sqlite3.Connection, *, id_: int) -> int:
     id_ -- int.
 
     Returns:
-    int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+    int -- The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     return conn.execute(DELETE_ROWS_ONE_SQLITE_TYPE, (id_,)).rowcount
 
@@ -1544,7 +1541,7 @@ def create_rows_table(conn: sqlite3.Connection) -> int:
     conn -- Connection object of type `sqlite3.Connection` used to execute the query.
 
     Returns:
-    int -- The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+    int -- The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     return conn.execute(CREATE_ROWS_TABLE).rowcount
 

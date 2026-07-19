@@ -15,7 +15,7 @@ if typing.TYPE_CHECKING:
     import collections.abc
 
 
-class TestMood(str, enum.Enum):
+class TestMood(enum.StrEnum):
     """Enum representing TestMood."""
 
     SAD = "sad"

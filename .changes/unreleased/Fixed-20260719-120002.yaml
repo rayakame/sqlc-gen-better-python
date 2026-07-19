@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'sqlite SQL type names are now matched case-insensitively and with precision suffixes: a column declared `DATETIME` registers its adapter/converter pair (previously it was silently skipped and returned raw strings under `PARSE_DECLTYPES`), and `decimal(10,2)` is annotated `decimal.Decimal` instead of `typing.Any`'
+time: 2026-07-19T12:00:02.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"

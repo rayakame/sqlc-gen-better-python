@@ -26,14 +26,12 @@ func New(cfg *config.Config, drv driver.Driver) *Renderer {
 
 func (r *Renderer) RenderAll(enums []model.Enum, tables []model.Table, queries []model.Query) ([]*plugin.File, error) {
 	outputFiles := make([]*plugin.File, 0)
-	hasEnums := len(enums) > 0
-	hasTables := len(tables) > 0
-	if hasEnums {
+	if len(enums) > 0 {
 		outputFiles = append(outputFiles, r.renderEnums(enums))
 	}
-	if hasTables {
-		outputFiles = append(outputFiles, r.renderTables(tables))
-	}
+	// models.py is emitted even when every table was filtered out: users
+	// import it directly, and v0.4.x always shipped it.
+	outputFiles = append(outputFiles, r.renderTables(tables))
 
 	queriesModuleMap := make(map[string][]model.Query)
 	for _, query := range queries {
