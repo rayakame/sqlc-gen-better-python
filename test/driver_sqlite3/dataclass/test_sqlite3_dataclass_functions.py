@@ -1009,3 +1009,12 @@ class TestSqlite3DataclassFunctions:
     def test_get_unknown_override(self, sqlite3_conn: sqlite3.Connection) -> None:
         happened_at = queries_unknown_override.get_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID)
         assert happened_at == "2460500.5"
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_unknown_override"])
+    def test_get_unknown_override_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_unknown_override.get_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID - 1) is None
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_unknown_override"])
+    def test_get_unknown_override_null_value(self, sqlite3_conn: sqlite3.Connection) -> None:
+        queries_unknown_override.insert_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID + 1, happened_at=None)
+        assert queries_unknown_override.get_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID + 1) is None
