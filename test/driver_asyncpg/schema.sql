@@ -162,3 +162,11 @@ CREATE TABLE IF NOT EXISTS test_copy_override
     id     bigint  NOT NULL,
     amount numeric NOT NULL
 );
+
+-- Plural column name: field names must NOT be singularized (only table
+-- names and embed fields are). Ported from PR 164.
+CREATE TABLE IF NOT EXISTS test_field_namings
+(
+    id      bigint PRIMARY KEY NOT NULL,
+    outputs jsonb              NOT NULL
+);

@@ -9,6 +9,7 @@ from __future__ import annotations
 __all__: collections.abc.Sequence[str] = (
     "TestEnumOverride",
     "TestEnumType",
+    "TestFieldNaming",
     "TestInnerPostgresType",
     "TestPostgresType",
     "TestTypeOverride",
@@ -55,6 +56,20 @@ class TestEnumType(pydantic.BaseModel):
     id_: int
     mood: enums.TestMood
     maybe_mood: enums.TestMood | None
+
+
+class TestFieldNaming(pydantic.BaseModel):
+    """Model representing TestFieldNaming.
+
+    Attributes:
+        id_: int
+        outputs: str
+    """
+
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    outputs: str
 
 
 class TestInnerPostgresType(pydantic.BaseModel):
