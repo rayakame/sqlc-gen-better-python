@@ -31,17 +31,26 @@ import pytest
 
 from test.driver_sqlite3.dataclass.functions import models
 from test.driver_sqlite3.dataclass.functions import queries
+from test.driver_sqlite3.dataclass.functions import queries_case
+from test.driver_sqlite3.dataclass.functions import queries_override_adapter
+from test.driver_sqlite3.dataclass.functions import queries_override_converter
+
+OVERRIDE_PRICE = 12.5
+OVERRIDE_HAPPENED_AT = datetime.datetime(2026, 7, 19, 12, 30)
+CASE_DT = datetime.datetime(2026, 7, 19, 8, 15)
+CASE_DEC = decimal.Decimal("12.34")
+RESERVED_ARG_ID = 525252
 
 
 class TestSqlite3DataclassFunctions:
     @pytest.fixture(scope="session")
     def override_model(self) -> models.TestTypeOverride:
-        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+        return models.TestTypeOverride(id_=random.randint(1, 10000000), text_test=UserString("Test"))
 
     @pytest.fixture(scope="session")
     def model(self) -> models.TestSqliteType:
         return models.TestSqliteType(
-            id=random.randint(1, 10000000),
+            id_=random.randint(1, 10000000),
             int_test=42,
             bigint_test=9_007_199_254_740_991,
             smallint_test=32_767,
@@ -75,7 +84,7 @@ class TestSqlite3DataclassFunctions:
     @pytest.fixture(scope="session")
     def inner_model(self, model: models.TestSqliteType) -> models.TestInnerSqliteType:
         return models.TestInnerSqliteType(
-            table_id=model.id,
+            table_id=model.id_,
             int_test=None,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -114,7 +123,7 @@ class TestSqlite3DataclassFunctions:
     ) -> None:
         queries.insert_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id,
+            id_=model.id_,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -145,9 +154,7 @@ class TestSqlite3DataclassFunctions:
             json_test=model.json_test,
         )
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::inner_insert", depends=["Sqlite3TestDataclassFunctions::insert"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::inner_insert", depends=["Sqlite3TestDataclassFunctions::insert"])
     def test_inner_insert(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -186,15 +193,13 @@ class TestSqlite3DataclassFunctions:
             json_test=inner_model.json_test,
         )
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_one", depends=["Sqlite3TestDataclassFunctions::inner_insert"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_one", depends=["Sqlite3TestDataclassFunctions::inner_insert"])
     def test_get_one(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_sqlite_type(conn=sqlite3_conn, id_=model.id)
+        result = queries.get_one_sqlite_type(conn=sqlite3_conn, id_=model.id_)
 
         assert result is not None
 
@@ -202,9 +207,7 @@ class TestSqlite3DataclassFunctions:
 
         assert result == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_one_none", depends=["Sqlite3TestDataclassFunctions::get_one"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_one_none", depends=["Sqlite3TestDataclassFunctions::get_one"])
     def test_get_one_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -213,9 +216,7 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_one_inner", depends=["Sqlite3TestDataclassFunctions::get_one_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_one_inner", depends=["Sqlite3TestDataclassFunctions::get_one_none"])
     def test_get_one_inner(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -240,24 +241,20 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_date", depends=["Sqlite3TestDataclassFunctions::get_one_inner_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_date", depends=["Sqlite3TestDataclassFunctions::get_one_inner_none"])
     def test_get_date(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_date(conn=sqlite3_conn, id_=model.id, date_test=model.date_test)
+        result = queries.get_one_date(conn=sqlite3_conn, id_=model.id_, date_test=model.date_test)
 
         assert result is not None
 
         assert isinstance(result, datetime.date)
         assert result == model.date_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_date_none", depends=["Sqlite3TestDataclassFunctions::get_date"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_date_none", depends=["Sqlite3TestDataclassFunctions::get_date"])
     def test_get_date_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -266,24 +263,20 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_datetime", depends=["Sqlite3TestDataclassFunctions::get_date_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_datetime", depends=["Sqlite3TestDataclassFunctions::get_date_none"])
     def test_get_datetime(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_datetime(conn=sqlite3_conn, id_=model.id, datetime_test=model.datetime_test)
+        result = queries.get_one_datetime(conn=sqlite3_conn, id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
 
         assert isinstance(result, datetime.datetime)
         assert result == model.datetime_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_datetime_none", depends=["Sqlite3TestDataclassFunctions::get_datetime"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_datetime_none", depends=["Sqlite3TestDataclassFunctions::get_datetime"])
     def test_get_datetime_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -301,7 +294,7 @@ class TestSqlite3DataclassFunctions:
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_timestamp(conn=sqlite3_conn, id_=model.id, timestamp_test=model.timestamp_test)
+        result = queries.get_one_timestamp(conn=sqlite3_conn, id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
 
@@ -320,24 +313,20 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_bool", depends=["Sqlite3TestDataclassFunctions::get_timestamp_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_bool", depends=["Sqlite3TestDataclassFunctions::get_timestamp_none"])
     def test_get_bool(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_bool(conn=sqlite3_conn, id_=model.id, bool_test=model.bool_test)
+        result = queries.get_one_bool(conn=sqlite3_conn, id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
 
         assert isinstance(result, bool)
         assert result == model.bool_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_bool_none", depends=["Sqlite3TestDataclassFunctions::get_bool"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_bool_none", depends=["Sqlite3TestDataclassFunctions::get_bool"])
     def test_get_bool_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -346,24 +335,20 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_boolean", depends=["Sqlite3TestDataclassFunctions::get_bool_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_boolean", depends=["Sqlite3TestDataclassFunctions::get_bool_none"])
     def test_get_boolean(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_boolean(conn=sqlite3_conn, id_=model.id, boolean_test=model.boolean_test)
+        result = queries.get_one_boolean(conn=sqlite3_conn, id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
 
         assert isinstance(result, bool)
         assert result == model.boolean_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_boolean_none", depends=["Sqlite3TestDataclassFunctions::get_boolean"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_boolean_none", depends=["Sqlite3TestDataclassFunctions::get_boolean"])
     def test_get_boolean_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -372,24 +357,20 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_decimal", depends=["Sqlite3TestDataclassFunctions::get_boolean_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_decimal", depends=["Sqlite3TestDataclassFunctions::get_boolean_none"])
     def test_get_decimal(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_decimal(conn=sqlite3_conn, id_=model.id, decimal_test=model.decimal_test)
+        result = queries.get_one_decimal(conn=sqlite3_conn, id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
 
         assert isinstance(result, decimal.Decimal)
         assert result == model.decimal_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_decimal_none", depends=["Sqlite3TestDataclassFunctions::get_decimal"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_decimal_none", depends=["Sqlite3TestDataclassFunctions::get_decimal"])
     def test_get_decimal_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -398,24 +379,20 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_blob", depends=["Sqlite3TestDataclassFunctions::get_decimal_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_blob", depends=["Sqlite3TestDataclassFunctions::get_decimal_none"])
     def test_get_blob(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.get_one_blob(conn=sqlite3_conn, id_=model.id, blob_test=model.blob_test)
+        result = queries.get_one_blob(conn=sqlite3_conn, id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
 
         assert isinstance(result, memoryview)
         assert result == model.blob_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_blob_none", depends=["Sqlite3TestDataclassFunctions::get_blob"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_blob_none", depends=["Sqlite3TestDataclassFunctions::get_blob"])
     def test_get_blob_none(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -424,11 +401,9 @@ class TestSqlite3DataclassFunctions:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_many", depends=["Sqlite3TestDataclassFunctions::get_blob_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_many", depends=["Sqlite3TestDataclassFunctions::get_blob_none"])
     def test_get_many(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id)
+        result = queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id_)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -441,19 +416,15 @@ class TestSqlite3DataclassFunctions:
 
         assert results[0] == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_many_iter", depends=["Sqlite3TestDataclassFunctions::get_many"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_many_iter", depends=["Sqlite3TestDataclassFunctions::get_many"])
     def test_get_many_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id):
+        for result in queries.get_many_sqlite_type(conn=sqlite3_conn, id_=model.id_):
             assert result is not None
             assert isinstance(result, models.TestSqliteType)
 
             assert result == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::get_many_inner", depends=["Sqlite3TestDataclassFunctions::get_many_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_many_inner", depends=["Sqlite3TestDataclassFunctions::get_many_iter"])
     def test_get_many_inner(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
         result = queries.get_many_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id)
 
@@ -468,9 +439,7 @@ class TestSqlite3DataclassFunctions:
         name="Sqlite3TestDataclassFunctions::get_many_inner_iter",
         depends=["Sqlite3TestDataclassFunctions::get_many_inner"],
     )
-    def test_get_many_inner_iter(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    def test_get_many_inner_iter(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
         for result in queries.get_many_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
@@ -482,12 +451,8 @@ class TestSqlite3DataclassFunctions:
         name="Sqlite3TestDataclassFunctions::get_many_nullable_inner",
         depends=["Sqlite3TestDataclassFunctions::get_many_inner_iter"],
     )
-    async def test_get_many_nullable_inner(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
-        result = queries.get_many_nullable_inner_sqlite_type(
-            conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
-        )
+    async def test_get_many_nullable_inner(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
+        result = queries.get_many_nullable_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -501,12 +466,8 @@ class TestSqlite3DataclassFunctions:
         name="Sqlite3TestDataclassFunctions::get_many_nullable_inner_iter",
         depends=["Sqlite3TestDataclassFunctions::get_many_nullable_inner"],
     )
-    async def test_get_many_nullable_inner_iter(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
-        for result in queries.get_many_nullable_inner_sqlite_type(
-            conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test
-        ):
+    async def test_get_many_nullable_inner_iter(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
+        for result in queries.get_many_nullable_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id, int_test=inner_model.int_test):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
 
@@ -517,7 +478,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_nullable_inner_iter"],
     )
     def test_get_many_date(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_date(conn=sqlite3_conn, id_=model.id, date_test=model.date_test)
+        result = queries.get_many_date(conn=sqlite3_conn, id_=model.id_, date_test=model.date_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -531,7 +492,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_date"],
     )
     def test_get_many_date_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_date(conn=sqlite3_conn, id_=model.id, date_test=model.date_test):
+        for result in queries.get_many_date(conn=sqlite3_conn, id_=model.id_, date_test=model.date_test):
             assert result is not None
             assert isinstance(result, datetime.date)
 
@@ -542,7 +503,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_date_iter"],
     )
     def test_get_many_datetime(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_datetime(conn=sqlite3_conn, id_=model.id, datetime_test=model.datetime_test)
+        result = queries.get_many_datetime(conn=sqlite3_conn, id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -556,7 +517,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_datetime"],
     )
     def test_get_many_datetime_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_datetime(conn=sqlite3_conn, id_=model.id, datetime_test=model.datetime_test):
+        for result in queries.get_many_datetime(conn=sqlite3_conn, id_=model.id_, datetime_test=model.datetime_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
@@ -567,7 +528,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_datetime_iter"],
     )
     def test_get_many_timestamp(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id, timestamp_test=model.timestamp_test)
+        result = queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -581,7 +542,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_timestamp"],
     )
     def test_get_many_timestamp_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id, timestamp_test=model.timestamp_test):
+        for result in queries.get_many_timestamp(conn=sqlite3_conn, id_=model.id_, timestamp_test=model.timestamp_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
@@ -592,7 +553,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_timestamp_iter"],
     )
     def test_get_many_bool(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_bool(conn=sqlite3_conn, id_=model.id, bool_test=model.bool_test)
+        result = queries.get_many_bool(conn=sqlite3_conn, id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -606,7 +567,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_bool"],
     )
     def test_get_many_bool_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_bool(conn=sqlite3_conn, id_=model.id, bool_test=model.bool_test):
+        for result in queries.get_many_bool(conn=sqlite3_conn, id_=model.id_, bool_test=model.bool_test):
             assert result is not None
             assert isinstance(result, bool)
 
@@ -617,7 +578,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_bool_iter"],
     )
     def test_get_many_boolean(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_boolean(conn=sqlite3_conn, id_=model.id, boolean_test=model.boolean_test)
+        result = queries.get_many_boolean(conn=sqlite3_conn, id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -631,7 +592,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_boolean"],
     )
     def test_get_many_boolean_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_boolean(conn=sqlite3_conn, id_=model.id, boolean_test=model.boolean_test):
+        for result in queries.get_many_boolean(conn=sqlite3_conn, id_=model.id_, boolean_test=model.boolean_test):
             assert result is not None
             assert isinstance(result, bool)
 
@@ -642,7 +603,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_boolean_iter"],
     )
     def test_get_many_decimal(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_decimal(conn=sqlite3_conn, id_=model.id, decimal_test=model.decimal_test)
+        result = queries.get_many_decimal(conn=sqlite3_conn, id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -656,7 +617,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_decimal"],
     )
     def test_get_many_decimal_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_decimal(conn=sqlite3_conn, id_=model.id, decimal_test=model.decimal_test):
+        for result in queries.get_many_decimal(conn=sqlite3_conn, id_=model.id_, decimal_test=model.decimal_test):
             assert result is not None
             assert isinstance(result, decimal.Decimal)
 
@@ -667,7 +628,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_decimal_iter"],
     )
     def test_get_many_blob(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        result = queries.get_many_blob(conn=sqlite3_conn, id_=model.id, blob_test=model.blob_test)
+        result = queries.get_many_blob(conn=sqlite3_conn, id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -681,7 +642,7 @@ class TestSqlite3DataclassFunctions:
         depends=["Sqlite3TestDataclassFunctions::get_many_blob"],
     )
     def test_get_many_blob_iter(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        for result in queries.get_many_blob(conn=sqlite3_conn, id_=model.id, blob_test=model.blob_test):
+        for result in queries.get_many_blob(conn=sqlite3_conn, id_=model.id_, blob_test=model.blob_test):
             assert result is not None
             assert isinstance(result, memoryview)
 
@@ -698,7 +659,7 @@ class TestSqlite3DataclassFunctions:
     ) -> None:
         result = queries.insert_result_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -730,31 +691,25 @@ class TestSqlite3DataclassFunctions:
         )
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::update_result", depends=["Sqlite3TestDataclassFunctions::insert_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::update_result", depends=["Sqlite3TestDataclassFunctions::insert_result"])
     def test_update_result(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.update_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 1)
+        result = queries.update_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::delete_result", depends=["Sqlite3TestDataclassFunctions::update_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::delete_result", depends=["Sqlite3TestDataclassFunctions::update_result"])
     def test_delete_result(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.delete_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 1)
+        result = queries.delete_result_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::insert_rows", depends=["Sqlite3TestDataclassFunctions::delete_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_rows", depends=["Sqlite3TestDataclassFunctions::delete_result"])
     def test_insert_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -762,7 +717,7 @@ class TestSqlite3DataclassFunctions:
     ) -> None:
         result = queries.insert_rows_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id + 2,
+            id_=model.id_ + 2,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -795,33 +750,27 @@ class TestSqlite3DataclassFunctions:
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::update_rows", depends=["Sqlite3TestDataclassFunctions::insert_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::update_rows", depends=["Sqlite3TestDataclassFunctions::insert_rows"])
     def test_update_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.update_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 2)
+        result = queries.update_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::delete_rows", depends=["Sqlite3TestDataclassFunctions::update_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::delete_rows", depends=["Sqlite3TestDataclassFunctions::update_rows"])
     def test_delete_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.delete_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 2)
+        result = queries.delete_rows_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::create_table_rows", depends=["Sqlite3TestDataclassFunctions::delete_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::create_table_rows", depends=["Sqlite3TestDataclassFunctions::delete_rows"])
     def test_create_table_rows(
         self,
         sqlite3_conn: sqlite3.Connection,
@@ -843,7 +792,7 @@ class TestSqlite3DataclassFunctions:
     ) -> None:
         result = queries.insert_last_id_one_sqlite_type(
             conn=sqlite3_conn,
-            id_=model.id + 3,
+            id_=model.id_ + 3,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -874,64 +823,54 @@ class TestSqlite3DataclassFunctions:
             json_test=model.json_test,
         )
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::update_last_id", depends=["Sqlite3TestDataclassFunctions::insert_last_id"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::update_last_id", depends=["Sqlite3TestDataclassFunctions::insert_last_id"])
     def test_update_last_id(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.update_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 3)
+        result = queries.update_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestDataclassFunctions::delete_last_id", depends=["Sqlite3TestDataclassFunctions::update_last_id"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::delete_last_id", depends=["Sqlite3TestDataclassFunctions::update_last_id"])
     def test_delete_last_id(
         self,
         sqlite3_conn: sqlite3.Connection,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries.delete_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id + 3)
+        result = queries.delete_last_id_one_sqlite_type(conn=sqlite3_conn, id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
     @pytest.mark.dependency(
         name="Sqlite3TestDataclassFunctions::delete_sqlite_type",
         depends=["Sqlite3TestDataclassFunctions::delete_last_id"],
     )
     def test_delete_sqlite_type(self, sqlite3_conn: sqlite3.Connection, model: models.TestSqliteType) -> None:
-        queries.delete_one_sqlite_type(conn=sqlite3_conn, id_=model.id)
+        queries.delete_one_sqlite_type(conn=sqlite3_conn, id_=model.id_)
 
     @pytest.mark.dependency(
         name="Sqlite3TestDataclassFunctions::delete_inner_sqlite_type",
         depends=["Sqlite3TestDataclassFunctions::delete_sqlite_type"],
     )
-    def test_delete_inner_sqlite_type(
-        self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    def test_delete_inner_sqlite_type(self, sqlite3_conn: sqlite3.Connection, inner_model: models.TestInnerSqliteType) -> None:
         queries.delete_one_test_inner_sqlite_type(conn=sqlite3_conn, table_id=inner_model.table_id)
 
     @pytest.mark.dependency(
         name="Sqlite3TestDataclassFunctions::insert_type_override",
     )
-    def test_insert_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        queries.insert_type_override(conn=sqlite3_conn, id_=override_model.id, text_test=override_model.text_test)
+    def test_insert_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        queries.insert_type_override(conn=sqlite3_conn, id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.dependency(
         name="Sqlite3TestDataclassFunctions::get_one_type_override",
         depends=["Sqlite3TestDataclassFunctions::insert_type_override"],
     )
-    def test_get_one_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id)
+    def test_get_one_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model
 
@@ -939,20 +878,16 @@ class TestSqlite3DataclassFunctions:
         name="Sqlite3TestDataclassFunctions::get_one_type_override_none",
         depends=["Sqlite3TestDataclassFunctions::get_one_type_override"],
     )
-    def test_get_one_type_override_none(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id - 1)
+    def test_get_one_type_override_none(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        result = queries.get_one_type_override(conn=sqlite3_conn, id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.dependency(
         name="Sqlite3TestDataclassFunctions::get_many_type_override",
         depends=["Sqlite3TestDataclassFunctions::get_one_type_override_none"],
     )
-    def test_get_many_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries.get_many_type_override(conn=sqlite3_conn, id_=override_model.id)
+    def test_get_many_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        result = queries.get_many_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = list(result)
@@ -969,10 +904,8 @@ class TestSqlite3DataclassFunctions:
         name="Sqlite3TestDataclassFunctions::get_one_text_type_override",
         depends=["Sqlite3TestDataclassFunctions::get_many_type_override"],
     )
-    def test_get_one_text_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id)
+    def test_get_one_text_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
 
@@ -980,20 +913,16 @@ class TestSqlite3DataclassFunctions:
         name="Sqlite3TestDataclassFunctions::get_one_text_type_override_none",
         depends=["Sqlite3TestDataclassFunctions::get_one_text_type_override"],
     )
-    def test_get_one_text_type_override_none(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id - 1)
+    def test_get_one_text_type_override_none(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        result = queries.get_one_text_type_override(conn=sqlite3_conn, id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.dependency(
         name="Sqlite3TestDataclassFunctions::get_many_text_type_override",
         depends=["Sqlite3TestDataclassFunctions::get_one_text_type_override_none"],
     )
-    def test_get_many_text_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries.get_many_text_type_override(conn=sqlite3_conn, id_=override_model.id)
+    def test_get_many_text_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        result = queries.get_many_text_type_override(conn=sqlite3_conn, id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = list(result)
@@ -1010,7 +939,60 @@ class TestSqlite3DataclassFunctions:
         name="Sqlite3TestDataclassFunctions::delete_type_override",
         depends=["Sqlite3TestDataclassFunctions::get_many_text_type_override"],
     )
-    def test_delete_type_override(
-        self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride
-    ) -> None:
-        queries.delete_type_override(conn=sqlite3_conn, id_=override_model.id)
+    def test_delete_type_override(self, sqlite3_conn: sqlite3.Connection, override_model: models.TestTypeOverride) -> None:
+        queries.delete_type_override(conn=sqlite3_conn, id_=override_model.id_)
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_override_conversion")
+    def test_insert_override_conversion(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The overridden price parameter is a plain float; the generated code
+        # converts it back to decimal.Decimal, which the registered adapter
+        # then serializes.
+        queries_override_adapter.insert_override_conversion(
+            conn=sqlite3_conn,
+            id_=434343,
+            price=OVERRIDE_PRICE,
+            happened_at=OVERRIDE_HAPPENED_AT,
+        )
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestDataclassFunctions::get_override_price",
+        depends=["Sqlite3TestDataclassFunctions::insert_override_conversion"],
+    )
+    def test_get_override_price(self, sqlite3_conn: sqlite3.Connection) -> None:
+        price = queries_override_adapter.get_override_price(conn=sqlite3_conn, id_=434343)
+        assert price is not None
+        assert isinstance(price, float)
+        assert price == OVERRIDE_PRICE
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_override_price"])
+    def test_get_override_happened_at(self, sqlite3_conn: sqlite3.Connection) -> None:
+        happened_at = queries_override_converter.get_override_happened_at(conn=sqlite3_conn, id_=434343)
+        assert happened_at is not None
+        assert isinstance(happened_at, datetime.datetime)
+        assert happened_at == OVERRIDE_HAPPENED_AT
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_case_row")
+    def test_insert_case_row(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The schema declares the columns as DATETIME and decimal(10,2); both
+        # must round-trip through the registered adapters and converters.
+        queries_case.insert_case_row(conn=sqlite3_conn, id_=515151, upper_dt=CASE_DT, prec_dec=CASE_DEC)
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_case_row"])
+    def test_get_case_row(self, sqlite3_conn: sqlite3.Connection) -> None:
+        row = queries_case.get_case_row(conn=sqlite3_conn, id_=515151)
+        assert row is not None
+        assert isinstance(row.upper_dt, datetime.datetime)
+        assert row.upper_dt == CASE_DT
+        assert isinstance(row.prec_dec, decimal.Decimal)
+        assert row.prec_dec == CASE_DEC
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_reserved_arg")
+    def test_insert_reserved_arg(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The column is literally named "conn"; the generated parameter must
+        # be deduplicated against the implicit connection argument.
+        queries_case.insert_reserved_arg(conn=sqlite3_conn, id_=RESERVED_ARG_ID, conn_2="reserved-arg-value")
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_reserved_arg"])
+    def test_get_reserved_arg(self, sqlite3_conn: sqlite3.Connection) -> None:
+        found_id = queries_case.get_reserved_arg(conn=sqlite3_conn, conn_2="reserved-arg-value")
+        assert found_id == RESERVED_ARG_ID

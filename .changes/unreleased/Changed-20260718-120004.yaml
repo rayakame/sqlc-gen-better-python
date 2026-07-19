@@ -1,0 +1,6 @@
+kind: Changed
+body: Complete rewrite of the code generator internals into a config/transform/render/driver pipeline
+time: 2026-07-18T12:00:04.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"

@@ -25,3 +25,21 @@ go.work.sum
 .env
 
 __pycache__/
+
+# Python tooling caches and outputs
+.venv/
+.nox/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+public/
+
+# local test scratch artifacts
+sqlite.db
+test/log.json
+test/log.txt
+test/models.py
+test/queries.py
+test/enums.py
+/sqlc-gen-better-python.wasm

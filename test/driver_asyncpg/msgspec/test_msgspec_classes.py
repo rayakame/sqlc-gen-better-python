@@ -43,12 +43,12 @@ from test.driver_asyncpg.msgspec.classes import queries
 class TestMsgspecClasses:
     @pytest.fixture(scope="session")
     def override_model(self) -> models.TestTypeOverride:
-        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+        return models.TestTypeOverride(id_=random.randint(1, 10000000), text_test=UserString("Test"))
 
     @pytest.fixture(scope="session")
     def model(self) -> models.TestPostgresType:
         return models.TestPostgresType(
-            id=random.randint(1, 1000000),
+            id_=random.randint(1, 1000000),
             serial_test=1,
             serial4_test=2,
             bigserial_test=3,
@@ -67,9 +67,9 @@ class TestMsgspecClasses:
             bytea_test=memoryview(b"\x00\x01\x02hello"),
             date_test=datetime.date(2025, 1, 1),
             time_test=datetime.time(14, 30, 0),
-            timetz_test=datetime.time(14, 30, 0, tzinfo=datetime.timezone.utc),
+            timetz_test=datetime.time(14, 30, 0, tzinfo=datetime.UTC),
             timestamp_test=datetime.datetime(2025, 1, 1, 14, 30, 0),
-            timestamptz_test=datetime.datetime(2025, 1, 1, 14, 30, 0, tzinfo=datetime.timezone.utc),
+            timestamptz_test=datetime.datetime(2025, 1, 1, 14, 30, 0, tzinfo=datetime.UTC),
             interval_test=datetime.timedelta(days=1, hours=2, minutes=30),
             text_test="Lorem ipsum",
             varchar_test="Example varchar",
@@ -89,7 +89,7 @@ class TestMsgspecClasses:
     @pytest.fixture(scope="session")
     def inner_model(self, model: models.TestPostgresType) -> models.TestInnerPostgresType:
         return models.TestInnerPostgresType(
-            table_id=model.id,
+            table_id=model.id_,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -135,7 +135,7 @@ class TestMsgspecClasses:
     @pytest.mark.dependency(name="TestMsgspecClasses::create")
     async def test_create(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
         await queries_obj.create_one_test_postgres_type(
-            id_=model.id,
+            id_=model.id_,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -218,7 +218,7 @@ class TestMsgspecClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecClasses::create_inner"], name="TestMsgspecClasses::get_one")
     async def test_get_one(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_one_test_postgres_type(id_=model.id)
+        result = await queries_obj.get_one_test_postgres_type(id_=model.id_)
         assert result is not None
         assert isinstance(result, models.TestPostgresType)
 
@@ -242,9 +242,7 @@ class TestMsgspecClasses:
         assert result == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestMsgspecClasses::get_one_inner"], name="TestMsgspecClasses::get_one_inner_none"
-    )
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::get_one_inner"], name="TestMsgspecClasses::get_one_inner_none")
     async def test_get_one_inner_none(self, queries_obj: queries.Queries) -> None:
         result = await queries_obj.get_one_inner_test_postgres_type(table_id=0)
 
@@ -256,16 +254,14 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_one_timestamp",
     )
     async def test_get_one_timestamp(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_one_test_timestamp_postgres_type(id_=model.id)
+        result = await queries_obj.get_one_test_timestamp_postgres_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, datetime.datetime)
         assert result == model.timestamp_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestMsgspecClasses::get_one_timestamp"], name="TestMsgspecClasses::get_one_timestamp_none"
-    )
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::get_one_timestamp"], name="TestMsgspecClasses::get_one_timestamp_none")
     async def test_get_one_timestamp_none(self, queries_obj: queries.Queries) -> None:
         result = await queries_obj.get_one_test_timestamp_postgres_type(id_=0)
 
@@ -277,16 +273,14 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_one_bytea",
     )
     async def test_get_one_bytea(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_one_test_bytea_postgres_type(id_=model.id)
+        result = await queries_obj.get_one_test_bytea_postgres_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, memoryview)
         assert result == model.bytea_test
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestMsgspecClasses::get_one_bytea"], name="TestMsgspecClasses::get_one_bytea_none"
-    )
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::get_one_bytea"], name="TestMsgspecClasses::get_one_bytea_none")
     async def test_get_one_bytea_none(self, queries_obj: queries.Queries) -> None:
         result = await queries_obj.get_one_test_bytea_postgres_type(id_=0)
 
@@ -295,7 +289,7 @@ class TestMsgspecClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecClasses::get_one_bytea_none"], name="TestMsgspecClasses::get_many")
     async def test_get_many(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_many_test_postgres_type(id_=model.id)
+        result = await queries_obj.get_many_test_postgres_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -307,7 +301,7 @@ class TestMsgspecClasses:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecClasses::get_many"], name="TestMsgspecClasses::get_many_timestamp")
     async def test_get_many_timestamp(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_many_test_timestamp_postgres_type(id_=model.id)
+        result = await queries_obj.get_many_test_timestamp_postgres_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -321,7 +315,7 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_many_bytea",
     )
     async def test_get_many_bytea(self, queries_obj: queries.Queries, model: models.TestPostgresType) -> None:
-        result = await queries_obj.get_many_test_bytea_postgres_type(id_=model.id)
+        result = await queries_obj.get_many_test_bytea_postgres_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
@@ -337,13 +331,13 @@ class TestMsgspecClasses:
         model: models.TestPostgresType,
         inner_model: models.TestInnerPostgresType,
     ) -> None:
-        result = await queries_obj.get_embedded_test_postgres_type(id_=model.id)
+        result = await queries_obj.get_embedded_test_postgres_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, queries.GetEmbeddedTestPostgresTypeRow)
         assert isinstance(result.test_inner_postgres_type, models.TestInnerPostgresType)
 
-        assert result.id == model.id
+        assert result.id_ == model.id_
         assert result.serial_test == model.serial_test
         assert result.serial4_test == model.serial4_test
         assert result.bigserial_test == model.bigserial_test
@@ -403,7 +397,7 @@ class TestMsgspecClasses:
         model: models.TestPostgresType,
         inner_model: models.TestInnerPostgresType,
     ) -> None:
-        result = await queries_obj.get_all_embedded_test_postgres_type(id_=model.id)
+        result = await queries_obj.get_all_embedded_test_postgres_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, queries.GetAllEmbeddedTestPostgresTypeRow)
@@ -415,9 +409,7 @@ class TestMsgspecClasses:
         assert result.test_inner_postgres_type == inner_model
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(
-        depends=["TestMsgspecClasses::get_all_embedded"], name="TestMsgspecClasses::get_all_embedded_none"
-    )
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::get_all_embedded"], name="TestMsgspecClasses::get_all_embedded_none")
     async def test_get_all_embedded_none(
         self,
         queries_obj: queries.Queries,
@@ -436,7 +428,7 @@ class TestMsgspecClasses:
         queries_obj: queries.Queries,
         model: models.TestPostgresType,
     ) -> None:
-        results = queries_obj.get_many_test_iterator_postgres_type(id_=model.id)
+        results = queries_obj.get_many_test_iterator_postgres_type(id_=model.id_)
         async with queries_obj.conn.transaction():
             async for result in results:
                 assert result is not None
@@ -451,7 +443,7 @@ class TestMsgspecClasses:
         queries_obj: queries.Queries,
         model: models.TestPostgresType,
     ) -> None:
-        await queries_obj.delete_one_test_postgres_type(id_=model.id)
+        await queries_obj.delete_one_test_postgres_type(id_=model.id_)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecClasses::delete"], name="TestMsgspecClasses::delete_inner")
@@ -470,7 +462,7 @@ class TestMsgspecClasses:
         model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.create_result_one_test_postgres_type(
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -517,7 +509,7 @@ class TestMsgspecClasses:
         queries_obj: queries.Queries,
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries_obj.update_result_test_postgres_type(id_=model.id + 1)
+        result = await queries_obj.update_result_test_postgres_type(id_=model.id_ + 1)
 
         assert result == "UPDATE 1"
 
@@ -528,7 +520,7 @@ class TestMsgspecClasses:
         queries_obj: queries.Queries,
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries_obj.delete_one_result_test_postgres_type(id_=model.id + 1)
+        result = await queries_obj.delete_one_result_test_postgres_type(id_=model.id_ + 1)
 
         assert result == "DELETE 1"
 
@@ -540,7 +532,7 @@ class TestMsgspecClasses:
         model: models.TestPostgresType,
     ) -> None:
         result = await queries_obj.create_rows_one_test_postgres_type(
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             serial_test=model.serial_test,
             serial4_test=model.serial4_test,
             bigserial_test=model.bigserial_test,
@@ -587,7 +579,7 @@ class TestMsgspecClasses:
         queries_obj: queries.Queries,
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries_obj.update_rows_test_postgres_type(id_=model.id + 1)
+        result = await queries_obj.update_rows_test_postgres_type(id_=model.id_ + 1)
 
         assert result == 1
 
@@ -598,7 +590,7 @@ class TestMsgspecClasses:
         queries_obj: queries.Queries,
         model: models.TestPostgresType,
     ) -> None:
-        result = await queries_obj.delete_one_rows_test_postgres_type(id_=model.id + 1)
+        result = await queries_obj.delete_one_rows_test_postgres_type(id_=model.id_ + 1)
 
         assert result == 1
 
@@ -613,7 +605,7 @@ class TestMsgspecClasses:
         num = 3
         rows: list[queries.TestCopyFromParams] = [
             queries.TestCopyFromParams(
-                id=i,
+                id_=i,
                 int_test=model.int_test,
                 float_test=model.float_test,
             )
@@ -640,20 +632,16 @@ class TestMsgspecClasses:
     @pytest.mark.dependency(
         name="TestMsgspecClasses::insert_type_override",
     )
-    async def test_insert_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        await queries_obj.insert_type_override(id_=override_model.id, text_test=override_model.text_test)
+    async def test_insert_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        await queries_obj.insert_type_override(id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="TestMsgspecClasses::get_one_type_override",
         depends=["TestMsgspecClasses::insert_type_override"],
     )
-    async def test_get_one_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_type_override(id_=override_model.id)
+    async def test_get_one_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model
 
@@ -662,10 +650,8 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_one_type_override_none",
         depends=["TestMsgspecClasses::get_one_type_override"],
     )
-    async def test_get_one_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_type_override(id_=override_model.id - 1)
+    async def test_get_one_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_type_override(id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
@@ -673,10 +659,8 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_many_type_override",
         depends=["TestMsgspecClasses::get_one_type_override_none"],
     )
-    async def test_get_many_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_many_type_override(id_=override_model.id)
+    async def test_get_many_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_many_type_override(id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model
 
@@ -685,10 +669,8 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_one_text_type_override",
         depends=["TestMsgspecClasses::get_many_type_override"],
     )
-    async def test_get_one_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_text_type_override(id_=override_model.id)
+    async def test_get_one_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_text_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
 
@@ -697,10 +679,8 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_one_text_type_override_none",
         depends=["TestMsgspecClasses::get_one_text_type_override"],
     )
-    async def test_get_one_text_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_one_text_type_override(id_=override_model.id - 1)
+    async def test_get_one_text_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_one_text_type_override(id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.asyncio(loop_scope="session")
@@ -708,10 +688,8 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::get_many_text_type_override",
         depends=["TestMsgspecClasses::get_one_text_type_override_none"],
     )
-    async def test_get_many_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = await queries_obj.get_many_text_type_override(id_=override_model.id)
+    async def test_get_many_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = await queries_obj.get_many_text_type_override(id_=override_model.id_)
         assert isinstance(result, collections.abc.Sequence)
         assert result[0] == override_model.text_test
 
@@ -720,7 +698,5 @@ class TestMsgspecClasses:
         name="TestMsgspecClasses::delete_type_override",
         depends=["TestMsgspecClasses::get_many_text_type_override"],
     )
-    async def test_delete_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        await queries_obj.delete_type_override(id_=override_model.id)
+    async def test_delete_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        await queries_obj.delete_type_override(id_=override_model.id_)
