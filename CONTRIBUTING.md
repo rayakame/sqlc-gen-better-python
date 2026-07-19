@@ -3,31 +3,70 @@
 Thank you for investing your time trying to improve this plugin. We have some contribution guidelines
 that you should follow to ensure that your contribution is at its best.
 
-# CI
+## Prerequisites
 
-We have a basic CI to ensure that the plugin generates working code without any obvious errors.
-The CI is build using `nox` which makes running pipelines for python code much easier.
+- **Go** - the version from [`go.mod`](go.mod). Any recent Go installation works, the toolchain
+  is downloaded automatically if yours is older.
+- **Python >= 3.12** and [**uv**](https://docs.astral.sh/uv/) - all Python tooling runs through uv.
+- [**sqlc**](https://docs.sqlc.dev/en/latest/overview/install.html) on your PATH.
+- **Docker** (or a local PostgreSQL) - only needed for the runtime tests.
 
-To get our pipelines running you will need to first install `nox`.
+One-time setup for the Python tooling:
 
 ```bash
 uv sync --group dev
 ```
 
-<details>
-    <summary>Equivalent pip command</summary>
-    
+## How the repo fits together
+
+The plugin itself is Go code under `internal/`, compiled to a WASM binary that `sqlc generate`
+executes. The Python code it generates is committed on purpose: `test/driver_<driver>/` contains
+a `sqlc.yaml` that generates a matrix of model types into committed subdirectories. CI regenerates
+them and fails if the output differs, type-checks them with pyright (strict), lints them with ruff
+and runs runtime test suites against real databases. Never edit generated files by hand - change
+the generator and regenerate.
+
+## Building the WASM plugin
+
+After any Go change the plugin must be rebuilt, otherwise `sqlc generate` keeps using the old
+binary:
+
 ```bash
-pip install 'nox[uv]'
+./scripts/build/build.sh    # Linux/macOS
+scripts\build\build.bat     # Windows
 ```
-</details>
 
-You will also need to have [sqlc installed](https://docs.sqlc.dev/en/latest/overview/install.html) locally before running some of the pipelines.
+The script builds with `GOOS=wasip1 GOARCH=wasm`, computes the SHA-256 of the new binary, patches
+the `sha256:` field in the root `sqlc.yaml` and every `test/driver_*/sqlc.yaml` (sqlc refuses to
+run a plugin whose hash does not match), and copies the `.wasm` into each test driver directory.
+Commit the updated binaries and yaml files together with your Go change.
 
-The `pytest` pipeline requires you to have a local postgres db running. To change the default connection URI,
-nox looks for a `POSTGRES_URI` enviourment variable.
+## Go checks
 
-To start a postgres instance with docker, run
+```bash
+make tests      # go test -shuffle=on ./...
+make fmt        # golangci-lint fmt
+make lint       # golangci-lint run
+make pipelines  # lint-fix + fmt + lint (default goal)
+```
+
+There is some pre-existing lint debt; make sure your change does not add NEW issues in the files
+you touched.
+
+## Python pipelines
+
+The pipelines are built with `nox`. Run everything with `uv run nox`, or single sessions with
+`uv run nox -s name1 name2`:
+
+| Session                                             | What it does                                                                           |
+|-----------------------------------------------------|----------------------------------------------------------------------------------------|
+| `asyncpg`, `sqlite3`, `aiosqlite`                   | Regenerate the driver's test fixtures via sqlc, then pyright + ruff                    |
+| `asyncpg_check`, `sqlite3_check`, `aiosqlite_check` | `sqlc diff` variant: verify the committed generated code is up to date (CI uses these) |
+| `pyright`, `ruff`, `ruff_format`                    | Type-check / lint / format-check the repository                                        |
+| `pytest`                                            | Runtime tests against real databases                                                   |
+
+The `pytest` session needs a local PostgreSQL. The connection URI is read from the
+`POSTGRES_URI` environment variable. To start a matching instance with docker, run
 
 ```bash
 docker run --name sqlc-gen-better-python-postgres \
@@ -44,26 +83,37 @@ and stop it (after running the tests) with
 docker stop sqlc-gen-better-python-postgres
 ```
 
-Before committing we recommend you to run `nox` to run all important pipelines and make sure the pipelines won't fail.
+Extra pytest arguments pass through after `--`, e.g.
+`uv run nox -s pytest -- test/driver_asyncpg/msgspec/test_msgspec_classes.py -k test_name`.
 
-You may run a single pipeline with `nox -s name` or multiple pipelines with `nox -s name1 name3 name9`.
+## The full loop for generator changes
 
-# Changelog fragments
+1. Change the Go code and run `make tests` / `make lint`.
+2. Rebuild the WASM plugin (see above).
+3. `uv run nox` - regenerates the fixtures and runs every check on them.
+4. If your change affects generated output, add coverage: a query/schema case in the test matrix
+   that pins the new behavior, plus a runtime test where it makes sense. CI gates pull requests
+   on patch coverage, so aim for covering every branch of code your PR adds.
+5. Commit the regenerated fixtures, wasm binaries and yaml files together with the Go change.
 
-We use [changie](https://changie.dev/) to manage changelog creation.
+Two gotchas worth knowing: generated output must be byte-identical across runs AND a no-op under
+`ruff format`, and `.sql` files must stay ASCII-only - multi-byte characters in comments corrupt
+sqlc's byte-offset parameter rewriting and can silently drop `?` placeholders.
 
-Every PR needs to have a changelog fragment for that to work.
-Please refer to the [changie documentation](https://changie.dev/guide/installation/) for information about installing changie.
+## Changelog fragments
 
-After installing changie you can run
+We use [changie](https://changie.dev/) to manage changelog creation, and every PR needs a
+changelog fragment. changie is set up as a Go tool, so no separate installation is needed:
 
-```cmd
-changie new
+```bash
+make changelog    # or: go tool changie new
 ```
 
-To create the needed changelog fragment. Changie will ask you for the following fields:
+Changie will ask you for the following fields:
 
 - Kind: The kind of changes, should be self explanatory
 - Body: A short description about the made changes.
 - PR: The number of the pull request associated to the changes.
-- Github Name: The **username** of the github account that made the changes. This is used for giving credits to contributors in the changelog.
+- Github Name: The **username** of the github account that made the changes. This is used for
+  giving credits to contributors in the changelog. When a fix was diagnosed by someone else
+  (e.g. an issue reporter), feel free to credit them here instead.
