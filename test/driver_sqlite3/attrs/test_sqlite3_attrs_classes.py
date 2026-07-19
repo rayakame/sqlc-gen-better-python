@@ -36,12 +36,12 @@ from test.driver_sqlite3.attrs.classes import queries
 class TestSqlite3AttrsClasses:
     @pytest.fixture(scope="session")
     def override_model(self) -> models.TestTypeOverride:
-        return models.TestTypeOverride(id=random.randint(1, 10000000), text_test=UserString("Test"))
+        return models.TestTypeOverride(id_=random.randint(1, 10000000), text_test=UserString("Test"))
 
     @pytest.fixture(scope="session")
     def model(self) -> models.TestSqliteType:
         return models.TestSqliteType(
-            id=random.randint(1, 10000000),
+            id_=random.randint(1, 10000000),
             int_test=42,
             bigint_test=9_007_199_254_740_991,
             smallint_test=32_767,
@@ -75,7 +75,7 @@ class TestSqlite3AttrsClasses:
     @pytest.fixture(scope="session")
     def inner_model(self, model: models.TestSqliteType) -> models.TestInnerSqliteType:
         return models.TestInnerSqliteType(
-            table_id=model.id,
+            table_id=model.id_,
             int_test=None,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -120,7 +120,7 @@ class TestSqlite3AttrsClasses:
         model: models.TestSqliteType,
     ) -> None:
         queries_obj.insert_one_sqlite_type(
-            id_=model.id,
+            id_=model.id_,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -195,7 +195,7 @@ class TestSqlite3AttrsClasses:
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_sqlite_type(id_=model.id)
+        result = queries_obj.get_one_sqlite_type(id_=model.id_)
 
         assert result is not None
 
@@ -212,9 +212,7 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_one_inner", depends=["Sqlite3TestAttrsClasses::get_one_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_one_inner", depends=["Sqlite3TestAttrsClasses::get_one_none"])
     def test_get_one_inner(
         self,
         queries_obj: queries.Queries,
@@ -227,9 +225,7 @@ class TestSqlite3AttrsClasses:
         assert isinstance(result, models.TestInnerSqliteType)
         assert result == inner_model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_one_inner_none", depends=["Sqlite3TestAttrsClasses::get_one_inner"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_one_inner_none", depends=["Sqlite3TestAttrsClasses::get_one_inner"])
     def test_get_one_inner_none(
         self,
         queries_obj: queries.Queries,
@@ -238,24 +234,20 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_date", depends=["Sqlite3TestAttrsClasses::get_one_inner_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_date", depends=["Sqlite3TestAttrsClasses::get_one_inner_none"])
     def test_get_date(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_date(id_=model.id, date_test=model.date_test)
+        result = queries_obj.get_one_date(id_=model.id_, date_test=model.date_test)
 
         assert result is not None
 
         assert isinstance(result, datetime.date)
         assert result == model.date_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_date_none", depends=["Sqlite3TestAttrsClasses::get_date"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_date_none", depends=["Sqlite3TestAttrsClasses::get_date"])
     def test_get_date_none(
         self,
         queries_obj: queries.Queries,
@@ -264,24 +256,20 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_datetime", depends=["Sqlite3TestAttrsClasses::get_date_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_datetime", depends=["Sqlite3TestAttrsClasses::get_date_none"])
     def test_get_datetime(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_datetime(id_=model.id, datetime_test=model.datetime_test)
+        result = queries_obj.get_one_datetime(id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
 
         assert isinstance(result, datetime.datetime)
         assert result == model.datetime_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_datetime_none", depends=["Sqlite3TestAttrsClasses::get_datetime"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_datetime_none", depends=["Sqlite3TestAttrsClasses::get_datetime"])
     def test_get_datetime_none(
         self,
         queries_obj: queries.Queries,
@@ -290,24 +278,20 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_timestamp", depends=["Sqlite3TestAttrsClasses::get_datetime_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_timestamp", depends=["Sqlite3TestAttrsClasses::get_datetime_none"])
     def test_get_timestamp(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_timestamp(id_=model.id, timestamp_test=model.timestamp_test)
+        result = queries_obj.get_one_timestamp(id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
 
         assert isinstance(result, datetime.datetime)
         assert result == model.timestamp_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_timestamp_none", depends=["Sqlite3TestAttrsClasses::get_timestamp"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_timestamp_none", depends=["Sqlite3TestAttrsClasses::get_timestamp"])
     def test_get_timestamp_none(
         self,
         queries_obj: queries.Queries,
@@ -316,24 +300,20 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_bool", depends=["Sqlite3TestAttrsClasses::get_timestamp_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_bool", depends=["Sqlite3TestAttrsClasses::get_timestamp_none"])
     def test_get_bool(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_bool(id_=model.id, bool_test=model.bool_test)
+        result = queries_obj.get_one_bool(id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
 
         assert isinstance(result, bool)
         assert result == model.bool_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_bool_none", depends=["Sqlite3TestAttrsClasses::get_bool"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_bool_none", depends=["Sqlite3TestAttrsClasses::get_bool"])
     def test_get_bool_none(
         self,
         queries_obj: queries.Queries,
@@ -342,24 +322,20 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_boolean", depends=["Sqlite3TestAttrsClasses::get_bool_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_boolean", depends=["Sqlite3TestAttrsClasses::get_bool_none"])
     def test_get_boolean(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_boolean(id_=model.id, boolean_test=model.boolean_test)
+        result = queries_obj.get_one_boolean(id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
 
         assert isinstance(result, bool)
         assert result == model.boolean_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_boolean_none", depends=["Sqlite3TestAttrsClasses::get_boolean"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_boolean_none", depends=["Sqlite3TestAttrsClasses::get_boolean"])
     def test_get_boolean_none(
         self,
         queries_obj: queries.Queries,
@@ -368,24 +344,20 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_decimal", depends=["Sqlite3TestAttrsClasses::get_boolean_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_decimal", depends=["Sqlite3TestAttrsClasses::get_boolean_none"])
     def test_get_decimal(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_decimal(id_=model.id, decimal_test=model.decimal_test)
+        result = queries_obj.get_one_decimal(id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
 
         assert isinstance(result, decimal.Decimal)
         assert result == model.decimal_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_decimal_none", depends=["Sqlite3TestAttrsClasses::get_decimal"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_decimal_none", depends=["Sqlite3TestAttrsClasses::get_decimal"])
     def test_get_decimal_none(
         self,
         queries_obj: queries.Queries,
@@ -394,24 +366,20 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_blob", depends=["Sqlite3TestAttrsClasses::get_decimal_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_blob", depends=["Sqlite3TestAttrsClasses::get_decimal_none"])
     def test_get_blob(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.get_one_blob(id_=model.id, blob_test=model.blob_test)
+        result = queries_obj.get_one_blob(id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
 
         assert isinstance(result, memoryview)
         assert result == model.blob_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_blob_none", depends=["Sqlite3TestAttrsClasses::get_blob"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_blob_none", depends=["Sqlite3TestAttrsClasses::get_blob"])
     def test_get_blob_none(
         self,
         queries_obj: queries.Queries,
@@ -420,11 +388,9 @@ class TestSqlite3AttrsClasses:
 
         assert result is None
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many", depends=["Sqlite3TestAttrsClasses::get_blob_none"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many", depends=["Sqlite3TestAttrsClasses::get_blob_none"])
     def test_get_many(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_sqlite_type(id_=model.id)
+        result = queries_obj.get_many_sqlite_type(id_=model.id_)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -437,19 +403,15 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_iter", depends=["Sqlite3TestAttrsClasses::get_many"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_iter", depends=["Sqlite3TestAttrsClasses::get_many"])
     def test_get_many_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_sqlite_type(id_=model.id):
+        for result in queries_obj.get_many_sqlite_type(id_=model.id_):
             assert result is not None
             assert isinstance(result, models.TestSqliteType)
 
             assert result == model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_inner", depends=["Sqlite3TestAttrsClasses::get_many_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_inner", depends=["Sqlite3TestAttrsClasses::get_many_iter"])
     def test_get_many_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         result = queries_obj.get_many_inner_sqlite_type(table_id=inner_model.table_id)
 
@@ -460,9 +422,7 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == inner_model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_inner_iter", depends=["Sqlite3TestAttrsClasses::get_many_inner"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_inner_iter", depends=["Sqlite3TestAttrsClasses::get_many_inner"])
     def test_get_many_inner_iter(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         for result in queries_obj.get_many_inner_sqlite_type(table_id=inner_model.table_id):
             assert result is not None
@@ -474,12 +434,8 @@ class TestSqlite3AttrsClasses:
         name="Sqlite3TestAttrsClasses::get_many_nullable_inner",
         depends=["Sqlite3TestAttrsClasses::get_many_inner_iter"],
     )
-    def test_get_many_nullable_inner(
-        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
-    ) -> None:
-        result = queries_obj.get_many_nullable_inner_sqlite_type(
-            table_id=inner_model.table_id, int_test=inner_model.int_test
-        )
+    def test_get_many_nullable_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
+        result = queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=inner_model.int_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -492,22 +448,16 @@ class TestSqlite3AttrsClasses:
         name="Sqlite3TestAttrsClasses::get_many_nullable_inner_iter",
         depends=["Sqlite3TestAttrsClasses::get_many_nullable_inner"],
     )
-    def test_get_many_nullable_inner_iter(
-        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
-    ) -> None:
-        for result in queries_obj.get_many_nullable_inner_sqlite_type(
-            table_id=inner_model.table_id, int_test=inner_model.int_test
-        ):
+    def test_get_many_nullable_inner_iter(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
+        for result in queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=inner_model.int_test):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
 
             assert result == inner_model
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_date", depends=["Sqlite3TestAttrsClasses::get_many_nullable_inner_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_date", depends=["Sqlite3TestAttrsClasses::get_many_nullable_inner_iter"])
     def test_get_many_date(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_date(id_=model.id, date_test=model.date_test)
+        result = queries_obj.get_many_date(id_=model.id_, date_test=model.date_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -516,21 +466,17 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == model.date_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_date_iter", depends=["Sqlite3TestAttrsClasses::get_many_date"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_date_iter", depends=["Sqlite3TestAttrsClasses::get_many_date"])
     def test_get_many_date_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_date(id_=model.id, date_test=model.date_test):
+        for result in queries_obj.get_many_date(id_=model.id_, date_test=model.date_test):
             assert result is not None
             assert isinstance(result, datetime.date)
 
             assert result == model.date_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_datetime", depends=["Sqlite3TestAttrsClasses::get_many_date_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_datetime", depends=["Sqlite3TestAttrsClasses::get_many_date_iter"])
     def test_get_many_datetime(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_datetime(id_=model.id, datetime_test=model.datetime_test)
+        result = queries_obj.get_many_datetime(id_=model.id_, datetime_test=model.datetime_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -539,11 +485,9 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == model.datetime_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_datetime_iter", depends=["Sqlite3TestAttrsClasses::get_many_datetime"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_datetime_iter", depends=["Sqlite3TestAttrsClasses::get_many_datetime"])
     def test_get_many_datetime_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_datetime(id_=model.id, datetime_test=model.datetime_test):
+        for result in queries_obj.get_many_datetime(id_=model.id_, datetime_test=model.datetime_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
@@ -554,7 +498,7 @@ class TestSqlite3AttrsClasses:
         depends=["Sqlite3TestAttrsClasses::get_many_datetime_iter"],
     )
     def test_get_many_timestamp(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_timestamp(id_=model.id, timestamp_test=model.timestamp_test)
+        result = queries_obj.get_many_timestamp(id_=model.id_, timestamp_test=model.timestamp_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -568,17 +512,15 @@ class TestSqlite3AttrsClasses:
         depends=["Sqlite3TestAttrsClasses::get_many_timestamp"],
     )
     def test_get_many_timestamp_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_timestamp(id_=model.id, timestamp_test=model.timestamp_test):
+        for result in queries_obj.get_many_timestamp(id_=model.id_, timestamp_test=model.timestamp_test):
             assert result is not None
             assert isinstance(result, datetime.datetime)
 
             assert result == model.timestamp_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_bool", depends=["Sqlite3TestAttrsClasses::get_many_timestamp_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_bool", depends=["Sqlite3TestAttrsClasses::get_many_timestamp_iter"])
     def test_get_many_bool(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_bool(id_=model.id, bool_test=model.bool_test)
+        result = queries_obj.get_many_bool(id_=model.id_, bool_test=model.bool_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -587,21 +529,17 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == model.bool_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_bool_iter", depends=["Sqlite3TestAttrsClasses::get_many_bool"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_bool_iter", depends=["Sqlite3TestAttrsClasses::get_many_bool"])
     def test_get_many_bool_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_bool(id_=model.id, bool_test=model.bool_test):
+        for result in queries_obj.get_many_bool(id_=model.id_, bool_test=model.bool_test):
             assert result is not None
             assert isinstance(result, bool)
 
             assert result == model.bool_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_boolean", depends=["Sqlite3TestAttrsClasses::get_many_bool_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_boolean", depends=["Sqlite3TestAttrsClasses::get_many_bool_iter"])
     def test_get_many_boolean(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_boolean(id_=model.id, boolean_test=model.boolean_test)
+        result = queries_obj.get_many_boolean(id_=model.id_, boolean_test=model.boolean_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -610,21 +548,17 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == model.boolean_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_boolean_iter", depends=["Sqlite3TestAttrsClasses::get_many_boolean"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_boolean_iter", depends=["Sqlite3TestAttrsClasses::get_many_boolean"])
     def test_get_many_boolean_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_boolean(id_=model.id, boolean_test=model.boolean_test):
+        for result in queries_obj.get_many_boolean(id_=model.id_, boolean_test=model.boolean_test):
             assert result is not None
             assert isinstance(result, bool)
 
             assert result == model.boolean_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_decimal", depends=["Sqlite3TestAttrsClasses::get_many_boolean_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_decimal", depends=["Sqlite3TestAttrsClasses::get_many_boolean_iter"])
     def test_get_many_decimal(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_decimal(id_=model.id, decimal_test=model.decimal_test)
+        result = queries_obj.get_many_decimal(id_=model.id_, decimal_test=model.decimal_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -633,21 +567,17 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == model.decimal_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_decimal_iter", depends=["Sqlite3TestAttrsClasses::get_many_decimal"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_decimal_iter", depends=["Sqlite3TestAttrsClasses::get_many_decimal"])
     def test_get_many_decimal_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_decimal(id_=model.id, decimal_test=model.decimal_test):
+        for result in queries_obj.get_many_decimal(id_=model.id_, decimal_test=model.decimal_test):
             assert result is not None
             assert isinstance(result, decimal.Decimal)
 
             assert result == model.decimal_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_blob", depends=["Sqlite3TestAttrsClasses::get_many_decimal_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_blob", depends=["Sqlite3TestAttrsClasses::get_many_decimal_iter"])
     def test_get_many_blob(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        result = queries_obj.get_many_blob(id_=model.id, blob_test=model.blob_test)
+        result = queries_obj.get_many_blob(id_=model.id_, blob_test=model.blob_test)
 
         assert result is not None
         assert isinstance(result, queries.QueryResults)
@@ -656,26 +586,22 @@ class TestSqlite3AttrsClasses:
 
         assert results[0] == model.blob_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::get_many_blob_iter", depends=["Sqlite3TestAttrsClasses::get_many_blob"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::get_many_blob_iter", depends=["Sqlite3TestAttrsClasses::get_many_blob"])
     def test_get_many_blob_iter(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        for result in queries_obj.get_many_blob(id_=model.id, blob_test=model.blob_test):
+        for result in queries_obj.get_many_blob(id_=model.id_, blob_test=model.blob_test):
             assert result is not None
             assert isinstance(result, memoryview)
 
             assert result == model.blob_test
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::insert_result", depends=["Sqlite3TestAttrsClasses::get_many_blob_iter"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::insert_result", depends=["Sqlite3TestAttrsClasses::get_many_blob_iter"])
     def test_insert_result(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
         result = queries_obj.insert_result_one_sqlite_type(
-            id_=model.id + 1,
+            id_=model.id_ + 1,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -707,38 +633,32 @@ class TestSqlite3AttrsClasses:
         )
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::update_result", depends=["Sqlite3TestAttrsClasses::insert_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::update_result", depends=["Sqlite3TestAttrsClasses::insert_result"])
     def test_update_result(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.update_result_one_sqlite_type(id_=model.id + 1)
+        result = queries_obj.update_result_one_sqlite_type(id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::delete_result", depends=["Sqlite3TestAttrsClasses::update_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::delete_result", depends=["Sqlite3TestAttrsClasses::update_result"])
     def test_delete_result(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.delete_result_one_sqlite_type(id_=model.id + 1)
+        result = queries_obj.delete_result_one_sqlite_type(id_=model.id_ + 1)
         assert isinstance(result, sqlite3.Cursor)
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::insert_rows", depends=["Sqlite3TestAttrsClasses::delete_result"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::insert_rows", depends=["Sqlite3TestAttrsClasses::delete_result"])
     def test_insert_rows(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
         result = queries_obj.insert_rows_one_sqlite_type(
-            id_=model.id + 2,
+            id_=model.id_ + 2,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -771,33 +691,27 @@ class TestSqlite3AttrsClasses:
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::update_rows", depends=["Sqlite3TestAttrsClasses::insert_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::update_rows", depends=["Sqlite3TestAttrsClasses::insert_rows"])
     def test_update_rows(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.update_rows_one_sqlite_type(id_=model.id + 2)
+        result = queries_obj.update_rows_one_sqlite_type(id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::delete_rows", depends=["Sqlite3TestAttrsClasses::update_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::delete_rows", depends=["Sqlite3TestAttrsClasses::update_rows"])
     def test_delete_rows(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.delete_rows_one_sqlite_type(id_=model.id + 2)
+        result = queries_obj.delete_rows_one_sqlite_type(id_=model.id_ + 2)
         assert isinstance(result, int)
         assert result == 1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::create_table_rows", depends=["Sqlite3TestAttrsClasses::delete_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::create_table_rows", depends=["Sqlite3TestAttrsClasses::delete_rows"])
     def test_create_table_rows(
         self,
         queries_obj: queries.Queries,
@@ -809,16 +723,14 @@ class TestSqlite3AttrsClasses:
         sqlite3_conn.commit()
         assert result == -1
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::insert_last_id", depends=["Sqlite3TestAttrsClasses::create_table_rows"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::insert_last_id", depends=["Sqlite3TestAttrsClasses::create_table_rows"])
     def test_insert_last_id(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
         result = queries_obj.insert_last_id_one_sqlite_type(
-            id_=model.id + 3,
+            id_=model.id_ + 3,
             int_test=model.int_test,
             bigint_test=model.bigint_test,
             smallint_test=model.smallint_test,
@@ -849,59 +761,51 @@ class TestSqlite3AttrsClasses:
             json_test=model.json_test,
         )
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::update_last_id", depends=["Sqlite3TestAttrsClasses::insert_last_id"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::update_last_id", depends=["Sqlite3TestAttrsClasses::insert_last_id"])
     def test_update_last_id(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.update_last_id_one_sqlite_type(id_=model.id + 3)
+        result = queries_obj.update_last_id_one_sqlite_type(id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::delete_last_id", depends=["Sqlite3TestAttrsClasses::update_last_id"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::delete_last_id", depends=["Sqlite3TestAttrsClasses::update_last_id"])
     def test_delete_last_id(
         self,
         queries_obj: queries.Queries,
         model: models.TestSqliteType,
     ) -> None:
-        result = queries_obj.delete_last_id_one_sqlite_type(id_=model.id + 3)
+        result = queries_obj.delete_last_id_one_sqlite_type(id_=model.id_ + 3)
         assert isinstance(result, int)
-        assert result == model.id + 3
+        assert result == model.id_ + 3
 
-    @pytest.mark.dependency(
-        name="Sqlite3TestAttrsClasses::delete_sqlite_type", depends=["Sqlite3TestAttrsClasses::delete_last_id"]
-    )
+    @pytest.mark.dependency(name="Sqlite3TestAttrsClasses::delete_sqlite_type", depends=["Sqlite3TestAttrsClasses::delete_last_id"])
     def test_delete_sqlite_type(self, queries_obj: queries.Queries, model: models.TestSqliteType) -> None:
-        queries_obj.delete_one_sqlite_type(id_=model.id)
+        queries_obj.delete_one_sqlite_type(id_=model.id_)
 
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsClasses::delete_inner_sqlite_type",
         depends=["Sqlite3TestAttrsClasses::delete_sqlite_type"],
     )
-    def test_delete_inner_sqlite_type(
-        self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType
-    ) -> None:
+    def test_delete_inner_sqlite_type(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         queries_obj.delete_one_test_inner_sqlite_type(table_id=inner_model.table_id)
 
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsClasses::insert_type_override",
     )
     def test_insert_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
-        queries_obj.insert_type_override(id_=override_model.id, text_test=override_model.text_test)
+        queries_obj.insert_type_override(id_=override_model.id_, text_test=override_model.text_test)
 
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsClasses::get_one_type_override",
         depends=["Sqlite3TestAttrsClasses::insert_type_override"],
     )
     def test_get_one_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
-        result = queries_obj.get_one_type_override(id_=override_model.id)
+        result = queries_obj.get_one_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model
 
@@ -909,20 +813,16 @@ class TestSqlite3AttrsClasses:
         name="Sqlite3TestAttrsClasses::get_one_type_override_none",
         depends=["Sqlite3TestAttrsClasses::get_one_type_override"],
     )
-    def test_get_one_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries_obj.get_one_type_override(id_=override_model.id - 1)
+    def test_get_one_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = queries_obj.get_one_type_override(id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsClasses::get_many_type_override",
         depends=["Sqlite3TestAttrsClasses::get_one_type_override_none"],
     )
-    def test_get_many_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries_obj.get_many_type_override(id_=override_model.id)
+    def test_get_many_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = queries_obj.get_many_type_override(id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = list(result)
@@ -934,10 +834,8 @@ class TestSqlite3AttrsClasses:
         name="Sqlite3TestAttrsClasses::get_one_text_type_override",
         depends=["Sqlite3TestAttrsClasses::get_many_type_override"],
     )
-    def test_get_one_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries_obj.get_one_text_type_override(id_=override_model.id)
+    def test_get_one_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = queries_obj.get_one_text_type_override(id_=override_model.id_)
         assert result is not None
         assert result == override_model.text_test
 
@@ -945,20 +843,16 @@ class TestSqlite3AttrsClasses:
         name="Sqlite3TestAttrsClasses::get_one_text_type_override_none",
         depends=["Sqlite3TestAttrsClasses::get_one_text_type_override"],
     )
-    def test_get_one_text_type_override_none(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries_obj.get_one_text_type_override(id_=override_model.id - 1)
+    def test_get_one_text_type_override_none(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = queries_obj.get_one_text_type_override(id_=override_model.id_ - 1)
         assert result is None
 
     @pytest.mark.dependency(
         name="Sqlite3TestAttrsClasses::get_many_text_type_override",
         depends=["Sqlite3TestAttrsClasses::get_one_text_type_override_none"],
     )
-    def test_get_many_text_type_override(
-        self, queries_obj: queries.Queries, override_model: models.TestTypeOverride
-    ) -> None:
-        result = queries_obj.get_many_text_type_override(id_=override_model.id)
+    def test_get_many_text_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
+        result = queries_obj.get_many_text_type_override(id_=override_model.id_)
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = list(result)
@@ -971,4 +865,4 @@ class TestSqlite3AttrsClasses:
         depends=["Sqlite3TestAttrsClasses::get_many_text_type_override"],
     )
     def test_delete_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
-        queries_obj.delete_type_override(id_=override_model.id)
+        queries_obj.delete_type_override(id_=override_model.id_)
