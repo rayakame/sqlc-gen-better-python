@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'Type overrides on SQL types the plugin does not know (e.g. a custom `JULIANDAY` sqlite type) no longer emit a `typing.Any(value)` conversion that raised `TypeError` at runtime; the values pass through unconverted. `db_type` overrides also match case-insensitively, so configs written against the DDL casing keep working. Reported by gazpachoking in issue 161'
+time: 2026-07-19T18:00:00.0000000Z
+custom:
+    Author: gazpachoking
+    PR: "173"

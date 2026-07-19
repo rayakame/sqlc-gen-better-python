@@ -34,12 +34,14 @@ from test.driver_sqlite3.dataclass.functions import queries
 from test.driver_sqlite3.dataclass.functions import queries_case
 from test.driver_sqlite3.dataclass.functions import queries_override_adapter
 from test.driver_sqlite3.dataclass.functions import queries_override_converter
+from test.driver_sqlite3.dataclass.functions import queries_unknown_override
 
 OVERRIDE_PRICE = 12.5
 OVERRIDE_HAPPENED_AT = datetime.datetime(2026, 7, 19, 12, 30)
 CASE_DT = datetime.datetime(2026, 7, 19, 8, 15)
 CASE_DEC = decimal.Decimal("12.34")
 RESERVED_ARG_ID = 525252
+UNKNOWN_OVERRIDE_ID = 545454
 
 
 class TestSqlite3DataclassFunctions:
@@ -996,3 +998,23 @@ class TestSqlite3DataclassFunctions:
     def test_get_reserved_arg(self, sqlite3_conn: sqlite3.Connection) -> None:
         found_id = queries_case.get_reserved_arg(conn=sqlite3_conn, conn_2="reserved-arg-value")
         assert found_id == RESERVED_ARG_ID
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_unknown_override")
+    def test_insert_unknown_override(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # Overridden unknown SQL type (JULIANDAY): the value must pass
+        # through unconverted instead of being wrapped in typing.Any(...).
+        queries_unknown_override.insert_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID, happened_at="2460500.5")
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_unknown_override"])
+    def test_get_unknown_override(self, sqlite3_conn: sqlite3.Connection) -> None:
+        happened_at = queries_unknown_override.get_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID)
+        assert happened_at == "2460500.5"
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_unknown_override"])
+    def test_get_unknown_override_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_unknown_override.get_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID - 1) is None
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_unknown_override"])
+    def test_get_unknown_override_null_value(self, sqlite3_conn: sqlite3.Connection) -> None:
+        queries_unknown_override.insert_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID + 1, happened_at=None)
+        assert queries_unknown_override.get_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID + 1) is None
