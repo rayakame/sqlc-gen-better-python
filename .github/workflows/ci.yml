@@ -121,6 +121,7 @@ jobs:
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: python
 
 
 
@@ -230,7 +231,14 @@ jobs:
           go-version-file: './go.mod'
 
       - name: Run go tests
-        run: go test -shuffle=on ./...
+        run: go test -shuffle=on -coverprofile=coverage.out -coverpkg=./internal/... ./...
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.out
+          flags: go
 
   go-lint:
     runs-on: ubuntu-latest

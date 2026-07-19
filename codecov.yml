@@ -2,3 +2,22 @@ codecov:
   bot: "Code Coverage"
   strict_yaml_branch: "main"
   max_report_age: 24
+
+# Go and Python coverage are uploaded as separate flags (go-test job and
+# upload-coverage job in ci.yml); the project number combines both.
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+      - type: patch
+        target: auto
+  individual_flags:
+    - name: go
+      paths:
+        - internal/
+        - plugin/
+    - name: python
+      paths:
+        - test/

@@ -19,6 +19,7 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import asyncio
 import collections.abc
 import datetime
 import decimal
@@ -35,8 +36,18 @@ import math
 import pytest
 import pytest_asyncio
 
+from test.driver_asyncpg.msgspec.classes import enums
 from test.driver_asyncpg.msgspec.classes import models
 from test.driver_asyncpg.msgspec.classes import queries
+from test.driver_asyncpg.msgspec.classes import queries_enum_override
+
+
+class _NoRowConn:
+    # `SELECT count(*)` always returns exactly one row, so the generated
+    # not-found branch of the count queries needs a connection stub that
+    # misses.
+    async def fetchrow(self, _query: str, *_args: object) -> None:
+        await asyncio.sleep(0)
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -700,3 +711,122 @@ class TestMsgspecClasses:
     )
     async def test_delete_type_override(self, queries_obj: queries.Queries, override_model: models.TestTypeOverride) -> None:
         await queries_obj.delete_type_override(id_=override_model.id_)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    async def test_digit_leading_enum_constant_is_member(self) -> None:
+        # "_24H" or "_HIDDEN" names would be treated as private by enum.
+        assert enums.TestMood.VALUE_24H.value == "24h"
+        assert enums.TestMood("24h") is enums.TestMood.VALUE_24H
+        assert enums.TestMood.VALUE__HIDDEN.value == "_hidden"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecClasses::insert_enum")
+    async def test_insert_enum(self, queries_obj: queries.Queries) -> None:
+        await queries_obj.insert_one_test_enum_type(id_=510005, mood=enums.TestMood.HAPPY, maybe_mood=None)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecClasses::get_enum", depends=["TestMsgspecClasses::insert_enum"])
+    async def test_get_enum(self, queries_obj: queries.Queries) -> None:
+        result = await queries_obj.get_one_test_enum_type(id_=510005)
+        assert result is not None
+        assert isinstance(result.mood, enums.TestMood)
+        assert result.mood is enums.TestMood.HAPPY
+        assert result.maybe_mood is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecClasses::get_enum_value", depends=["TestMsgspecClasses::get_enum"])
+    async def test_get_enum_value(self, queries_obj: queries.Queries) -> None:
+        mood = await queries_obj.get_one_test_enum_value(id_=510005)
+        assert isinstance(mood, enums.TestMood)
+        assert mood is enums.TestMood.HAPPY
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::insert_enum"])
+    async def test_get_enum_none(self, queries_obj: queries.Queries) -> None:
+        result = await queries_obj.get_one_test_enum_type(id_=987654321)
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::insert_enum"])
+    async def test_get_enum_value_none(self, queries_obj: queries.Queries) -> None:
+        mood = await queries_obj.get_one_test_enum_value(id_=987654321)
+        assert mood is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecClasses::get_many_enums", depends=["TestMsgspecClasses::get_enum_value"])
+    async def test_get_many_enums(self, queries_obj: queries.Queries) -> None:
+        result = await queries_obj.get_many_test_enum_types()
+        assert len(result) >= 1
+        assert all(isinstance(row.mood, enums.TestMood) for row in result)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::get_many_enums"])
+    async def test_delete_enum(self, queries_obj: queries.Queries) -> None:
+        assert await queries_obj.delete_one_test_enum_type(id_=510005) == 1
+
+    @pytest_asyncio.fixture(scope="session", loop_scope="session")
+    async def queries_enum_override_obj(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> queries_enum_override.QueriesEnumOverride:
+        return queries_enum_override.QueriesEnumOverride(conn=asyncpg_conn)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecClasses::insert_enum_override")
+    async def test_insert_enum_override(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
+        # The overridden parameter is a plain str; the generated code converts
+        # it back to enums.TestMood before it reaches the driver.
+        await queries_enum_override_obj.insert_enum_override(id_=520005, mood_test="sad")
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::insert_enum_override"])
+    async def test_get_enum_override(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
+        mood = await queries_enum_override_obj.get_enum_override_mood(id_=520005)
+        assert mood is not None
+        assert isinstance(mood, str)
+        assert mood == "sad"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::insert_enum_override"])
+    async def test_get_enum_override_none(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
+        mood = await queries_enum_override_obj.get_enum_override_mood(id_=987654321)
+        assert mood is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecClasses::list_enum_override", depends=["TestMsgspecClasses::insert_enum_override"])
+    async def test_list_enum_override_by_ids(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
+        # :many with an array parameter: the Sequence must pass both pyright
+        # (QueryResultsArgsType) and the runtime QueryResults plumbing.
+        rows = await queries_enum_override_obj.list_enum_override_by_ids(dollar_1=[520005])
+        assert len(rows) == 1
+        assert rows[0].mood_test == "sad"
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::insert_enum_override"])
+    async def test_iterate_enum_override_by_ids(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
+        results = queries_enum_override_obj.list_enum_override_by_ids(dollar_1=[520005])
+        seen: dict[int, str] = {}
+        # The cursor-based async-for path requires a transaction; going
+        # through the conn property also covers its generated accessor.
+        async with queries_enum_override_obj.conn.transaction():
+            async for row in results:
+                assert isinstance(row, models.TestEnumOverride)
+                seen[row.id_] = row.mood_test
+        assert seen == {520005: "sad"}
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestMsgspecClasses::count_enum_override", depends=["TestMsgspecClasses::insert_enum_override"])
+    async def test_count_enum_override_by_moods(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
+        # No HAPPY in the list: other suites may leave happy rows behind and
+        # would break the exact count.
+        count = await queries_enum_override_obj.count_enum_override_by_moods(dollar_1=[enums.TestMood.SAD, enums.TestMood.OK])
+        assert count == 1
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecClasses::count_enum_override"])
+    async def test_cleanup_enum_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        await asyncpg_conn.execute("DELETE FROM test_enum_override WHERE id = $1", 520005)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    async def test_count_enum_override_no_row(self) -> None:
+        conn = typing.cast("asyncpg.Connection[asyncpg.Record]", _NoRowConn())
+        no_row_queries = queries_enum_override.QueriesEnumOverride(conn=conn)
+        count = await no_row_queries.count_enum_override_by_moods(dollar_1=[enums.TestMood.SAD])
+        assert count is None

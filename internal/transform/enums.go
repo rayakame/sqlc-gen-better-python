@@ -5,14 +5,14 @@ import (
 	"slices"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
-	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 )
 
 func (t *Transformer) BuildEnums() []model.Enum {
 	enums := make([]model.Enum, 0)
 	seenNames := make(map[string]int)
 	for _, schema := range t.req.Catalog.Schemas {
-		if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
+		if schema.Name == types.PgCatalog || schema.Name == types.InformationSchema {
 			continue
 		}
 		for _, enum := range schema.Enums {

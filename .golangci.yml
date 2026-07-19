@@ -85,6 +85,12 @@ linters:
     - wastedassign
     - whitespace
     - exhaustruct
+  exclusions:
+    rules:
+      # Partially initialized fixture structs are the point of table tests.
+      - path: _test\.go
+        linters:
+          - exhaustruct
   settings:
     mnd:
       # The int argument of these is an indent level / newline count.

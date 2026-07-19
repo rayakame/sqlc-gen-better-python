@@ -19,6 +19,7 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import asyncio
 import collections.abc
 import datetime
 import decimal
@@ -39,6 +40,14 @@ from test.driver_asyncpg.msgspec.functions import models
 from test.driver_asyncpg.msgspec.functions import queries
 from test.driver_asyncpg.msgspec.functions import queries_copy_override
 from test.driver_asyncpg.msgspec.functions import queries_enum_override
+
+
+class _NoRowConn:
+    # `SELECT count(*)` always returns exactly one row, so the generated
+    # not-found branch of the count queries needs a connection stub that
+    # misses.
+    async def fetchrow(self, _query: str, *_args: object) -> None:
+        await asyncio.sleep(0)
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -787,6 +796,18 @@ class TestMsgspecFunctions:
         assert mood is enums.TestMood.HAPPY
 
     @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum"])
+    async def test_get_enum_none(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        result = await queries.get_one_test_enum_type(conn=asyncpg_conn, id_=987654321)
+        assert result is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum"])
+    async def test_get_enum_value_none(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        mood = await queries.get_one_test_enum_value(conn=asyncpg_conn, id_=987654321)
+        assert mood is None
+
+    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestMsgspecFunctions::get_many_enums", depends=["TestMsgspecFunctions::get_enum_value"])
     async def test_get_many_enums(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         result = await queries.get_many_test_enum_types(conn=asyncpg_conn)
@@ -814,6 +835,12 @@ class TestMsgspecFunctions:
         assert mood == "happy"
 
     @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum_override"])
+    async def test_get_enum_override_none(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        mood = await queries_enum_override.get_enum_override_mood(conn=asyncpg_conn, id_=987654321)
+        assert mood is None
+
+    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestMsgspecFunctions::list_enum_override", depends=["TestMsgspecFunctions::insert_enum_override"])
     async def test_list_enum_override_by_ids(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         # :many with an array parameter: the Sequence must pass both pyright
@@ -824,9 +851,33 @@ class TestMsgspecFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum_override"])
+    async def test_iterate_enum_override_by_ids(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        results = queries_enum_override.list_enum_override_by_ids(conn=asyncpg_conn, dollar_1=[434343])
+        seen: dict[int, str] = {}
+        # The cursor-based async-for path requires a transaction.
+        async with asyncpg_conn.transaction():
+            async for row in results:
+                assert isinstance(row, models.TestEnumOverride)
+                seen[row.id_] = row.mood_test
+        assert seen == {434343: "happy"}
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum_override"])
+    async def test_list_enum_override_by_ids_empty(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        rows = await queries_enum_override.list_enum_override_by_ids(conn=asyncpg_conn, dollar_1=[987654321])
+        assert rows == []
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum_override"])
     async def test_count_enum_override_by_moods(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         count = await queries_enum_override.count_enum_override_by_moods(conn=asyncpg_conn, dollar_1=[enums.TestMood.HAPPY, enums.TestMood.SAD])
         assert count == 1
+
+    @pytest.mark.asyncio(loop_scope="session")
+    async def test_count_enum_override_by_moods_no_row(self) -> None:
+        conn = typing.cast("asyncpg.Connection[asyncpg.Record]", _NoRowConn())
+        count = await queries_enum_override.count_enum_override_by_moods(conn=conn, dollar_1=[enums.TestMood.HAPPY])
+        assert count is None
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestMsgspecFunctions::copy_override")
@@ -849,3 +900,15 @@ class TestMsgspecFunctions:
         await queries_copy_override.delete_copy_override_rows(conn=asyncpg_conn)
         count = await queries_copy_override.count_copy_override_rows(conn=asyncpg_conn)
         assert count == 0
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestMsgspecFunctions::insert_enum_override"])
+    async def test_delete_enum_override(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # Later suites count test_enum_override rows by mood; drop this one.
+        await asyncpg_conn.execute("DELETE FROM test_enum_override WHERE id = $1", 434343)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    async def test_count_copy_override_rows_no_row(self) -> None:
+        conn = typing.cast("asyncpg.Connection[asyncpg.Record]", _NoRowConn())
+        count = await queries_copy_override.count_copy_override_rows(conn=conn)
+        assert count is None
