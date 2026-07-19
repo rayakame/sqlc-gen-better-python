@@ -32,12 +32,11 @@ func SnakeToCamel(conf *config.Config, s string) string {
 		}
 	}
 	// A Model prefix, not an underscore: pyright strict flags references to
-	// leading-underscore class names as private.
+	// leading-underscore class names as private. IsReserved catches the only
+	// CapWords-shaped keywords (True/False/None).
 	r, _ := utf8.DecodeRuneInString(out)
 	switch {
-	case out == "":
-		return "Model"
-	case unicode.IsDigit(r):
+	case out == "", unicode.IsDigit(r), IsReserved(out):
 		return "Model" + out
 	default:
 		return out
