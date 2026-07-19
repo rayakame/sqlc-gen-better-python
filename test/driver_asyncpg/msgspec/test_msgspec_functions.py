@@ -760,9 +760,7 @@ class TestMsgspecFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     async def test_digit_leading_enum_constant_is_member(self) -> None:
-        # A digit-leading enum value gets a VALUE_ prefix: a leading
-        # underscore would make enum treat the name as private, so the
-        # member would not exist at all.
+        # A "_24H" name would be treated as private by enum, not as a member.
         assert enums.TestMood.VALUE_24H.value == "24h"
         assert enums.TestMood("24h") is enums.TestMood.VALUE_24H
 

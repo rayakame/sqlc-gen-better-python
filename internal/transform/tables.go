@@ -41,8 +41,7 @@ func (t *Transformer) buildTable(pluginSchema *plugin.Schema, pluginTable *plugi
 			Name:    pluginTable.Rel.Name,
 		}),
 	}
-	// Sanitized names can collide (e.g. "a b" and "a_b" both become a_b);
-	// a duplicate dataclass field would silently shadow the first one.
+	// Sanitized names can collide ("a b" and "a_b" both become a_b).
 	seen := make(map[string]int, len(pluginTable.Columns))
 	for i, column := range pluginTable.Columns {
 		table.Columns = append(table.Columns, model.Column{

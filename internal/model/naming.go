@@ -61,11 +61,9 @@ func ColumnName(pluginColumn *plugin.Column, pos int) string {
 	return fmt.Sprintf("column_%d", pos+1)
 }
 
-// sanitizePyIdentifier maps every rune that cannot appear in a Python
-// identifier to an underscore. Returns "" when nothing identifier-worthy
-// remains; digitPrefix (plus an underscore) is prepended when the result
-// starts with a digit - a bare underscore prefix would break attrs and
-// pydantic, which treat leading-underscore fields specially.
+// sanitizePyIdentifier maps invalid runes to "_" and returns "" when nothing
+// usable remains. Digit-leading results get digitPrefix, not "_": attrs and
+// pydantic treat leading-underscore fields specially.
 func sanitizePyIdentifier(name, digitPrefix string) string {
 	var builder strings.Builder
 	for _, r := range name {
@@ -86,10 +84,6 @@ func sanitizePyIdentifier(name, digitPrefix string) string {
 	return sanitized
 }
 
-// EscapedColumnName builds the Python field name for a column: quoted SQL
-// identifiers like "3p%" or "new notes" sanitize to valid Python
-// identifiers, empty results fall back to the positional column_N name, and
-// reserved words are escaped.
 func EscapedColumnName(pluginColumn *plugin.Column, pos int) string {
 	name := sanitizePyIdentifier(ColumnName(pluginColumn, pos), "column")
 	if name == "" {

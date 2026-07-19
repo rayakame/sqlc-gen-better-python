@@ -779,8 +779,6 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestDataclassFunctions::insert_invalid_identifiers")
     async def test_insert_invalid_identifiers(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
-        # Columns named "3p%" and "new notes" sanitize to valid Python
-        # parameter and field names instead of emitting a SyntaxError.
         await queries_invalid_identifiers.insert_invalid_identifiers(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID, arg_3p_="3%", new_notes="hello")
 
     @pytest.mark.asyncio(loop_scope="session")
