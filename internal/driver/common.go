@@ -5,6 +5,7 @@ import (
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 )
@@ -96,7 +97,7 @@ func writeQueryDocstring(body *writer.CodeWriter, d Driver, cfg *config.Config, 
 // is not instantiable - those values pass through unconverted (there is no
 // registered adapter for unknown types either).
 func convertParamExpr(expr string, typ model.PyType) string {
-	if !typ.DoOverride() || typ.DefaultType == "typing.Any" {
+	if !typ.DoOverride() || typ.DefaultType == types.Any {
 		return expr
 	}
 	converted := fmt.Sprintf("%s(%s)", typ.DefaultType, expr)

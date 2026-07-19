@@ -82,6 +82,8 @@ func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
 	w.WriteIndentedLine(1, `"""`+fmt.Sprintf("Model representing %s.", table.Name))
 	w.NewLine()
 	switch w.docstringConvention {
+	// None arms here and below are unreachable (DocstringsEnabled guards every
+	// path) but keep the switches exhaustive for future conventions.
 	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
 		w.WriteIndentedLine(1, "Attributes")
@@ -500,12 +502,12 @@ func (w *CodeWriter) writeDocArgsSection(lvl int, connType string, args []DocArg
 		w.WriteIndentedLine(lvl, "Args:")
 		if connType != "" {
 			w.WriteIndentedLine(lvl+1, "conn:")
-			w.WriteIndentedLine(lvl+2, connDesc)
+			w.WriteIndentedLine(lvl+detailOffset, connDesc)
 		}
 		for _, arg := range args {
 			w.WriteIndentedLine(lvl+1, fmt.Sprintf("%s: %s.", arg.Name, arg.Type))
 			if arg.Extra != "" {
-				w.WriteIndentedLine(lvl+2, arg.Extra)
+				w.WriteIndentedLine(lvl+detailOffset, arg.Extra)
 			}
 		}
 	case config.DocstringConventionPEP257:

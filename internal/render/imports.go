@@ -9,6 +9,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/driver"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 )
@@ -174,7 +175,7 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 	if r.conf.OmitTypecheckingBlock {
 		// No TYPE_CHECKING guard is emitted; typing is then only referenced
 		// when a column falls back to the typing.Any annotation.
-		if used, _ := uses("typing.Any"); !used {
+		if used, _ := uses(types.Any); !used {
 			delete(std, "typing")
 		}
 	}
@@ -603,7 +604,7 @@ func (r *ImportResolver) buildQueryResult(std, typeChecking, local map[string]im
 		if _, ok := allSpecs["uuid"]; ok {
 			members += " | uuid.UUID"
 		}
-		if _, ok := allSpecs["datetime"]; ok {
+		if _, ok := allSpecs[moduleDatetime]; ok {
 			members += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
 		}
 		// Array/sqlc.slice params are forwarded into QueryResults too, so the
@@ -645,7 +646,7 @@ func (r *ImportResolver) stdImports(uses func(string) (bool, bool)) map[string]i
 
 	// Check which standard types are used.
 	for _, check := range []struct{ typeName, module string }{
-		{"decimal.Decimal", "decimal"},
+		{types.Decimal, "decimal"},
 		{"datetime.date", moduleDatetime},
 		{"datetime.time", moduleDatetime},
 		{"datetime.datetime", moduleDatetime},

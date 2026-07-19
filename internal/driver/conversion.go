@@ -51,7 +51,7 @@ var sqliteConversions = []sqliteConversion{
 		speedupsBody: "ciso8601.parse_datetime(val.decode()).date()",
 	},
 	{
-		pyType:       "decimal.Decimal",
+		pyType:       types.Decimal,
 		suffix:       "decimal",
 		sqlTypes:     []string{"decimal"},
 		adaptRet:     types.Str,
@@ -72,7 +72,7 @@ var sqliteConversions = []sqliteConversion{
 		pyType:       types.Bool,
 		suffix:       "bool",
 		sqlTypes:     []string{types.Bool, types.Boolean},
-		adaptRet:     "int",
+		adaptRet:     types.Int,
 		adaptBody:    "int(val)",
 		convBody:     "bool(int(val))",
 		speedupsBody: "",

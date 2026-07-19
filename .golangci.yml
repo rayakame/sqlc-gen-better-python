@@ -120,6 +120,11 @@ linters:
       check-type-assertions: true
       check-blank: true
       disable-default-exclusions: true
+      # These are documented to always return a nil error.
+      exclude-functions:
+        - '(*strings.Builder).WriteString'
+        - '(*strings.Builder).WriteRune'
+        - '(*strings.Builder).WriteByte'
     exhaustive:
       default-signifies-exhaustive: true
     depguard:

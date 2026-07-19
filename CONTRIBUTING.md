@@ -8,7 +8,9 @@ that you should follow to ensure that your contribution is at its best.
 - **Go** - the version from [`go.mod`](go.mod). Any recent Go installation works, the toolchain
   is downloaded automatically if yours is older.
 - **Python >= 3.12** and [**uv**](https://docs.astral.sh/uv/) - all Python tooling runs through uv.
-- [**sqlc**](https://docs.sqlc.dev/en/latest/overview/install.html) on your PATH.
+- [**sqlc**](https://docs.sqlc.dev/en/latest/overview/install.html) on your PATH, in the
+  version CI pins (`sqlc-version` in `.github/workflows/ci.yml`). The sqlc version is
+  stamped into every generated file header, so a different version diffs all fixtures.
 - **Docker** (or a local PostgreSQL) - only needed for the runtime tests.
 
 One-time setup for the Python tooling:
@@ -50,7 +52,9 @@ make lint       # golangci-lint run
 make pipelines  # lint-fix + fmt + lint (default goal)
 ```
 
-`make lint` passes with zero issues on a clean checkout; please keep it that way.
+`make lint` passes with zero issues on a clean checkout; please keep it that way. CI runs
+the golangci-lint version pinned in `.github/workflows/ci.yml`; use the same one locally
+so `make lint` matches the CI result.
 
 ## Python pipelines
 
@@ -62,7 +66,9 @@ sessions run with `uv run nox -s name1 name2`:
 |-----------------------------------------------------|----------------------------------------------------------------------------------------|
 | `asyncpg`, `sqlite3`, `aiosqlite`                   | Regenerate the driver's test fixtures via sqlc, then pyright + ruff                    |
 | `asyncpg_check`, `sqlite3_check`, `aiosqlite_check` | `sqlc diff` variant: verify the committed generated code is up to date (CI uses these) |
-| `pyright`, `ruff`, `ruff_format`                    | Type-check / lint / format-check the repository                                        |
+| `pyright`                                           | Type-check the repository                                                              |
+| `ruff_check`                                        | Non-mutating format + lint check (the CI gate)                                         |
+| `ruff`, `ruff_format`                               | Format and auto-fix the repository - these sessions rewrite files                      |
 | `pytest`                                            | Runtime tests against real databases                                                   |
 
 The `pytest` session needs a local PostgreSQL. The connection URI is read from the
@@ -93,7 +99,8 @@ Extra pytest arguments pass through after `--`, e.g.
 
 1. Change the Go code and run `make tests` / `make lint`.
 2. Rebuild the WASM plugin (see above).
-3. `uv run nox` - regenerates the fixtures and runs every check on them.
+3. `uv run nox` - regenerates the fixtures and runs every check on them. The default
+   sessions include `pytest`, so have the PostgreSQL from the section above running.
 4. If your change affects generated output, add coverage: a query/schema case in the test matrix
    that pins the new behavior, plus a runtime test where it makes sense. CI gates pull requests
    on patch coverage, so aim for covering every branch of code your PR adds.

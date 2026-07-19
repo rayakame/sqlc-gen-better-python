@@ -12,10 +12,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-func writeString(builder *strings.Builder, s string) {
-	builder.WriteString(s) //nolint:errcheck // never returns an error
-}
-
 func SnakeToCamel(conf *config.Config, s string) string {
 	var builder strings.Builder
 	s = strings.Map(func(r rune) rune {
@@ -27,9 +23,9 @@ func SnakeToCamel(conf *config.Config, s string) string {
 	}, s)
 	for p := range strings.SplitSeq(s, "_") {
 		if _, found := conf.InitialismsMap[p]; found {
-			writeString(&builder, strings.ToUpper(p))
+			builder.WriteString(strings.ToUpper(p))
 		} else {
-			writeString(&builder, cases.Title(language.Und, cases.NoLower).String(p))
+			builder.WriteString(cases.Title(language.Und, cases.NoLower).String(p))
 		}
 	}
 	out := builder.String()
@@ -49,9 +45,9 @@ func UpperSnakeCase(s string) string {
 	var result strings.Builder
 	for i, r := range s {
 		if unicode.IsUpper(r) && i != 0 {
-			writeString(&result, "_")
+			result.WriteByte('_')
 		}
-		writeString(&result, string(r))
+		result.WriteRune(r)
 	}
 
 	return strings.ToUpper(result.String())

@@ -96,8 +96,7 @@ func (w *CodeWriter) WriteFutureImport() {
 }
 
 func (w *CodeWriter) WriteString(txt string) {
-	// strings.Builder.WriteString is documented to always return a nil error.
-	w.builder.WriteString(txt) //nolint:errcheck // never returns an error
+	w.builder.WriteString(txt)
 }
 
 func (w *CodeWriter) Bytes() []byte {
