@@ -31,7 +31,7 @@ suites against real databases.
 
 ### Go (plugin source)
 
-```
+```text
 make tests      # go test -shuffle=on ./...
 make fmt        # golangci-lint fmt
 make lint       # golangci-lint run
@@ -47,7 +47,7 @@ changes, check that no NEW issues appear in the files you touched.
 After any Go change, the plugin must be rebuilt before `sqlc generate` picks
 it up:
 
-```
+```text
 scripts\build\build.bat   # Windows (scripts/build/build.sh on Unix)
 ```
 
@@ -61,7 +61,7 @@ into each test driver directory.
 Python tooling is uv + nox. One-time setup: `uv sync --group dev`. Requires
 `sqlc` on PATH and Python >= 3.12.
 
-```
+```text
 uv run nox                    # all default sessions
 uv run nox -s asyncpg         # regenerate test/driver_asyncpg via sqlc, then pyright + ruff on it
 uv run nox -s aiosqlite       # same for aiosqlite
