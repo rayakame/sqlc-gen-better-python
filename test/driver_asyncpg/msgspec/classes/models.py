@@ -9,6 +9,7 @@ from __future__ import annotations
 __all__: collections.abc.Sequence[str] = (
     "TestEnumOverride",
     "TestEnumType",
+    "TestFieldNaming",
     "TestInnerPostgresType",
     "TestPostgresType",
     "TestTypeOverride",
@@ -50,6 +51,18 @@ class TestEnumType(msgspec.Struct):
     id_: int
     mood: enums.TestMood
     maybe_mood: enums.TestMood | None
+
+
+class TestFieldNaming(msgspec.Struct):
+    """Model representing TestFieldNaming.
+
+    Attributes:
+    id_ -- int
+    outputs -- str
+    """
+
+    id_: int
+    outputs: str
 
 
 class TestInnerPostgresType(msgspec.Struct):

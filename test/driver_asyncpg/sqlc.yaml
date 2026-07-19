@@ -10,6 +10,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /attrs/classes
@@ -40,6 +41,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /attrs/functions
@@ -70,6 +72,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /dataclass/classes
@@ -99,6 +102,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /dataclass/functions
@@ -128,6 +132,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /msgspec/classes
@@ -157,6 +162,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /msgspec/functions
@@ -187,6 +193,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /pydantic/classes
@@ -216,6 +223,7 @@ sql:
       - queries.sql
       - queries_enum_override.sql
       - queries_copy_override.sql
+      - queries_field_namings.sql
     engine: postgresql
     codegen:
       - out: /pydantic/functions
