@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -32,7 +32,7 @@ jobs:
       
       - name: Get the latest version
         id: latest
-        uses: miniscruff/changie-action@v2
+        uses: miniscruff/changie-action@v3
         with:
           version: latest
           args: latest
@@ -86,7 +86,7 @@ jobs:
           echo "\`\`\`" >> release_body.md
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: "${{ steps.latest.outputs.output }}"
           tag_name: "refs/tags/${{ steps.latest.outputs.output }}"

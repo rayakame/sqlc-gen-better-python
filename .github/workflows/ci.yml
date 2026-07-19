@@ -26,7 +26,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: testdb
         ports:
-          - 5432/tcp              # host‑port is picked automatically
+          - 5432/tcp              # host-port is picked automatically
         options: >-
           --health-cmd="pg_isready -U postgres -d testdb"
           --health-interval=10s
@@ -36,12 +36,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.10", "3.11", "3.12", "3.13" ]
+        python-version: [ "3.12", "3.13" ]
 
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -52,13 +52,13 @@ jobs:
 
       - name: Run tests via nox
         env:
-          # GitHub tells you which host‑port was assigned via the `job.services` context
+          # GitHub tells you which host-port was assigned via the `job.services` context
           POSTGRES_URI: postgres://postgres:postgres@localhost:${{ job.services.postgres.ports['5432'] }}/testdb
         run: |
           uv run nox -s pytest -- --coverage
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: .coverage.${{ matrix.python-version }}
           path: .coverage
@@ -85,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -94,7 +94,7 @@ jobs:
           activate-environment: true
 
       - name: Download coverage
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: coverages/
 
@@ -118,7 +118,7 @@ jobs:
           coverage report
 
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Run ruff via nox"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -144,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Run pyright via nox"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -157,7 +157,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Run asyncpg check via nox"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Run aiosqlite check via nox"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -197,7 +197,7 @@ jobs:
     runs-on: ubuntu-latest
     name: "Run sqlite3 check via nox"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -218,7 +218,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -232,7 +232,7 @@ jobs:
         run: ./scripts/build/build.sh
 
       - name: Upload wasm artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wasm-artifact
           path: sqlc-gen-better-python.wasm

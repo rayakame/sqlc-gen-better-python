@@ -20,32 +20,38 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Batch changes
-        uses: miniscruff/changie-action@v2
+        uses: miniscruff/changie-action@v3
         with:
           version: latest
           args: batch ${{ github.event.inputs.version }}
 
       - name: Merge changes
-        uses: miniscruff/changie-action@v2
+        uses: miniscruff/changie-action@v3
         with:
           version: latest
           args: merge
 
       - name: Get the latest version
         id: latest
-        uses: miniscruff/changie-action@v2
+        uses: miniscruff/changie-action@v3
         with:
           version: latest
           args: latest
 
       - name: Set version
+        env:
+          NEW_VERSION: ${{ steps.latest.outputs.output }}
         run: |
-          sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"${{ steps.latest.outputs.output }}"'"/' internal/core/config.go
-          
-          echo "✅ Updated PluginVersion to $new_version"
+          if ! [[ "$NEW_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "unexpected version format: $NEW_VERSION" >&2
+            exit 1
+          fi
+          sed -i 's/^const PluginVersion = ".*"/const PluginVersion = "'"$NEW_VERSION"'"/' internal/config/constants.go
+
+          echo "OK: Updated PluginVersion to $NEW_VERSION"
 
 
       - name: Create Pull Request

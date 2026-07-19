@@ -1,0 +1,6 @@
+kind: Breaking
+body: 'Generated code now requires Python 3.12+. Type aliases use the lazy PEP 695 `type` statement (which also makes them safe at module level with `omit_typechecking_block`), `QueryResults` uses PEP 695 generic-class syntax, and enums subclass `enum.StrEnum` instead of `(str, enum.Enum)`'
+time: 2026-07-19T12:00:00.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"

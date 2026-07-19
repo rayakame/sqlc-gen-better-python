@@ -1,0 +1,6 @@
+kind: Added
+body: New `model_type` option `pydantic` generating `pydantic.BaseModel` models (requires pydantic >= 2.9)
+time: 2026-07-18T12:00:01.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"

@@ -1,0 +1,6 @@
+kind: Added
+body: '`query_parameter_limit` is now implemented and opt-in: when set to a non-negative value, queries with more parameters than the limit take a single `params: <Query>Params` argument; unset or negative values keep parameters expanded'
+time: 2026-07-18T12:00:02.0000000Z
+custom:
+    Author: rayakame
+    PR: "148"
