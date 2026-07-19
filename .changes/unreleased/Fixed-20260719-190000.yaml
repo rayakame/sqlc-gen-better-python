@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'Quoted SQL identifiers that are not valid Python names (e.g. columns named `"3p%"` or `"new notes"`) no longer generate invalid Python: field and parameter names are sanitized (`column_3p_`, `new_notes`), digit-leading names get a `column_`/`arg_` prefix, and collisions are deduplicated. Digit-leading enum values get a `VALUE_` prefix so the member actually exists (a leading underscore is treated as private by `enum`). Reported by AlexanderHott in issue 160'
+time: 2026-07-19T19:00:00.0000000Z
+custom:
+    Author: AlexanderHott
+    PR: "174"
