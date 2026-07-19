@@ -54,8 +54,9 @@ make pipelines  # lint-fix + fmt + lint (default goal)
 
 ## Python pipelines
 
-The pipelines are built with `nox`. Run everything with `uv run nox`, or single sessions with
-`uv run nox -s name1 name2`:
+The pipelines are built with `nox`. `uv run nox` runs the default sessions (regeneration,
+pyright, ruff, ruff_format and pytest - everything except the `_check` variants), single
+sessions run with `uv run nox -s name1 name2`:
 
 | Session                                             | What it does                                                                           |
 |-----------------------------------------------------|----------------------------------------------------------------------------------------|
@@ -70,7 +71,7 @@ The `pytest` session needs a local PostgreSQL. The connection URI is read from t
 differs from that. To start a matching instance with docker, run
 
 ```bash
-docker run --name sqlc-gen-better-python-postgres \
+docker run --rm --name sqlc-gen-better-python-postgres \
   -e POSTGRES_USER=root \
   -e POSTGRES_PASSWORD=187187 \
   -e POSTGRES_DB=root \
@@ -78,7 +79,8 @@ docker run --name sqlc-gen-better-python-postgres \
   -d postgres
 ```
 
-and stop it (after running the tests) with
+and stop it (after running the tests) with the command below; `--rm` removes the container
+on stop, so the `docker run` command above can be reused as is next time.
 
 ```bash
 docker stop sqlc-gen-better-python-postgres
