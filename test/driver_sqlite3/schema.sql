@@ -106,3 +106,12 @@ CREATE TABLE IF NOT EXISTS test_reserved_args
     id                    integer PRIMARY KEY NOT NULL,
     conn                  text                NOT NULL
 );
+
+-- Unknown SQL type with an uppercase db_type override (issue 161): the
+-- override must match case-insensitively, and values must pass through
+-- unconverted (the unknown type's DefaultType is typing.Any).
+CREATE TABLE IF NOT EXISTS test_unknown_override
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    happened_at           JULIANDAY
+);

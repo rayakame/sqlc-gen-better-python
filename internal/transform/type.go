@@ -86,7 +86,10 @@ func (t *Transformer) matchOverride(pluginColumn *plugin.Column, columnType stri
 				return override
 			}
 		}
-		if override.DBType != "" && override.DBType == columnType {
+		// Case-insensitive: columnType is lowercased during normalization,
+		// but configs written against the DDL casing ("JULIANDAY") must
+		// keep matching.
+		if override.DBType != "" && strings.EqualFold(override.DBType, columnType) {
 			return override
 		}
 	}

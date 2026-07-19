@@ -13,6 +13,7 @@ __all__: collections.abc.Sequence[str] = (
     "TestReservedArg",
     "TestSqliteType",
     "TestTypeOverride",
+    "TestUnknownOverride",
 )
 
 import attrs
@@ -225,3 +226,18 @@ class TestTypeOverride:
 
     id_: int
     text_test: UserString | None
+
+
+@attrs.define()
+class TestUnknownOverride:
+    """Model representing TestUnknownOverride.
+
+    Attributes
+    ----------
+    id_ : int
+    happened_at : str | None
+
+    """
+
+    id_: int
+    happened_at: str | None
