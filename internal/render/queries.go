@@ -109,5 +109,6 @@ func isAnyQueryMany(queries []model.Query) bool {
 			return true
 		}
 	}
+
 	return false
 }

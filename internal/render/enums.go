@@ -39,4 +39,3 @@ func (r *Renderer) renderEnums(enums []model.Enum) *plugin.File {
 		Contents: fileBody.Bytes(),
 	}
 }
-

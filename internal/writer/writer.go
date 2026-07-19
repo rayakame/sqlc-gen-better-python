@@ -42,6 +42,7 @@ func NewCodeWriter(
 		QueryResults:        nil,
 	})
 	w.QueryResults = NewQueryResultsWriter(w)
+
 	return w
 }
 

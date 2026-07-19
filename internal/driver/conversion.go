@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 )
 
 // asyncpgConversions lists SQL types that need explicit Python-side
@@ -19,6 +20,7 @@ var asyncpgConversions = map[string]struct{}{
 // asyncpgNeedsConversion reports whether a SQL type needs runtime conversion for asyncpg.
 func asyncpgNeedsConversion(sqlType string) bool {
 	_, ok := asyncpgConversions[sqlType]
+
 	return ok
 }
 
@@ -43,7 +45,7 @@ var sqliteConversions = []sqliteConversion{
 		pyType:       "datetime.date",
 		suffix:       "date",
 		sqlTypes:     []string{"date"},
-		adaptRet:     "str",
+		adaptRet:     types.Str,
 		adaptBody:    "val.isoformat()",
 		convBody:     "datetime.date.fromisoformat(val.decode())",
 		speedupsBody: "ciso8601.parse_datetime(val.decode()).date()",
@@ -52,7 +54,7 @@ var sqliteConversions = []sqliteConversion{
 		pyType:       "decimal.Decimal",
 		suffix:       "decimal",
 		sqlTypes:     []string{"decimal"},
-		adaptRet:     "str",
+		adaptRet:     types.Str,
 		adaptBody:    "str(val)",
 		convBody:     "decimal.Decimal(val.decode())",
 		speedupsBody: "",
@@ -61,15 +63,15 @@ var sqliteConversions = []sqliteConversion{
 		pyType:       "datetime.datetime",
 		suffix:       "datetime",
 		sqlTypes:     []string{"datetime", "timestamp"},
-		adaptRet:     "str",
+		adaptRet:     types.Str,
 		adaptBody:    "val.isoformat()",
 		convBody:     "datetime.datetime.fromisoformat(val.decode())",
 		speedupsBody: "ciso8601.parse_datetime(val.decode())",
 	},
 	{
-		pyType:       "bool",
+		pyType:       types.Bool,
 		suffix:       "bool",
-		sqlTypes:     []string{"bool", "boolean"},
+		sqlTypes:     []string{types.Bool, types.Boolean},
 		adaptRet:     "int",
 		adaptBody:    "int(val)",
 		convBody:     "bool(int(val))",

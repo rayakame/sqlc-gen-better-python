@@ -8,6 +8,8 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 )
 
+const decodeRowsExpr = "return [self._decode_hook(row) for row in result]"
+
 type Driver interface {
 	// Name returns the Python module name (e.g., "asyncpg", "aiosqlite", "sqlite3").
 	Name() string

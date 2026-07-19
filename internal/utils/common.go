@@ -19,5 +19,6 @@ func SameTableName(table1, table2 *plugin.Identifier, defaultSchema string) bool
 	if schema2 == "" {
 		schema2 = defaultSchema
 	}
+
 	return table1.Catalog == table2.Catalog && schema1 == schema2 && table1.Name == table2.Name
 }

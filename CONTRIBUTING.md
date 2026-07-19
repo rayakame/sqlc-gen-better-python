@@ -50,8 +50,7 @@ make lint       # golangci-lint run
 make pipelines  # lint-fix + fmt + lint (default goal)
 ```
 
-There is some pre-existing lint debt; make sure your change does not add NEW issues in the files
-you touched.
+`make lint` passes with zero issues on a clean checkout; please keep it that way.
 
 ## Python pipelines
 

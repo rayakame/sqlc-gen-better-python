@@ -87,8 +87,11 @@ linters:
     - exhaustruct
   settings:
     mnd:
+      # The int argument of these is an indent level / newline count.
       ignored-functions:
         - '^.*NNewLine$'
+        - '^.*WriteIndentedLine$'
+        - '^.*WriteIndentedString$'
     exhaustruct:
       # List of regular expressions to match type names that should be excluded from processing.
       # Anonymous structs can be matched by '<anonymous>' alias.

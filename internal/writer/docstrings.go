@@ -62,6 +62,17 @@ func (w *CodeWriter) WriteInitFileModuleDocstring() {
 
 // --- Class docstrings -------------------------------------------------------
 
+// Fixed indent depths in generated docstrings: 2 is a class member's
+// docstring or a section entry, 3 an entry inside a member section, 4 an
+// entry's detail line. detailOffset shifts two below a caller-given level.
+const (
+	memberIndent = 2
+	entryIndent  = 3
+	detailIndent = 4
+
+	detailOffset = 2
+)
+
 // WriteModelClassDocstring writes a model/row/params class docstring with an
 // attribute list, followed by a blank line.
 func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
@@ -71,6 +82,7 @@ func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
 	w.WriteIndentedLine(1, `"""`+fmt.Sprintf("Model representing %s.", table.Name))
 	w.NewLine()
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
 		w.WriteIndentedLine(1, "Attributes")
 		w.WriteIndentedLine(1, "----------")
@@ -81,7 +93,7 @@ func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
 	case config.DocstringConventionGoogle:
 		w.WriteIndentedLine(1, "Attributes:")
 		for _, col := range table.Columns {
-			w.WriteIndentedLine(2, fmt.Sprintf("%s: %s", col.Name, col.Type.Print()))
+			w.WriteIndentedLine(memberIndent, fmt.Sprintf("%s: %s", col.Name, col.Type.Print()))
 		}
 	case config.DocstringConventionPEP257:
 		w.WriteIndentedLine(1, "Attributes:")
@@ -115,7 +127,7 @@ func (w *CodeWriter) WriteQueryClassDocstring(sourceName, connType string) {
 		w.WriteIndentedLine(1, "Parameters")
 		w.WriteIndentedLine(1, "----------")
 		w.WriteIndentedLine(1, "conn : "+connType)
-		w.WriteIndentedLine(2, "The connection object used to execute queries.")
+		w.WriteIndentedLine(memberIndent, "The connection object used to execute queries.")
 		w.NewLine()
 		w.WriteIndentedLine(1, `"""`)
 	} else {
@@ -131,13 +143,14 @@ func (w *CodeWriter) WriteQueryClassInitDocstring(lvl int, connType string) {
 	}
 	w.WriteIndentedString(lvl, `"""Initialize the instance using the connection.`)
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
 		w.WriteLine(`"""`)
 	case config.DocstringConventionGoogle:
 		w.NNewLine(2)
 		w.WriteIndentedLine(lvl, "Args:")
 		w.WriteIndentedLine(lvl+1, "conn:")
-		w.WriteIndentedLine(lvl+2, fmt.Sprintf("Connection object of type `%s` used to execute the query.", connType))
+		w.WriteIndentedLine(lvl+detailOffset, fmt.Sprintf("Connection object of type `%s` used to execute the query.", connType))
 		w.WriteIndentedLine(lvl, `"""`)
 	case config.DocstringConventionPEP257:
 		w.NNewLine(2)
@@ -152,22 +165,23 @@ func (w *CodeWriter) WriteQueryClassConnDocstring(connType string) {
 	if !w.DocstringsEnabled() {
 		return
 	}
-	w.WriteIndentedLine(2, `"""Connection object used to make queries.`)
+	w.WriteIndentedLine(memberIndent, `"""Connection object used to make queries.`)
 	w.NewLine()
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
-		w.WriteIndentedLine(2, "Returns")
-		w.WriteIndentedLine(2, "-------")
-		w.WriteIndentedLine(2, connType)
+		w.WriteIndentedLine(memberIndent, "Returns")
+		w.WriteIndentedLine(memberIndent, "-------")
+		w.WriteIndentedLine(memberIndent, connType)
 		w.NewLine()
 	case config.DocstringConventionGoogle:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(3, fmt.Sprintf("Connection object of type `%s` used to make queries.", connType))
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(entryIndent, fmt.Sprintf("Connection object of type `%s` used to make queries.", connType))
 	case config.DocstringConventionPEP257:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(2, fmt.Sprintf("%s -- Connection object used to make queries.", connType))
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(memberIndent, connType+" -- Connection object used to make queries.")
 	}
-	w.WriteIndentedLine(2, `"""`)
+	w.WriteIndentedLine(memberIndent, `"""`)
 }
 
 // --- QueryResults docstrings --------------------------------------------------
@@ -183,13 +197,16 @@ func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string
 		w.WriteIndentedLine(1, "Parameters")
 		w.WriteIndentedLine(1, "----------")
 		w.WriteIndentedLine(1, "conn")
-		w.WriteIndentedLine(2, fmt.Sprintf("The connection object of type `%s` used to execute queries.", connType))
+		w.WriteIndentedLine(memberIndent, fmt.Sprintf("The connection object of type `%s` used to execute queries.", connType))
 		w.WriteIndentedLine(1, "sql")
-		w.WriteIndentedLine(2, "The SQL statement that will be executed when fetching/iterating.")
+		w.WriteIndentedLine(memberIndent, "The SQL statement that will be executed when fetching/iterating.")
 		w.WriteIndentedLine(1, "decode_hook")
-		w.WriteIndentedLine(2, fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", resultType))
+		w.WriteIndentedLine(
+			memberIndent,
+			fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", resultType),
+		)
 		w.WriteIndentedLine(1, "*args")
-		w.WriteIndentedLine(2, "Arguments that should be sent when executing the sql query.")
+		w.WriteIndentedLine(memberIndent, "Arguments that should be sent when executing the sql query.")
 		w.NewLine()
 		w.WriteIndentedLine(1, `"""`)
 	} else {
@@ -203,33 +220,40 @@ func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string)
 	if !w.DocstringsEnabled() {
 		return
 	}
-	w.WriteIndentedString(2, `"""Initialize the QueryResults instance.`)
+	w.WriteIndentedString(memberIndent, `"""Initialize the QueryResults instance.`)
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
 		w.WriteLine(`"""`)
 	case config.DocstringConventionGoogle:
 		w.NNewLine(2)
-		w.WriteIndentedLine(2, "Args:")
-		w.WriteIndentedLine(3, "conn:")
-		w.WriteIndentedLine(4, fmt.Sprintf("The connection object of type `%s` used to execute queries.", connType))
-		w.WriteIndentedLine(3, "sql:")
-		w.WriteIndentedLine(4, "The SQL statement that will be executed when fetching/iterating.")
-		w.WriteIndentedLine(3, "decode_hook:")
-		w.WriteIndentedLine(4, fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", resultType))
-		w.WriteIndentedLine(3, "*args:")
-		w.WriteIndentedLine(4, "Arguments that should be sent when executing the sql query.")
-		w.WriteIndentedLine(2, `"""`)
+		w.WriteIndentedLine(memberIndent, "Args:")
+		w.WriteIndentedLine(entryIndent, "conn:")
+		w.WriteIndentedLine(detailIndent, fmt.Sprintf("The connection object of type `%s` used to execute queries.", connType))
+		w.WriteIndentedLine(entryIndent, "sql:")
+		w.WriteIndentedLine(detailIndent, "The SQL statement that will be executed when fetching/iterating.")
+		w.WriteIndentedLine(entryIndent, "decode_hook:")
+		w.WriteIndentedLine(
+			detailIndent,
+			fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", resultType),
+		)
+		w.WriteIndentedLine(entryIndent, "*args:")
+		w.WriteIndentedLine(detailIndent, "Arguments that should be sent when executing the sql query.")
+		w.WriteIndentedLine(memberIndent, `"""`)
 	case config.DocstringConventionPEP257:
 		w.NNewLine(2)
-		w.WriteIndentedLine(2, "Arguments:")
-		w.WriteIndentedLine(2, fmt.Sprintf("conn -- The connection object of type `%s` used to execute queries.", connType))
-		w.WriteIndentedLine(2, "sql -- The SQL statement that will be executed when fetching/iterating.")
+		w.WriteIndentedLine(memberIndent, "Arguments:")
 		w.WriteIndentedLine(
-			2,
+			memberIndent,
+			fmt.Sprintf("conn -- The connection object of type `%s` used to execute queries.", connType),
+		)
+		w.WriteIndentedLine(memberIndent, "sql -- The SQL statement that will be executed when fetching/iterating.")
+		w.WriteIndentedLine(
+			memberIndent,
 			fmt.Sprintf("decode_hook -- A callback that turns an `%s` object into `T` that will be returned.", resultType),
 		)
-		w.WriteIndentedLine(2, "*args -- Arguments that should be sent when executing the sql query.")
-		w.WriteIndentedLine(2, `"""`)
+		w.WriteIndentedLine(memberIndent, "*args -- Arguments that should be sent when executing the sql query.")
+		w.WriteIndentedLine(memberIndent, `"""`)
 	}
 }
 
@@ -244,22 +268,23 @@ func (w *CodeWriter) WriteQueryResultsIterDocstring(async bool) {
 		summary = "Initialize iteration support for `async for`."
 		returns = "Self as an asynchronous iterator."
 	}
-	w.WriteIndentedLine(2, `"""`+summary)
+	w.WriteIndentedLine(memberIndent, `"""`+summary)
 	w.NewLine()
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
-		w.WriteIndentedLine(2, "Returns")
-		w.WriteIndentedLine(2, "-------")
-		w.WriteIndentedLine(2, "QueryResults[T]")
-		w.WriteIndentedLine(3, returns)
+		w.WriteIndentedLine(memberIndent, "Returns")
+		w.WriteIndentedLine(memberIndent, "-------")
+		w.WriteIndentedLine(memberIndent, "QueryResults[T]")
+		w.WriteIndentedLine(entryIndent, returns)
 	case config.DocstringConventionGoogle:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(3, returns)
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(entryIndent, returns)
 	case config.DocstringConventionPEP257:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(2, returns)
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(memberIndent, returns)
 	}
-	w.WriteIndentedLine(2, `"""`)
+	w.WriteIndentedLine(memberIndent, `"""`)
 }
 
 // WriteQueryResultsNextDocstring writes the __next__/__anext__ docstring.
@@ -272,33 +297,34 @@ func (w *CodeWriter) WriteQueryResultsNextDocstring(cursorPhrase string, async b
 	if async {
 		raises = "StopAsyncIteration"
 	}
-	w.WriteIndentedLine(2, fmt.Sprintf(`"""Yield the next item in the query result using %s.`, cursorPhrase))
+	w.WriteIndentedLine(memberIndent, fmt.Sprintf(`"""Yield the next item in the query result using %s.`, cursorPhrase))
 	w.NewLine()
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
-		w.WriteIndentedLine(2, "Returns")
-		w.WriteIndentedLine(2, "-------")
-		w.WriteIndentedLine(2, "T")
-		w.WriteIndentedLine(3, "The next decoded result.")
+		w.WriteIndentedLine(memberIndent, "Returns")
+		w.WriteIndentedLine(memberIndent, "-------")
+		w.WriteIndentedLine(memberIndent, "T")
+		w.WriteIndentedLine(entryIndent, "The next decoded result.")
 		w.NewLine()
-		w.WriteIndentedLine(2, "Raises")
-		w.WriteIndentedLine(2, "------")
-		w.WriteIndentedLine(2, raises)
-		w.WriteIndentedLine(3, "When no more records are available.")
+		w.WriteIndentedLine(memberIndent, "Raises")
+		w.WriteIndentedLine(memberIndent, "------")
+		w.WriteIndentedLine(memberIndent, raises)
+		w.WriteIndentedLine(entryIndent, "When no more records are available.")
 	case config.DocstringConventionGoogle:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(3, "The next decoded result of type `T`.")
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(entryIndent, "The next decoded result of type `T`.")
 		w.NewLine()
-		w.WriteIndentedLine(2, "Raises:")
-		w.WriteIndentedLine(3, raises+": When no more records are available.")
+		w.WriteIndentedLine(memberIndent, "Raises:")
+		w.WriteIndentedLine(entryIndent, raises+": When no more records are available.")
 	case config.DocstringConventionPEP257:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(2, "The next decoded result of type `T`.")
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(memberIndent, "The next decoded result of type `T`.")
 		w.NewLine()
-		w.WriteIndentedLine(2, "Raises:")
-		w.WriteIndentedLine(2, raises+" -- When no more records are available.")
+		w.WriteIndentedLine(memberIndent, "Raises:")
+		w.WriteIndentedLine(memberIndent, raises+" -- When no more records are available.")
 	}
-	w.WriteIndentedLine(2, `"""`)
+	w.WriteIndentedLine(memberIndent, `"""`)
 }
 
 // WriteQueryResultsFetchDocstring writes the __await__/__call__ docstring.
@@ -310,22 +336,23 @@ func (w *CodeWriter) WriteQueryResultsFetchDocstring(async bool) {
 	if async {
 		summary = "Allow `await` on the object to return all rows as a fully decoded sequence."
 	}
-	w.WriteIndentedLine(2, `"""`+summary)
+	w.WriteIndentedLine(memberIndent, `"""`+summary)
 	w.NewLine()
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
-		w.WriteIndentedLine(2, "Returns")
-		w.WriteIndentedLine(2, "-------")
-		w.WriteIndentedLine(2, "collections.abc.Sequence[T]")
-		w.WriteIndentedLine(3, "A sequence of decoded objects of type `T`.")
+		w.WriteIndentedLine(memberIndent, "Returns")
+		w.WriteIndentedLine(memberIndent, "-------")
+		w.WriteIndentedLine(memberIndent, "collections.abc.Sequence[T]")
+		w.WriteIndentedLine(entryIndent, "A sequence of decoded objects of type `T`.")
 	case config.DocstringConventionGoogle:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(3, "A sequence of decoded objects of type `T`.")
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(entryIndent, "A sequence of decoded objects of type `T`.")
 	case config.DocstringConventionPEP257:
-		w.WriteIndentedLine(2, "Returns:")
-		w.WriteIndentedLine(2, "A sequence of decoded objects of type `T`.")
+		w.WriteIndentedLine(memberIndent, "Returns:")
+		w.WriteIndentedLine(memberIndent, "A sequence of decoded objects of type `T`.")
 	}
-	w.WriteIndentedLine(2, `"""`)
+	w.WriteIndentedLine(memberIndent, `"""`)
 }
 
 // --- Query function docstrings ------------------------------------------------
@@ -455,6 +482,7 @@ func (w *CodeWriter) writeDocArgsSection(lvl int, connType string, args []DocArg
 	}
 	connDesc := fmt.Sprintf("Connection object of type `%s` used to execute the query.", connType)
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
 		w.WriteIndentedLine(lvl, "Parameters")
 		w.WriteIndentedLine(lvl, "----------")
@@ -500,6 +528,7 @@ func (w *CodeWriter) writeDocArgsSection(lvl int, connType string, args []DocArg
 // writeDocReturnsSection writes the Returns section for a query function.
 func (w *CodeWriter) writeDocReturnsSection(lvl int, ret *retDoc) {
 	switch w.docstringConvention {
+	case config.DocstringConventionNone:
 	case config.DocstringConventionNumpy:
 		w.WriteIndentedLine(lvl, "Returns")
 		w.WriteIndentedLine(lvl, "-------")

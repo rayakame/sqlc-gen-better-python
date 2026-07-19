@@ -12,6 +12,11 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
+const (
+	identifierPartsSchemaName        = 2
+	identifierPartsCatalogSchemaName = 3
+)
+
 func parseIdentifierString(name string) (*plugin.Identifier, error) {
 	parts := strings.Split(name, ".")
 	switch len(parts) {
@@ -19,12 +24,12 @@ func parseIdentifierString(name string) (*plugin.Identifier, error) {
 		return &plugin.Identifier{
 			Name: parts[0],
 		}, nil
-	case 2:
+	case identifierPartsSchemaName:
 		return &plugin.Identifier{
 			Schema: parts[0],
 			Name:   parts[1],
 		}, nil
-	case 3:
+	case identifierPartsCatalogSchemaName:
 		return &plugin.Identifier{
 			Catalog: parts[0],
 			Schema:  parts[1],
@@ -61,7 +66,7 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 	case Float, "double precision", "float8", "pg_catalog.float8", "real", "float4", "pg_catalog.float4":
 		return Float
 	case "numeric", "pg_catalog.numeric":
-		return "decimal.Decimal"
+		return Decimal
 	case "money":
 		return Str
 	case Boolean, Bool, "pg_catalog.bool":
@@ -93,7 +98,8 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 		columnRelation, err := parseIdentifierString(columnType)
 		if err != nil {
 			log.L().LogErr("error trying to parse identifier string", err)
-			return "typing.Any"
+
+			return Any
 		}
 		if columnRelation.Schema == "" {
 			columnRelation.Schema = req.Catalog.DefaultSchema
@@ -118,6 +124,6 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 		}
 		log.L().Log("unknown PostgreSQL type: " + columnType)
 
-		return "typing.Any"
+		return Any
 	}
 }

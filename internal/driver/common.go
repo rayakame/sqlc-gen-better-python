@@ -18,7 +18,7 @@ func writeFuncSignature(
 	returnAnnotation string,
 ) string {
 	conn := "conn"
-	first := fmt.Sprintf("conn: %s", d.ConnType())
+	first := "conn: " + d.ConnType()
 	if config.EmitClasses {
 		first = "self"
 		conn = "self._conn"

@@ -27,19 +27,19 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeader(
 	w.writer.WriteIndentedLine(1, `__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")`)
 	w.writer.NewLine()
 	w.writer.WriteIndentedLine(1, "def __init__(")
-	w.writer.WriteIndentedLine(2, "self,")
-	w.writer.WriteIndentedLine(2, fmt.Sprintf("conn: %s,", connType))
-	w.writer.WriteIndentedLine(2, "sql: str,")
-	w.writer.WriteIndentedLine(2, fmt.Sprintf("decode_hook: collections.abc.Callable[[%s], T],", driverReturnType))
-	w.writer.WriteIndentedLine(2, "*args: QueryResultsArgsType,")
+	w.writer.WriteIndentedLine(memberIndent, "self,")
+	w.writer.WriteIndentedLine(memberIndent, fmt.Sprintf("conn: %s,", connType))
+	w.writer.WriteIndentedLine(memberIndent, "sql: str,")
+	w.writer.WriteIndentedLine(memberIndent, fmt.Sprintf("decode_hook: collections.abc.Callable[[%s], T],", driverReturnType))
+	w.writer.WriteIndentedLine(memberIndent, "*args: QueryResultsArgsType,")
 	w.writer.WriteIndentedLine(1, ") -> None:")
 	w.writer.WriteQueryResultsInitDocstring(connType, driverReturnType)
-	w.writer.WriteIndentedLine(2, "self._conn = conn")
-	w.writer.WriteIndentedLine(2, "self._sql = sql")
-	w.writer.WriteIndentedLine(2, "self._decode_hook = decode_hook")
-	w.writer.WriteIndentedLine(2, "self._args = args")
+	w.writer.WriteIndentedLine(memberIndent, "self._conn = conn")
+	w.writer.WriteIndentedLine(memberIndent, "self._sql = sql")
+	w.writer.WriteIndentedLine(memberIndent, "self._decode_hook = decode_hook")
+	w.writer.WriteIndentedLine(memberIndent, "self._args = args")
 	for _, line := range initFields {
-		w.writer.WriteIndentedLine(2, line)
+		w.writer.WriteIndentedLine(memberIndent, line)
 	}
 	w.writer.NewLine()
 
@@ -49,34 +49,34 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeader(
 		w.writer.WriteIndentedLine(1, "def __iter__(self) -> QueryResults[T]:")
 	}
 	w.writer.WriteQueryResultsIterDocstring(async)
-	w.writer.WriteIndentedLine(2, "return self")
+	w.writer.WriteIndentedLine(memberIndent, "return self")
 	w.writer.NewLine()
 }
 
 // WriteQueryResultsCallFunction writes the synchronous __call__ method.
 func (w *QueryResultsWriter) WriteQueryResultsCallFunction(wrapperLines []string) {
 	w.writer.WriteIndentedLine(1, "def __call__(")
-	w.writer.WriteIndentedLine(2, "self,")
+	w.writer.WriteIndentedLine(memberIndent, "self,")
 	w.writer.WriteIndentedLine(1, ") -> collections.abc.Sequence[T]:")
 	w.writer.WriteQueryResultsFetchDocstring(false)
 	for _, line := range wrapperLines {
-		w.writer.WriteIndentedLine(2, line)
+		w.writer.WriteIndentedLine(memberIndent, line)
 	}
 }
 
 // WriteQueryResultsAwaitFunction writes the async __await__ method.
 func (w *QueryResultsWriter) WriteQueryResultsAwaitFunction(wrapperLines []string) {
 	w.writer.WriteIndentedLine(1, "def __await__(")
-	w.writer.WriteIndentedLine(2, "self,")
+	w.writer.WriteIndentedLine(memberIndent, "self,")
 	w.writer.WriteIndentedLine(1, ") -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:")
 	w.writer.WriteQueryResultsFetchDocstring(true)
 	if w.writer.DocstringsEnabled() {
 		w.writer.NewLine()
 	}
-	w.writer.WriteIndentedLine(2, "async def _wrapper() -> collections.abc.Sequence[T]:")
+	w.writer.WriteIndentedLine(memberIndent, "async def _wrapper() -> collections.abc.Sequence[T]:")
 	for _, line := range wrapperLines {
-		w.writer.WriteIndentedLine(3, line)
+		w.writer.WriteIndentedLine(entryIndent, line)
 	}
 	w.writer.NewLine()
-	w.writer.WriteIndentedLine(2, "return _wrapper().__await__()")
+	w.writer.WriteIndentedLine(memberIndent, "return _wrapper().__await__()")
 }

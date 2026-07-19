@@ -26,7 +26,7 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, _ *config.Config, pluginType 
 	case "datetime", "timestamp":
 		return "datetime.datetime"
 	case "decimal":
-		return "decimal.Decimal"
+		return Decimal
 	}
 
 	switch {
@@ -44,11 +44,11 @@ func SqliteTypeToPython(_ *plugin.GenerateRequest, _ *config.Config, pluginType 
 	// Precision variants like "decimal(10,5)" keep their prefix; must agree
 	// with the conversion registration in driver/conversion.go.
 	case strings.HasPrefix(columnType, "decimal"):
-		return "decimal.Decimal"
+		return Decimal
 
 	default:
 		log.L().Log("unknown SQLite type: " + columnType)
 
-		return "typing.Any"
+		return Any
 	}
 }

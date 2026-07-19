@@ -6,6 +6,7 @@ import (
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 )
@@ -73,7 +74,7 @@ func (d *AsyncpgDriver) WriteQueryResultsClass(body *writer.CodeWriter) string {
 	}, asyncpgResultType, d.IsAsync())
 	body.QueryResults.WriteQueryResultsAwaitFunction([]string{
 		"result = await self._conn.fetch(self._sql, *self._args)",
-		"return [self._decode_hook(row) for row in result]",
+		decodeRowsExpr,
 	})
 	body.NewLine()
 	body.WriteIndentedLine(1, "async def __anext__(self) -> T:")
@@ -88,6 +89,7 @@ func (d *AsyncpgDriver) WriteQueryResultsClass(body *writer.CodeWriter) string {
 	body.WriteIndentedLine(3, "self._iterator = None")
 	body.WriteIndentedLine(3, "raise")
 	body.WriteIndentedLine(2, "return self._decode_hook(record)")
+
 	return "QueryResults"
 }
 
@@ -112,7 +114,7 @@ func (d *AsyncpgDriver) WriteQueryFunc(body *writer.CodeWriter, config *config.C
 	case metadata.CmdExec:
 		annotation, docRetType = query.Returns.Type.Print(), ""
 	case metadata.CmdExecResult:
-		annotation, docRetType = "str", "str"
+		annotation, docRetType = types.Str, types.Str
 	case metadata.CmdExecRows, metadata.CmdCopyFrom:
 		annotation, docRetType = query.Returns.Type.Print(), query.Returns.Type.Type
 	case metadata.CmdOne:
@@ -163,13 +165,13 @@ func (d *AsyncpgDriver) WriteQueryFunc(body *writer.CodeWriter, config *config.C
 
 // writeCopyFromBody writes the body for an asyncpg :copyfrom command.
 func writeCopyFromBody(body *writer.CodeWriter, config *config.Config, query model.Query, conn string, indent int) {
-	var paramParts []string
-	var columnParts []string
+	paramParts := make([]string, 0, len(query.Params[0].Table.Columns))
+	columnParts := make([]string, 0, len(query.Params[0].Table.Columns))
 	for _, col := range query.Params[0].Table.Columns {
 		// Overridden columns convert back to their DefaultType here too:
 		// copy_records_to_table receives the raw record values, so this is
 		// the only place the conversion can happen for :copyfrom.
-		paramParts = append(paramParts, convertParamExpr(fmt.Sprintf("param.%s", col.Name), col.Type))
+		paramParts = append(paramParts, convertParamExpr("param."+col.Name, col.Type))
 		columnParts = append(columnParts, writer.PyQuote(col.DBName))
 	}
 
