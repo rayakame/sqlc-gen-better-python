@@ -11,12 +11,17 @@ import (
 
 func (t *Transformer) BuildTables() []model.Table {
 	tables := make([]model.Table, 0)
+	// Distinct tables can sanitize to the same class name ("%a" and "a", or
+	// digit-leading names sharing the Model prefix).
+	seen := make(map[string]int)
 	for _, schema := range t.req.Catalog.Schemas {
 		if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
 			continue
 		}
 		for _, table := range schema.Tables {
-			tables = append(tables, t.buildTable(schema, table))
+			built := t.buildTable(schema, table)
+			built.Name = model.DedupClassName(built.Name, seen)
+			tables = append(tables, built)
 		}
 	}
 	slices.SortFunc(tables, func(a, b model.Table) int {

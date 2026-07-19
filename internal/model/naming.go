@@ -158,12 +158,22 @@ func EnumConstantName(value string, index int, seen map[string]int) string {
 // unused identifier is found, so a literal "name_2" that appeared earlier can
 // never collide with a generated one. seen tracks usage counts per scope.
 func DedupName(name string, seen map[string]int) string {
+	return dedup(name, "%s_%d", seen)
+}
+
+// DedupClassName is DedupName with a bare digit suffix ("Name", "Name2",
+// ...): an underscore suffix would violate the CapWords convention (N801).
+func DedupClassName(name string, seen map[string]int) string {
+	return dedup(name, "%s%d", seen)
+}
+
+func dedup(name, format string, seen map[string]int) string {
 	seen[name]++
 	if seen[name] == 1 {
 		return name
 	}
 	for i := seen[name]; ; i++ {
-		candidate := fmt.Sprintf("%s_%d", name, i)
+		candidate := fmt.Sprintf(format, name, i)
 		if seen[candidate] == 0 {
 			seen[candidate]++
 

@@ -10,6 +10,7 @@ import (
 
 func (t *Transformer) BuildEnums() []model.Enum {
 	enums := make([]model.Enum, 0)
+	seenNames := make(map[string]int)
 	for _, schema := range t.req.Catalog.Schemas {
 		if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
 			continue
@@ -21,7 +22,7 @@ func (t *Transformer) BuildEnums() []model.Enum {
 			}
 
 			e := model.Enum{
-				Name:      model.EnumName(t.config, enum.Name, schemaName),
+				Name:      model.DedupClassName(model.EnumName(t.config, enum.Name, schemaName), seenNames),
 				Constants: make([]model.EnumConstants, 0, len(enum.Vals)),
 			}
 
