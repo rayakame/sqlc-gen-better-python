@@ -2,7 +2,7 @@ package config
 
 import "fmt"
 
-const PluginVersion = "v0.4.6"
+const PluginVersion = "v0.5.0"
 
 type (
 	SQLDriver           string

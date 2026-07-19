@@ -1,6 +1,0 @@
-kind: Added
-body: Support for PostgreSQL enums - enum columns now generate an `enums.py` module with `str`-based enum classes, including schema-qualified naming and runtime value coercion
-time: 2026-07-18T12:00:00.0000000Z
-custom:
-    Author: rayakame
-    PR: "148"

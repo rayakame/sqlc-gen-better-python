@@ -1,6 +1,0 @@
-kind: Breaking
-body: Config option `sql_driver` is now required instead of defaulting to asyncpg
-time: 2025-12-10T09:21:32.2253488Z
-custom:
-    Author: rayakame
-    PR: "138"

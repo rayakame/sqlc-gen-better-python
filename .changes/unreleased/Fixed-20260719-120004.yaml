@@ -1,6 +1,0 @@
-kind: Fixed
-body: '`omit_typechecking_block: true` no longer crashes generated asyncpg modules at import time: the `ConnectionLike` alias is lazy (PEP 695), module-level import order satisfies E402, and `typing` is only imported where it is actually referenced. `models.py` is emitted even when all models are filtered out, matching v0.4.x. `inflection_exclude_table_names` entries match both the bare and the schema-qualified table name (v0.4.x only matched the qualified form)'
-time: 2026-07-19T12:00:04.0000000Z
-custom:
-    Author: rayakame
-    PR: "148"
