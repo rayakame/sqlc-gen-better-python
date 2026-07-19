@@ -7,7 +7,6 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/log"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
-	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
@@ -105,7 +104,7 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 			columnRelation.Schema = req.Catalog.DefaultSchema
 		}
 		for _, schema := range req.Catalog.Schemas {
-			if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
+			if schema.Name == PgCatalog || schema.Name == InformationSchema {
 				continue
 			}
 			if schema.Name != columnRelation.Schema {

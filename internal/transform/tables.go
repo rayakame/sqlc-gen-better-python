@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
@@ -15,7 +16,7 @@ func (t *Transformer) BuildTables() []model.Table {
 	// digit-leading names sharing the Model prefix).
 	seen := make(map[string]int)
 	for _, schema := range t.req.Catalog.Schemas {
-		if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
+		if schema.Name == types.PgCatalog || schema.Name == types.InformationSchema {
 			continue
 		}
 		for _, table := range schema.Tables {

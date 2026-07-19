@@ -967,11 +967,19 @@ class TestSqlite3DataclassFunctions:
         assert price == OVERRIDE_PRICE
 
     @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_override_price"])
+    def test_get_override_price_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_override_adapter.get_override_price(conn=sqlite3_conn, id_=434342) is None
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_override_price"])
     def test_get_override_happened_at(self, sqlite3_conn: sqlite3.Connection) -> None:
         happened_at = queries_override_converter.get_override_happened_at(conn=sqlite3_conn, id_=434343)
         assert happened_at is not None
         assert isinstance(happened_at, datetime.datetime)
         assert happened_at == OVERRIDE_HAPPENED_AT
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_override_price"])
+    def test_get_override_happened_at_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_override_converter.get_override_happened_at(conn=sqlite3_conn, id_=434342) is None
 
     @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_case_row")
     def test_insert_case_row(self, sqlite3_conn: sqlite3.Connection) -> None:
@@ -988,6 +996,10 @@ class TestSqlite3DataclassFunctions:
         assert isinstance(row.prec_dec, decimal.Decimal)
         assert row.prec_dec == CASE_DEC
 
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_case_row"])
+    def test_get_case_row_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_case.get_case_row(conn=sqlite3_conn, id_=515150) is None
+
     @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_reserved_arg")
     def test_insert_reserved_arg(self, sqlite3_conn: sqlite3.Connection) -> None:
         # The column is literally named "conn"; the generated parameter must
@@ -998,6 +1010,10 @@ class TestSqlite3DataclassFunctions:
     def test_get_reserved_arg(self, sqlite3_conn: sqlite3.Connection) -> None:
         found_id = queries_case.get_reserved_arg(conn=sqlite3_conn, conn_2="reserved-arg-value")
         assert found_id == RESERVED_ARG_ID
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_reserved_arg"])
+    def test_get_reserved_arg_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_case.get_reserved_arg(conn=sqlite3_conn, conn_2="missing-reserved-arg-value") is None
 
     @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_unknown_override")
     def test_insert_unknown_override(self, sqlite3_conn: sqlite3.Connection) -> None:

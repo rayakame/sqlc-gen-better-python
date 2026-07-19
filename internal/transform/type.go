@@ -5,7 +5,7 @@ import (
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
-	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
@@ -32,7 +32,7 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 	}
 
 	for _, schema := range t.req.Catalog.Schemas {
-		if schema.Name == utils.PgCatalog || schema.Name == utils.InformationSchema {
+		if schema.Name == types.PgCatalog || schema.Name == types.InformationSchema {
 			continue
 		}
 		if typeSchema != schema.GetName() {
