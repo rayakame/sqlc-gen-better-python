@@ -984,14 +984,14 @@ class TestDataclassFunctions:
         assert row.tags == frozenset()
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converted"])
+    @pytest.mark.dependency(name="TestDataclassFunctions::list_converted", depends=["TestDataclassFunctions::insert_converted"])
     async def test_list_converted_by_tags(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         # The converted value is passed as a QueryResults argument.
         rows = await queries_converters.list_converted_by_tags(conn=asyncpg_conn, tags=frozenset({"a", "b"}))
         assert rows == [CONVERTER_ID]
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converted"])
+    @pytest.mark.dependency(name="TestDataclassFunctions::iterate_converted", depends=["TestDataclassFunctions::insert_converted"])
     async def test_iterate_converted_by_tags(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         results = queries_converters.list_converted_by_tags(conn=asyncpg_conn, tags=frozenset({"a", "b"}))
         # The cursor-based async-for path requires a transaction.
@@ -1000,7 +1000,7 @@ class TestDataclassFunctions:
         assert seen == [CONVERTER_ID]
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.dependency(depends=["TestDataclassFunctions::converted_nullable"])
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::converted_nullable", "TestDataclassFunctions::list_converted", "TestDataclassFunctions::iterate_converted"])
     async def test_delete_converted(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
         await queries_converters.delete_converted(conn=asyncpg_conn, id_=CONVERTER_ID)
         await queries_converters.delete_converted(conn=asyncpg_conn, id_=CONVERTER_ID + 1)
