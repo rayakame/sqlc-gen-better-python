@@ -1,0 +1,6 @@
+kind: Added
+body: 'Go unit tests for internal/transform, internal/driver, internal/render and the handler complete the suite: overall Go statement coverage is now 99.8%, with every package at 100%.'
+time: 2026-07-20T16:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "182"
