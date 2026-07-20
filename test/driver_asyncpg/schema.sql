@@ -189,3 +189,11 @@ CREATE TABLE IF NOT EXISTS "3rd_party_stats"
     id    bigint PRIMARY KEY NOT NULL,
     total bigint NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS test_converters
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    prefs                 jsonb NOT NULL,
+    maybe_prefs           jsonb,
+    tags                  text NOT NULL
+);

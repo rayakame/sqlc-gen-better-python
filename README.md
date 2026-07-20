@@ -69,6 +69,7 @@ More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/re
 | `omit_kwargs_limit`              | integer        | no       | This can be used to set a limit where any query with less or equal amounts of parameters will not require kwargs for the parameters. This defaults to `0` which makes every query require kwargs for their parameters.    |
 | `speedups`                       | bool           | no       | If set to `true` the plugin will use other librarys for type conversion. Needs extra dependecys to be installed. This option currently only affects `sqlite3` & `aiosqlite` and uses the library `ciso8601`               |
 | `overrides`                      | list[Override] | no       | A list of [type overrides](#type-overrides).                                                                                                                                                                              |
+| `converters`                     | list[Converter]| no       | A list of [converters](#converters): named pairs of your own functions that serialize and deserialize a column value, referenced by an override.                                                                          |
 | `debug`                          | bool           | no       | If set to `true`, there will be debug logs generated into a `log.txt` file when executing `sqlc generate`. Defaults to `false`                                                                                            |
 
 ### Type Overrides
@@ -93,6 +94,53 @@ options:
         type: collections.UserString
 
 ```
+
+### Converters
+
+An override replaces a column's type, but conversion is done by calling that type
+(`Preferences(value)`), which does not work for things like JSON. A converter names
+two of your own functions instead, used whenever the column is read or written:
+
+```yaml
+# filename: sqlc.yaml
+# ...
+options:
+  # ...
+  converters:
+    - name: prefs
+      py_type:
+        import: myapp.models
+        package: Preferences
+        type: Preferences
+      to_db: myapp.converters.encode_preferences
+      from_db: myapp.converters.decode_preferences
+  overrides:
+    - db_type: jsonb
+      converter: prefs
+    - column: users.preferences
+      converter: prefs
+```
+
+```python
+# generated
+preferences=myapp.converters.decode_preferences(row[1])                     # read
+await conn.execute(CREATE_USER, id_, myapp.converters.encode_preferences(preferences))  # write
+```
+
+A converter is referenced by an override, so it applies to whichever columns that
+override matches, and `converter` replaces `py_type` on the override itself.
+
+Both directions are required. `to_db` and `from_db` are dotted paths; their module is
+imported and the function called fully qualified, so the names can never collide with
+generated code.
+
+`to_db` must return the type the column would have had without the override (`jsonb` is
+a `str`, `bytea` a `memoryview`), and `from_db` receives that same type. For a column
+whose SQL type the plugin does not recognise there is no such type, so `to_db` must
+return one the driver accepts.
+
+Your functions never see `None`: nullable columns are guarded, so a NULL stays `None`
+without calling the converter. List columns convert element-wise.
 
 ### Enums
 

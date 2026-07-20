@@ -17,6 +17,9 @@ import (
 // functions mode.
 const commonConnExpr = "conn"
 
+// paramConverterTo is the fully qualified to_db function a converter override carries.
+const paramConverterTo = "myconv.to_db"
+
 func commonTestConfig() *config.Config {
 	return &config.Config{
 		SqlDriver:           config.SQLDriverAsyncpg,
@@ -321,6 +324,47 @@ func TestConvertParamExpr(t *testing.T) {
 			name: "override nullable list guards comprehension",
 			typ:  model.PyType{Type: "IPv4Address", IsOverride: true, DefaultType: "str", IsList: true, IsNullable: true},
 			want: "[str(v) for v in x] if x is not None else None",
+		},
+		{
+			name: "converter scalar calls to_db instead of the default type",
+			typ: model.PyType{
+				Type: "mymod.Money", IsOverride: true, DefaultType: "str", ConverterTo: paramConverterTo,
+			},
+			want: "myconv.to_db(x)",
+		},
+		{
+			name: "converter list converts element-wise",
+			typ: model.PyType{
+				Type: "mymod.Money", IsOverride: true, DefaultType: "str", ConverterTo: paramConverterTo, IsList: true,
+			},
+			want: "[myconv.to_db(v) for v in x]",
+		},
+		{
+			name: "converter nullable guards against None",
+			typ: model.PyType{
+				Type: "mymod.Money", IsOverride: true, DefaultType: "str", ConverterTo: paramConverterTo, IsNullable: true,
+			},
+			want: "myconv.to_db(x) if x is not None else None",
+		},
+		{
+			// A converter makes an otherwise non-instantiable typing.Any default convertible.
+			name: "converter overrides the typing.Any passthrough",
+			typ: model.PyType{
+				Type: "mymod.Money", IsOverride: true, DefaultType: types.Any, ConverterTo: paramConverterTo,
+			},
+			want: "myconv.to_db(x)",
+		},
+		{
+			name: "converter nullable list with typing.Any default guards comprehension",
+			typ: model.PyType{
+				Type:        "mymod.Money",
+				IsOverride:  true,
+				DefaultType: types.Any,
+				ConverterTo: paramConverterTo,
+				IsList:      true,
+				IsNullable:  true,
+			},
+			want: "[myconv.to_db(v) for v in x] if x is not None else None",
 		},
 	}
 	for _, tc := range cases {

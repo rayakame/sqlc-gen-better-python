@@ -12,6 +12,9 @@ import (
 
 const decodeHookName = "_decode_hook"
 
+// rowConverterFrom is the fully qualified from_db function a converter override carries.
+const rowConverterFrom = "myconv.from_db"
+
 func newRowBuilderWriter(convention config.DocstringConvention) *writer.CodeWriter {
 	return writer.NewCodeWriter(&config.Config{
 		SqlDriver:           config.SQLDriverAsyncpg,
@@ -74,6 +77,49 @@ func TestConvertExpr(t *testing.T) {
 			typ:  model.PyType{Type: "uuid.UUID", IsOverride: true, IsList: true, IsNullable: true},
 			src:  "row[2]",
 			want: "[uuid.UUID(v) for v in row[2]] if row[2] is not None else None",
+		},
+		{
+			name: "converter scalar calls from_db instead of the constructor",
+			typ: model.PyType{
+				Type: "mymod.Money", IsOverride: true, DefaultType: "str", ConverterFrom: rowConverterFrom,
+			},
+			src:  "row[0]",
+			want: "myconv.from_db(row[0])",
+		},
+		{
+			name: "converter list converts element-wise",
+			typ: model.PyType{
+				Type: "mymod.Money", IsOverride: true, DefaultType: "str", ConverterFrom: rowConverterFrom, IsList: true,
+			},
+			src:  "row[1]",
+			want: "[myconv.from_db(v) for v in row[1]]",
+		},
+		{
+			name: "converter nullable scalar guarded",
+			typ: model.PyType{
+				Type: "mymod.Money", IsOverride: true, DefaultType: "str", ConverterFrom: rowConverterFrom, IsNullable: true,
+			},
+			src:  "row[2]",
+			want: "myconv.from_db(row[2]) if row[2] is not None else None",
+		},
+		{
+			name: "converter nullable list guarded comprehension",
+			typ: model.PyType{
+				Type:          "mymod.Money",
+				IsOverride:    true,
+				DefaultType:   "str",
+				ConverterFrom: rowConverterFrom,
+				IsList:        true,
+				IsNullable:    true,
+			},
+			src:  "row[3]",
+			want: "[myconv.from_db(v) for v in row[3]] if row[3] is not None else None",
+		},
+		{
+			name: "converter on an enum return still calls from_db",
+			typ:  model.PyType{Type: "enums.Status", IsEnum: true, ConverterFrom: rowConverterFrom},
+			src:  "row[0]",
+			want: "myconv.from_db(row[0])",
 		},
 	}
 	for _, tc := range cases {

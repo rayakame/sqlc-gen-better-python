@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: b275a4f468b37f5df9f64ea039f25921f76ae792386934647a27b3b37c9f86ba
+      sha256: e8e6687416ae45990859fcdd8d7adc20ab0696fd744928234aa38835f7d96c9b
 sql:
   - schema: schema.sql
     queries:
@@ -107,6 +107,7 @@ sql:
       - queries_copy_override.sql
       - queries_field_namings.sql
       - queries_invalid_identifiers.sql
+      - queries_converters.sql
     engine: postgresql
     codegen:
       - out: /dataclass/functions
@@ -131,6 +132,25 @@ sql:
             - column: test_copy_override.amount
               py_type:
                 type: float
+            - column: test_converters.prefs
+              converter: prefs
+            - column: test_converters.maybe_prefs
+              converter: prefs
+            - column: test_converters.tags
+              converter: tags
+          converters:
+            - name: prefs
+              py_type:
+                import: test.converters
+                package: Preferences
+                type: Preferences
+              to_db: test.converters.encode_preferences
+              from_db: test.converters.decode_preferences
+            - name: tags
+              py_type:
+                type: frozenset[str]
+              to_db: test.converters.encode_tags
+              from_db: test.converters.decode_tags
   - schema: schema.sql
     queries:
       - queries.sql

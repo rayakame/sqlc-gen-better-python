@@ -44,6 +44,13 @@ func TestNewConfigErrors(t *testing.T) {
 			wantErr: "override specifying both `column` (\"authors.name\") and `db_type` (\"text\") is not valid",
 		},
 		{
+			name: "converter parse error propagates",
+			options: `{"package":"db","sql_driver":"asyncpg","emit_init_file":true,` +
+				`"converters":[{"name":"money","py_type":{"type":"Money"},"to_db":"encode","from_db":"m.decode"}]}`,
+			engine:  "postgresql",
+			wantErr: "converter \"money\": \"encode\" must be a dotted path to a function",
+		},
+		{
 			name:    "negative omit_kwargs_limit",
 			options: `{"package":"db","sql_driver":"asyncpg","emit_init_file":true,"omit_kwargs_limit":-1}`,
 			engine:  "postgresql",
@@ -198,6 +205,55 @@ func TestNewConfigAllOptions(t *testing.T) {
 	}
 	if !reflect.DeepEqual(conf, want) {
 		t.Errorf("NewConfig() = %+v, want %+v", conf, want)
+	}
+}
+
+func TestNewConfigConverters(t *testing.T) {
+	t.Parallel()
+	options := `{
+		"package": "queries",
+		"sql_driver": "sqlite3",
+		"emit_init_file": true,
+		"converters": [
+			{"name": "money", "py_type": {"import": "myapp.money", "type": "myapp.money.Money", "package": "Money"},
+			 "to_db": "myapp.converters.encode", "from_db": "myapp.converters.decode"},
+			{"name": "point", "py_type": {"type": "myapp.geo.Point"},
+			 "to_db": "myapp.geo.to_db", "from_db": "myapp.geo.from_db"}
+		],
+		"overrides": [
+			{"db_type": "numeric", "converter": "money"},
+			{"column": "places.location", "converter": "point"},
+			{"db_type": "text", "py_type": {"type": "str"}}
+		]
+	}`
+	conf, err := config.NewConfig(newRequest(options, "sqlite"))
+	if err != nil {
+		t.Fatalf("NewConfig() error = %v, want nil", err)
+	}
+
+	wantModules := [][]string{
+		{"myapp.converters", "myapp.converters"},
+		{"myapp.geo", "myapp.geo"},
+	}
+	for i, want := range wantModules {
+		if !reflect.DeepEqual(conf.Converters[i].Modules, want) {
+			t.Errorf("Converters[%d].Modules = %v, want %v", i, conf.Converters[i].Modules, want)
+		}
+	}
+
+	wantTypes := []string{"myapp.money.Money", "myapp.geo.Point", "str"}
+	for i, want := range wantTypes {
+		if conf.Overrides[i].PyType.Type != want {
+			t.Errorf("Overrides[%d].PyType.Type = %q, want %q", i, conf.Overrides[i].PyType.Type, want)
+		}
+	}
+
+	// The column override still compiles its patterns after adopting the type.
+	if conf.Overrides[1].ColumnName == nil || !conf.Overrides[1].ColumnName.MatchString("location") {
+		t.Error("Overrides[1].ColumnName does not match \"location\"")
+	}
+	if conf.Overrides[2].Resolved != nil {
+		t.Errorf("Overrides[2].Resolved = %+v, want nil", conf.Overrides[2].Resolved)
 	}
 }
 

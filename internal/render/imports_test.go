@@ -27,7 +27,37 @@ const (
 	typeTime     = "datetime.time"
 	typeDatetime = "datetime.datetime"
 	typeUUID     = "uuid.UUID"
+	typeMoney    = "mymod.Money"
 )
+
+// Converter fixture: the module holding the user functions and their dotted paths.
+const (
+	converterModule = "myconv"
+	converterToDB   = "myconv.to_db"
+	converterFromDB = "myconv.from_db"
+)
+
+// impConverter builds a converter-backed override type for the given SQL type.
+func impConverter(sqlType, defaultType string) model.PyType {
+	return model.PyType{
+		SQLType:       sqlType,
+		Type:          typeMoney,
+		IsOverride:    true,
+		DefaultType:   defaultType,
+		ConverterTo:   converterToDB,
+		ConverterFrom: converterFromDB,
+	}
+}
+
+// impConverterConf configures a converter plus the override adopting its py_type.
+// Modules is normally derived by config parsing, so it is set explicitly here.
+func impConverterConf(c *config.Config) {
+	pyType := config.OverridePyType{Import: "mymod", Type: typeMoney}
+	c.Converters = []config.Converter{
+		{Name: "money", PyType: pyType, ToDB: converterToDB, FromDB: converterFromDB, Modules: []string{converterModule}},
+	}
+	c.Overrides = []config.Override{{PyType: pyType}}
+}
 
 func newImportsConfig(sqlDriver config.SQLDriver, mods ...func(*config.Config)) *config.Config {
 	conf := &config.Config{Package: "db", SqlDriver: sqlDriver, ModelType: config.ModelTypeDataclass}
@@ -967,6 +997,38 @@ func TestQueryImports(t *testing.T) {
 				TypeChecking: []string{"import asyncpg", "import collections.abc", "import datetime"},
 			},
 		},
+		{
+			name:    "converter return imports the converter module and keeps the type lazy",
+			conf:    newImportsConfig(config.SQLDriverAsyncpg, impConverterConf),
+			queries: []model.Query{{Cmd: metadata.CmdOne, Returns: impScalar(impConverter("numeric", "decimal.Decimal"))}},
+			want: ImportResult{
+				// decimal never appears: the converter replaces the DefaultType call.
+				Std:          []string{"import myconv", "import typing"},
+				TypeChecking: []string{"import asyncpg", "import collections.abc", "import mymod"},
+			},
+		},
+		{
+			name: "converter param imports the converter module instead of the default type",
+			conf: newImportsConfig(config.SQLDriverAsyncpg, impConverterConf),
+			queries: []model.Query{
+				{Cmd: metadata.CmdExec, Params: []model.QueryValue{impScalar(impConverter("date", typeDate))}},
+			},
+			want: ImportResult{
+				Std:          []string{"import myconv", "import typing"},
+				TypeChecking: []string{"import asyncpg", "import collections.abc", "import mymod"},
+			},
+		},
+		{
+			name: "converter struct column return imports the converter module",
+			conf: newImportsConfig(config.SQLDriverAsyncpg, impConverterConf),
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impStruct(true, impCol("amount", impConverter("inet", "str")))},
+			},
+			want: ImportResult{
+				Std:          []string{"import dataclasses", "import myconv", "import typing"},
+				TypeChecking: []string{"import asyncpg", "import collections.abc", "import mymod"},
+			},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1168,12 +1230,143 @@ func TestOverrideDefaultTypeUses(t *testing.T) {
 			qv:   impStruct(true, impCol("a", model.PyType{Type: typeDate})),
 			want: false,
 		},
+		{
+			// The converter replaces the DefaultType call, so its module is never imported.
+			name: "scalar converter override is skipped",
+			qv:   impScalar(impConverter("date", typeDate)),
+			want: false,
+		},
+		{
+			name: "struct column converter override is skipped",
+			qv:   impStruct(true, impCol("a", impConverter("date", typeDate))),
+			want: false,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := overrideDefaultTypeUses(typeDate, tc.qv); got != tc.want {
 				t.Errorf("overrideDefaultTypeUses() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+//nolint:funlen // Table test enumerating every addConverterImports branch.
+func TestAddConverterImports(t *testing.T) {
+	t.Parallel()
+	pyType := config.OverridePyType{Import: "mymod", Type: typeMoney}
+	oneModule := []config.Converter{
+		{Name: "money", PyType: pyType, ToDB: converterToDB, FromDB: converterFromDB, Modules: []string{converterModule}},
+	}
+	runtimeSpec := func(module string) importSpec {
+		return importSpec{Module: module, TypeChecking: false}
+	}
+	cases := []struct {
+		name       string
+		converters []config.Converter
+		queries    []model.Query
+		want       map[string]importSpec
+	}{
+		{
+			name:       "no converter types used adds nothing",
+			converters: oneModule,
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "int", Type: "int"})},
+			},
+			want: map[string]importSpec{},
+		},
+		{
+			name:       "converter param imports its module at runtime",
+			converters: oneModule,
+			queries: []model.Query{
+				{Cmd: metadata.CmdExec, Params: []model.QueryValue{impScalar(impConverter("numeric", "decimal.Decimal"))}},
+			},
+			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+		},
+		{
+			name:       "converter return imports its module at runtime",
+			converters: oneModule,
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(impConverter("numeric", "decimal.Decimal"))},
+			},
+			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+		},
+		{
+			name:       "converter struct column is found through the table walk",
+			converters: oneModule,
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impStruct(true, impCol("amount", impConverter("numeric", "decimal.Decimal")))},
+			},
+			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+		},
+		{
+			name: "to_db and from_db in different modules import both",
+			converters: []config.Converter{
+				{
+					Name:    "money",
+					PyType:  pyType,
+					ToDB:    "encode.to_db",
+					FromDB:  "decode.from_db",
+					Modules: []string{"encode", "decode"},
+				},
+			},
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(impConverter("numeric", "decimal.Decimal"))},
+			},
+			want: map[string]importSpec{"encode": runtimeSpec("encode"), "decode": runtimeSpec("decode")},
+		},
+		{
+			name: "two converters sharing a module are deduplicated",
+			converters: []config.Converter{
+				{Name: "money", PyType: pyType, ToDB: converterToDB, FromDB: converterFromDB, Modules: []string{converterModule}},
+				{
+					Name:    "other",
+					PyType:  config.OverridePyType{Import: "mymod", Type: "mymod.Other"},
+					ToDB:    "myconv.other_to_db",
+					FromDB:  "myconv.other_from_db",
+					Modules: []string{converterModule},
+				},
+			},
+			queries: []model.Query{
+				{
+					Cmd:     metadata.CmdOne,
+					Returns: impScalar(impConverter("numeric", "decimal.Decimal")),
+					Params: []model.QueryValue{impScalar(model.PyType{
+						SQLType: "text", Type: "mymod.Other", IsOverride: true,
+						DefaultType: types.Str, ConverterTo: "myconv.other_to_db",
+					})},
+				},
+			},
+			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+		},
+		{
+			name: "configured converter whose type is unused is skipped",
+			converters: []config.Converter{
+				{
+					Name:    "unused",
+					PyType:  config.OverridePyType{Import: "other", Type: "other.Type"},
+					ToDB:    "otherconv.to_db",
+					FromDB:  "otherconv.from_db",
+					Modules: []string{"otherconv"},
+				},
+				oneModule[0],
+			},
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(impConverter("numeric", "decimal.Decimal"))},
+			},
+			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			conf := newImportsConfig(config.SQLDriverAsyncpg, func(c *config.Config) { c.Converters = tc.converters })
+			resolver := newImportsResolver(t, conf)
+			std := map[string]importSpec{}
+			resolver.addConverterImports(std, tc.queries)
+			if !maps.Equal(std, tc.want) {
+				t.Errorf("addConverterImports() stored %+v, want %+v", std, tc.want)
 			}
 		})
 	}
@@ -1332,6 +1525,23 @@ func TestQueryValueUses(t *testing.T) {
 				impCol("d", model.PyType{SQLType: "date", Type: typeDate, IsOverride: true, DefaultType: "str"}),
 			),
 			isReturn: false,
+			wantUsed: true,
+			wantTC:   true,
+		},
+		{
+			// "inet" converts inline for asyncpg, so only the converter keeps this lazy.
+			name:     "scalar converter return stays annotation only",
+			lookup:   typeMoney,
+			qv:       impScalar(impConverter("inet", "str")),
+			isReturn: true,
+			wantUsed: true,
+			wantTC:   true,
+		},
+		{
+			name:     "struct converter column return stays annotation only",
+			lookup:   typeMoney,
+			qv:       impStruct(true, impCol("amount", impConverter("inet", "str"))),
+			isReturn: true,
 			wantUsed: true,
 			wantTC:   true,
 		},

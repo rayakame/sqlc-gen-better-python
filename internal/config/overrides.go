@@ -206,9 +206,3 @@ func (o *Converter) parse() error {
 
 	return nil
 }
-
-// CallExpr returns the fully qualified call expression for a converter
-// function, e.g. "myapp.converters.encode(value)".
-func CallExpr(function, argument string) string {
-	return function + "(" + argument + ")"
-}

@@ -596,7 +596,7 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 				return
 			}
 			used = true
-			if isReturn && (r.drv.ConvertsInline(typ.SQLType) || typ.DoOverride()) {
+			if isReturn && !typ.HasConverter() && (r.drv.ConvertsInline(typ.SQLType) || typ.DoOverride()) {
 				typeChecking = false
 			}
 		}
@@ -618,7 +618,8 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 	}
 
 	if queryValue.Type.Type == name {
-		needsConv := isReturn && (r.drv.ConvertsInline(queryValue.Type.SQLType) || queryValue.Type.DoOverride())
+		needsConv := isReturn && !queryValue.Type.HasConverter() &&
+			(r.drv.ConvertsInline(queryValue.Type.SQLType) || queryValue.Type.DoOverride())
 
 		return true, !needsConv
 	}

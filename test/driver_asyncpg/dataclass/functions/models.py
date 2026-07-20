@@ -8,6 +8,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "Model3RdPartyStat",
+    "TestConverter",
     "TestEnumOverride",
     "TestEnumType",
     "TestFieldNaming",
@@ -22,6 +23,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     from collections import UserString
+    from test.converters import Preferences
     from test.driver_asyncpg.dataclass.functions import enums
     import collections.abc
     import datetime
@@ -40,6 +42,23 @@ class Model3RdPartyStat:
 
     id_: int
     total: int
+
+
+@dataclasses.dataclass()
+class TestConverter:
+    """Model representing TestConverter.
+
+    Attributes:
+        id_: int
+        prefs: Preferences
+        maybe_prefs: Preferences | None
+        tags: frozenset[str]
+    """
+
+    id_: int
+    prefs: Preferences
+    maybe_prefs: Preferences | None
+    tags: frozenset[str]
 
 
 @dataclasses.dataclass()
