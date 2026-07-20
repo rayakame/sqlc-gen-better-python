@@ -259,7 +259,7 @@ jobs:
           go-version-file: './go.mod'
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           # Dependabot does not update this pin; keep it in sync with the
           # golangci-lint version used locally for make lint.
