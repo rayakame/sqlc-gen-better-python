@@ -1,6 +1,0 @@
-kind: Changed
-body: 'The contributing guidelines have been rewritten from scratch to match the current development workflow: prerequisites, repository layout, the WASM build scripts, all nox sessions, the runtime test setup and the full loop for generator changes are now documented. changie is also set up as a Go tool, so `make changelog` works without installing anything. Closes issue 88'
-time: 2026-07-19T20:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "177"

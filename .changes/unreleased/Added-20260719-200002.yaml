@@ -1,6 +1,0 @@
-kind: Added
-body: 'CI now runs the Go test suite and golangci-lint on every pull request, so the Go checks are no longer local-only conventions.'
-time: 2026-07-19T20:00:02.0000000Z
-custom:
-    Author: Rayakame
-    PR: "177"

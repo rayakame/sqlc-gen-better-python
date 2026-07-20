@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.5.1 - 2026-07-20
+### Added
+* [#177](https://github.com/rayakame/sqlc-gen-better-python/pull/177) CI now runs the Go test suite and golangci-lint on every pull request, so the Go checks are no longer local-only conventions. ([Rayakame](https://github.com/Rayakame))
+* [#177](https://github.com/rayakame/sqlc-gen-better-python/pull/177) Python 3.14 support: the test tooling accepts and CI now tests Python 3.14. This bumps the asyncpg floor to 0.31.0, the first release with Python 3.14 wheels. ([Rayakame](https://github.com/Rayakame))
+* [#180](https://github.com/rayakame/sqlc-gen-better-python/pull/180) Go unit tests: internal/model, internal/config, internal/log, internal/types and internal/writer are now covered to 100% of statements, raising the Go coverage flag from 0.5% to about 43%. ([Rayakame](https://github.com/Rayakame))
+* [#182](https://github.com/rayakame/sqlc-gen-better-python/pull/182) Go unit tests for internal/transform, internal/driver, internal/render and the handler complete the suite: overall Go statement coverage is now 99.8%, with every package at 100%. ([Rayakame](https://github.com/Rayakame))
+### Changed
+* [#177](https://github.com/rayakame/sqlc-gen-better-python/pull/177) The contributing guidelines have been rewritten from scratch to match the current development workflow: prerequisites, repository layout, the WASM build scripts, all nox sessions, the runtime test setup and the full loop for generator changes are now documented. changie is also set up as a Go tool, so `make changelog` works without installing anything. Closes issue 88 ([Rayakame](https://github.com/Rayakame))
+* [#177](https://github.com/rayakame/sqlc-gen-better-python/pull/177) All pre-existing golangci-lint findings in the plugin source have been fixed; `make lint` now passes with zero issues. This is a pure internal refactor, generated code is unchanged. ([Rayakame](https://github.com/Rayakame))
+
 ## v0.5.0 - 2026-07-19
 ### Added
 * [#148](https://github.com/rayakame/sqlc-gen-better-python/pull/148) Support for PostgreSQL enums - enum columns now generate an `enums.py` module with `str`-based enum classes, including schema-qualified naming and runtime value coercion ([rayakame](https://github.com/rayakame))

@@ -1,6 +1,0 @@
-kind: Changed
-body: 'All pre-existing golangci-lint findings in the plugin source have been fixed; `make lint` now passes with zero issues. This is a pure internal refactor, generated code is unchanged.'
-time: 2026-07-19T20:00:01.0000000Z
-custom:
-    Author: Rayakame
-    PR: "177"
