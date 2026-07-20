@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'Overrides on columns whose SQL type the plugin does not recognise are passed to the driver unconverted, so their Python type is now included in `QueryResultsArgsType`; previously pyright strict rejected such a value as a `:many` query parameter. Types used only as parameter annotations also stay lazy instead of being forced into a runtime import.'
+time: 2026-07-20T21:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "185"
