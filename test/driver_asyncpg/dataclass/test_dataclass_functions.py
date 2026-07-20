@@ -32,6 +32,7 @@ if typing.TYPE_CHECKING:
     import asyncpg
 
 import math
+import pathlib
 
 import pytest
 
@@ -45,6 +46,7 @@ from test.driver_asyncpg.dataclass.functions import queries_invalid_identifiers
 
 INVALID_IDENTIFIER_ID = 606060
 CONVERTER_ID = 610001
+CONVERTER_ARRAY_ID = 620001
 
 
 class _NoRowConn:
@@ -1003,3 +1005,31 @@ class TestDataclassFunctions:
         await queries_converters.delete_converted(conn=asyncpg_conn, id_=CONVERTER_ID)
         await queries_converters.delete_converted(conn=asyncpg_conn, id_=CONVERTER_ID + 1)
         assert await queries_converters.get_converted(conn=asyncpg_conn, id_=CONVERTER_ID) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::insert_converter_array")
+    async def test_insert_converter_array(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # db_type converter on a domain-typed column: the scalar label converts via to_db.
+        await queries_converters.insert_converter_array_row(conn=asyncpg_conn, id_=CONVERTER_ARRAY_ID, label=pathlib.PurePosixPath("a/b"))
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converter_array"])
+    async def test_get_converter_array_label(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        label = await queries_converters.get_converter_array_label(conn=asyncpg_conn, id_=CONVERTER_ARRAY_ID)
+        assert label == pathlib.PurePosixPath("a/b")
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converter_array"])
+    async def test_get_converter_array_label_not_found(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        assert await queries_converters.get_converter_array_label(conn=asyncpg_conn, id_=CONVERTER_ARRAY_ID + 999) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converter_array"])
+    async def test_find_converter_array_by_labels(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # Every element of the ANY($1::converter_label[]) array passes through
+        # the db_type converter before reaching the driver.
+        rows = await queries_converters.find_converter_array_by_labels(
+            conn=asyncpg_conn,
+            dollar_1=[pathlib.PurePosixPath("a/b"), pathlib.PurePosixPath("c/d")],
+        )
+        assert rows == [CONVERTER_ARRAY_ID]

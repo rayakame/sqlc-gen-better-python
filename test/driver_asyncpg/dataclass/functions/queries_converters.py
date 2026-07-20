@@ -10,8 +10,11 @@ from __future__ import annotations
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
     "delete_converted",
+    "find_converter_array_by_labels",
     "get_converted",
+    "get_converter_array_label",
     "insert_converted",
+    "insert_converter_array_row",
     "list_converted_by_tags",
 )
 
@@ -20,12 +23,13 @@ import test.converters
 import typing
 
 if typing.TYPE_CHECKING:
+    from pathlib import PurePosixPath
     from test.converters import Preferences
     import asyncpg
     import asyncpg.cursor
     import collections.abc
 
-    type QueryResultsArgsType = int | float | str | memoryview | collections.abc.Sequence[QueryResultsArgsType] | None
+    type QueryResultsArgsType = int | float | str | memoryview | PurePosixPath | collections.abc.Sequence[QueryResultsArgsType] | None
 
     type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
@@ -46,6 +50,18 @@ SELECT id FROM test_converters WHERE tags = $1
 
 DELETE_CONVERTED: typing.Final[str] = """-- name: DeleteConverted :exec
 DELETE FROM test_converters WHERE id = $1
+"""
+
+INSERT_CONVERTER_ARRAY_ROW: typing.Final[str] = """-- name: InsertConverterArrayRow :exec
+INSERT INTO test_converter_array (id, label) VALUES ($1, $2)
+"""
+
+GET_CONVERTER_ARRAY_LABEL: typing.Final[str] = """-- name: GetConverterArrayLabel :one
+SELECT label FROM test_converter_array WHERE id = $1
+"""
+
+FIND_CONVERTER_ARRAY_BY_LABELS: typing.Final[str] = """-- name: FindConverterArrayByLabels :many
+SELECT id FROM test_converter_array WHERE label = ANY($1::converter_label[])
 """
 
 
@@ -194,3 +210,58 @@ async def delete_converted(conn: ConnectionLike, *, id_: int) -> None:
         id_: int.
     """
     await conn.execute(DELETE_CONVERTED, id_)
+
+
+async def insert_converter_array_row(conn: ConnectionLike, *, id_: int, label: PurePosixPath) -> None:
+    """Execute SQL query with `name: InsertConverterArrayRow :exec`.
+
+    ```sql
+    INSERT INTO test_converter_array (id, label) VALUES ($1, $2)
+    ```
+
+    Args:
+        conn:
+            Connection object of type `ConnectionLike` used to execute the query.
+        id_: int.
+        label: PurePosixPath.
+    """
+    await conn.execute(INSERT_CONVERTER_ARRAY_ROW, id_, test.converters.encode_label(label))
+
+
+async def get_converter_array_label(conn: ConnectionLike, *, id_: int) -> PurePosixPath | None:
+    """Fetch one from the db using the SQL query with `name: GetConverterArrayLabel :one`.
+
+    ```sql
+    SELECT label FROM test_converter_array WHERE id = $1
+    ```
+
+    Args:
+        conn:
+            Connection object of type `ConnectionLike` used to execute the query.
+        id_: int.
+
+    Returns:
+        Result of type `PurePosixPath` fetched from the db. Will be `None` if not found.
+    """
+    row = await conn.fetchrow(GET_CONVERTER_ARRAY_LABEL, id_)
+    if row is None:
+        return None
+    return test.converters.decode_label(row[0])
+
+
+def find_converter_array_by_labels(conn: ConnectionLike, *, dollar_1: collections.abc.Sequence[PurePosixPath]) -> QueryResults[int]:
+    """Fetch many from the db using the SQL query with `name: FindConverterArrayByLabels :many`.
+
+    ```sql
+    SELECT id FROM test_converter_array WHERE label = ANY($1::converter_label[])
+    ```
+
+    Args:
+        conn:
+            Connection object of type `ConnectionLike` used to execute the query.
+        dollar_1: collections.abc.Sequence[PurePosixPath].
+
+    Returns:
+        Helper class of type `QueryResults[int]` that allows both iteration and normal fetching of data from the db.
+    """
+    return QueryResults(conn, FIND_CONVERTER_ARRAY_BY_LABELS, operator.itemgetter(0), [test.converters.encode_label(v) for v in dollar_1])

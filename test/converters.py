@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import pathlib
 import typing
 
 
@@ -58,22 +59,45 @@ def decode_preferences(value: str) -> Preferences:
 
 
 def encode_tags(value: frozenset[str]) -> str:
-    """Serialize tags into a sorted comma separated list.
+    """Serialize tags into a JSON array, preserving tags with commas.
 
     Returns
     -------
     str
-        The joined tags.
+        The JSON encoded tags.
     """
-    return ",".join(sorted(value))
+    return json.dumps(sorted(value))
 
 
 def decode_tags(value: str) -> frozenset[str]:
-    """Deserialize a comma separated list into tags.
+    """Deserialize a JSON array of tags.
 
     Returns
     -------
     frozenset[str]
         The parsed tags.
     """
-    return frozenset(part for part in value.split(",") if part)
+    raw: list[str] = json.loads(value)
+    return frozenset(raw)
+
+
+def encode_label(value: pathlib.PurePosixPath) -> str:
+    """Serialize a label for a domain-typed (text) column.
+
+    Returns
+    -------
+    str
+        The label as text.
+    """
+    return str(value)
+
+
+def decode_label(value: str) -> pathlib.PurePosixPath:
+    """Deserialize a label from a domain-typed (text) column.
+
+    Returns
+    -------
+    pathlib.PurePosixPath
+        The parsed label.
+    """
+    return pathlib.PurePosixPath(value)

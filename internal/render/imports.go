@@ -463,7 +463,6 @@ func overrideDefaultTypeUses(name string, qv model.QueryValue) bool {
 	return qv.Type.DoOverride() && !qv.Type.HasConverter() && qv.Type.DefaultType == name
 }
 
-// addOverrideImports adds imports contributed by configured type overrides.
 // addConverterImports imports the modules holding converter functions. They
 // are called by the generated code, so they can never be lazy.
 func (r *ImportResolver) addConverterImports(std map[string]importSpec, queries []model.Query) {
@@ -498,6 +497,7 @@ func (r *ImportResolver) addConverterImports(std map[string]importSpec, queries 
 	}
 }
 
+// addOverrideImports adds imports contributed by configured type overrides.
 func (r *ImportResolver) addOverrideImports(std map[string]importSpec, uses func(string) (bool, bool)) {
 	for _, override := range r.conf.Overrides {
 		if override.PyType.Type == "" || override.PyType.Import == "" {
