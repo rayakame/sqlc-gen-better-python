@@ -44,3 +44,4 @@ test/queries.py
 test/enums.py
 /sqlc-gen-better-python.wasm
 cover*.tmp
+.claude/
