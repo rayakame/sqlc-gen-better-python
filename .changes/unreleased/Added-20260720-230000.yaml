@@ -1,0 +1,6 @@
+kind: Added
+body: 'Converters: a named pair of your own `to_db` / `from_db` functions that serialize and deserialize a column value, referenced by an override. Overrides could only convert by calling the type itself, which does not work for JSON and similar formats. The functions receive and return the type the column would have had without the override, are never called with `None` (nullable columns stay guarded), and convert list columns element-wise.'
+time: 2026-07-20T23:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "186"

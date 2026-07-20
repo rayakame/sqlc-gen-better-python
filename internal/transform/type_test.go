@@ -18,6 +18,12 @@ const typeTestOverrideOptions = `{"package":"db","sql_driver":"asyncpg","emit_in
 	`{"column":"authors.name","py_type":{"import":"collections","type":"collections.UserString"}},` +
 	`{"column":"analytics.events.payload","py_type":{"type":"bytes"}}]}`
 
+const typeTestConverterOptions = `{"package":"db","sql_driver":"asyncpg","emit_init_file":true,` +
+	`"converters":[{"name":"money","py_type":{"import":"myapp.money","type":"myapp.money.Money"},` +
+	`"to_db":"myapp.converters.encode","from_db":"myapp.converters.decode"}],` +
+	`"overrides":[{"db_type":"numeric","converter":"money"},` +
+	`{"db_type":"text","py_type":{"type":"bytes"}}]}`
+
 func typeTestRequest(options string) *plugin.GenerateRequest {
 	return &plugin.GenerateRequest{
 		PluginOptions: []byte(options),
@@ -189,6 +195,31 @@ func TestBuildPyType(t *testing.T) {
 				Table:   &plugin.Identifier{Name: "authors"},
 			},
 			want: model.PyType{SQLType: "int4", Type: types.Int, DefaultType: types.Int},
+		},
+		{
+			name:    "resolved converter sets both conversion functions",
+			options: typeTestConverterOptions,
+			column:  &plugin.Column{Name: "price", Type: &plugin.Identifier{Name: "numeric"}, NotNull: true},
+			want: model.PyType{
+				SQLType:       "numeric",
+				Type:          "myapp.money.Money",
+				IsOverride:    true,
+				DefaultType:   types.Decimal,
+				ConverterTo:   "myapp.converters.encode",
+				ConverterFrom: "myapp.converters.decode",
+			},
+		},
+		{
+			name:    "override without a converter leaves conversion functions empty",
+			options: typeTestConverterOptions,
+			column:  &plugin.Column{Name: "title", Type: &plugin.Identifier{Name: "text"}, NotNull: true},
+			want:    model.PyType{SQLType: "text", Type: "bytes", IsOverride: true, DefaultType: "str"},
+		},
+		{
+			name:    "no override leaves conversion functions empty",
+			options: typeTestConverterOptions,
+			column:  &plugin.Column{Name: "id", Type: &plugin.Identifier{Name: "int4"}, NotNull: true},
+			want:    model.PyType{SQLType: "int4", Type: types.Int, DefaultType: types.Int},
 		},
 	}
 	for _, tc := range cases {

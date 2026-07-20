@@ -20,6 +20,19 @@ func newOverrideRequest(catalog *plugin.Catalog, overrideJSON string) *plugin.Ge
 	}
 }
 
+// newConverterRequest wraps converter and override JSON fragments in otherwise
+// valid plugin options. Converters resolve before overrides are parsed.
+func newConverterRequest(convertersJSON, overridesJSON string) *plugin.GenerateRequest {
+	options := `{"package":"db","sql_driver":"asyncpg","emit_init_file":true,` +
+		`"converters":[` + convertersJSON + `],"overrides":[` + overridesJSON + `]}`
+
+	return &plugin.GenerateRequest{
+		Settings:      &plugin.Settings{Engine: "postgresql"},
+		Catalog:       &plugin.Catalog{DefaultSchema: "public"},
+		PluginOptions: []byte(options),
+	}
+}
+
 func mustPattern(t *testing.T, expr string) *pattern.Match {
 	t.Helper()
 	match, err := pattern.MatchCompile(expr)
@@ -329,4 +342,171 @@ func TestOverrideMatches(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConverterParseErrors(t *testing.T) {
+	t.Parallel()
+	const validOverride = `{"db_type":"numeric","converter":"money"}`
+	cases := []struct {
+		name       string
+		converters string
+		overrides  string
+		wantErr    string
+	}{
+		{
+			name:       "missing name",
+			converters: `{"py_type":{"type":"Money"},"to_db":"m.to","from_db":"m.from"}`,
+			overrides:  validOverride,
+			wantErr:    "converter must specify a `name`",
+		},
+		{
+			name:       "missing py_type type",
+			converters: `{"name":"money","py_type":{"import":"m"},"to_db":"m.to","from_db":"m.from"}`,
+			overrides:  validOverride,
+			wantErr:    "converter \"money\" must specify a `py_type` with a non-empty `type`",
+		},
+		{
+			name:       "missing to_db",
+			converters: `{"name":"money","py_type":{"type":"Money"},"from_db":"m.from"}`,
+			overrides:  validOverride,
+			wantErr:    "converter \"money\" must specify both `to_db` and `from_db`",
+		},
+		{
+			name:       "missing from_db",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":"m.to"}`,
+			overrides:  validOverride,
+			wantErr:    "converter \"money\" must specify both `to_db` and `from_db`",
+		},
+		{
+			name:       "to_db without a dot",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":"encode","from_db":"m.from"}`,
+			overrides:  validOverride,
+			wantErr:    "converter \"money\": \"encode\" must be a dotted path to a function",
+		},
+		{
+			name:       "to_db with a leading dot",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":".encode","from_db":"m.from"}`,
+			overrides:  validOverride,
+			wantErr:    "converter \"money\": \".encode\" must be a dotted path to a function",
+		},
+		{
+			name:       "to_db with a trailing dot",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":"mod.","from_db":"m.from"}`,
+			overrides:  validOverride,
+			wantErr:    "converter \"money\": \"mod.\" must be a dotted path to a function",
+		},
+		{
+			name:       "from_db without a dot",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":"m.to","from_db":"decode"}`,
+			overrides:  validOverride,
+			wantErr:    "converter \"money\": \"decode\" must be a dotted path to a function",
+		},
+		{
+			name: "duplicate converter names",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":"m.to","from_db":"m.from"},` +
+				`{"name":"money","py_type":{"type":"Other"},"to_db":"o.to","from_db":"o.from"}`,
+			overrides: validOverride,
+			wantErr:   "converter \"money\" is defined more than once",
+		},
+		{
+			name:       "override references unknown converter",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":"m.to","from_db":"m.from"}`,
+			overrides:  `{"db_type":"numeric","converter":"cash"}`,
+			wantErr:    "override references unknown converter \"cash\"",
+		},
+		{
+			name:       "override with both py_type and converter",
+			converters: `{"name":"money","py_type":{"type":"Money"},"to_db":"m.to","from_db":"m.from"}`,
+			overrides:  `{"db_type":"numeric","converter":"money","py_type":{"type":"str"}}`,
+			wantErr:    "override specifying both `py_type` and `converter` (\"money\") is not valid",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			cfg, err := config.NewConfig(newConverterRequest(tc.converters, tc.overrides))
+			if cfg != nil {
+				t.Errorf("NewConfig returned non-nil config %v, want nil", cfg)
+			}
+			if err == nil {
+				t.Fatalf("NewConfig returned nil error, want %q", tc.wantErr)
+			}
+			if err.Error() != tc.wantErr {
+				t.Errorf("NewConfig error = %q, want %q", err.Error(), tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestConverterParseValid(t *testing.T) {
+	t.Parallel()
+
+	t.Run("dotted paths populate modules", func(t *testing.T) {
+		t.Parallel()
+		converters := `{"name":"money","py_type":{"import":"myapp.money","type":"myapp.money.Money","package":"Money"},` +
+			`"to_db":"myapp.converters.encode","from_db":"other.pkg.mod.decode"}`
+		cfg, err := config.NewConfig(newConverterRequest(converters, `{"db_type":"numeric","converter":"money"}`))
+		if err != nil {
+			t.Fatalf("NewConfig returned error: %v", err)
+		}
+		if len(cfg.Converters) != 1 {
+			t.Fatalf("len(cfg.Converters) = %d, want 1", len(cfg.Converters))
+		}
+		converter := cfg.Converters[0]
+		if converter.ToDB != "myapp.converters.encode" {
+			t.Errorf("ToDB = %q, want %q", converter.ToDB, "myapp.converters.encode")
+		}
+		if converter.FromDB != "other.pkg.mod.decode" {
+			t.Errorf("FromDB = %q, want %q", converter.FromDB, "other.pkg.mod.decode")
+		}
+	})
+
+	t.Run("override adopts the converter py_type", func(t *testing.T) {
+		t.Parallel()
+		converters := `{"name":"money","py_type":{"import":"myapp.money","type":"myapp.money.Money","package":"Money"},` +
+			`"to_db":"myapp.money.encode","from_db":"myapp.money.decode"}`
+		cfg, err := config.NewConfig(newConverterRequest(converters, `{"db_type":"numeric","converter":"money"}`))
+		if err != nil {
+			t.Fatalf("NewConfig returned error: %v", err)
+		}
+		override := cfg.Overrides[0]
+		if override.Resolved != &cfg.Converters[0] {
+			t.Errorf("Resolved = %p, want %p", override.Resolved, &cfg.Converters[0])
+		}
+		want := config.OverridePyType{Import: "myapp.money", Type: "myapp.money.Money", Package: "Money"}
+		if override.PyType != want {
+			t.Errorf("PyType = %+v, want %+v", override.PyType, want)
+		}
+	})
+
+	t.Run("override without a converter is untouched", func(t *testing.T) {
+		t.Parallel()
+		converters := `{"name":"money","py_type":{"type":"myapp.money.Money"},` +
+			`"to_db":"myapp.money.encode","from_db":"myapp.money.decode"}`
+		cfg, err := config.NewConfig(newConverterRequest(converters, `{"db_type":"text","py_type":{"type":"str"}}`))
+		if err != nil {
+			t.Fatalf("NewConfig returned error: %v", err)
+		}
+		override := cfg.Overrides[0]
+		if override.Resolved != nil {
+			t.Errorf("Resolved = %+v, want nil", override.Resolved)
+		}
+		if override.PyType != (config.OverridePyType{Type: "str"}) {
+			t.Errorf("PyType = %+v, want %+v", override.PyType, config.OverridePyType{Type: "str"})
+		}
+	})
+
+	t.Run("empty converters list leaves overrides alone", func(t *testing.T) {
+		t.Parallel()
+		cfg, err := config.NewConfig(newConverterRequest("", `{"db_type":"text","py_type":{"type":"str"}}`))
+		if err != nil {
+			t.Fatalf("NewConfig returned error: %v", err)
+		}
+		if len(cfg.Converters) != 0 {
+			t.Errorf("len(cfg.Converters) = %d, want 0", len(cfg.Converters))
+		}
+		if cfg.Overrides[0].Resolved != nil {
+			t.Errorf("Resolved = %+v, want nil", cfg.Overrides[0].Resolved)
+		}
+	})
 }

@@ -189,3 +189,20 @@ CREATE TABLE IF NOT EXISTS "3rd_party_stats"
     id    bigint PRIMARY KEY NOT NULL,
     total bigint NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS test_converters
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    prefs                 jsonb NOT NULL,
+    maybe_prefs           jsonb,
+    tags                  text NOT NULL
+);
+
+DROP TABLE IF EXISTS test_converter_array;
+DROP DOMAIN IF EXISTS converter_label;
+CREATE DOMAIN converter_label AS text;
+CREATE TABLE test_converter_array
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    label                 converter_label NOT NULL
+);

@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 5319f1eceda511756b782e1dc1b5c8808179da77a563d5fa777c68b8928c117d
+      sha256: 73861329dc7deb8596b0fafc8514f798fe5c6e4e089bae2f56e974d3a9586c1f
 sql:
   - schema: schema.sql
     queries:
@@ -107,6 +107,7 @@ sql:
       - queries_copy_override.sql
       - queries_field_namings.sql
       - queries_invalid_identifiers.sql
+      - queries_converters.sql
     engine: postgresql
     codegen:
       - out: /dataclass/functions
@@ -131,6 +132,36 @@ sql:
             - column: test_copy_override.amount
               py_type:
                 type: float
+            - column: test_converters.prefs
+              converter: prefs
+            - column: test_converters.maybe_prefs
+              converter: prefs
+            - column: test_converters.tags
+              converter: tags
+            # db_type (not column) so the converter reaches the ANY($1::type[])
+            # parameter, which column overrides are not linked to.
+            - db_type: converter_label
+              converter: label
+          converters:
+            - name: prefs
+              py_type:
+                import: test.converters
+                package: Preferences
+                type: Preferences
+              to_db: test.converters.encode_preferences
+              from_db: test.converters.decode_preferences
+            - name: tags
+              py_type:
+                type: frozenset[str]
+              to_db: test.converters.encode_tags
+              from_db: test.converters.decode_tags
+            - name: label
+              py_type:
+                import: pathlib
+                package: PurePosixPath
+                type: PurePosixPath
+              to_db: test.converters.encode_label
+              from_db: test.converters.decode_label
   - schema: schema.sql
     queries:
       - queries.sql

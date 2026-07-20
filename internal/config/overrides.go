@@ -20,11 +20,26 @@ type OverridePyType struct {
 	Package string `json:"package" yaml:"package"`
 }
 
+// Converter names a pair of user functions that translate a column value
+// between its Python type and the type the driver expects. Both are dotted
+// paths; the module is imported and the function called fully qualified.
+type Converter struct {
+	Name   string         `json:"name"    yaml:"name"`
+	PyType OverridePyType `json:"py_type" yaml:"py_type"`
+	ToDB   string         `json:"to_db"   yaml:"to_db"`
+	FromDB string         `json:"from_db" yaml:"from_db"`
+}
+
 // Override replaces the default Python type of columns matched either by
 // SQL type (DBType) or by a column pattern ("[catalog.][schema.]table.column",
 // wildcards supported).
 type Override struct {
 	PyType OverridePyType `json:"py_type" yaml:"py_type"`
+
+	// Converter names an entry in the top-level converters list, supplying
+	// both the Python type and the functions converting to and from it.
+	Converter string     `json:"converter" yaml:"converter"`
+	Resolved  *Converter `json:"-"         yaml:"-"`
 
 	// DBType matches the SQL data type exactly, e.g. "text" or "pg_catalog.int4".
 	DBType string `json:"db_type" yaml:"db_type"`
@@ -131,6 +146,60 @@ func (o *Override) parseColumnPattern(defaultSchema string) error {
 			return err
 		}
 		*tgt.dst = compiled
+	}
+
+	return nil
+}
+
+// parseConverters validates every converter and links overrides to the one
+// they name, adopting its Python type.
+func (c *Config) parseConverters() error {
+	byName := make(map[string]*Converter, len(c.Converters))
+	for i := range c.Converters {
+		converter := &c.Converters[i]
+		if err := converter.parse(); err != nil {
+			return err
+		}
+		if _, duplicate := byName[converter.Name]; duplicate {
+			return fmt.Errorf("converter %q is defined more than once", converter.Name)
+		}
+		byName[converter.Name] = converter
+	}
+
+	for i := range c.Overrides {
+		override := &c.Overrides[i]
+		if override.Converter == "" {
+			continue
+		}
+		if override.PyType.Type != "" {
+			return fmt.Errorf("override specifying both `py_type` and `converter` (%q) is not valid", override.Converter)
+		}
+		converter, found := byName[override.Converter]
+		if !found {
+			return fmt.Errorf("override references unknown converter %q", override.Converter)
+		}
+		override.Resolved = converter
+		override.PyType = converter.PyType
+	}
+
+	return nil
+}
+
+func (o *Converter) parse() error {
+	switch {
+	case o.Name == "":
+		return errors.New("converter must specify a `name`")
+	case o.PyType.Type == "":
+		return fmt.Errorf("converter %q must specify a `py_type` with a non-empty `type`", o.Name)
+	case o.ToDB == "" || o.FromDB == "":
+		return fmt.Errorf("converter %q must specify both `to_db` and `from_db`", o.Name)
+	}
+
+	for _, function := range []string{o.ToDB, o.FromDB} {
+		dot := strings.LastIndex(function, ".")
+		if dot <= 0 || dot == len(function)-1 {
+			return fmt.Errorf("converter %q: %q must be a dotted path to a function", o.Name, function)
+		}
 	}
 
 	return nil

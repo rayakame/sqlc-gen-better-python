@@ -89,6 +89,28 @@ func TestPyTypeDoOverride(t *testing.T) {
 	}
 }
 
+func TestPyTypeHasConverter(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		typ  model.PyType
+		want bool
+	}{
+		{name: "no converter", typ: model.PyType{Type: "int"}, want: false},
+		{name: "both directions", typ: model.PyType{Type: "M", ConverterTo: "m.to", ConverterFrom: "m.from"}, want: true},
+		{name: "only to_db", typ: model.PyType{Type: "M", ConverterTo: "m.to"}, want: true},
+		{name: "only from_db", typ: model.PyType{Type: "M", ConverterFrom: "m.from"}, want: true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tc.typ.HasConverter(); got != tc.want {
+				t.Errorf("HasConverter() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestQueryEmitsTable(t *testing.T) {
 	t.Parallel()
 	table := &model.Table{Name: "User"}

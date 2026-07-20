@@ -32,16 +32,21 @@ if typing.TYPE_CHECKING:
     import asyncpg
 
 import math
+import pathlib
 
 import pytest
 
+from test import converters
 from test.driver_asyncpg.dataclass.functions import enums
 from test.driver_asyncpg.dataclass.functions import models
 from test.driver_asyncpg.dataclass.functions import queries
+from test.driver_asyncpg.dataclass.functions import queries_converters
 from test.driver_asyncpg.dataclass.functions import queries_enum_override
 from test.driver_asyncpg.dataclass.functions import queries_invalid_identifiers
 
 INVALID_IDENTIFIER_ID = 606060
+CONVERTER_ID = 610001
+CONVERTER_ARRAY_ID = 620001
 
 
 class _NoRowConn:
@@ -936,3 +941,95 @@ class TestDataclassFunctions:
         # count_enum_override_by_moods asserts exact counts; remove the row so
         # later suites against the shared database start clean.
         await asyncpg_conn.execute("DELETE FROM test_enum_override WHERE id = $1", 520004)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::insert_converted")
+    async def test_insert_converted(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        await queries_converters.insert_converted(
+            conn=asyncpg_conn,
+            id_=CONVERTER_ID,
+            prefs=converters.Preferences(theme="dark", notifications=True),
+            maybe_prefs=None,
+            tags=frozenset({"b", "a"}),
+        )
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converted"])
+    async def test_get_converted(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        row = await queries_converters.get_converted(conn=asyncpg_conn, id_=CONVERTER_ID)
+        assert row is not None
+        assert row.prefs == converters.Preferences(theme="dark", notifications=True)
+        # The plugin guards None, so the converter never sees it.
+        assert row.maybe_prefs is None
+        assert row.tags == frozenset({"a", "b"})
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converted"])
+    async def test_get_converted_not_found(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        assert await queries_converters.get_converted(conn=asyncpg_conn, id_=CONVERTER_ID + 999) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::converted_nullable", depends=["TestDataclassFunctions::insert_converted"])
+    async def test_converted_nullable_roundtrip(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        await queries_converters.insert_converted(
+            conn=asyncpg_conn,
+            id_=CONVERTER_ID + 1,
+            prefs=converters.Preferences(theme="light", notifications=False),
+            maybe_prefs=converters.Preferences(theme="sepia", notifications=True),
+            tags=frozenset(),
+        )
+        row = await queries_converters.get_converted(conn=asyncpg_conn, id_=CONVERTER_ID + 1)
+        assert row is not None
+        assert row.maybe_prefs == converters.Preferences(theme="sepia", notifications=True)
+        assert row.tags == frozenset()
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::list_converted", depends=["TestDataclassFunctions::insert_converted"])
+    async def test_list_converted_by_tags(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # The converted value is passed as a QueryResults argument.
+        rows = await queries_converters.list_converted_by_tags(conn=asyncpg_conn, tags=frozenset({"a", "b"}))
+        assert rows == [CONVERTER_ID]
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::iterate_converted", depends=["TestDataclassFunctions::insert_converted"])
+    async def test_iterate_converted_by_tags(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        results = queries_converters.list_converted_by_tags(conn=asyncpg_conn, tags=frozenset({"a", "b"}))
+        # The cursor-based async-for path requires a transaction.
+        async with asyncpg_conn.transaction():
+            seen = [row async for row in results]
+        assert seen == [CONVERTER_ID]
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::converted_nullable", "TestDataclassFunctions::list_converted", "TestDataclassFunctions::iterate_converted"])
+    async def test_delete_converted(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        await queries_converters.delete_converted(conn=asyncpg_conn, id_=CONVERTER_ID)
+        await queries_converters.delete_converted(conn=asyncpg_conn, id_=CONVERTER_ID + 1)
+        assert await queries_converters.get_converted(conn=asyncpg_conn, id_=CONVERTER_ID) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="TestDataclassFunctions::insert_converter_array")
+    async def test_insert_converter_array(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # db_type converter on a domain-typed column: the scalar label converts via to_db.
+        await queries_converters.insert_converter_array_row(conn=asyncpg_conn, id_=CONVERTER_ARRAY_ID, label=pathlib.PurePosixPath("a/b"))
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converter_array"])
+    async def test_get_converter_array_label(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        label = await queries_converters.get_converter_array_label(conn=asyncpg_conn, id_=CONVERTER_ARRAY_ID)
+        assert label == pathlib.PurePosixPath("a/b")
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converter_array"])
+    async def test_get_converter_array_label_not_found(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        assert await queries_converters.get_converter_array_label(conn=asyncpg_conn, id_=CONVERTER_ARRAY_ID + 999) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_converter_array"])
+    async def test_find_converter_array_by_labels(self, asyncpg_conn: asyncpg.Connection[asyncpg.Record]) -> None:
+        # Every element of the ANY($1::converter_label[]) array passes through
+        # the db_type converter before reaching the driver.
+        rows = await queries_converters.find_converter_array_by_labels(
+            conn=asyncpg_conn,
+            dollar_1=[pathlib.PurePosixPath("a/b"), pathlib.PurePosixPath("c/d")],
+        )
+        assert rows == [CONVERTER_ARRAY_ID]

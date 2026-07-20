@@ -82,6 +82,8 @@ async def asyncpg_conn(
         DELETE FROM test_inner_postgres_types;
         DELETE FROM test_copy_from;
         DELETE FROM test_copy_override;
+        DELETE FROM test_converters;
+        DELETE FROM test_converter_array;
         DELETE FROM test_invalid_identifiers;
         DELETE FROM "3rd_party_stats";
     """)
