@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal"
@@ -73,14 +72,14 @@ func fileNames(files []*plugin.File) []string {
 func TestHandlerErrors(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		name        string
-		req         *plugin.GenerateRequest
-		wantContain string
+		name    string
+		req     *plugin.GenerateRequest
+		wantErr string
 	}{
 		{
 			"invalid plugin options json",
 			sqliteRequest(`{`),
-			"error trying to parse config",
+			"error trying to parse config: unmarshalling plugin options: unexpected end of JSON input",
 		},
 		{
 			"failed options validation",
@@ -95,7 +94,7 @@ func TestHandlerErrors(t *testing.T) {
 				Text:     "INSERT INTO users (id) VALUES (?)",
 				Filename: "copy.sql",
 			}),
-			"error building queries",
+			`error building queries: unsupported cmd ":copyfrom" for driver "sqlite3"`,
 		},
 	}
 	for _, tc := range cases {
@@ -108,8 +107,8 @@ func TestHandlerErrors(t *testing.T) {
 			if err == nil {
 				t.Fatal("Handler returned nil error, want error")
 			}
-			if !strings.Contains(err.Error(), tc.wantContain) {
-				t.Errorf("Handler error = %q, want it to contain %q", err, tc.wantContain)
+			if err.Error() != tc.wantErr {
+				t.Errorf("Handler error = %q, want %q", err, tc.wantErr)
 			}
 		})
 	}
@@ -176,7 +175,16 @@ func TestHandlerFiles(t *testing.T) {
 
 func TestHandlerDebugEmitsLog(t *testing.T) {
 	t.Parallel()
-	resp, err := internal.Handler(context.Background(), sqliteRequest(sqliteDebugOptions))
+	// A column with an unknown SQLite type makes this run itself write a log
+	// entry, so the non-empty check below cannot depend on other tests.
+	unknownTypeQuery := &plugin.Query{
+		Name:     "GetPayload",
+		Cmd:      metadata.CmdOne,
+		Text:     "SELECT payload FROM users LIMIT 1",
+		Filename: "payloads.sql",
+		Columns:  []*plugin.Column{{Name: "payload", NotNull: true, Type: &plugin.Identifier{Name: "frobnicate"}}},
+	}
+	resp, err := internal.Handler(context.Background(), sqliteRequest(sqliteDebugOptions, unknownTypeQuery))
 	if err != nil {
 		t.Fatalf("Handler returned error: %v", err)
 	}
@@ -190,9 +198,12 @@ func TestHandlerDebugEmitsLog(t *testing.T) {
 		t.Fatalf("Handler emitted files %v, want log.json among them", fileNames(resp.Files))
 	}
 	// The log package is a process-global singleton accumulating across
-	// tests, so only verify the export is a valid JSON array.
+	// tests, so verify the export is a non-empty JSON array without
+	// asserting exact contents; the Handler run itself always logs.
 	var entries []json.RawMessage
 	if err := json.Unmarshal(logFile.Contents, &entries); err != nil {
 		t.Errorf("log.json contents are not a JSON array: %v", err)
+	} else if len(entries) == 0 {
+		t.Error("log.json is an empty array, want at least one entry from the Handler run")
 	}
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-
-	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 )
 
 var (
@@ -14,7 +12,10 @@ var (
 	loggingOnce     sync.Once
 )
 
+// Logger collects debug messages; the mutex only matters for parallel
+// tests, the wasm plugin runs single-threaded.
 type Logger struct {
+	mu       sync.Mutex
 	messages []string
 }
 type logMessage struct {
@@ -27,7 +28,7 @@ type errMessage struct {
 
 func L() *Logger {
 	loggingOnce.Do(func() {
-		loggingInstance = utils.ToPtr(Logger{})
+		loggingInstance = new(Logger)
 	})
 
 	return loggingInstance
@@ -53,7 +54,9 @@ func (logger *Logger) LogAny(message any) {
 }
 
 func (logger *Logger) Export() (string, []byte) {
+	logger.mu.Lock()
 	joined := strings.Join(logger.messages, ",\n")
+	logger.mu.Unlock()
 	if joined != "" {
 		joined += "\n"
 	}
@@ -62,5 +65,7 @@ func (logger *Logger) Export() (string, []byte) {
 }
 
 func (logger *Logger) log(data string) {
+	logger.mu.Lock()
 	logger.messages = append(logger.messages, data)
+	logger.mu.Unlock()
 }

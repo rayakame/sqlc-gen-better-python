@@ -176,15 +176,26 @@ func TestRenderAllFileSets(t *testing.T) {
 		}
 
 		// Both a.sql queries land in a.py, in source order.
-		wantInOrder(t, renderedFile(t, files, "a.py"),
+		aFile := renderedFile(t, files, "a.py")
+		bFile := renderedFile(t, files, "b.py")
+		wantInOrder(t, aFile,
 			`INSERT_A: typing.Final[str] = """-- name: InsertA :exec`,
 			`DELETE_A: typing.Final[str] = """-- name: DeleteA :exec`,
 			"async def insert_a(conn: ConnectionLike) -> None:",
 			"async def delete_a(conn: ConnectionLike) -> None:",
 		)
-		wantInOrder(t, renderedFile(t, files, "b.py"),
+		wantInOrder(t, bFile,
 			`DELETE_B: typing.Final[str] = """-- name: DeleteB :exec`,
 		)
+		// Queries stay isolated per source file: no cross-module leakage.
+		if strings.Contains(aFile, "DELETE_B") {
+			t.Errorf("a.py contains b.sql's DELETE_B constant:\n%s", aFile)
+		}
+		for _, leaked := range []string{"INSERT_A", "DELETE_A"} {
+			if strings.Contains(bFile, leaked) {
+				t.Errorf("b.py contains a.sql's %s constant:\n%s", leaked, bFile)
+			}
+		}
 	})
 }
 

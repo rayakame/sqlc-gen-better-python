@@ -1,6 +1,7 @@
 package transform_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
@@ -438,13 +439,28 @@ func TestBuildQueriesEmbeds(t *testing.T) {
 		t.Errorf("row column[0] = %+v, want %+v", columns[0], want)
 	}
 	embedCases := []struct {
-		index     int
-		fieldName string
-		dbName    string
-		modelName string
+		index       int
+		fieldName   string
+		dbName      string
+		modelName   string
+		wantColumns []model.Column
 	}{
-		{index: 1, fieldName: "test_author", dbName: "test_authors", modelName: "TestAuthor"},
-		{index: 2, fieldName: "test_pref", dbName: "test_prefs", modelName: "TestPref"},
+		{
+			index: 1, fieldName: "test_author", dbName: "test_authors", modelName: "TestAuthor",
+			wantColumns: []model.Column{
+				{Name: "id_", DBName: "id", Type: pyInt},
+				{Name: "name", DBName: "name", Type: pyStr},
+			},
+		},
+		{
+			index: 2, fieldName: "test_pref", dbName: "test_prefs", modelName: "TestPref",
+			wantColumns: []model.Column{
+				{Name: "id_", DBName: "id", Type: pyInt},
+				{Name: "mood", DBName: "mood", Type: model.PyType{
+					SQLType: "mood", Type: "enums.Mood", IsEnum: true, DefaultType: "enums.Mood",
+				}},
+			},
+		},
 	}
 	for _, tc := range embedCases {
 		column := columns[tc.index]
@@ -457,8 +473,8 @@ func TestBuildQueriesEmbeds(t *testing.T) {
 		if column.Embed == nil || column.Embed.ModelName != tc.modelName {
 			t.Fatalf("row column[%d] embed = %+v, want model %q", tc.index, column.Embed, tc.modelName)
 		}
-		if len(column.Embed.Columns) != 2 {
-			t.Errorf("row column[%d] embed columns = %+v, want the 2 model columns", tc.index, column.Embed.Columns)
+		if !reflect.DeepEqual(column.Embed.Columns, tc.wantColumns) {
+			t.Errorf("row column[%d] embed columns = %+v, want %+v", tc.index, column.Embed.Columns, tc.wantColumns)
 		}
 	}
 }

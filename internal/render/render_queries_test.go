@@ -365,14 +365,89 @@ func TestRenderQueriesManyClassesMode(t *testing.T) {
 	)
 
 	got := renderedFile(t, mustRenderFiles(t, req), "queries.py")
-	// QueryResults comes first, separated from the Querier class by exactly
-	// two blank lines; the query method lives on the class.
-	wantInOrder(t, got,
-		"__all__: collections.abc.Sequence[str] = (\n    \"Queries\",\n    \"QueryResults\",\n)\n",
-		"class QueryResults[T]:",
-		"        return self._decode_hook(record)\n\n\nclass Queries:\n    __slots__ = (\"_conn\",)\n",
-		"    @property\n    def conn(self) -> ConnectionLike:\n        return self._conn\n\n"+
-			"    def list_item_ids(self) -> QueryResults[int]:\n"+
-			"        return QueryResults(self._conn, LIST_ITEM_IDS, operator.itemgetter(0))\n",
-	)
+	// QueryResults is emitted once before the Querier class and the query
+	// method lives on the class, with no module-level function duplication.
+	want := sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = (
+    "Queries",
+    "QueryResults",
+)
+
+import operator
+import typing
+
+if typing.TYPE_CHECKING:
+    import asyncpg
+    import asyncpg.cursor
+    import collections.abc
+
+    type QueryResultsArgsType = int | float | str | memoryview | collections.abc.Sequence[QueryResultsArgsType] | None
+
+    type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+
+
+LIST_ITEM_IDS: typing.Final[str] = """-- name: ListItemIds :many
+SELECT id FROM test_items
+"""
+
+
+class QueryResults[T]:
+    __slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")
+
+    def __init__(
+        self,
+        conn: ConnectionLike,
+        sql: str,
+        decode_hook: collections.abc.Callable[[asyncpg.Record], T],
+        *args: QueryResultsArgsType,
+    ) -> None:
+        self._conn = conn
+        self._sql = sql
+        self._decode_hook = decode_hook
+        self._args = args
+        self._cursor: asyncpg.cursor.CursorFactory[asyncpg.Record] | None = None
+        self._iterator: asyncpg.cursor.CursorIterator[asyncpg.Record] | None = None
+
+    def __aiter__(self) -> QueryResults[T]:
+        return self
+
+    def __await__(
+        self,
+    ) -> collections.abc.Generator[None, None, collections.abc.Sequence[T]]:
+        async def _wrapper() -> collections.abc.Sequence[T]:
+            result = await self._conn.fetch(self._sql, *self._args)
+            return [self._decode_hook(row) for row in result]
+
+        return _wrapper().__await__()
+
+    async def __anext__(self) -> T:
+        if self._cursor is None or self._iterator is None:
+            self._cursor = self._conn.cursor(self._sql, *self._args)
+            self._iterator = self._cursor.__aiter__()
+        try:
+            record = await self._iterator.__anext__()
+        except StopAsyncIteration:
+            self._cursor = None
+            self._iterator = None
+            raise
+        return self._decode_hook(record)
+
+
+class Queries:
+    __slots__ = ("_conn",)
+
+    def __init__(self, conn: ConnectionLike) -> None:
+        self._conn = conn
+
+    @property
+    def conn(self) -> ConnectionLike:
+        return self._conn
+
+    def list_item_ids(self) -> QueryResults[int]:
+        return QueryResults(self._conn, LIST_ITEM_IDS, operator.itemgetter(0))
+`
+	if got != want {
+		t.Errorf("queries.py mismatch\ngot:\n%q\nwant:\n%q", got, want)
+	}
 }
