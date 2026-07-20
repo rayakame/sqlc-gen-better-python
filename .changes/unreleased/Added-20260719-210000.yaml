@@ -1,6 +1,0 @@
-kind: Added
-body: 'Python 3.14 support: the test tooling accepts and CI now tests Python 3.14. This bumps the asyncpg floor to 0.31.0, the first release with Python 3.14 wheels.'
-time: 2026-07-19T21:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "177"
