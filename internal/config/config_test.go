@@ -231,16 +231,6 @@ func TestNewConfigConverters(t *testing.T) {
 		t.Fatalf("NewConfig() error = %v, want nil", err)
 	}
 
-	wantModules := [][]string{
-		{"myapp.converters", "myapp.converters"},
-		{"myapp.geo", "myapp.geo"},
-	}
-	for i, want := range wantModules {
-		if !reflect.DeepEqual(conf.Converters[i].Modules, want) {
-			t.Errorf("Converters[%d].Modules = %v, want %v", i, conf.Converters[i].Modules, want)
-		}
-	}
-
 	wantTypes := []string{"myapp.money.Money", "myapp.geo.Point", "str"}
 	for i, want := range wantTypes {
 		if conf.Overrides[i].PyType.Type != want {

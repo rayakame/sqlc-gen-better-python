@@ -54,7 +54,7 @@ func impConverter(sqlType, defaultType string) model.PyType {
 func impConverterConf(c *config.Config) {
 	pyType := config.OverridePyType{Import: "mymod", Type: typeMoney}
 	c.Converters = []config.Converter{
-		{Name: "money", PyType: pyType, ToDB: converterToDB, FromDB: converterFromDB, Modules: []string{converterModule}},
+		{Name: "money", PyType: pyType, ToDB: converterToDB, FromDB: converterFromDB},
 	}
 	c.Overrides = []config.Override{{PyType: pyType}}
 }
@@ -1255,118 +1255,100 @@ func TestOverrideDefaultTypeUses(t *testing.T) {
 //nolint:funlen // Table test enumerating every addConverterImports branch.
 func TestAddConverterImports(t *testing.T) {
 	t.Parallel()
-	pyType := config.OverridePyType{Import: "mymod", Type: typeMoney}
-	oneModule := []config.Converter{
-		{Name: "money", PyType: pyType, ToDB: converterToDB, FromDB: converterFromDB, Modules: []string{converterModule}},
+	conv := func(sqlType, toDB, fromDB string) model.PyType {
+		return model.PyType{
+			SQLType: sqlType, Type: typeMoney, IsOverride: true,
+			DefaultType: types.Str, ConverterTo: toDB, ConverterFrom: fromDB,
+		}
 	}
 	runtimeSpec := func(module string) importSpec {
 		return importSpec{Module: module, TypeChecking: false}
 	}
 	cases := []struct {
-		name       string
-		converters []config.Converter
-		queries    []model.Query
-		want       map[string]importSpec
+		name             string
+		typeChecking     map[string]importSpec
+		queries          []model.Query
+		wantStd          map[string]importSpec
+		wantTypeChecking map[string]importSpec
 	}{
 		{
-			name:       "no converter types used adds nothing",
-			converters: oneModule,
+			name: "no converter type used adds nothing",
 			queries: []model.Query{
 				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "int", Type: "int"})},
 			},
-			want: map[string]importSpec{},
+			wantStd: map[string]importSpec{},
 		},
 		{
-			name:       "converter param imports its module at runtime",
-			converters: oneModule,
+			name: "converter param imports the to_db module at runtime",
 			queries: []model.Query{
-				{Cmd: metadata.CmdExec, Params: []model.QueryValue{impScalar(impConverter("numeric", "decimal.Decimal"))}},
+				{Cmd: metadata.CmdExec, Params: []model.QueryValue{impScalar(conv("numeric", converterToDB, converterFromDB))}},
 			},
-			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+			wantStd: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
 		},
 		{
-			name:       "converter return imports its module at runtime",
-			converters: oneModule,
+			name: "converter return imports the from_db module at runtime",
 			queries: []model.Query{
-				{Cmd: metadata.CmdOne, Returns: impScalar(impConverter("numeric", "decimal.Decimal"))},
+				{Cmd: metadata.CmdOne, Returns: impScalar(conv("numeric", converterToDB, converterFromDB))},
 			},
-			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+			wantStd: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
 		},
 		{
-			name:       "converter struct column is found through the table walk",
-			converters: oneModule,
-			queries: []model.Query{
-				{Cmd: metadata.CmdOne, Returns: impStruct(true, impCol("amount", impConverter("numeric", "decimal.Decimal")))},
-			},
-			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
-		},
-		{
-			name: "to_db and from_db in different modules import both",
-			converters: []config.Converter{
-				{
-					Name:    "money",
-					PyType:  pyType,
-					ToDB:    "encode.to_db",
-					FromDB:  "decode.from_db",
-					Modules: []string{"encode", "decode"},
-				},
-			},
-			queries: []model.Query{
-				{Cmd: metadata.CmdOne, Returns: impScalar(impConverter("numeric", "decimal.Decimal"))},
-			},
-			want: map[string]importSpec{"encode": runtimeSpec("encode"), "decode": runtimeSpec("decode")},
-		},
-		{
-			name: "two converters sharing a module are deduplicated",
-			converters: []config.Converter{
-				{Name: "money", PyType: pyType, ToDB: converterToDB, FromDB: converterFromDB, Modules: []string{converterModule}},
-				{
-					Name:    "other",
-					PyType:  config.OverridePyType{Import: "mymod", Type: "mymod.Other"},
-					ToDB:    "myconv.other_to_db",
-					FromDB:  "myconv.other_from_db",
-					Modules: []string{converterModule},
-				},
-			},
+			name: "converter struct column is found through the table walk",
 			queries: []model.Query{
 				{
 					Cmd:     metadata.CmdOne,
-					Returns: impScalar(impConverter("numeric", "decimal.Decimal")),
-					Params: []model.QueryValue{impScalar(model.PyType{
-						SQLType: "text", Type: "mymod.Other", IsOverride: true,
-						DefaultType: types.Str, ConverterTo: "myconv.other_to_db",
-					})},
+					Returns: impStruct(true, impCol("amount", conv("numeric", converterToDB, converterFromDB))),
 				},
 			},
-			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+			wantStd: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
 		},
 		{
-			name: "configured converter whose type is unused is skipped",
-			converters: []config.Converter{
-				{
-					Name:    "unused",
-					PyType:  config.OverridePyType{Import: "other", Type: "other.Type"},
-					ToDB:    "otherconv.to_db",
-					FromDB:  "otherconv.from_db",
-					Modules: []string{"otherconv"},
-				},
-				oneModule[0],
-			},
+			name: "read-only query imports only the from_db module",
 			queries: []model.Query{
-				{Cmd: metadata.CmdOne, Returns: impScalar(impConverter("numeric", "decimal.Decimal"))},
+				{Cmd: metadata.CmdOne, Returns: impScalar(conv("numeric", "encode.enc", "decode.dec"))},
 			},
-			want: map[string]importSpec{converterModule: runtimeSpec(converterModule)},
+			wantStd: map[string]importSpec{"decode": runtimeSpec("decode")},
+		},
+		{
+			name: "write-only query imports only the to_db module",
+			queries: []model.Query{
+				{Cmd: metadata.CmdExec, Params: []model.QueryValue{impScalar(conv("numeric", "encode.enc", "decode.dec"))}},
+			},
+			wantStd: map[string]importSpec{"encode": runtimeSpec("encode")},
+		},
+		{
+			name: "both directions used imports both modules",
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(conv("numeric", "encode.enc", "decode.dec"))},
+				{Cmd: metadata.CmdExec, Params: []model.QueryValue{impScalar(conv("numeric", "encode.enc", "decode.dec"))}},
+			},
+			wantStd: map[string]importSpec{"encode": runtimeSpec("encode"), "decode": runtimeSpec("decode")},
+		},
+		{
+			name:         "runtime converter module drops a colliding annotation-only import",
+			typeChecking: map[string]importSpec{typeMoney: {Module: "mymod", TypeChecking: true}},
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(conv("numeric", "mymod.enc", "mymod.dec"))},
+			},
+			wantStd:          map[string]importSpec{"mymod": runtimeSpec("mymod")},
+			wantTypeChecking: map[string]importSpec{},
 		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			conf := newImportsConfig(config.SQLDriverAsyncpg, func(c *config.Config) { c.Converters = tc.converters })
-			resolver := newImportsResolver(t, conf)
+			resolver := newImportsResolver(t, newImportsConfig(config.SQLDriverAsyncpg))
 			std := map[string]importSpec{}
-			resolver.addConverterImports(std, tc.queries)
-			if !maps.Equal(std, tc.want) {
-				t.Errorf("addConverterImports() stored %+v, want %+v", std, tc.want)
+			typeChecking := tc.typeChecking
+			if typeChecking == nil {
+				typeChecking = map[string]importSpec{}
+			}
+			resolver.addConverterImports(std, typeChecking, tc.queries)
+			if !maps.Equal(std, tc.wantStd) {
+				t.Errorf("std = %+v, want %+v", std, tc.wantStd)
+			}
+			if tc.wantTypeChecking != nil && !maps.Equal(typeChecking, tc.wantTypeChecking) {
+				t.Errorf("typeChecking = %+v, want %+v", typeChecking, tc.wantTypeChecking)
 			}
 		})
 	}

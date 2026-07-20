@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
@@ -454,10 +453,6 @@ func TestConverterParseValid(t *testing.T) {
 			t.Fatalf("len(cfg.Converters) = %d, want 1", len(cfg.Converters))
 		}
 		converter := cfg.Converters[0]
-		wantModules := []string{"myapp.converters", "other.pkg.mod"}
-		if !reflect.DeepEqual(converter.Modules, wantModules) {
-			t.Errorf("Modules = %v, want %v", converter.Modules, wantModules)
-		}
 		if converter.ToDB != "myapp.converters.encode" {
 			t.Errorf("ToDB = %q, want %q", converter.ToDB, "myapp.converters.encode")
 		}

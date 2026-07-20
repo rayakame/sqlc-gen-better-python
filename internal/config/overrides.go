@@ -24,11 +24,10 @@ type OverridePyType struct {
 // between its Python type and the type the driver expects. Both are dotted
 // paths; the module is imported and the function called fully qualified.
 type Converter struct {
-	Name    string         `json:"name"    yaml:"name"`
-	PyType  OverridePyType `json:"py_type" yaml:"py_type"`
-	ToDB    string         `json:"to_db"   yaml:"to_db"`
-	FromDB  string         `json:"from_db" yaml:"from_db"`
-	Modules []string       `json:"-"       yaml:"-"`
+	Name   string         `json:"name"    yaml:"name"`
+	PyType OverridePyType `json:"py_type" yaml:"py_type"`
+	ToDB   string         `json:"to_db"   yaml:"to_db"`
+	FromDB string         `json:"from_db" yaml:"from_db"`
 }
 
 // Override replaces the default Python type of columns matched either by
@@ -201,7 +200,6 @@ func (o *Converter) parse() error {
 		if dot <= 0 || dot == len(function)-1 {
 			return fmt.Errorf("converter %q: %q must be a dotted path to a function", o.Name, function)
 		}
-		o.Modules = append(o.Modules, function[:dot])
 	}
 
 	return nil

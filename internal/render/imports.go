@@ -248,7 +248,7 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		conversions = driver.SqliteConversionsUsed(queries)
 	}
 	r.addDriverImports(std, typeChecking, queries, conversions)
-	r.addConverterImports(std, queries)
+	r.addConverterImports(std, typeChecking, queries)
 
 	for module := range conversions.RuntimeModules(r.conf.Speedups) {
 		spec, ok := typeChecking[module]
@@ -288,7 +288,8 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 	usesEnums := anyQueryType(queries, func(typ model.PyType) bool {
 		return typ.IsEnum || strings.HasPrefix(typ.Type, "enums.")
 	}) || anyParamType(queries, func(typ model.PyType) bool {
-		return typ.DoOverride() && strings.HasPrefix(typ.DefaultType, "enums.")
+		// A converter param calls to_db, never enums.X(...), so it needs no enums import.
+		return typ.DoOverride() && !typ.HasConverter() && strings.HasPrefix(typ.DefaultType, "enums.")
 	})
 	if usesEnums {
 		local["enums"] = importSpec{Module: r.conf.Package, Name: moduleEnums}
@@ -386,7 +387,9 @@ func passthroughParamTypes(queries []model.Query) []string {
 	seen := make(map[string]struct{})
 	// Reported as never matching so the walk visits every param.
 	anyParamType(queries, func(typ model.PyType) bool {
-		if typ.DoOverride() && typ.DefaultType == types.Any {
+		// A converter param is converted to its wire type via to_db, so its
+		// py_type never reaches QueryResults; only unconverted overrides do.
+		if typ.DoOverride() && !typ.HasConverter() && typ.DefaultType == types.Any {
 			seen[typ.Type] = struct{}{}
 		}
 
@@ -464,35 +467,37 @@ func overrideDefaultTypeUses(name string, qv model.QueryValue) bool {
 }
 
 // addConverterImports imports the modules holding converter functions. They
-// are called by the generated code, so they can never be lazy.
-func (r *ImportResolver) addConverterImports(std map[string]importSpec, queries []model.Query) {
-	used := make(map[string]struct{})
-	anyParamType(queries, func(typ model.PyType) bool {
-		if typ.HasConverter() {
-			used[typ.Type] = struct{}{}
+// are called at runtime, so they can never be lazy, and direction matters:
+// parameters call to_db, results call from_db, so only the module of the
+// direction actually used is imported.
+func (r *ImportResolver) addConverterImports(std, typeChecking map[string]importSpec, queries []model.Query) {
+	add := func(function string) {
+		dot := strings.LastIndex(function, ".")
+		if dot <= 0 {
+			return
 		}
-
-		return false
-	})
+		module := function[:dot]
+		// A runtime import subsumes an annotation-only import of the same
+		// module (e.g. the converter's own py_type), so drop the lazy copy.
+		for key, spec := range typeChecking {
+			if spec.Module == module && spec.Name == "" && spec.Alias == "" {
+				delete(typeChecking, key)
+			}
+		}
+		addWithPriority(std, module, importSpec{Module: module, Name: "", Alias: "", TypeChecking: false})
+	}
 	for _, query := range queries {
 		queryValueMatches(query.Returns, func(typ model.PyType) bool {
-			if typ.HasConverter() {
-				used[typ.Type] = struct{}{}
-			}
+			add(typ.ConverterFrom)
 
 			return false
 		})
-	}
-	if len(used) == 0 {
-		return
-	}
-	for i := range r.conf.Converters {
-		converter := &r.conf.Converters[i]
-		if _, ok := used[converter.PyType.Type]; !ok {
-			continue
-		}
-		for _, module := range converter.Modules {
-			addWithPriority(std, module, importSpec{Module: module, Name: "", Alias: "", TypeChecking: false})
+		for _, param := range query.Params {
+			queryValueMatches(param, func(typ model.PyType) bool {
+				add(typ.ConverterTo)
+
+				return false
+			})
 		}
 	}
 }

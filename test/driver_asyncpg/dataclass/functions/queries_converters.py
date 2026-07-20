@@ -29,7 +29,7 @@ if typing.TYPE_CHECKING:
     import asyncpg.cursor
     import collections.abc
 
-    type QueryResultsArgsType = int | float | str | memoryview | PurePosixPath | collections.abc.Sequence[QueryResultsArgsType] | None
+    type QueryResultsArgsType = int | float | str | memoryview | collections.abc.Sequence[QueryResultsArgsType] | None
 
     type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
