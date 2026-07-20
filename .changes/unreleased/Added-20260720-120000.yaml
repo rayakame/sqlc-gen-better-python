@@ -1,0 +1,6 @@
+kind: Added
+body: 'Go unit tests: internal/model, internal/config, internal/log, internal/types and internal/writer are now covered to 100% of statements, raising the Go coverage flag from 0.5% to about 43%.'
+time: 2026-07-20T12:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "180"
