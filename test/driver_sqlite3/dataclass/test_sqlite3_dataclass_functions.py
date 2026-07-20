@@ -23,6 +23,7 @@ import datetime
 import decimal
 import json
 import math
+import pathlib
 import random
 import sqlite3
 from collections import UserString
@@ -31,6 +32,7 @@ import pytest
 
 from test.driver_sqlite3.dataclass.functions import models
 from test.driver_sqlite3.dataclass.functions import queries
+from test.driver_sqlite3.dataclass.functions import queries_any_param
 from test.driver_sqlite3.dataclass.functions import queries_case
 from test.driver_sqlite3.dataclass.functions import queries_override_adapter
 from test.driver_sqlite3.dataclass.functions import queries_override_converter
@@ -42,6 +44,7 @@ CASE_DT = datetime.datetime(2026, 7, 19, 8, 15)
 CASE_DEC = decimal.Decimal("12.34")
 RESERVED_ARG_ID = 525252
 UNKNOWN_OVERRIDE_ID = 545454
+ANY_PARAM_ID = 565656
 
 
 class TestSqlite3DataclassFunctions:
@@ -1034,3 +1037,22 @@ class TestSqlite3DataclassFunctions:
     def test_get_unknown_override_null_value(self, sqlite3_conn: sqlite3.Connection) -> None:
         queries_unknown_override.insert_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID + 1, happened_at=None)
         assert queries_unknown_override.get_unknown_override(conn=sqlite3_conn, id_=UNKNOWN_OVERRIDE_ID + 1) is None
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_any_param")
+    def test_insert_any_param(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The override maps an unknown SQL type to a type the driver cannot
+        # encode on its own, so the caller registers the adapter.
+        sqlite3.register_adapter(pathlib.PurePosixPath, str)
+        queries_any_param.insert_any_param(conn=sqlite3_conn, id_=ANY_PARAM_ID, tag=pathlib.PurePosixPath("a/b"))
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_any_param"])
+    def test_list_any_param_ids(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # Passed through unconverted, so PurePosixPath must be a valid
+        # QueryResults argument type.
+        results = queries_any_param.list_any_param_ids(conn=sqlite3_conn, tag=pathlib.PurePosixPath("a/b"))
+        assert list(results()) == [ANY_PARAM_ID]
+
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_any_param"])
+    def test_iterate_any_param_ids(self, sqlite3_conn: sqlite3.Connection) -> None:
+        seen = list(queries_any_param.list_any_param_ids(conn=sqlite3_conn, tag=pathlib.PurePosixPath("a/b")))
+        assert seen == [ANY_PARAM_ID]

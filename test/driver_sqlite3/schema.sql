@@ -115,3 +115,8 @@ CREATE TABLE IF NOT EXISTS test_unknown_override
     id                    integer PRIMARY KEY NOT NULL,
     happened_at           JULIANDAY
 );
+CREATE TABLE IF NOT EXISTS test_any_param
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    tag                   TAGTYPE NOT NULL
+);

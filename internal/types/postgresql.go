@@ -73,7 +73,7 @@ func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pl
 	case "pg_catalog.json", "json", "jsonb":
 		return Str
 	case "bytea", "blob", "pg_catalog.bytea":
-		return "memoryview"
+		return Memoryview
 	case "date":
 		return "datetime.date"
 	case "pg_catalog.time", "pg_catalog.timetz", "timetz":

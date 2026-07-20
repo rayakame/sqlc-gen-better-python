@@ -8,6 +8,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/driver"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
@@ -608,8 +609,10 @@ func TestQueryImports(t *testing.T) {
 				},
 			},
 			want: ImportResult{
-				Std:          []string{"import datetime", "import mymod", "import typing"},
-				TypeChecking: []string{"import asyncpg", "import collections.abc"},
+				// datetime is runtime (the param converts via DefaultType);
+				// mymod only annotates, so it stays lazy.
+				Std:          []string{"import datetime", "import typing"},
+				TypeChecking: []string{"import asyncpg", "import collections.abc", "import mymod"},
 			},
 		},
 		{
@@ -1240,14 +1243,16 @@ func TestQueryValueUses(t *testing.T) {
 		name     string
 		lookup   string
 		qv       model.QueryValue
+		isReturn bool
 		wantUsed bool
 		wantTC   bool
 	}{
-		{name: "empty value", lookup: "int", qv: model.QueryValue{}, wantUsed: false, wantTC: false},
+		{name: "empty value", lookup: "int", qv: model.QueryValue{}, isReturn: true, wantUsed: false, wantTC: false},
 		{
 			name:     "scalar annotation only",
 			lookup:   typeDate,
 			qv:       impScalar(model.PyType{SQLType: "date", Type: typeDate}),
+			isReturn: true,
 			wantUsed: true,
 			wantTC:   true,
 		},
@@ -1255,6 +1260,7 @@ func TestQueryValueUses(t *testing.T) {
 			name:     "scalar inline converted",
 			lookup:   "ipaddress.IPv4Address",
 			qv:       impScalar(model.PyType{SQLType: "inet", Type: "ipaddress.IPv4Address"}),
+			isReturn: true,
 			wantUsed: true,
 			wantTC:   false,
 		},
@@ -1262,6 +1268,7 @@ func TestQueryValueUses(t *testing.T) {
 			name:     "scalar overridden",
 			lookup:   "mytype",
 			qv:       impScalar(model.PyType{SQLType: "text", Type: "mytype", IsOverride: true, DefaultType: "str"}),
+			isReturn: true,
 			wantUsed: true,
 			wantTC:   false,
 		},
@@ -1269,6 +1276,7 @@ func TestQueryValueUses(t *testing.T) {
 			name:     "scalar no match",
 			lookup:   typeDate,
 			qv:       impScalar(model.PyType{SQLType: "int", Type: "int"}),
+			isReturn: true,
 			wantUsed: false,
 			wantTC:   false,
 		},
@@ -1276,6 +1284,7 @@ func TestQueryValueUses(t *testing.T) {
 			name:     "struct no match",
 			lookup:   typeDate,
 			qv:       impStruct(true, impCol("a", model.PyType{SQLType: "int", Type: "int"})),
+			isReturn: true,
 			wantUsed: false,
 			wantTC:   false,
 		},
@@ -1283,6 +1292,7 @@ func TestQueryValueUses(t *testing.T) {
 			name:     "struct annotation only column",
 			lookup:   typeDate,
 			qv:       impStruct(true, impCol("a", model.PyType{SQLType: "date", Type: typeDate})),
+			isReturn: true,
 			wantUsed: true,
 			wantTC:   true,
 		},
@@ -1295,15 +1305,42 @@ func TestQueryValueUses(t *testing.T) {
 					impCol("d", model.PyType{SQLType: "date", Type: typeDate, IsOverride: true, DefaultType: "str"}),
 				}}},
 			),
+			isReturn: true,
 			wantUsed: true,
 			wantTC:   false,
+		},
+		{
+			name:     "param overridden stays annotation only",
+			lookup:   "mytype",
+			qv:       impScalar(model.PyType{SQLType: "text", Type: "mytype", IsOverride: true, DefaultType: "str"}),
+			isReturn: false,
+			wantUsed: true,
+			wantTC:   true,
+		},
+		{
+			name:     "param inline converted stays annotation only",
+			lookup:   "ipaddress.IPv4Address",
+			qv:       impScalar(model.PyType{SQLType: "inet", Type: "ipaddress.IPv4Address"}),
+			isReturn: false,
+			wantUsed: true,
+			wantTC:   true,
+		},
+		{
+			name:   "param struct overridden column stays annotation only",
+			lookup: typeDate,
+			qv: impStruct(true,
+				impCol("d", model.PyType{SQLType: "date", Type: typeDate, IsOverride: true, DefaultType: "str"}),
+			),
+			isReturn: false,
+			wantUsed: true,
+			wantTC:   true,
 		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			resolver := newImportsResolver(t, newImportsConfig(config.SQLDriverAsyncpg))
-			gotUsed, gotTC := resolver.queryValueUses(tc.lookup, tc.qv)
+			gotUsed, gotTC := resolver.queryValueUses(tc.lookup, tc.qv, tc.isReturn)
 			if gotUsed != tc.wantUsed || gotTC != tc.wantTC {
 				t.Errorf("queryValueUses() = (%v, %v), want (%v, %v)", gotUsed, gotTC, tc.wantUsed, tc.wantTC)
 			}
@@ -1399,6 +1436,62 @@ func TestBuildImportBlock(t *testing.T) {
 			t.Parallel()
 			if got := buildImportBlock(tc.specs); !slices.Equal(got, tc.want) {
 				t.Errorf("buildImportBlock() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPassthroughParamTypes(t *testing.T) {
+	t.Parallel()
+	passthrough := func(name string) model.PyType {
+		return model.PyType{SQLType: "weird", Type: name, IsOverride: true, DefaultType: types.Any}
+	}
+	cases := []struct {
+		name    string
+		queries []model.Query
+		want    []string
+	}{
+		{name: "no queries", queries: nil, want: []string{}},
+		{
+			name: "override with a known default type is converted back",
+			queries: []model.Query{
+				{
+					Params: []model.QueryValue{
+						impScalar(model.PyType{SQLType: "text", Type: "mytype", IsOverride: true, DefaultType: types.Str}),
+					},
+				},
+			},
+			want: []string{},
+		},
+		{
+			name:    "plain param",
+			queries: []model.Query{{Params: []model.QueryValue{impScalar(model.PyType{SQLType: "text", Type: types.Str})}}},
+			want:    []string{},
+		},
+		{
+			name:    "passthrough override",
+			queries: []model.Query{{Params: []model.QueryValue{impScalar(passthrough("pathlib.PurePosixPath"))}}},
+			want:    []string{"pathlib.PurePosixPath"},
+		},
+		{
+			name: "deduplicated and sorted across queries",
+			queries: []model.Query{
+				{Params: []model.QueryValue{impScalar(passthrough("zeta.Type"))}},
+				{Params: []model.QueryValue{impScalar(passthrough("alpha.Type")), impScalar(passthrough("zeta.Type"))}},
+			},
+			want: []string{"alpha.Type", "zeta.Type"},
+		},
+		{
+			name:    "struct param columns are scanned",
+			queries: []model.Query{{Params: []model.QueryValue{impStruct(true, impCol("c", passthrough("beta.Type")))}}},
+			want:    []string{"beta.Type"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := passthroughParamTypes(tc.queries); !slices.Equal(got, tc.want) {
+				t.Errorf("passthroughParamTypes() = %v, want %v", got, tc.want)
 			}
 		})
 	}

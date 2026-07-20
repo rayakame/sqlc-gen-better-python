@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: ea7d4febaa1d6b33ae1fe62a5413187b9b378a2d746fce9df55d2a2d041293bf
+      sha256: 5319f1eceda511756b782e1dc1b5c8808179da77a563d5fa777c68b8928c117d
 sql:
   - schema: schema.sql
     queries:
@@ -106,6 +106,7 @@ sql:
       - queries_override_converter.sql
       - queries_case.sql
       - queries_unknown_override.sql
+      - queries_any_param.sql
     engine: sqlite
     codegen:
       - out: /dataclass/functions
@@ -130,6 +131,11 @@ sql:
             - db_type: JULIANDAY
               py_type:
                 type: str
+            - db_type: TAGTYPE
+              py_type:
+                import: pathlib
+                package: PurePosixPath
+                type: PurePosixPath
   - schema: schema.sql
     queries:
       - queries.sql

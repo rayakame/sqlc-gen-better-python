@@ -2,6 +2,7 @@ package render
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"sort"
 	"strings"
@@ -201,11 +202,11 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		}
 
 		for _, query := range queries {
-			if used, tc := r.queryValueUses(name, query.Returns); used {
+			if used, tc := r.queryValueUses(name, query.Returns, true); used {
 				update(used, tc)
 			}
 			for _, arg := range query.Params {
-				if used, tc := r.queryValueUses(name, arg); used {
+				if used, tc := r.queryValueUses(name, arg, false); used {
 					update(used, tc)
 				}
 				// Overridden params are converted back to their DefaultType at
@@ -377,6 +378,25 @@ func emittedModelFields(queries []model.Query) (bool, bool) {
 
 // anyParamType is anyQueryType restricted to query parameters - for imports
 // that only the runtime parameter conversion needs.
+// passthroughParamTypes returns the distinct override types that reach the
+// driver unconverted: an unknown SQL type has no DefaultType to convert back
+// to, so the override type itself must be a valid QueryResults argument.
+func passthroughParamTypes(queries []model.Query) []string {
+	seen := make(map[string]struct{})
+	// Reported as never matching so the walk visits every param.
+	anyParamType(queries, func(typ model.PyType) bool {
+		if typ.DoOverride() && typ.DefaultType == types.Any {
+			seen[typ.Type] = struct{}{}
+		}
+
+		return false
+	})
+	names := slices.Collect(maps.Keys(seen))
+	slices.Sort(names)
+
+	return names
+}
+
 func anyParamType(queries []model.Query, pred func(model.PyType) bool) bool {
 	for _, query := range queries {
 		for _, param := range query.Params {
@@ -521,7 +541,11 @@ func (r *ImportResolver) hasSimpleReturn(queries []model.Query) bool {
 	return false
 }
 
-func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue) (bool, bool) {
+// queryValueUses reports whether the value references the type and whether the
+// reference is annotation-only. Only decoded return values construct the type
+// at runtime; parameters are annotated but passed through (an overridden one is
+// converted via its DefaultType, tracked by overrideDefaultTypeUses).
+func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue, isReturn bool) (bool, bool) {
 	if queryValue.IsEmpty() {
 		return false, false
 	}
@@ -537,7 +561,7 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 				return
 			}
 			used = true
-			if r.drv.ConvertsInline(typ.SQLType) || typ.DoOverride() {
+			if isReturn && (r.drv.ConvertsInline(typ.SQLType) || typ.DoOverride()) {
 				typeChecking = false
 			}
 		}
@@ -559,7 +583,7 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 	}
 
 	if queryValue.Type.Type == name {
-		needsConv := r.drv.ConvertsInline(queryValue.Type.SQLType) || queryValue.Type.DoOverride()
+		needsConv := isReturn && (r.drv.ConvertsInline(queryValue.Type.SQLType) || queryValue.Type.DoOverride())
 
 		return true, !needsConv
 	}
@@ -596,22 +620,23 @@ func (r *ImportResolver) buildQueryResult(std, typeChecking, local map[string]im
 		if len(result.TypeChecking) != 0 {
 			result.TypeChecking[len(result.TypeChecking)-1] += "\n"
 		}
-		members := "int | float | str | memoryview"
+		members := []string{types.Int, types.Float, types.Str, types.Memoryview}
 		allSpecs := mergeMaps(std, typeChecking)
 		if _, ok := allSpecs["decimal"]; ok {
-			members += " | decimal.Decimal"
+			members = append(members, types.Decimal)
 		}
 		if _, ok := allSpecs["uuid"]; ok {
-			members += " | uuid.UUID"
+			members = append(members, "uuid.UUID")
 		}
 		if _, ok := allSpecs[moduleDatetime]; ok {
-			members += " | datetime.date | datetime.time | datetime.datetime | datetime.timedelta"
+			members = append(members, "datetime.date", "datetime.time", "datetime.datetime", "datetime.timedelta")
 		}
+		members = append(members, passthroughParamTypes(queries)...)
 		// Array/sqlc.slice params are forwarded into QueryResults too, so the
 		// union needs a recursive Sequence member. The PEP 695 alias is lazy,
 		// so it is also safe at module level with omit_typechecking_block.
-		argsType := "type QueryResultsArgsType = " + members +
-			" | collections.abc.Sequence[QueryResultsArgsType] | None"
+		members = append(members, "collections.abc.Sequence[QueryResultsArgsType]", "None")
+		argsType := "type QueryResultsArgsType = " + strings.Join(members, " | ")
 		result.TypeChecking = append(result.TypeChecking, argsType)
 	}
 
