@@ -112,23 +112,49 @@ func TestWriteQueryResultsClassHeaderDocstrings(t *testing.T) {
 	t.Parallel()
 	w := newWriter(config.DocstringConventionGoogle)
 	w.QueryResults.WriteQueryResultsClassHeader("asyncpg.Connection", []string{"self._cursor = None"}, "asyncpg.Record", true)
-	got := w.String()
-	// Assert the class skeleton and that each docstring hook produced output;
-	// docstring bodies themselves are covered by the docstring tests.
-	wantParts := []string{
-		"class QueryResults[T]:\n",
-		"    \"\"\"Helper class that allows both iteration and normal fetching of data from the db.\"\"\"\n",
-		"    __slots__ = (\"_args\", \"_conn\", \"_cursor\", \"_decode_hook\", \"_iterator\", \"_sql\")\n",
-		"    def __init__(\n",
+	want := strings.Join([]string{
+		"class QueryResults[T]:",
+		"    \"\"\"Helper class that allows both iteration and normal fetching of data from the db.\"\"\"",
+		"",
+		"    __slots__ = (\"_args\", \"_conn\", \"_cursor\", \"_decode_hook\", \"_iterator\", \"_sql\")",
+		"",
+		"    def __init__(",
+		"        self,",
+		"        conn: asyncpg.Connection,",
+		"        sql: str,",
+		"        decode_hook: collections.abc.Callable[[asyncpg.Record], T],",
+		"        *args: QueryResultsArgsType,",
+		"    ) -> None:",
 		"        \"\"\"Initialize the QueryResults instance.",
-		"        self._cursor = None\n",
-		"    def __aiter__(self) -> QueryResults[T]:\n",
-		"\"\"\"Initialize iteration support for `async for`.",
-	}
-	for _, part := range wantParts {
-		if !strings.Contains(got, part) {
-			t.Errorf("WriteQueryResultsClassHeader() output missing %q\ngot: %q", part, got)
-		}
+		"",
+		"        Args:",
+		"            conn:",
+		"                The connection object of type `asyncpg.Connection` used to execute queries.",
+		"            sql:",
+		"                The SQL statement that will be executed when fetching/iterating.",
+		"            decode_hook:",
+		"                A callback that turns an `asyncpg.Record` object into `T` that will be returned.",
+		"            *args:",
+		"                Arguments that should be sent when executing the sql query.",
+		"        \"\"\"",
+		"        self._conn = conn",
+		"        self._sql = sql",
+		"        self._decode_hook = decode_hook",
+		"        self._args = args",
+		"        self._cursor = None",
+		"",
+		"    def __aiter__(self) -> QueryResults[T]:",
+		"        \"\"\"Initialize iteration support for `async for`.",
+		"",
+		"        Returns:",
+		"            Self as an asynchronous iterator.",
+		"        \"\"\"",
+		"        return self",
+		"",
+		"",
+	}, "\n")
+	if got := w.String(); got != want {
+		t.Errorf("WriteQueryResultsClassHeader() = %q, want %q", got, want)
 	}
 }
 
