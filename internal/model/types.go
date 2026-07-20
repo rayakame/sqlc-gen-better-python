@@ -18,6 +18,16 @@ type PyType struct {
 	// DefaultType is the Python type the column would have without the
 	// override. Used to convert override values before passing them to the driver.
 	DefaultType string
+
+	// ConverterTo and ConverterFrom are fully qualified user functions that
+	// replace the default constructor-call conversion in both directions.
+	ConverterTo   string
+	ConverterFrom string
+}
+
+// HasConverter reports whether user functions handle this type's conversion.
+func (t PyType) HasConverter() bool {
+	return t.ConverterFrom != "" || t.ConverterTo != ""
 }
 
 func (t PyType) Print() string {

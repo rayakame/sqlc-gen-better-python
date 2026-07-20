@@ -248,6 +248,7 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		conversions = driver.SqliteConversionsUsed(queries)
 	}
 	r.addDriverImports(std, typeChecking, queries, conversions)
+	r.addConverterImports(std, queries)
 
 	for module := range conversions.RuntimeModules(r.conf.Speedups) {
 		spec, ok := typeChecking[module]
@@ -451,7 +452,7 @@ func overrideDefaultTypeUses(name string, qv model.QueryValue) bool {
 	}
 	if qv.IsStruct() {
 		for _, col := range qv.Table.Columns {
-			if col.Type.DoOverride() && col.Type.DefaultType == name {
+			if col.Type.DoOverride() && !col.Type.HasConverter() && col.Type.DefaultType == name {
 				return true
 			}
 		}
@@ -459,10 +460,44 @@ func overrideDefaultTypeUses(name string, qv model.QueryValue) bool {
 		return false
 	}
 
-	return qv.Type.DoOverride() && qv.Type.DefaultType == name
+	return qv.Type.DoOverride() && !qv.Type.HasConverter() && qv.Type.DefaultType == name
 }
 
 // addOverrideImports adds imports contributed by configured type overrides.
+// addConverterImports imports the modules holding converter functions. They
+// are called by the generated code, so they can never be lazy.
+func (r *ImportResolver) addConverterImports(std map[string]importSpec, queries []model.Query) {
+	used := make(map[string]struct{})
+	anyParamType(queries, func(typ model.PyType) bool {
+		if typ.HasConverter() {
+			used[typ.Type] = struct{}{}
+		}
+
+		return false
+	})
+	for _, query := range queries {
+		queryValueMatches(query.Returns, func(typ model.PyType) bool {
+			if typ.HasConverter() {
+				used[typ.Type] = struct{}{}
+			}
+
+			return false
+		})
+	}
+	if len(used) == 0 {
+		return
+	}
+	for i := range r.conf.Converters {
+		converter := &r.conf.Converters[i]
+		if _, ok := used[converter.PyType.Type]; !ok {
+			continue
+		}
+		for _, module := range converter.Modules {
+			addWithPriority(std, module, importSpec{Module: module, Name: "", Alias: "", TypeChecking: false})
+		}
+	}
+}
+
 func (r *ImportResolver) addOverrideImports(std map[string]importSpec, uses func(string) (bool, bool)) {
 	for _, override := range r.conf.Overrides {
 		if override.PyType.Type == "" || override.PyType.Import == "" {

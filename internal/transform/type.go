@@ -47,7 +47,7 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 	}
 
 	if override := t.matchOverride(pluginColumn, columnType); override != nil {
-		return model.PyType{
+		pyType := model.PyType{
 			SQLType:     columnType,
 			Type:        override.PyType.Type,
 			IsNullable:  !pluginColumn.GetNotNull(),
@@ -56,6 +56,12 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 			IsOverride:  true,
 			DefaultType: strType,
 		}
+		if override.Resolved != nil {
+			pyType.ConverterTo = override.Resolved.ToDB
+			pyType.ConverterFrom = override.Resolved.FromDB
+		}
+
+		return pyType
 	}
 
 	return model.PyType{

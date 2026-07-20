@@ -115,9 +115,13 @@ func (rb *RowBuilder) convertExpr(typ model.PyType, src string) string {
 	if !rb.columnNeedsConversion(typ) {
 		return src
 	}
-	expr := fmt.Sprintf("%s(%s)", typ.Type, src)
+	callable := typ.Type
+	if typ.ConverterFrom != "" {
+		callable = typ.ConverterFrom
+	}
+	expr := fmt.Sprintf("%s(%s)", callable, src)
 	if typ.IsList {
-		expr = fmt.Sprintf("[%s(v) for v in %s]", typ.Type, src)
+		expr = fmt.Sprintf("[%s(v) for v in %s]", callable, src)
 	}
 	if typ.IsNullable {
 		expr = fmt.Sprintf("%s if %s is not None else None", expr, src)

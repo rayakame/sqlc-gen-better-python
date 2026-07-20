@@ -26,6 +26,7 @@ type Config struct {
 	EmitDocstringsSQL           *bool               `json:"docstrings_emit_sql"                      yaml:"docstrings_emit_sql"`
 	Speedups                    bool                `json:"speedups"                                 yaml:"speedups"`
 	Overrides                   []Override          `json:"overrides,omitempty"                      yaml:"overrides,omitempty"`
+	Converters                  []Converter         `json:"converters,omitempty"                     yaml:"converters,omitempty"`
 
 	Debug bool `json:"debug" yaml:"debug"`
 
@@ -74,6 +75,10 @@ func parseConfig(req *plugin.GenerateRequest) (*Config, error) {
 		return nil, fmt.Errorf("unmarshalling plugin options: %w", err)
 	}
 
+	// Converters resolve first: an override naming one inherits its py_type.
+	if err := config.parseConverters(); err != nil {
+		return nil, err
+	}
 	for i := range config.Overrides {
 		if err := config.Overrides[i].parse(req); err != nil {
 			return nil, err

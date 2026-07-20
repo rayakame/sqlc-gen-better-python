@@ -97,12 +97,18 @@ func writeQueryDocstring(body *writer.CodeWriter, d Driver, cfg *config.Config, 
 // is not instantiable - those values pass through unconverted (there is no
 // registered adapter for unknown types either).
 func convertParamExpr(expr string, typ model.PyType) string {
-	if !typ.DoOverride() || typ.DefaultType == types.Any {
+	if !typ.DoOverride() {
 		return expr
 	}
-	converted := fmt.Sprintf("%s(%s)", typ.DefaultType, expr)
+	callable := typ.DefaultType
+	if typ.ConverterTo != "" {
+		callable = typ.ConverterTo
+	} else if typ.DefaultType == types.Any {
+		return expr
+	}
+	converted := fmt.Sprintf("%s(%s)", callable, expr)
 	if typ.IsList {
-		converted = fmt.Sprintf("[%s(v) for v in %s]", typ.DefaultType, expr)
+		converted = fmt.Sprintf("[%s(v) for v in %s]", callable, expr)
 	}
 	if typ.IsNullable {
 		return fmt.Sprintf("%s if %s is not None else None", converted, expr)
