@@ -21,6 +21,11 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 	columnType := strings.ToLower(sdk.DataType(pluginColumn.Type))
 	strType := t.convertType(pluginColumn.Type)
 
+	// A sqlc.slice parameter is never optional, even on a nullable column:
+	// the generated expansion calls len() on it, and "no values" is an empty
+	// sequence, matching the plain slice parameters of sqlc's own Go codegen.
+	isNullable := !pluginColumn.GetNotNull() && !pluginColumn.GetIsSqlcSlice()
+
 	isEnum := false
 
 	// Never mutate pluginColumn: buildPyType runs repeatedly on the same
@@ -50,7 +55,7 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 		pyType := model.PyType{
 			SQLType:       columnType,
 			Type:          override.PyType.Type,
-			IsNullable:    !pluginColumn.GetNotNull(),
+			IsNullable:    isNullable,
 			IsList:        pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
 			IsEnum:        false,
 			IsOverride:    true,
@@ -68,7 +73,7 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 	return model.PyType{
 		SQLType:       columnType,
 		Type:          strType,
-		IsNullable:    !pluginColumn.GetNotNull(),
+		IsNullable:    isNullable,
 		IsList:        pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
 		IsEnum:        isEnum,
 		IsOverride:    false,

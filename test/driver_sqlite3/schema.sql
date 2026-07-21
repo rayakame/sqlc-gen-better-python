@@ -126,5 +126,6 @@ CREATE TABLE IF NOT EXISTS test_any_param
 CREATE TABLE IF NOT EXISTS test_slice
 (
     id                    integer PRIMARY KEY NOT NULL,
-    name                  text                NOT NULL
+    name                  text                NOT NULL,
+    note                  text
 );

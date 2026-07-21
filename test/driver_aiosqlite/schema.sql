@@ -88,5 +88,6 @@ CREATE TABLE IF NOT EXISTS test_type_override
 CREATE TABLE IF NOT EXISTS test_slice
 (
     id                    integer PRIMARY KEY NOT NULL,
-    name                  text                NOT NULL
+    name                  text                NOT NULL,
+    note                  text
 );

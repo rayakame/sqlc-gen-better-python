@@ -145,7 +145,7 @@ async def aiosqlite_delete_all(dsn: str) -> None:
         DELETE FROM test_sqlite_types;
         DELETE FROM test_inner_sqlite_types;
         DELETE FROM test_type_override;
-        DELETE FROM test_slice;
+        DROP TABLE IF EXISTS test_slice;
         DROP TABLE IF EXISTS test_override_conversion;
         DROP TABLE IF EXISTS test_case_sensitivity;
         DROP TABLE IF EXISTS test_reserved_args;

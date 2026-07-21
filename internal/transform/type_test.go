@@ -73,6 +73,14 @@ func TestBuildPyType(t *testing.T) {
 			want:    model.PyType{SQLType: "int4", Type: types.Int, IsList: true, DefaultType: types.Int, SqlcSliceName: "ids"},
 		},
 		{
+			// The generated expansion calls len() on the sequence, so a slice
+			// against a nullable column must not become "Sequence[T] | None".
+			name:    "sqlc slice parameter on nullable column stays required",
+			options: typeTestBaseOptions,
+			column:  &plugin.Column{Name: "notes", Type: &plugin.Identifier{Name: "text"}, IsSqlcSlice: true},
+			want:    model.PyType{SQLType: "text", Type: "str", IsList: true, DefaultType: "str", SqlcSliceName: "notes"},
+		},
+		{
 			// DDL casing survives into the identifier; SQLType must come out
 			// lowercased regardless of what the conversion func returns.
 			name:    "sql type is lowercased",

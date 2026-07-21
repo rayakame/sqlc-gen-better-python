@@ -97,10 +97,12 @@ class TestSlice:
     Attributes:
         id_: int
         name: str
+        note: str | None
     """
 
     id_: int
     name: str
+    note: str | None
 
 
 @dataclasses.dataclass()

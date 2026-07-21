@@ -1005,8 +1005,8 @@ class TestDataclassFunctions:
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="AiosqliteTestDataclassFunctions::insert_slice_rows")
     async def test_insert_slice_rows(self, aiosqlite_conn: aiosqlite.Connection) -> None:
-        for offset, name in enumerate(("a", "b", "c", "b")):
-            await queries_slice.insert_slice_row(conn=aiosqlite_conn, id_=SLICE_ID_BASE + offset, name=name)
+        for offset, (name, note) in enumerate((("a", "x"), ("b", "y"), ("c", None), ("b", "y"))):
+            await queries_slice.insert_slice_row(conn=aiosqlite_conn, id_=SLICE_ID_BASE + offset, name=name, note=note)
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
@@ -1016,8 +1016,8 @@ class TestDataclassFunctions:
     async def test_get_slice_rows(self, aiosqlite_conn: aiosqlite.Connection) -> None:
         rows = await queries_slice.get_slice_rows(conn=aiosqlite_conn, ids=[SLICE_ID_BASE, SLICE_ID_BASE + 2])
         assert rows == [
-            models.TestSlice(id_=SLICE_ID_BASE, name="a"),
-            models.TestSlice(id_=SLICE_ID_BASE + 2, name="c"),
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 2, name="c", note=None),
         ]
         seen = [row async for row in queries_slice.get_slice_rows(conn=aiosqlite_conn, ids=[SLICE_ID_BASE, SLICE_ID_BASE + 2])]
         assert seen == rows
@@ -1046,8 +1046,23 @@ class TestDataclassFunctions:
             ids=[SLICE_ID_BASE + 1, SLICE_ID_BASE + 3],
             id_=SLICE_ID_BASE + 1,
         )
-        assert row == models.TestSlice(id_=SLICE_ID_BASE + 3, name="b")
+        assert row == models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y")
         assert await queries_slice.get_slice_row_filtered(conn=aiosqlite_conn, name="a", ids=[SLICE_ID_BASE], id_=SLICE_ID_BASE) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows_by_notes",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows_by_notes(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # The slice targets a nullable column; the parameter is still a plain
+        # Sequence, and rows whose note is NULL never match.
+        rows = await queries_slice.get_slice_rows_by_notes(conn=aiosqlite_conn, notes=["y"])
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE + 1, name="b", note="y"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert await queries_slice.get_slice_rows_by_notes(conn=aiosqlite_conn, notes=[]) == []
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
@@ -1064,6 +1079,7 @@ class TestDataclassFunctions:
             "AiosqliteTestDataclassFunctions::get_slice_rows",
             "AiosqliteTestDataclassFunctions::get_slice_rows_empty_slice",
             "AiosqliteTestDataclassFunctions::get_slice_row_filtered",
+            "AiosqliteTestDataclassFunctions::get_slice_rows_by_notes",
             "AiosqliteTestDataclassFunctions::count_slice_rows_two_slices",
         ],
     )

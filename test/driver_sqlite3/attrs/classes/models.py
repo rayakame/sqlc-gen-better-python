@@ -169,11 +169,13 @@ class TestSlice:
     ----------
     id_ : int
     name : str
+    note : str | None
 
     """
 
     id_: int
     name: str
+    note: str | None
 
 
 @attrs.define()

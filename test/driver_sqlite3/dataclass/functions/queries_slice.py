@@ -13,6 +13,7 @@ __all__: collections.abc.Sequence[str] = (
     "delete_slice_rows",
     "get_slice_row_filtered",
     "get_slice_rows",
+    "get_slice_rows_by_notes",
     "insert_slice_row",
 )
 
@@ -28,15 +29,19 @@ from test.driver_sqlite3.dataclass.functions import models
 
 
 INSERT_SLICE_ROW: typing.Final[str] = """-- name: InsertSliceRow :exec
-INSERT INTO test_slice (id, name) VALUES (?, ?)
+INSERT INTO test_slice (id, name, note) VALUES (?, ?, ?)
 """
 
 GET_SLICE_ROWS: typing.Final[str] = """-- name: GetSliceRows :many
-SELECT id, name FROM test_slice WHERE id IN (/*SLICE:ids*/?) ORDER BY id
+SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) ORDER BY id
 """
 
 GET_SLICE_ROW_FILTERED: typing.Final[str] = """-- name: GetSliceRowFiltered :one
-SELECT id, name FROM test_slice WHERE name = ? AND id IN (/*SLICE:ids*/?) AND id != ? LIMIT 1
+SELECT id, name, note FROM test_slice WHERE name = ? AND id IN (/*SLICE:ids*/?) AND id != ? LIMIT 1
+"""
+
+GET_SLICE_ROWS_BY_NOTES: typing.Final[str] = """-- name: GetSliceRowsByNotes :many
+SELECT id, name, note FROM test_slice WHERE note IN (/*SLICE:notes*/?) ORDER BY id
 """
 
 COUNT_SLICE_ROWS: typing.Final[str] = """-- name: CountSliceRows :one
@@ -119,11 +124,11 @@ class QueryResults[T]:
         return self._decode_hook(record)
 
 
-def insert_slice_row(conn: sqlite3.Connection, *, id_: int, name: str) -> None:
+def insert_slice_row(conn: sqlite3.Connection, *, id_: int, name: str, note: str | None) -> None:
     """Execute SQL query with `name: InsertSliceRow :exec`.
 
     ```sql
-    INSERT INTO test_slice (id, name) VALUES (?, ?)
+    INSERT INTO test_slice (id, name, note) VALUES (?, ?, ?)
     ```
 
     Args:
@@ -131,15 +136,16 @@ def insert_slice_row(conn: sqlite3.Connection, *, id_: int, name: str) -> None:
             Connection object of type `sqlite3.Connection` used to execute the query.
         id_: int.
         name: str.
+        note: str | None.
     """
-    conn.execute(INSERT_SLICE_ROW, (id_, name))
+    conn.execute(INSERT_SLICE_ROW, (id_, name, note))
 
 
 def get_slice_rows(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int]) -> QueryResults[models.TestSlice]:
     """Fetch many from the db using the SQL query with `name: GetSliceRows :many`.
 
     ```sql
-    SELECT id, name FROM test_slice WHERE id IN (/*SLICE:ids*/?) ORDER BY id
+    SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) ORDER BY id
     ```
 
     Args:
@@ -152,7 +158,7 @@ def get_slice_rows(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[in
     """
 
     def _decode_hook(row: sqlite3.Row) -> models.TestSlice:
-        return models.TestSlice(id_=row[0], name=row[1])
+        return models.TestSlice(id_=row[0], name=row[1], note=row[2])
 
     sql = GET_SLICE_ROWS.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)
     return QueryResults(conn, sql, _decode_hook, *ids)
@@ -162,7 +168,7 @@ def get_slice_row_filtered(conn: sqlite3.Connection, *, name: str, ids: collecti
     """Fetch one from the db using the SQL query with `name: GetSliceRowFiltered :one`.
 
     ```sql
-    SELECT id, name FROM test_slice WHERE name = ? AND id IN (/*SLICE:ids*/?) AND id != ? LIMIT 1
+    SELECT id, name, note FROM test_slice WHERE name = ? AND id IN (/*SLICE:ids*/?) AND id != ? LIMIT 1
     ```
 
     Args:
@@ -179,7 +185,30 @@ def get_slice_row_filtered(conn: sqlite3.Connection, *, name: str, ids: collecti
     row = conn.execute(sql, (name, *ids, id_)).fetchone()
     if row is None:
         return None
-    return models.TestSlice(id_=row[0], name=row[1])
+    return models.TestSlice(id_=row[0], name=row[1], note=row[2])
+
+
+def get_slice_rows_by_notes(conn: sqlite3.Connection, *, notes: collections.abc.Sequence[str]) -> QueryResults[models.TestSlice]:
+    """Fetch many from the db using the SQL query with `name: GetSliceRowsByNotes :many`.
+
+    ```sql
+    SELECT id, name, note FROM test_slice WHERE note IN (/*SLICE:notes*/?) ORDER BY id
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        notes: collections.abc.Sequence[str].
+
+    Returns:
+        Helper class of type `QueryResults[models.TestSlice]` that allows both iteration and normal fetching of data from the db.
+    """
+
+    def _decode_hook(row: sqlite3.Row) -> models.TestSlice:
+        return models.TestSlice(id_=row[0], name=row[1], note=row[2])
+
+    sql = GET_SLICE_ROWS_BY_NOTES.replace("/*SLICE:notes*/?", ",".join("?" * len(notes)) or "NULL", 1)
+    return QueryResults(conn, sql, _decode_hook, *notes)
 
 
 def count_slice_rows(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int], names: collections.abc.Sequence[str]) -> int | None:
