@@ -12,6 +12,10 @@ A WASM plugin for SQLC allowing the generation of Python code.
 The generated code requires **Python 3.12 or newer** (it uses PEP 695 type
 aliases and generics, and `enum.StrEnum`).
 
+**Documentation: https://rayakame.github.io/sqlc-gen-better-python/**
+(The docs site is new; some feature references still live in this README below
+while they are ported over.)
+
 
 > [!NOTE]  
 > Every Release before `v1.0.0`, including this one is an beta release. 
