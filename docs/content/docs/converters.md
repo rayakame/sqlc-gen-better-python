@@ -68,6 +68,7 @@ wrap it in two small functions that match the wire type of a `jsonb` column
 {{< tabs >}}
 
   {{< tab name="converters.py" >}}
+
 ```python
 import msgspec
 
@@ -82,9 +83,11 @@ def encode_user(value: User) -> str:
 def decode_user(value: str) -> User:
     return msgspec.json.decode(value, type=User)
 ```
+
   {{< /tab >}}
 
   {{< tab name="models.py" >}}
+
 ```python
 import msgspec
 
@@ -94,9 +97,11 @@ class User(msgspec.Struct):
     groups: set[str]
     email: str | None = None
 ```
+
   {{< /tab >}}
 
   {{< tab name="sqlc.yaml" >}}
+
 ```yaml
 converters:
   - name: user
@@ -110,6 +115,7 @@ overrides:
   - db_type: jsonb
     converter: user
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
