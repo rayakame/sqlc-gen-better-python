@@ -20,12 +20,19 @@ open and manage the connection yourself and pass it in.
 ## asyncpg (PostgreSQL)
 
 ```python
+import asyncio
+
 import asyncpg
 
 from app.db import queries
 
-conn = await asyncpg.connect("postgresql://user:pass@localhost/db")
-user = await queries.get_field_naming(conn, id_=1)
+
+async def main() -> None:
+    conn = await asyncpg.connect("postgresql://user:pass@localhost/db")
+    user = await queries.get_field_naming(conn, id_=1)
+
+
+asyncio.run(main())
 ```
 
 asyncpg is the only driver that supports `:copyfrom` (bulk insert via
@@ -34,14 +41,20 @@ asyncpg is the only driver that supports `:copyfrom` (bulk insert via
 ## aiosqlite (async SQLite)
 
 ```python
+import asyncio
 import sqlite3
 
 import aiosqlite
 
 from app.db import queries
 
-async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as conn:
-    user = await queries.get_field_naming(conn, id_=1)
+
+async def main() -> None:
+    async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as conn:
+        user = await queries.get_field_naming(conn, id_=1)
+
+
+asyncio.run(main())
 ```
 
 ## sqlite3 (sync SQLite)

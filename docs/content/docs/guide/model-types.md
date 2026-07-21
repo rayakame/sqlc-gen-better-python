@@ -31,6 +31,7 @@ the plugin generates (shown with the default `docstrings: none`):
 {{< tabs >}}
 
   {{< tab name="dataclass" >}}
+
 ```python
 @dataclasses.dataclass()
 class TestFieldNaming:
@@ -42,6 +43,7 @@ Standard library, no dependencies. The safe default.
   {{< /tab >}}
 
   {{< tab name="attrs" >}}
+
 ```python
 @attrs.define()
 class TestFieldNaming:
@@ -53,6 +55,7 @@ Requires `attrs`. Slotted classes with concise definitions.
   {{< /tab >}}
 
   {{< tab name="msgspec" >}}
+
 ```python
 class TestFieldNaming(msgspec.Struct):
     id_: int
@@ -64,6 +67,7 @@ Requires `msgspec`. Very fast serialization/validation; pairs well with
   {{< /tab >}}
 
   {{< tab name="pydantic" >}}
+
 ```python
 class TestFieldNaming(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)

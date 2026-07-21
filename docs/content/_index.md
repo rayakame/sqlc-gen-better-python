@@ -97,32 +97,39 @@ already uses - the fields and annotations are identical:
 {{< tabs >}}
 
   {{< tab name="dataclass" >}}
+
 ```python
 @dataclasses.dataclass()
 class User:
     id_: int
     name: str
 ```
+
   {{< /tab >}}
 
   {{< tab name="attrs" >}}
+
 ```python
 @attrs.define()
 class User:
     id_: int
     name: str
 ```
+
   {{< /tab >}}
 
   {{< tab name="msgspec" >}}
+
 ```python
 class User(msgspec.Struct):
     id_: int
     name: str
 ```
+
   {{< /tab >}}
 
   {{< tab name="pydantic" >}}
+
 ```python
 class User(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
@@ -130,6 +137,7 @@ class User(pydantic.BaseModel):
     id_: int
     name: str
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
@@ -158,6 +166,7 @@ Point `sqlc` at the plugin, pick a driver and a model type, and generate:
 
 ```yaml
 # sqlc.yaml
+version: "2"
 plugins:
   - name: python
     wasm:

@@ -21,21 +21,27 @@ Then install the database driver you want to use:
 {{< tabs >}}
 
   {{< tab name="asyncpg" >}}
+
 ```bash
 pip install asyncpg
 ```
+
   {{< /tab >}}
 
   {{< tab name="aiosqlite" >}}
+
 ```bash
 pip install aiosqlite
 ```
+
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
+
 ```text
 Nothing to install - sqlite3 is in the standard library.
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
@@ -48,6 +54,7 @@ The plugin is a WASM binary that `sqlc generate` downloads and runs. Create a
 {{< tabs >}}
 
   {{< tab name="asyncpg" >}}
+
 ```yaml
 # filename: sqlc.yaml
 version: "2"
@@ -69,9 +76,11 @@ sql:
           sql_driver: "asyncpg"
           model_type: "dataclass"
 ```
+
   {{< /tab >}}
 
   {{< tab name="aiosqlite" >}}
+
 ```yaml
 # filename: sqlc.yaml
 version: "2"
@@ -93,9 +102,11 @@ sql:
           sql_driver: "aiosqlite"
           model_type: "dataclass"
 ```
+
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
+
 ```yaml
 # filename: sqlc.yaml
 version: "2"
@@ -117,6 +128,7 @@ sql:
           sql_driver: "sqlite3"
           model_type: "dataclass"
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
@@ -134,6 +146,7 @@ sql:
 {{< tabs >}}
 
   {{< tab name="asyncpg" >}}
+
 ```sql
 -- filename: schema.sql
 CREATE TABLE users
@@ -142,9 +155,11 @@ CREATE TABLE users
     name text               NOT NULL
 );
 ```
+
   {{< /tab >}}
 
   {{< tab name="aiosqlite" >}}
+
 ```sql
 -- filename: schema.sql
 CREATE TABLE users
@@ -153,9 +168,11 @@ CREATE TABLE users
     name TEXT                NOT NULL
 );
 ```
+
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
+
 ```sql
 -- filename: schema.sql
 CREATE TABLE users
@@ -164,6 +181,7 @@ CREATE TABLE users
     name TEXT                NOT NULL
 );
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
@@ -177,6 +195,7 @@ returns a single row or `None`, `:many` returns all matching rows.
 {{< tabs >}}
 
   {{< tab name="asyncpg" >}}
+
 ```sql
 -- filename: query.sql
 -- name: GetUser :one
@@ -185,9 +204,11 @@ SELECT * FROM users WHERE id = $1;
 -- name: ListUsers :many
 SELECT * FROM users ORDER BY name;
 ```
+
   {{< /tab >}}
 
   {{< tab name="aiosqlite" >}}
+
 ```sql
 -- filename: query.sql
 -- name: GetUser :one
@@ -196,9 +217,11 @@ SELECT * FROM users WHERE id = ?;
 -- name: ListUsers :many
 SELECT * FROM users ORDER BY name;
 ```
+
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
+
 ```sql
 -- filename: query.sql
 -- name: GetUser :one
@@ -207,6 +230,7 @@ SELECT * FROM users WHERE id = ?;
 -- name: ListUsers :many
 SELECT * FROM users ORDER BY name;
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
@@ -231,6 +255,7 @@ A model per table, and a typed function per query:
 {{< tabs >}}
 
   {{< tab name="asyncpg" >}}
+
 ```python
 # models.py
 @dataclasses.dataclass()
@@ -250,9 +275,11 @@ async def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
 def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
     ...
 ```
+
   {{< /tab >}}
 
   {{< tab name="aiosqlite" >}}
+
 ```python
 # models.py
 @dataclasses.dataclass()
@@ -272,9 +299,11 @@ async def get_user(conn: aiosqlite.Connection, *, id_: int) -> models.User | Non
 def list_users(conn: aiosqlite.Connection) -> QueryResults[models.User]:
     ...
 ```
+
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
+
 ```python
 # models.py
 @dataclasses.dataclass()
@@ -294,6 +323,7 @@ def get_user(conn: sqlite3.Connection, *, id_: int) -> models.User | None:
 def list_users(conn: sqlite3.Connection) -> QueryResults[models.User]:
     ...
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
@@ -312,35 +342,18 @@ can consume all at once or stream row by row:
 {{< tabs >}}
 
   {{< tab name="asyncpg" >}}
+
 ```python
+import asyncio
+
 import asyncpg
 
 from app.db import query
 
-conn = await asyncpg.connect("postgresql://user:pass@localhost/mydb")
 
-user = await query.get_user(conn, id_=1)
-if user is not None:
-    print(user.name)
+async def main() -> None:
+    conn = await asyncpg.connect("postgresql://user:pass@localhost/mydb")
 
-# every row at once
-users = await query.list_users(conn)
-
-# or stream them
-async for user in query.list_users(conn):
-    print(user.name)
-```
-  {{< /tab >}}
-
-  {{< tab name="aiosqlite" >}}
-```python
-import sqlite3
-
-import aiosqlite
-
-from app.db import query
-
-async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as conn:
     user = await query.get_user(conn, id_=1)
     if user is not None:
         print(user.name)
@@ -351,10 +364,45 @@ async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as 
     # or stream them
     async for user in query.list_users(conn):
         print(user.name)
+
+
+asyncio.run(main())
 ```
+
+  {{< /tab >}}
+
+  {{< tab name="aiosqlite" >}}
+
+```python
+import asyncio
+import sqlite3
+
+import aiosqlite
+
+from app.db import query
+
+
+async def main() -> None:
+    async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as conn:
+        user = await query.get_user(conn, id_=1)
+        if user is not None:
+            print(user.name)
+
+        # every row at once
+        users = await query.list_users(conn)
+
+        # or stream them
+        async for user in query.list_users(conn):
+            print(user.name)
+
+
+asyncio.run(main())
+```
+
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
+
 ```python
 import sqlite3
 
@@ -373,6 +421,7 @@ users = query.list_users(conn)()
 for user in query.list_users(conn):
     print(user.name)
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}

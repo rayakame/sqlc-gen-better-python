@@ -18,20 +18,26 @@ open the connection with `PARSE_DECLTYPES`:
 {{< tabs >}}
 
   {{< tab name="sqlite3" >}}
+
 ```python
 conn = sqlite3.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES)
 ```
+
   {{< /tab >}}
 
   {{< tab name="aiosqlite" >}}
+
 ```python
 import sqlite3
 
 import aiosqlite
 
-async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as conn:
-    ...
+
+async def main() -> None:
+    async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as conn:
+        ...
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}

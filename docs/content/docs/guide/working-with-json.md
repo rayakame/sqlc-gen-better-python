@@ -53,6 +53,7 @@ INSERT INTO users (id, name, preferences) VALUES ($1, $2, $3);
 {{< tabs >}}
 
   {{< tab name="models.py" >}}
+
 ```python
 import msgspec
 
@@ -73,6 +74,7 @@ field. `msgspec` handles all of it.
   {{< /tab >}}
 
   {{< tab name="converters.py" >}}
+
 ```python
 import msgspec
 
@@ -93,6 +95,7 @@ The `type=` argument is what makes decoding *typed* - msgspec builds real
   {{< /tab >}}
 
   {{< tab name="sqlc.yaml" >}}
+
 ```yaml
 options:
   model_type: "msgspec"
@@ -108,6 +111,7 @@ options:
     - column: users.preferences
       converter: preferences
 ```
+
   {{< /tab >}}
 
 {{< /tabs >}}
@@ -138,15 +142,17 @@ async def create_user(conn: ConnectionLike, *, id_: int, name: str, preferences:
 ### Using it
 
 ```python
-await create_user(
-    conn,
-    id_=1,
-    name="ada",
-    preferences=Preferences(theme=Theme(name="solarized", dark_mode=True), languages=["en"]),
-)
+async def main() -> None:
+    await create_user(
+        conn,
+        id_=1,
+        name="ada",
+        preferences=Preferences(theme=Theme(name="solarized", dark_mode=True), languages=["en"]),
+    )
 
-user = await get_user(conn, id_=1)
-user.preferences.theme.dark_mode  # True - typed all the way down
+    user = await get_user(conn, id_=1)
+    if user is not None:
+        print(user.preferences.theme.dark_mode)  # True - typed all the way down
 ```
 
 No `json.loads`, no `dict["theme"]["dark_mode"]`, and pyright checks every access.

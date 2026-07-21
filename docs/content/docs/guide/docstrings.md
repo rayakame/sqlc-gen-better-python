@@ -23,6 +23,7 @@ The same `:one` query, generated under each convention:
 {{< tabs >}}
 
   {{< tab name="google" >}}
+
 ````python
 async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFieldNaming | None:
     """Fetch one from the db using the SQL query with `name: GetFieldNaming :one`.
@@ -42,9 +43,11 @@ async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFiel
         Result of type `models.TestFieldNaming` fetched from the db. Will be `None` if not found.
     """
 ````
+
   {{< /tab >}}
 
   {{< tab name="numpy" >}}
+
 ````python
 async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFieldNaming | None:
     """Fetch one from the db using the SQL query with `name: GetFieldNaming :one`.
@@ -68,9 +71,11 @@ async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFiel
 
     """
 ````
+
   {{< /tab >}}
 
   {{< tab name="pep257" >}}
+
 ````python
 async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFieldNaming | None:
     """Fetch one from the db using the SQL query with `name: GetFieldNaming :one`.
@@ -89,6 +94,7 @@ async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFiel
     models.TestFieldNaming -- Result fetched from the db. Will be `None` if not found.
     """
 ````
+
   {{< /tab >}}
 
 {{< /tabs >}}
