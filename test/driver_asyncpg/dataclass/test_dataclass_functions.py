@@ -822,7 +822,7 @@ class TestDataclassFunctions:
         stat = await queries_invalid_identifiers.get_third_party_stat(conn=asyncpg_conn, id_=INVALID_IDENTIFIER_ID)
         assert stat is not None
         assert isinstance(stat, models.Model3RdPartyStat)
-        assert stat.total == 7  # noqa: PLR2004
+        assert stat.total == 7  # ruff:ignore[magic-value-comparison]
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestDataclassFunctions::insert_third_party_stat"])

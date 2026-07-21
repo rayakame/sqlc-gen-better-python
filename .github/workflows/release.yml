@@ -51,7 +51,7 @@ jobs:
           sed -i -E "s|(sha256: ).*|sha256: ${{ steps.hash.outputs.sha256 }}|" README.md
 
       - name: Create PR to update README
-        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           commit-message: "chore: update README example with v${{ steps.latest.outputs.output }}"
           branch: "release/update-readme-${{ steps.latest.outputs.output }}"
@@ -86,7 +86,7 @@ jobs:
           echo "\`\`\`" >> release_body.md
 
       - name: Create release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           name: "${{ steps.latest.outputs.output }}"
           tag_name: "refs/tags/${{ steps.latest.outputs.output }}"

@@ -66,7 +66,7 @@ jobs:
       # never deletes previews of still-open PRs; force: false rebases
       # instead of force-pushing, tolerating concurrent preview pushes.
       - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           branch: gh-pages
           folder: docs/public
@@ -114,7 +114,7 @@ jobs:
         run: hugo --minify --gc --baseURL "https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-${PR_NUMBER}/"
 
       - name: Deploy preview
-        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
         with:
           source-dir: docs/public
           preview-branch: gh-pages
