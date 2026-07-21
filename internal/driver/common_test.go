@@ -225,6 +225,16 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			want: []string{"*[datetime.date(v) for v in days]"},
 		},
 		{
+			name: "reused slice repeats the starred copy per marker occurrence",
+			query: model.Query{
+				SQL: "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) OR ref_id IN (/*SLICE:ids*/?)",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+				},
+			},
+			want: []string{"*ids", "*ids"},
+		},
+		{
 			name: "bundled table field slice unpacks the attribute",
 			query: model.Query{
 				Params: []model.QueryValue{

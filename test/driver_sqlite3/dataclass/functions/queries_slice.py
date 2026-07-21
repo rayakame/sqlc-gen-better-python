@@ -13,6 +13,7 @@ __all__: collections.abc.Sequence[str] = (
     "get_first_slice_name",
     "get_slice_row_filtered",
     "get_slice_rows",
+    "get_slice_rows_by_name_or_note",
     "get_slice_rows_by_notes",
     "insert_slice_row",
 )
@@ -46,6 +47,10 @@ SELECT id, name, note FROM test_slice WHERE note IN (/*SLICE:notes*/?) ORDER BY 
 
 GET_FIRST_SLICE_NAME: typing.Final[str] = """-- name: GetFirstSliceName :one
 SELECT name FROM test_slice WHERE id IN (/*SLICE:ids*/?) OR name IN (/*SLICE:names*/?) ORDER BY id LIMIT 1
+"""
+
+GET_SLICE_ROWS_BY_NAME_OR_NOTE: typing.Final[str] = """-- name: GetSliceRowsByNameOrNote :many
+SELECT id, name, note FROM test_slice WHERE name IN (/*SLICE:names*/?) OR note IN (/*SLICE:names*/?) ORDER BY id
 """
 
 DELETE_SLICE_ROWS: typing.Final[str] = """-- name: DeleteSliceRows :execrows
@@ -233,6 +238,29 @@ def get_first_slice_name(conn: sqlite3.Connection, *, ids: collections.abc.Seque
     if row is None:
         return None
     return row[0]
+
+
+def get_slice_rows_by_name_or_note(conn: sqlite3.Connection, *, names: collections.abc.Sequence[str]) -> QueryResults[models.TestSlice]:
+    """Fetch many from the db using the SQL query with `name: GetSliceRowsByNameOrNote :many`.
+
+    ```sql
+    SELECT id, name, note FROM test_slice WHERE name IN (/*SLICE:names*/?) OR note IN (/*SLICE:names*/?) ORDER BY id
+    ```
+
+    Args:
+        conn:
+            Connection object of type `sqlite3.Connection` used to execute the query.
+        names: collections.abc.Sequence[str].
+
+    Returns:
+        Helper class of type `QueryResults[models.TestSlice]` that allows both iteration and normal fetching of data from the db.
+    """
+
+    def _decode_hook(row: sqlite3.Row) -> models.TestSlice:
+        return models.TestSlice(id_=row[0], name=row[1], note=row[2])
+
+    sql = GET_SLICE_ROWS_BY_NAME_OR_NOTE.replace("/*SLICE:names*/?", ",".join("?" * len(names)) or "NULL")
+    return QueryResults(conn, sql, _decode_hook, *names, *names)
 
 
 def delete_slice_rows(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int]) -> int:

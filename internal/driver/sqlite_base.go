@@ -271,11 +271,16 @@ func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query)
 	}
 	src := query.ConstantName
 	for _, param := range params {
-		body.WriteWrappedCall(indent, "sql = "+src+".replace(", []string{
-			writer.PyQuote("/*SLICE:" + param.marker + "*/?"),
+		args := []string{
+			writer.PyQuote(sliceMarker(param.marker)),
 			fmt.Sprintf(`",".join("?" * len(%s)) or "NULL"`, param.expr),
-			"1",
-		}, ")")
+		}
+		// A reused slice has one marker per use site: replace them all, with
+		// expandParamsFlattenSlices supplying a copy of the args for each.
+		if sliceMarkerCount(query, param.marker) == 1 {
+			args = append(args, "1")
+		}
+		body.WriteWrappedCall(indent, "sql = "+src+".replace(", args, ")")
 		src = "sql"
 	}
 

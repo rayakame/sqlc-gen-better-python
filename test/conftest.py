@@ -137,10 +137,11 @@ async def asyncpg_delete_all(dsn: str) -> None:
 async def aiosqlite_delete_all(dsn: str) -> None:
     conn = await aiosqlite.connect(dsn, detect_types=sqlite3.PARSE_DECLTYPES)
 
-    # DROP IF EXISTS: these tables only exist once the sqlite3 driver schema
-    # ran, and the schema recreates them (IF NOT EXISTS) on the next run.
-    # Without this an aborted run leaves the fixed-id rows behind and the next
-    # run fails with an IntegrityError.
+    # DROP IF EXISTS: most of these tables only exist once the sqlite3 driver
+    # schema ran; test_slice is in both schemas but is dropped so older db
+    # files pick up column changes. The schemas recreate everything
+    # (IF NOT EXISTS) on the next run. Without this an aborted run leaves the
+    # fixed-id rows behind and the next run fails with an IntegrityError.
     await conn.executescript("""
         DELETE FROM test_sqlite_types;
         DELETE FROM test_inner_sqlite_types;

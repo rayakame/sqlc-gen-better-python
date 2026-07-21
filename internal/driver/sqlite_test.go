@@ -611,6 +611,29 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 				"",
 			}, "\n"),
 		},
+		{
+			// sqlc merges same-named sqlc.slice uses into one parameter but
+			// keeps a marker per use site: all of them are replaced and the
+			// arguments are repeated once per occurrence.
+			name:      "exec sync reused slice replaces all markers and repeats args",
+			sqlDriver: config.SQLDriverSQLite,
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) OR ref_id IN (/*SLICE:ids*/?)",
+				ConstantName: "DELETE_LINKED",
+				FuncName:     "delete_linked",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def delete_linked(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int]) -> None:",
+				`    sql = DELETE_LINKED.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL")`,
+				"    conn.execute(sql, (*ids, *ids))",
+				"",
+			}, "\n"),
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

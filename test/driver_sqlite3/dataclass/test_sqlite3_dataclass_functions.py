@@ -1076,7 +1076,7 @@ class TestSqlite3DataclassFunctions:
         ]
         assert list(result) == rows
 
-    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows_empty_slice", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
     def test_get_slice_rows_empty_slice(self, sqlite3_conn: sqlite3.Connection) -> None:
         # An empty sequence expands the placeholder to NULL: IN (NULL)
         # matches no rows instead of raising.
@@ -1094,7 +1094,7 @@ class TestSqlite3DataclassFunctions:
         )
         assert row == models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y")
 
-    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_row_filtered_not_found", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
     def test_get_slice_row_filtered_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
         assert queries_slice.get_slice_row_filtered(conn=sqlite3_conn, name="a", ids=[SLICE_ID_BASE], id_=SLICE_ID_BASE) is None
 
@@ -1109,13 +1109,35 @@ class TestSqlite3DataclassFunctions:
         ]
         assert queries_slice.get_slice_rows_by_notes(conn=sqlite3_conn, notes=[])() == []
 
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_rows_by_name_or_note(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The same slice name is used twice, so every marker occurrence is
+        # expanded and the sequence is bound once per occurrence.
+        rows = queries_slice.get_slice_rows_by_name_or_note(conn=sqlite3_conn, names=["b", "x"])()
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 1, name="b", note="y"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert queries_slice.get_slice_rows_by_name_or_note(conn=sqlite3_conn, names=[])() == []
+
     @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
     def test_get_first_slice_name_two_slices(self, sqlite3_conn: sqlite3.Connection) -> None:
         name = queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[SLICE_ID_BASE + 1], names=["a"])
         assert name == "a"
         assert queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[], names=[]) is None
 
-    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_slice_rows", "Sqlite3TestDataclassFunctions::get_slice_row_filtered", "Sqlite3TestDataclassFunctions::get_slice_rows_by_notes", "Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices"])
+    @pytest.mark.dependency(
+        depends=[
+            "Sqlite3TestDataclassFunctions::get_slice_rows",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_empty_slice",
+            "Sqlite3TestDataclassFunctions::get_slice_row_filtered",
+            "Sqlite3TestDataclassFunctions::get_slice_row_filtered_not_found",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_by_notes",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note",
+            "Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices",
+        ]
+    )
     def test_delete_slice_rows(self, sqlite3_conn: sqlite3.Connection) -> None:
         assert queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[]) == 0
         deleted = queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[SLICE_ID_BASE + offset for offset in range(SLICE_ROW_COUNT)])

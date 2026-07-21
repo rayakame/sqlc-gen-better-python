@@ -1065,6 +1065,22 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows_by_name_or_note(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # The same slice name is used twice, so every marker occurrence is
+        # expanded and the sequence is bound once per occurrence.
+        rows = await queries_slice.get_slice_rows_by_name_or_note(conn=aiosqlite_conn, names=["b", "x"])
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 1, name="b", note="y"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert await queries_slice.get_slice_rows_by_name_or_note(conn=aiosqlite_conn, names=[]) == []
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
         name="AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
         depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
     )
@@ -1079,6 +1095,7 @@ class TestDataclassFunctions:
             "AiosqliteTestDataclassFunctions::get_slice_rows_empty_slice",
             "AiosqliteTestDataclassFunctions::get_slice_row_filtered",
             "AiosqliteTestDataclassFunctions::get_slice_rows_by_notes",
+            "AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note",
             "AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
         ],
     )

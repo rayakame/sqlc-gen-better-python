@@ -2,6 +2,7 @@ package driver
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
@@ -64,7 +65,13 @@ func expandParamsImpl(query model.Query, flattenSlices bool) []string {
 	appendPart := func(expr string, typ model.PyType) {
 		converted := convertParamExpr(expr, typ)
 		if flattenSlices && typ.SqlcSliceName != "" {
-			converted = "*" + converted
+			// One starred copy per marker occurrence, so the argument count
+			// matches the expanded placeholders when a slice is reused.
+			for range sliceMarkerCount(query, typ.SqlcSliceName) {
+				parts = append(parts, "*"+converted)
+			}
+
+			return
 		}
 		parts = append(parts, converted)
 	}
@@ -90,6 +97,23 @@ type sliceParam struct {
 	marker string
 	// expr is the Python expression holding the passed sequence.
 	expr string
+}
+
+// sliceMarker returns the placeholder sqlc leaves in the SQL for a slice name.
+func sliceMarker(name string) string {
+	return "/*SLICE:" + name + "*/?"
+}
+
+// sliceMarkerCount reports how often a slice parameter's placeholder occurs in
+// the query. sqlc merges same-named sqlc.slice uses into ONE parameter but
+// keeps a marker per use site, so each occurrence needs its own expansion and
+// its own copy of the arguments. Clamped to 1 for queries without the marker.
+func sliceMarkerCount(query model.Query, name string) int {
+	if count := strings.Count(query.SQL, sliceMarker(name)); count > 1 {
+		return count
+	}
+
+	return 1
 }
 
 // sliceParams collects the sqlc.slice parameters of a query, including fields
