@@ -154,7 +154,7 @@ async def aiosqlite_delete_all(dsn: str) -> None:
     await conn.close()
 
 
-def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -> None:  # noqa: ARG001
+def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -> None:  # ruff:ignore[unused-function-argument]
     async def _delete_all(conf: pytest.Config) -> None:
         postgres_dsn = get_dsn(conf)
         await asyncpg_delete_all(postgres_dsn)
