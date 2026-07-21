@@ -48,7 +48,9 @@ async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFiel
 
 ### `:one`
 
-Returns a single model instance or `None`. Shown above.
+Returns the row or `None`. The row is a `models.*` class when the query's columns
+match a table, a generated `<Name>Row` class when they do not, or a bare scalar
+when the query selects a single column. Shown above.
 
 When a query's columns do not match one table exactly (a join, a partial select,
 an aggregate), the plugin generates a dedicated `<Name>Row` class instead of
@@ -82,6 +84,12 @@ Here the query selects one column, so `T` is a scalar (`datetime.datetime`). A
 `:many` that selects full rows returns `QueryResults[models.Foo]` (or a
 `<Name>Row`).
 
+{{< callout type="info" >}}
+  Note that a `:many` function is **not** a coroutine, even on the async drivers -
+  it returns the `QueryResults` helper synchronously. You await (or iterate) the
+  helper, not the call.
+{{< /callout >}}
+
 ### `:exec`
 
 Runs the statement and returns `None`:
@@ -95,9 +103,15 @@ async def set_field_naming_outputs(conn: ConnectionLike, *, id_: int, outputs: s
 
 Variants of `:exec` that return something about the write:
 
-- **`:execrows`** - the number of affected rows (`int`).
-- **`:execlastid`** - the id of the last inserted row (`int`); SQLite drivers only.
-- **`:execresult`** - the driver's raw result/status object.
+- **`:execrows`** - the number of affected rows (`int`). For statements that
+  affect no rows, such as `CREATE TABLE`, asyncpg reports `0` and the SQLite
+  drivers report `-1`.
+- **`:execlastid`** - the cursor's `lastrowid`, typed `int | None` - it is `None`
+  when no row was affected. SQLite drivers only, and note it is the last
+  *affected* row, not strictly the last inserted one.
+- **`:execresult`** - the driver's raw result, which differs per driver: a `str`
+  status tag on asyncpg, and a `sqlite3.Cursor` / `aiosqlite.Cursor` on the
+  SQLite drivers.
 
 See the [feature support matrix](/docs/reference/feature-support) for which
 driver supports which.
@@ -130,6 +144,29 @@ this:
 
 ## Grouping into a class
 
-With `emit_classes: true`, the standalone functions become methods on a single
-`Querier` class instead. The bodies are identical; only the call style changes
-(`Querier(conn).get_field_naming(id_=1)`).
+With `emit_classes: true`, the standalone functions of each query file become
+methods on a class named after that file - `queries_field_namings.sql` yields
+`QueriesFieldNamings` - so you get one class per query module rather than one
+class overall.
+
+The connection is passed once to the constructor and is also exposed as a
+read-only `conn` property. The bodies are otherwise unchanged, except that `conn`
+becomes `self._conn`:
+
+```python
+class QueriesFieldNamings:
+    __slots__ = ("_conn",)
+
+    def __init__(self, conn: ConnectionLike) -> None:
+        self._conn = conn
+
+    @property
+    def conn(self) -> ConnectionLike:
+        return self._conn
+
+    async def get_field_naming(self, *, id_: int) -> models.TestFieldNaming | None:
+        row = await self._conn.fetchrow(GET_FIELD_NAMING, id_)
+        ...
+```
+
+so the call becomes `QueriesFieldNamings(conn).get_field_naming(id_=1)`.

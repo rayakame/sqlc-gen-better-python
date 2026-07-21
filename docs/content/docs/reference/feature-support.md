@@ -8,8 +8,16 @@ Which sqlc features and query commands the plugin supports.
 
 ## Macros
 
-Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
-supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
+Of the [sqlc macros](https://docs.sqlc.dev/en/latest/reference/macros.html),
+`sqlc.arg`, `sqlc.narg`, and `sqlc.embed` are supported.
+
+{{< callout type="warning" >}}
+  **`sqlc.slice` is not supported.** The parameter is typed as a
+  `collections.abc.Sequence[...]`, but the `/*SLICE:name*/` placeholder that sqlc
+  emits is never expanded, so the query fails at runtime when the driver is handed
+  a list. On PostgreSQL, use `= ANY($1::type[])` instead - that is fully
+  supported, including with [converters](/docs/guide/converters).
+{{< /callout >}}
 
 ## Query commands
 

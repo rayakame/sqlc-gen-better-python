@@ -22,7 +22,7 @@ optional.
 | `model_type` | string | `dataclass` | One of `dataclass`, `attrs`, `msgspec`, `pydantic`. See [Model types](/docs/guide/model-types). |
 | `initialisms` | list[string] | `["id"]` | Identifier segments to upper-case, e.g. `app_id` -> `AppID`. |
 | `emit_exact_table_names` | bool | `false` | If `true`, model names mirror table names; otherwise plural table names are singularized. |
-| `emit_classes` | bool | `false` | If `true`, query functions become methods on a `Querier` class. See [Writing queries](/docs/guide/writing-queries). |
+| `emit_classes` | bool | `false` | If `true`, each query file's functions become methods on a class named after that file (`queries_field_namings.sql` -> `QueriesFieldNamings`). See [Writing queries](/docs/guide/writing-queries). |
 | `inflection_exclude_table_names` | list[string] | `[]` | Table names to leave un-singularized (only used when `emit_exact_table_names` is `false`). |
 | `omit_unused_models` | bool | `false` | If `true`, tables not referenced by any query are not turned into models. |
 | `omit_typechecking_block` | bool | `false` | If `true`, non-builtin types are imported at module level instead of inside a `typing.TYPE_CHECKING` block. |

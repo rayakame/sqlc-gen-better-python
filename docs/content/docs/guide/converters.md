@@ -3,6 +3,8 @@ title: Converters
 weight: 70
 prev: /docs/guide/type-overrides
 next: /docs/guide/working-with-json
+aliases:
+  - /docs/converters/
 ---
 
 A [type override](/docs/guide/type-overrides) replaces a column's Python type,
