@@ -55,7 +55,7 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;emit_classes&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;bool&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;If &lt;code&gt;true&lt;/code&gt;, query functions become methods on a &lt;code&gt;Querier&lt;/code&gt; class. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/writing-queries/"&gt;Writing queries&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;If &lt;code&gt;true&lt;/code&gt;, each query file&amp;rsquo;s functions become methods on a class named after that file (&lt;code&gt;queries_field_namings.sql&lt;/code&gt; -&amp;gt; &lt;code&gt;QueriesFieldNamings&lt;/code&gt;). See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/writing-queries/"&gt;Writing queries&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;inflection_exclude_table_names&lt;/code&gt;&lt;/td&gt;
@@ -393,8 +393,18 @@ converters (registered in the generated code) to round-trip correctly - see
 &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Feature support</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/reference/feature-support/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/reference/feature-support/</guid><description>
 &lt;p&gt;Which sqlc features and query commands the plugin supports.&lt;/p&gt;
 &lt;h2&gt;Macros&lt;span class="hx:absolute hx:-mt-20" id="macros"&gt;&lt;/span&gt;
-&lt;a href="#macros" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every &lt;a href="https://docs.sqlc.dev/en/latest/reference/macros.html"target="_blank" rel="noopener"&gt;sqlc macro&lt;/a&gt; is
-supported (&lt;code&gt;sqlc.arg&lt;/code&gt;, &lt;code&gt;sqlc.narg&lt;/code&gt;, &lt;code&gt;sqlc.embed&lt;/code&gt;, &lt;code&gt;sqlc.slice&lt;/code&gt;).&lt;/p&gt;
+&lt;a href="#macros" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Of the &lt;a href="https://docs.sqlc.dev/en/latest/reference/macros.html"target="_blank" rel="noopener"&gt;sqlc macros&lt;/a&gt;,
+&lt;code&gt;sqlc.arg&lt;/code&gt;, &lt;code&gt;sqlc.narg&lt;/code&gt;, and &lt;code&gt;sqlc.embed&lt;/code&gt; are supported.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;strong&gt;&lt;code&gt;sqlc.slice&lt;/code&gt; is not supported.&lt;/strong&gt; The parameter is typed as a
+&lt;code&gt;collections.abc.Sequence[...]&lt;/code&gt;, but the &lt;code&gt;/*SLICE:name*/&lt;/code&gt; placeholder that sqlc
+emits is never expanded, so the query fails at runtime when the driver is handed
+a list. On PostgreSQL, use &lt;code&gt;= ANY($1::type[])&lt;/code&gt; instead - that is fully
+supported, including with &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/converters/"&gt;converters&lt;/a&gt;.&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;h2&gt;Query commands&lt;span class="hx:absolute hx:-mt-20" id="query-commands"&gt;&lt;/span&gt;
 &lt;a href="#query-commands" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The supported &lt;a href="https://docs.sqlc.dev/en/latest/reference/query-annotations.html"target="_blank" rel="noopener"&gt;query annotations&lt;/a&gt;
 depend on the driver:&lt;/p&gt;

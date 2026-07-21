@@ -419,7 +419,9 @@ data-copied-label="Copied!"
 &lt;/ul&gt;
 &lt;h2&gt;Query commands&lt;span class="hx:absolute hx:-mt-20" id="query-commands"&gt;&lt;/span&gt;
 &lt;a href="#query-commands" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;code&gt;:one&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="one"&gt;&lt;/span&gt;
-&lt;a href="#one" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Returns a single model instance or &lt;code&gt;None&lt;/code&gt;. Shown above.&lt;/p&gt;
+&lt;a href="#one" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Returns the row or &lt;code&gt;None&lt;/code&gt;. The row is a &lt;code&gt;models.*&lt;/code&gt; class when the query&amp;rsquo;s columns
+match a table, a generated &lt;code&gt;&amp;lt;Name&amp;gt;Row&lt;/code&gt; class when they do not, or a bare scalar
+when the query selects a single column. Shown above.&lt;/p&gt;
 &lt;p&gt;When a query&amp;rsquo;s columns do not match one table exactly (a join, a partial select,
 an aggregate), the plugin generates a dedicated &lt;code&gt;&amp;lt;Name&amp;gt;Row&lt;/code&gt; class instead of
 reusing a table model:&lt;/p&gt;
@@ -466,6 +468,14 @@ data-copied-label="Copied!"
 &lt;p&gt;Here the query selects one column, so &lt;code&gt;T&lt;/code&gt; is a scalar (&lt;code&gt;datetime.datetime&lt;/code&gt;). A
 &lt;code&gt;:many&lt;/code&gt; that selects full rows returns &lt;code&gt;QueryResults[models.Foo]&lt;/code&gt; (or a
 &lt;code&gt;&amp;lt;Name&amp;gt;Row&lt;/code&gt;).&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Note that a &lt;code&gt;:many&lt;/code&gt; function is &lt;strong&gt;not&lt;/strong&gt; a coroutine, even on the async drivers -
+it returns the &lt;code&gt;QueryResults&lt;/code&gt; helper synchronously. You await (or iterate) the
+helper, not the call.&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;h3&gt;&lt;code&gt;:exec&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="exec"&gt;&lt;/span&gt;
 &lt;a href="#exec" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Runs the statement and returns &lt;code&gt;None&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -485,9 +495,15 @@ data-copied-label="Copied!"
 &lt;h3&gt;&lt;code&gt;:execresult&lt;/code&gt;, &lt;code&gt;:execrows&lt;/code&gt;, &lt;code&gt;:execlastid&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="execresult-execrows-execlastid"&gt;&lt;/span&gt;
 &lt;a href="#execresult-execrows-execlastid" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Variants of &lt;code&gt;:exec&lt;/code&gt; that return something about the write:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;:execrows&lt;/code&gt;&lt;/strong&gt; - the number of affected rows (&lt;code&gt;int&lt;/code&gt;).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;:execlastid&lt;/code&gt;&lt;/strong&gt; - the id of the last inserted row (&lt;code&gt;int&lt;/code&gt;); SQLite drivers only.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;:execresult&lt;/code&gt;&lt;/strong&gt; - the driver&amp;rsquo;s raw result/status object.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;:execrows&lt;/code&gt;&lt;/strong&gt; - the number of affected rows (&lt;code&gt;int&lt;/code&gt;). For statements that
+affect no rows, such as &lt;code&gt;CREATE TABLE&lt;/code&gt;, asyncpg reports &lt;code&gt;0&lt;/code&gt; and the SQLite
+drivers report &lt;code&gt;-1&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;:execlastid&lt;/code&gt;&lt;/strong&gt; - the cursor&amp;rsquo;s &lt;code&gt;lastrowid&lt;/code&gt;, typed &lt;code&gt;int | None&lt;/code&gt; - it is &lt;code&gt;None&lt;/code&gt;
+when no row was affected. SQLite drivers only, and note it is the last
+&lt;em&gt;affected&lt;/em&gt; row, not strictly the last inserted one.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;:execresult&lt;/code&gt;&lt;/strong&gt; - the driver&amp;rsquo;s raw result, which differs per driver: a &lt;code&gt;str&lt;/code&gt;
+status tag on asyncpg, and a &lt;code&gt;sqlite3.Cursor&lt;/code&gt; / &lt;code&gt;aiosqlite.Cursor&lt;/code&gt; on the
+SQLite drivers.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;See the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/reference/feature-support/"&gt;feature support matrix&lt;/a&gt; for which
 driver supports which.&lt;/p&gt;
@@ -524,9 +540,39 @@ or negative, parameters are never bundled. &lt;code&gt;:copyfrom&lt;/code&gt; al
 class regardless.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2&gt;Grouping into a class&lt;span class="hx:absolute hx:-mt-20" id="grouping-into-a-class"&gt;&lt;/span&gt;
-&lt;a href="#grouping-into-a-class" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;With &lt;code&gt;emit_classes: true&lt;/code&gt;, the standalone functions become methods on a single
-&lt;code&gt;Querier&lt;/code&gt; class instead. The bodies are identical; only the call style changes
-(&lt;code&gt;Querier(conn).get_field_naming(id_=1)&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>Enums</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</guid><description>
+&lt;a href="#grouping-into-a-class" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;With &lt;code&gt;emit_classes: true&lt;/code&gt;, the standalone functions of each query file become
+methods on a class named after that file - &lt;code&gt;queries_field_namings.sql&lt;/code&gt; yields
+&lt;code&gt;QueriesFieldNamings&lt;/code&gt; - so you get one class per query module rather than one
+class overall.&lt;/p&gt;
+&lt;p&gt;The connection is passed once to the constructor and is also exposed as a
+read-only &lt;code&gt;conn&lt;/code&gt; property. The bodies are otherwise unchanged, except that &lt;code&gt;conn&lt;/code&gt;
+becomes &lt;code&gt;self._conn&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;QueriesFieldNamings&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="vm"&gt;__slots__&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;_conn&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;ConnectionLike&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_conn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;conn&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nd"&gt;@property&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;ConnectionLike&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_conn&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;get_field_naming&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;models&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;TestFieldNaming&lt;/span&gt; &lt;span class="o"&gt;|&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;row&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_conn&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fetchrow&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;GET_FIELD_NAMING&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="o"&gt;...&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;so the call becomes &lt;code&gt;QueriesFieldNamings(conn).get_field_naming(id_=1)&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>Enums</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</guid><description>
 &lt;p&gt;PostgreSQL enum types become &lt;code&gt;enum.StrEnum&lt;/code&gt; classes in a generated &lt;code&gt;enums.py&lt;/code&gt;
 module. Columns of that type are annotated with the class, and values read from
 the database are coerced into it.&lt;/p&gt;
