@@ -198,16 +198,20 @@ defaults or widen them to `| None`.
 ## Other libraries
 
 The converter contract is just "return the wire type, accept the wire type", so
-any library works:
+any library works - as long as your model and your converter use the same one.
+The examples below assume `Theme`/`Preferences` are defined with that library
+rather than as `msgspec.Struct`s.
 
 {{< tabs >}}
 
   {{< tab name="stdlib json" >}}
+With `Theme` and `Preferences` defined as `dataclasses.dataclass`:
+
 ```python
 import dataclasses
 import json
 
-from myapp.models import Preferences
+from myapp.models import Preferences, Theme
 
 
 def encode_preferences(value: Preferences) -> str:
@@ -215,12 +219,20 @@ def encode_preferences(value: Preferences) -> str:
 
 
 def decode_preferences(value: str) -> Preferences:
-    return Preferences(**json.loads(value))
+    raw = json.loads(value)
+    return Preferences(
+        theme=Theme(**raw["theme"]),
+        languages=raw.get("languages", []),
+        email_opt_in=raw.get("email_opt_in"),
+    )
 ```
-No dependencies, but no validation and no nested-struct rebuilding.
+No dependencies, but no validation - and nested objects must be rebuilt by hand,
+since `json.loads` leaves `theme` as a plain `dict`.
   {{< /tab >}}
 
   {{< tab name="pydantic" >}}
+With `Theme` and `Preferences` defined as `pydantic.BaseModel`:
+
 ```python
 from myapp.models import Preferences
 
@@ -232,7 +244,8 @@ def encode_preferences(value: Preferences) -> str:
 def decode_preferences(value: str) -> Preferences:
     return Preferences.model_validate_json(value)
 ```
-Full validation, and `model_validate_json` parses straight from the string.
+Full validation, nested models rebuilt for you, and `model_validate_json` parses
+straight from the string.
   {{< /tab >}}
 
 {{< /tabs >}}

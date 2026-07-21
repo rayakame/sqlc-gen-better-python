@@ -15,7 +15,7 @@ SQL type.
 The tables below give the **base** Python type for a SQL type. Two modifiers are
 applied on top, based on the column:
 
-- **Nullable** (the column is not `NOT NULL`): ` | None` is appended, e.g.
+- **Nullable** (the column is not `NOT NULL`): `| None` is appended, e.g.
   `str | None`.
 - **Array / list** (a Postgres array column, or a `sqlc.slice` parameter): the
   base type is wrapped as `collections.abc.Sequence[T]`.

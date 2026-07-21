@@ -77,7 +77,7 @@ and list columns convert element-wise:
   the override (`jsonb` is a `str`, `bytea` a `memoryview` - see
   [type mappings](/docs/reference/type-mappings)), and `from_db` receives that
   same type. For an unrecognised SQL type there is no such type, so `to_db` must
-  return one the driver accepts.
+  return a type the driver accepts.
 - **Your functions never see `None`.** A SQL `NULL` stays `None` without calling
   the converter.
 - **List columns convert element-wise.**

@@ -25,7 +25,11 @@ conn = sqlite3.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES)
 
   {{< tab name="aiosqlite" >}}
 ```python
-async with aiosqlite.connect("app.db", detect_types=aiosqlite.PARSE_DECLTYPES) as conn:
+import sqlite3
+
+import aiosqlite
+
+async with aiosqlite.connect("app.db", detect_types=sqlite3.PARSE_DECLTYPES) as conn:
     ...
 ```
   {{< /tab >}}
@@ -60,8 +64,11 @@ actually uses:
 - A type used in a **returned column** gets its **converter** registered.
 
 {{< callout type="info" >}}
-  `register_converter` is process-global in Python's `sqlite3`. Registering only
-  what a module needs keeps modules from stepping on each other's conversions.
+  `register_converter` is process-global in Python's `sqlite3`, so a registration
+  made by one generated module applies to every connection in the process.
+  Registering only what a module needs avoids installing conversions it never
+  uses - it does not isolate modules from one another, and two modules
+  registering the same declared type will share that conversion.
 {{< /callout >}}
 
 ## Interaction with overrides

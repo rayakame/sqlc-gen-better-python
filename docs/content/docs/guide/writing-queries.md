@@ -122,9 +122,11 @@ this:
 
 - **`omit_kwargs_limit`** - queries with this many parameters or fewer allow
   positional arguments. Defaults to `0` (always keyword-only).
-- **`query_parameter_limit`** - when a query has more parameters than the limit,
-  they are bundled into a single generated `<Name>Params` object instead of
-  expanded into the signature. `:copyfrom` always uses a params class.
+- **`query_parameter_limit`** - when set to a non-negative value, queries with
+  more parameters than the limit bundle them into a single generated
+  `<Name>Params` object instead of expanding them into the signature. Left unset
+  or negative, parameters are never bundled. `:copyfrom` always uses a params
+  class regardless.
 
 ## Grouping into a class
 
