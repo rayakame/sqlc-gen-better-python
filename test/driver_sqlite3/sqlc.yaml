@@ -106,6 +106,7 @@ sql:
       - queries_override_converter.sql
       - queries_case.sql
       - queries_unknown_override.sql
+      - queries_any_param.sql
       - queries_slice.sql
     engine: sqlite
     codegen:
@@ -131,6 +132,11 @@ sql:
             - db_type: JULIANDAY
               py_type:
                 type: str
+            - db_type: TAGTYPE
+              py_type:
+                import: pathlib
+                package: PurePosixPath
+                type: PurePosixPath
   - schema: schema.sql
     queries:
       - queries.sql
