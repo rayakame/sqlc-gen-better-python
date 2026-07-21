@@ -634,6 +634,29 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 				"",
 			}, "\n"),
 		},
+		{
+			// A plain placeholder between the reuse sites: arguments follow
+			// the SQL text order, not the parameter order.
+			name:      "exec sync reused slice keeps text order around plain params",
+			sqlDriver: config.SQLDriverSQLite,
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
+				ConstantName: "DELETE_BETWEEN",
+				FuncName:     "delete_between",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def delete_between(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int], name: str) -> None:",
+				`    sql = DELETE_BETWEEN.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL")`,
+				"    conn.execute(sql, (*ids, name, *ids))",
+				"",
+			}, "\n"),
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

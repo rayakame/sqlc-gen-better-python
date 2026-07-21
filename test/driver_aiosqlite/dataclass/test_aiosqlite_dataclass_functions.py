@@ -1081,6 +1081,21 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows_by_name_or_note_filtered(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # A plain parameter sits between the two uses of the slice, so this
+        # proves the flattened arguments follow SQL text order.
+        rows = await queries_slice.get_slice_rows_by_name_or_note_filtered(conn=aiosqlite_conn, names=["b", "x"], id_=SLICE_ID_BASE + 1)
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert await queries_slice.get_slice_rows_by_name_or_note_filtered(conn=aiosqlite_conn, names=[], id_=SLICE_ID_BASE) == []
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
         name="AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
         depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
     )
@@ -1096,6 +1111,7 @@ class TestDataclassFunctions:
             "AiosqliteTestDataclassFunctions::get_slice_row_filtered",
             "AiosqliteTestDataclassFunctions::get_slice_rows_by_notes",
             "AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note",
+            "AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
             "AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
         ],
     )

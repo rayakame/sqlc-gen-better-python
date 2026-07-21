@@ -61,19 +61,20 @@ func expandParamsFlattenSlices(query model.Query) []string {
 }
 
 func expandParamsImpl(query model.Query, flattenSlices bool) []string {
-	parts := make([]string, 0, len(query.Params))
+	type part struct {
+		expr string
+		// slice is the raw marker name for slice params, "" otherwise.
+		slice string
+	}
+	parts := make([]part, 0, len(query.Params))
 	appendPart := func(expr string, typ model.PyType) {
 		converted := convertParamExpr(expr, typ)
+		slice := ""
 		if flattenSlices && typ.SqlcSliceName != "" {
-			// One starred copy per marker occurrence, so the argument count
-			// matches the expanded placeholders when a slice is reused.
-			for range sliceMarkerCount(query, typ.SqlcSliceName) {
-				parts = append(parts, "*"+converted)
-			}
-
-			return
+			converted = "*" + converted
+			slice = typ.SqlcSliceName
 		}
-		parts = append(parts, converted)
+		parts = append(parts, part{expr: converted, slice: slice})
 	}
 	for _, param := range query.Params {
 		if param.IsEmpty() {
@@ -89,7 +90,146 @@ func expandParamsImpl(query model.Query, flattenSlices bool) []string {
 		appendPart(param.Name, param.Type)
 	}
 
-	return parts
+	reused := false
+	for _, p := range parts {
+		if p.slice != "" && sliceMarkerCount(query, p.slice) > 1 {
+			reused = true
+
+			break
+		}
+	}
+	if !reused {
+		out := make([]string, 0, len(parts))
+		for _, p := range parts {
+			out = append(out, p.expr)
+		}
+
+		return out
+	}
+
+	// A reused slice binds once per marker occurrence, and other placeholders
+	// may sit between the use sites, so arguments must follow the SQL text
+	// order rather than the parameter order.
+	plain := make([]string, 0, len(parts))
+	starred := make(map[string]string, len(parts))
+	for _, p := range parts {
+		if p.slice == "" {
+			plain = append(plain, p.expr)
+		} else {
+			starred[p.slice] = p.expr
+		}
+	}
+	if ordered, ok := orderByPlaceholders(query.SQL, plain, starred); ok {
+		return ordered
+	}
+
+	// Unmatchable SQL (hand-built IR in tests): consecutive copies keep the
+	// argument count right even if the interleaving cannot be derived.
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p.slice != "" {
+			for range sliceMarkerCount(query, p.slice) {
+				out = append(out, p.expr)
+			}
+
+			continue
+		}
+		out = append(out, p.expr)
+	}
+
+	return out
+}
+
+// orderByPlaceholders lines the flattened arguments up with the SQL text's
+// placeholder sequence: plain expressions fill "?" slots in order, and every
+// marker occurrence gets its slice's starred copy. Reports false when the SQL
+// does not account for exactly the given arguments.
+func orderByPlaceholders(sql string, plain []string, starred map[string]string) ([]string, bool) {
+	seq := placeholderSequence(sql)
+	out := make([]string, 0, len(seq))
+	next := 0
+	for _, name := range seq {
+		if name == "" {
+			if next >= len(plain) {
+				return nil, false
+			}
+			out = append(out, plain[next])
+			next++
+
+			continue
+		}
+		expr, ok := starred[name]
+		if !ok {
+			return nil, false
+		}
+		out = append(out, expr)
+	}
+	if next != len(plain) {
+		return nil, false
+	}
+
+	return out, true
+}
+
+// placeholderSequence scans the SQL for bindable placeholders in text order:
+// the raw slice name for a /*SLICE:name*/? marker, "" for a plain (possibly
+// numbered) "?". String literals, quoted identifiers, and comments are
+// skipped, so a "?" inside them never counts as a placeholder.
+func placeholderSequence(sql string) []string {
+	var seq []string
+	for i := 0; i < len(sql); {
+		rest := sql[i:]
+		switch {
+		case strings.HasPrefix(rest, "/*SLICE:"):
+			end := strings.Index(rest, "*/?")
+			if end == -1 {
+				return seq
+			}
+			seq = append(seq, rest[len("/*SLICE:"):end])
+			i += end + len("*/?")
+		case strings.HasPrefix(rest, "/*"):
+			end := strings.Index(rest[len("/*"):], "*/")
+			if end == -1 {
+				return seq
+			}
+			i += len("/*") + end + len("*/")
+		case strings.HasPrefix(rest, "--"):
+			end := strings.IndexByte(rest, '\n')
+			if end == -1 {
+				return seq
+			}
+			i += end + 1
+		case rest[0] == '\'' || rest[0] == '"':
+			quote := rest[0]
+			j := i + 1
+			for j < len(sql) {
+				if sql[j] != quote {
+					j++
+
+					continue
+				}
+				if j+1 < len(sql) && sql[j+1] == quote {
+					// A doubled quote is an escape, not the end.
+					j += 2
+
+					continue
+				}
+
+				break
+			}
+			i = j + 1
+		case rest[0] == '?':
+			seq = append(seq, "")
+			i++
+			for i < len(sql) && sql[i] >= '0' && sql[i] <= '9' {
+				i++
+			}
+		default:
+			i++
+		}
+	}
+
+	return seq
 }
 
 type sliceParam struct {

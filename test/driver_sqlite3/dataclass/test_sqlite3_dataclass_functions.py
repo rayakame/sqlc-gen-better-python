@@ -1121,6 +1121,17 @@ class TestSqlite3DataclassFunctions:
         ]
         assert queries_slice.get_slice_rows_by_name_or_note(conn=sqlite3_conn, names=[])() == []
 
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note_filtered", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_rows_by_name_or_note_filtered(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # A plain parameter sits between the two uses of the slice, so this
+        # proves the flattened arguments follow SQL text order.
+        rows = queries_slice.get_slice_rows_by_name_or_note_filtered(conn=sqlite3_conn, names=["b", "x"], id_=SLICE_ID_BASE + 1)()
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert queries_slice.get_slice_rows_by_name_or_note_filtered(conn=sqlite3_conn, names=[], id_=SLICE_ID_BASE)() == []
+
     @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
     def test_get_first_slice_name_two_slices(self, sqlite3_conn: sqlite3.Connection) -> None:
         name = queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[SLICE_ID_BASE + 1], names=["a"])
@@ -1135,6 +1146,7 @@ class TestSqlite3DataclassFunctions:
             "Sqlite3TestDataclassFunctions::get_slice_row_filtered_not_found",
             "Sqlite3TestDataclassFunctions::get_slice_rows_by_notes",
             "Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
             "Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices",
         ]
     )

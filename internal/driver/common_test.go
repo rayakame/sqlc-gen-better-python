@@ -235,6 +235,50 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			want: []string{"*ids", "*ids"},
 		},
 		{
+			// The parameter array puts the merged slice first, but the SQL
+			// binds name between the two use sites: text order must win.
+			name: "reused slice interleaves plain params in SQL text order",
+			query: model.Query{
+				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+				},
+			},
+			want: []string{"*ids", "name", "*ids"},
+		},
+		{
+			name: "reused slice with unaccounted plain placeholder falls back to consecutive copies",
+			query: model.Query{
+				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+				},
+			},
+			want: []string{"*ids", "*ids"},
+		},
+		{
+			name: "reused slice with unknown marker falls back to consecutive copies",
+			query: model.Query{
+				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) OR a IN (/*SLICE:ids*/?) OR b IN (/*SLICE:other*/?)",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+				},
+			},
+			want: []string{"*ids", "*ids"},
+		},
+		{
+			name: "reused slice with leftover plain param falls back to consecutive copies",
+			query: model.Query{
+				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) OR ref_id IN (/*SLICE:ids*/?)",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+					{Name: "ghost", Type: model.PyType{Type: "str", SQLType: "text"}},
+				},
+			},
+			want: []string{"*ids", "*ids", "ghost"},
+		},
+		{
 			name: "bundled table field slice unpacks the attribute",
 			query: model.Query{
 				Params: []model.QueryValue{
@@ -264,6 +308,59 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			t.Parallel()
 			if got := expandParamsFlattenSlices(tc.query); !slices.Equal(got, tc.want) {
 				t.Errorf("expandParamsFlattenSlices() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPlaceholderSequence(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		sql  string
+		want []string
+	}{
+		{
+			name: "markers and plain placeholders in text order",
+			sql:  "WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
+			want: []string{"ids", "", "ids"},
+		},
+		{
+			name: "question marks inside string literals do not count",
+			sql:  "WHERE note LIKE 'what?%' AND s = 'it''s?' AND id IN (/*SLICE:ids*/?)",
+			want: []string{"ids"},
+		},
+		{
+			name: "quoted identifiers and comments are skipped",
+			sql:  "SELECT \"weird?col\" FROM t /* really? */ WHERE a = ? -- trailing?\nAND b = ?2",
+			want: []string{"", ""},
+		},
+		{
+			name: "unterminated marker stops the scan",
+			sql:  "WHERE a = ? AND id IN (/*SLICE:ids",
+			want: []string{""},
+		},
+		{
+			name: "unterminated comment stops the scan",
+			sql:  "WHERE a = ? /* dangling",
+			want: []string{""},
+		},
+		{
+			name: "unterminated line comment stops the scan",
+			sql:  "WHERE a = ? -- dangling",
+			want: []string{""},
+		},
+		{
+			name: "unterminated string swallows the rest",
+			sql:  "WHERE a = ? AND s = 'open?",
+			want: []string{""},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := placeholderSequence(tc.sql); !slices.Equal(got, tc.want) {
+				t.Errorf("placeholderSequence() = %q, want %q", got, tc.want)
 			}
 		})
 	}

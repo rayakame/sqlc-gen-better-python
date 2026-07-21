@@ -14,6 +14,7 @@ __all__: collections.abc.Sequence[str] = (
     "get_slice_row_filtered",
     "get_slice_rows",
     "get_slice_rows_by_name_or_note",
+    "get_slice_rows_by_name_or_note_filtered",
     "get_slice_rows_by_notes",
     "insert_slice_row",
 )
@@ -52,6 +53,10 @@ SELECT name FROM test_slice WHERE id IN (/*SLICE:ids*/?) OR name IN (/*SLICE:nam
 
 GET_SLICE_ROWS_BY_NAME_OR_NOTE: typing.Final[str] = """-- name: GetSliceRowsByNameOrNote :many
 SELECT id, name, note FROM test_slice WHERE name IN (/*SLICE:names*/?) OR note IN (/*SLICE:names*/?) ORDER BY id
+"""
+
+GET_SLICE_ROWS_BY_NAME_OR_NOTE_FILTERED: typing.Final[str] = """-- name: GetSliceRowsByNameOrNoteFiltered :many
+SELECT id, name, note FROM test_slice WHERE name IN (/*SLICE:names*/?) AND id != ? OR note IN (/*SLICE:names*/?) ORDER BY id
 """
 
 DELETE_SLICE_ROWS: typing.Final[str] = """-- name: DeleteSliceRows :execrows
@@ -266,6 +271,30 @@ def get_slice_rows_by_name_or_note(conn: aiosqlite.Connection, *, names: collect
 
     sql = GET_SLICE_ROWS_BY_NAME_OR_NOTE.replace("/*SLICE:names*/?", ",".join("?" * len(names)) or "NULL")
     return QueryResults(conn, sql, _decode_hook, *names, *names)
+
+
+def get_slice_rows_by_name_or_note_filtered(conn: aiosqlite.Connection, *, names: collections.abc.Sequence[str], id_: int) -> QueryResults[models.TestSlice]:
+    """Fetch many from the db using the SQL query with `name: GetSliceRowsByNameOrNoteFiltered :many`.
+
+    ```sql
+    SELECT id, name, note FROM test_slice WHERE name IN (/*SLICE:names*/?) AND id != ? OR note IN (/*SLICE:names*/?) ORDER BY id
+    ```
+
+    Args:
+        conn:
+            Connection object of type `aiosqlite.Connection` used to execute the query.
+        names: collections.abc.Sequence[str].
+        id_: int.
+
+    Returns:
+        Helper class of type `QueryResults[models.TestSlice]` that allows both iteration and normal fetching of data from the db.
+    """
+
+    def _decode_hook(row: sqlite3.Row) -> models.TestSlice:
+        return models.TestSlice(id_=row[0], name=row[1], note=row[2])
+
+    sql = GET_SLICE_ROWS_BY_NAME_OR_NOTE_FILTERED.replace("/*SLICE:names*/?", ",".join("?" * len(names)) or "NULL")
+    return QueryResults(conn, sql, _decode_hook, *names, id_, *names)
 
 
 async def delete_slice_rows(conn: aiosqlite.Connection, *, ids: collections.abc.Sequence[int]) -> int:
