@@ -45,15 +45,13 @@ jobs:
         with:
           go-version-file: docs/go.mod
 
-      - name: Configure Pages
-        id: pages
-        uses: actions/configure-pages@v5
-
+      # baseURL comes from hugo.yaml, so the build has no dependency on Pages
+      # being enabled - PR builds validate without any repo setup.
       - name: Build with Hugo
         working-directory: docs
         env:
           HUGO_ENVIRONMENT: production
-        run: hugo --minify --gc --baseURL "${{ steps.pages.outputs.base_url }}/"
+        run: hugo --minify --gc
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -69,6 +67,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # enablement turns Pages on automatically the first time, so no manual
+      # "Settings -> Pages -> GitHub Actions" step is needed.
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
