@@ -69,6 +69,7 @@ github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZ
 github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/miniscruff/changie v1.25.0 h1:obSAtYsKqB+Bj/3omPbGxe7m4xwy/d9e4RwSAB2gnXQ=
 github.com/miniscruff/changie v1.25.0/go.mod h1:UD34LQSRN31xBr8fIASIKDBbP89P7WYQo8ueR+MEp5w=
+github.com/miniscruff/changie v1.25.1/go.mod h1:gYaDm1Uu6gQeZ+exIw3jxea6o1EatSKfmzjW4SPzFO8=
 github.com/mitchellh/copystructure v1.2.0 h1:vpKXTN4ewci03Vljg/q9QvCGUDttBOGBIa15WveJJGw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
