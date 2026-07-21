@@ -42,7 +42,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -51,7 +51,7 @@ jobs:
         uses: ./.github/actions/install-hugo
 
       - name: Set up Go
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: docs/go.mod
 
@@ -66,7 +66,7 @@ jobs:
       # never deletes previews of still-open PRs; force: false rebases
       # instead of force-pushing, tolerating concurrent preview pushes.
       - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
         with:
           branch: gh-pages
           folder: docs/public
@@ -88,7 +88,7 @@ jobs:
     steps:
       # Always checked out so the deploy action can operate, even on close.
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -99,7 +99,7 @@ jobs:
 
       - name: Set up Go
         if: github.event.action != 'closed'
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: docs/go.mod
 
@@ -114,7 +114,7 @@ jobs:
         run: hugo --minify --gc --baseURL "https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-${PR_NUMBER}/"
 
       - name: Deploy preview
-        uses: rossjrw/pr-preview-action@v1
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1
         with:
           source-dir: docs/public
           preview-branch: gh-pages
