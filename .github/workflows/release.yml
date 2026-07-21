@@ -47,20 +47,32 @@ jobs:
 
       - name: Update README with new version and checksum
         run: |
-          sed -i -E "s|(url: ).*|url: ${{ steps.tag.outputs.download_url }}|" README.md
-          sed -i -E "s|(sha256: ).*|sha256: ${{ steps.hash.outputs.sha256 }}|" README.md
+          # Every file that pins the release url and sha256 in an example
+          # config: the README plus the docs site pages (getting-started
+          # carries one config per driver tab; all pins are identical).
+          for file in \
+            README.md \
+            docs/content/docs/getting-started.md \
+            docs/content/docs/guide/configuration.md \
+            docs/content/_index.md
+          do
+            sed -i -E "s|(url: ).*|\1${{ steps.tag.outputs.download_url }}|" "$file"
+            sed -i -E "s|(sha256: ).*|\1${{ steps.hash.outputs.sha256 }}|" "$file"
+          done
 
-      - name: Create PR to update README
+      - name: Create PR to update README and docs
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          commit-message: "chore: update README example with v${{ steps.latest.outputs.output }}"
+          commit-message: "chore: update pinned plugin version to ${{ steps.latest.outputs.output }}"
           branch: "release/update-readme-${{ steps.latest.outputs.output }}"
-          title: "Update README for release ${{ steps.latest.outputs.output }}"
+          title: "Update README and docs for release ${{ steps.latest.outputs.output }}"
           labels: skip-fragment-check
           add-paths: |
               README.md
+              docs/content
           body: |
-            This PR updates the README example config with:
+            This PR updates the example configs in the README and on the docs
+            site with:
             - WASM plugin version: `${{ steps.latest.outputs.output }}`
             - SHA256 checksum: `${{ steps.hash.outputs.sha256 }}`
 
