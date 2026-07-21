@@ -7,6 +7,7 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs.yml"
+      - ".github/actions/install-hugo/action.yml"
   pull_request:
     types:
       - opened
@@ -16,6 +17,7 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs.yml"
+      - ".github/actions/install-hugo/action.yml"
   workflow_dispatch:
 
 # Publishing jobs raise this to write on themselves; keep the default read-only.
@@ -31,28 +33,21 @@ concurrency:
 jobs:
   # Production: build the site and publish it to the gh-pages branch root.
   deploy:
+    name: "Deploy docs"
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    # contents: write lets the deploy action push the built site to gh-pages.
     permissions:
       contents: write
-    env:
-      HUGO_VERSION: 0.164.0
     steps:
-      - name: Install Hugo (extended)
-        run: |
-          deb="hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
-          base="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}"
-          wget -O /tmp/hugo.deb "${base}/${deb}"
-          wget -O /tmp/hugo_checksums.txt "${base}/hugo_${HUGO_VERSION}_checksums.txt"
-          sha="$(awk -v f="$deb" '$2 == f {print $1}' /tmp/hugo_checksums.txt)"
-          echo "${sha}  /tmp/hugo.deb" | sha256sum -c -
-          sudo dpkg -i /tmp/hugo.deb
-
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Install Hugo (extended)
+        uses: ./.github/actions/install-hugo
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -80,31 +75,26 @@ jobs:
   # PR previews: build with a per-PR baseURL and publish under
   # gh-pages/pr-preview/pr-N; the action removes it when the PR closes.
   preview:
-    if: github.event_name == 'pull_request'
+    name: "Deploy PR preview"
+    # Skip forks: their token is read-only, so a preview push would only fail.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    # contents: write publishes the preview to gh-pages; pull-requests: write
+    # lets the action comment the preview URL on the pull request.
     permissions:
       contents: write
       pull-requests: write
-    env:
-      HUGO_VERSION: 0.164.0
     steps:
-      - name: Install Hugo (extended)
-        if: github.event.action != 'closed'
-        run: |
-          deb="hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
-          base="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}"
-          wget -O /tmp/hugo.deb "${base}/${deb}"
-          wget -O /tmp/hugo_checksums.txt "${base}/hugo_${HUGO_VERSION}_checksums.txt"
-          sha="$(awk -v f="$deb" '$2 == f {print $1}' /tmp/hugo_checksums.txt)"
-          echo "${sha}  /tmp/hugo.deb" | sha256sum -c -
-          sudo dpkg -i /tmp/hugo.deb
-
       # Always checked out so the deploy action can operate, even on close.
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Install Hugo (extended)
+        if: github.event.action != 'closed'
+        uses: ./.github/actions/install-hugo
 
       - name: Set up Go
         if: github.event.action != 'closed'
@@ -119,7 +109,8 @@ jobs:
         working-directory: docs
         env:
           HUGO_ENVIRONMENT: production
-        run: hugo --minify --gc --baseURL "https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-${{ github.event.number }}/"
+          PR_NUMBER: ${{ github.event.number }}
+        run: hugo --minify --gc --baseURL "https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-${PR_NUMBER}/"
 
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
