@@ -7,81 +7,114 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs.yml"
+      - ".github/actions/install-hugo/action.yml"
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
     paths:
       - "docs/**"
       - ".github/workflows/docs.yml"
+      - ".github/actions/install-hugo/action.yml"
   workflow_dispatch:
 
-# Build needs only read; the Pages write tokens are scoped to the deploy job.
+# Publishing jobs raise this to write on themselves; keep the default read-only.
 permissions:
   contents: read
 
-# Never cancel an in-progress deployment; let it finish.
+# Serialize per PR (and separately for main) so pushes to the gh-pages branch
+# do not race; never cancel an in-progress deploy.
 concurrency:
-  group: docs-pages
+  group: docs-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
+  # Production: build the site and publish it to the gh-pages branch root.
+  deploy:
+    name: "Deploy docs"
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    env:
-      HUGO_VERSION: 0.164.0
+    # contents: write lets the deploy action push the built site to gh-pages.
+    permissions:
+      contents: write
     steps:
-      - name: Install Hugo (extended)
-        run: |
-          deb="hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
-          base="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}"
-          wget -O /tmp/hugo.deb "${base}/${deb}"
-          wget -O /tmp/hugo_checksums.txt "${base}/hugo_${HUGO_VERSION}_checksums.txt"
-          sha="$(awk -v f="$deb" '$2 == f {print $1}' /tmp/hugo_checksums.txt)"
-          echo "${sha}  /tmp/hugo.deb" | sha256sum -c -
-          sudo dpkg -i /tmp/hugo.deb
-
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Install Hugo (extended)
+        uses: ./.github/actions/install-hugo
+
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
           go-version-file: docs/go.mod
 
-      # baseURL comes from hugo.yaml, so the build has no dependency on Pages
-      # being enabled - PR builds validate without any repo setup.
+      # baseURL comes from hugo.yaml (the production root).
       - name: Build with Hugo
         working-directory: docs
         env:
           HUGO_ENVIRONMENT: production
         run: hugo --minify --gc
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      # clean-exclude keeps the pr-preview umbrella so a production deploy
+      # never deletes previews of still-open PRs; force: false rebases
+      # instead of force-pushing, tolerating concurrent preview pushes.
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: docs/public
+          branch: gh-pages
+          folder: docs/public
+          clean-exclude: pr-preview/
+          force: false
 
-  deploy:
-    needs: build
-    # Deploy only on a real push/dispatch to main, never on pull requests.
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+  # PR previews: build with a per-PR baseURL and publish under
+  # gh-pages/pr-preview/pr-N; the action removes it when the PR closes.
+  preview:
+    name: "Deploy PR preview"
+    # Skip forks: their token is read-only, so a preview push would only fail.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    # contents: write publishes the preview to gh-pages; pull-requests: write
+    # lets the action comment the preview URL on the pull request.
     permissions:
-      contents: read
-      pages: write # deploy-pages publishes the built site to GitHub Pages
-      id-token: write # deploy-pages uses OIDC to verify the deployment origin
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      contents: write
+      pull-requests: write
     steps:
-      # enablement turns Pages on automatically the first time, so no manual
-      # "Settings -> Pages -> GitHub Actions" step is needed.
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+      # Always checked out so the deploy action can operate, even on close.
+      - name: Checkout repository
+        uses: actions/checkout@v7
         with:
-          enablement: true
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Install Hugo (extended)
+        if: github.event.action != 'closed'
+        uses: ./.github/actions/install-hugo
+
+      - name: Set up Go
+        if: github.event.action != 'closed'
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: docs/go.mod
+
+      # The preview lives at <site>/pr-preview/pr-N/, so the absolute baseURL
+      # Hugo bakes into asset and link URLs must point at that subdirectory.
+      - name: Build with Hugo
+        if: github.event.action != 'closed'
+        working-directory: docs
+        env:
+          HUGO_ENVIRONMENT: production
+          PR_NUMBER: ${{ github.event.number }}
+        run: hugo --minify --gc --baseURL "https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-${PR_NUMBER}/"
+
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: docs/public
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
