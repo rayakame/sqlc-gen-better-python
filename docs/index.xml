@@ -1154,12 +1154,12 @@ supported (&lt;code&gt;sqlc.arg&lt;/code&gt;, &lt;code&gt;sqlc.narg&lt;/code&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Known issue in &lt;code&gt;v0.5.1&lt;/code&gt;: a query using &lt;code&gt;sqlc.slice&lt;/code&gt; is generated with sqlc&amp;rsquo;s
-&lt;code&gt;/*SLICE:name*/&lt;/code&gt; placeholder left in place, so it fails at runtime. A fix is
-landing before the next release - see
-&lt;a href="https://github.com/rayakame/sqlc-gen-better-python/issues/210"target="_blank" rel="noopener"&gt;issue #210&lt;/a&gt;.
-On PostgreSQL, &lt;code&gt;= ANY($1::type[])&lt;/code&gt; is the idiomatic form anyway and is
-unaffected.&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;code&gt;sqlc.slice&lt;/code&gt; is for the SQLite drivers, where a list cannot be passed to the
+&lt;code&gt;IN&lt;/code&gt; operator: the generated function expands the placeholder at call time,
+one &lt;code&gt;?&lt;/code&gt; per element, and an empty sequence matches no rows. Because the SQL
+is built per call, it cannot be used with prepared statements. On PostgreSQL
+the macro is not needed - use &lt;code&gt;= ANY($1::type[])&lt;/code&gt;, which accepts the sequence
+directly.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;Query commands&lt;span class="hx:absolute hx:-mt-20" id="query-commands"&gt;&lt;/span&gt;
