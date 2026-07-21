@@ -169,4 +169,7 @@ class QueriesFieldNamings:
         ...
 ```
 
-so the call becomes `QueriesFieldNamings(conn).get_field_naming(id_=1)`.
+so the call becomes
+`user = await QueriesFieldNamings(conn).get_field_naming(id_=1)` - without the
+`await` on the synchronous `sqlite3` driver, where the method is a plain
+function.
