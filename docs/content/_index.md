@@ -88,6 +88,69 @@ No ORM, no hand-written row unpacking, and pyright checks every field access.
 <div class="hx:mt-16"></div>
 
 {{< hextra/hero-section >}}
+  One schema, four model types
+{{< /hextra/hero-section >}}
+
+Set `model_type` and the same table generates whichever flavour your project
+already uses - the fields and annotations are identical:
+
+{{< tabs >}}
+
+  {{< tab name="dataclass" >}}
+```python
+@dataclasses.dataclass()
+class User:
+    id_: int
+    name: str
+```
+  {{< /tab >}}
+
+  {{< tab name="attrs" >}}
+```python
+@attrs.define()
+class User:
+    id_: int
+    name: str
+```
+  {{< /tab >}}
+
+  {{< tab name="msgspec" >}}
+```python
+class User(msgspec.Struct):
+    id_: int
+    name: str
+```
+  {{< /tab >}}
+
+  {{< tab name="pydantic" >}}
+```python
+class User(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    name: str
+```
+  {{< /tab >}}
+
+{{< /tabs >}}
+
+<div class="hx:mt-16"></div>
+
+{{< hextra/hero-section >}}
+  Built to be trusted
+{{< /hextra/hero-section >}}
+
+Generated code is held to the same standard as hand-written code:
+
+- **Type-checked.** Every generated file passes pyright in strict mode and ruff.
+- **Tested against real databases.** The suite runs the generated code against
+  live PostgreSQL and SQLite, across every driver and model type.
+- **Deterministic.** Output is byte-identical between runs, and CI fails if a
+  change would silently alter what you get.
+
+<div class="hx:mt-16"></div>
+
+{{< hextra/hero-section >}}
   Set up in three steps
 {{< /hextra/hero-section >}}
 
