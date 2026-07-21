@@ -18,27 +18,6 @@ it.
   {{< card link="reference" title="Reference" icon="clipboard-list" subtitle="Configuration options, type mappings, and per-driver support." >}}
 {{< /cards >}}
 
-## What it looks like
-
-You write a query:
-
-```sql
--- name: GetUser :one
-SELECT * FROM users WHERE id = $1;
-```
-
-and get a typed function, with a model built from your schema:
-
-```python
-async def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
-    row = await conn.fetchrow(GET_USER, id_)
-    if row is None:
-        return None
-    return models.User(id_=row[0], name=row[1])
-```
-
-No ORM, no hand-written row unpacking, and pyright checks every field access.
-
 ## Explore by feature
 
 {{< cards >}}

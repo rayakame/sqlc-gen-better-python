@@ -59,3 +59,66 @@ layout: hextra-home
     subtitle="Optional google, numpy, or pep257 docstrings on every generated function."
   >}}
 {{< /hextra/feature-grid >}}
+
+<div class="hx:mt-16"></div>
+
+{{< hextra/hero-section >}}
+  From SQL to Python
+{{< /hextra/hero-section >}}
+
+You write a query, annotated with the name and shape you want:
+
+```sql
+-- name: GetUser :one
+SELECT * FROM users WHERE id = $1;
+```
+
+and get a typed function back, with a model built from your schema:
+
+```python
+async def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
+    row = await conn.fetchrow(GET_USER, id_)
+    if row is None:
+        return None
+    return models.User(id_=row[0], name=row[1])
+```
+
+No ORM, no hand-written row unpacking, and pyright checks every field access.
+
+<div class="hx:mt-16"></div>
+
+{{< hextra/hero-section >}}
+  Set up in three steps
+{{< /hextra/hero-section >}}
+
+Point `sqlc` at the plugin, pick a driver and a model type, and generate:
+
+```yaml
+# sqlc.yaml
+plugins:
+  - name: python
+    wasm:
+      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.5.1/sqlc-gen-better-python.wasm
+      sha256: c7cc470df7625ae3232c2b042060b948180ae784ce3d81c32e8a2c040fe04fa7
+sql:
+  - engine: "postgresql"
+    queries: "query.sql"
+    schema: "schema.sql"
+    codegen:
+      - out: "app/db"
+        plugin: python
+        options:
+          package: "db"
+          emit_init_file: true
+          sql_driver: "asyncpg"
+```
+
+```bash
+sqlc generate
+```
+
+<div class="hx:mt-6"></div>
+
+{{< hextra/hero-button text="Read the Getting Started guide" link="docs/getting-started" >}}
+
+<div class="hx:mt-12"></div>
