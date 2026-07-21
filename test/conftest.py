@@ -100,7 +100,7 @@ def sqlite3_conn(
     conn.commit()
     yield conn
 
-    conn.executescript("DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_override_conversion;DELETE FROM test_type_override;DELETE FROM test_case_sensitivity;DELETE FROM test_reserved_args;DELETE FROM test_unknown_override;DELETE FROM test_any_param;")
+    conn.executescript("DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_override_conversion;DELETE FROM test_type_override;DELETE FROM test_case_sensitivity;DELETE FROM test_reserved_args;DELETE FROM test_unknown_override;DELETE FROM test_any_param;DELETE FROM test_slice;")
     conn.commit()
     conn.close()
 
@@ -115,7 +115,7 @@ async def aiosqlite_conn(
     await conn.commit()
     yield conn
 
-    await conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_type_override;""")
+    await conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_type_override;DELETE FROM test_slice;""")
     await conn.commit()
     await conn.close()
 
@@ -145,6 +145,7 @@ async def aiosqlite_delete_all(dsn: str) -> None:
         DELETE FROM test_sqlite_types;
         DELETE FROM test_inner_sqlite_types;
         DELETE FROM test_type_override;
+        DELETE FROM test_slice;
         DROP TABLE IF EXISTS test_override_conversion;
         DROP TABLE IF EXISTS test_case_sensitivity;
         DROP TABLE IF EXISTS test_reserved_args;

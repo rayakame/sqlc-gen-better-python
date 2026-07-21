@@ -120,3 +120,11 @@ CREATE TABLE IF NOT EXISTS test_any_param
     id                    integer PRIMARY KEY NOT NULL,
     tag                   TAGTYPE NOT NULL
 );
+
+-- Variable-length IN lists via sqlc.slice: the /*SLICE:name*/ placeholder in
+-- the SQL constant is expanded at call time, one "?" per element.
+CREATE TABLE IF NOT EXISTS test_slice
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    name                  text                NOT NULL
+);

@@ -48,13 +48,14 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 
 	if override := t.matchOverride(pluginColumn, columnType); override != nil {
 		pyType := model.PyType{
-			SQLType:     columnType,
-			Type:        override.PyType.Type,
-			IsNullable:  !pluginColumn.GetNotNull(),
-			IsList:      pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
-			IsEnum:      false,
-			IsOverride:  true,
-			DefaultType: strType,
+			SQLType:       columnType,
+			Type:          override.PyType.Type,
+			IsNullable:    !pluginColumn.GetNotNull(),
+			IsList:        pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
+			IsEnum:        false,
+			IsOverride:    true,
+			DefaultType:   strType,
+			SqlcSliceName: sqlcSliceName(pluginColumn),
 		}
 		if override.Resolved != nil {
 			pyType.ConverterTo = override.Resolved.ToDB
@@ -65,14 +66,25 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 	}
 
 	return model.PyType{
-		SQLType:     columnType,
-		Type:        strType,
-		IsNullable:  !pluginColumn.GetNotNull(),
-		IsList:      pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
-		IsEnum:      isEnum,
-		IsOverride:  false,
-		DefaultType: strType,
+		SQLType:       columnType,
+		Type:          strType,
+		IsNullable:    !pluginColumn.GetNotNull(),
+		IsList:        pluginColumn.GetIsArray() || pluginColumn.GetIsSqlcSlice(),
+		IsEnum:        isEnum,
+		IsOverride:    false,
+		DefaultType:   strType,
+		SqlcSliceName: sqlcSliceName(pluginColumn),
 	}
+}
+
+// sqlcSliceName returns the raw sqlc.slice parameter name; the marker sqlc
+// leaves in the SQL is built from it, not from the escaped Python name.
+func sqlcSliceName(pluginColumn *plugin.Column) string {
+	if pluginColumn.GetIsSqlcSlice() {
+		return pluginColumn.GetName()
+	}
+
+	return ""
 }
 
 // matchOverride returns the first configured override matching the column,

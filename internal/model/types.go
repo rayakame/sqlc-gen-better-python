@@ -23,6 +23,10 @@ type PyType struct {
 	// replace the default constructor-call conversion in both directions.
 	ConverterTo   string
 	ConverterFrom string
+
+	// SqlcSliceName is the raw sqlc.slice parameter name, needed to expand
+	// the /*SLICE:name*/? placeholder at runtime. Empty for other values.
+	SqlcSliceName string
 }
 
 // HasConverter reports whether user functions handle this type's conversion.

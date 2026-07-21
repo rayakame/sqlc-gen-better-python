@@ -193,12 +193,18 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 
 	indent++
 	writeQueryDocstring(body, sb, config, query, indent, docRetType)
+	// :many delays this until after the decode hook, whose trailing blank
+	// line keeps the assignment from touching the nested def (ruff E306).
+	sqlRef := query.ConstantName
+	if query.Cmd != metadata.CmdMany {
+		sqlRef = writeSliceExpansion(body, indent, query)
+	}
 
 	// stmt builds the execute-statement head/tail with the correct await
 	// wrapping for the async driver: accessing an attribute or method of the
 	// cursor requires parenthesizing the awaited execute call.
 	stmt := func(prefix, attribute string) (string, string) {
-		base := fmt.Sprintf("%s.execute(%s", conn, query.ConstantName)
+		base := fmt.Sprintf("%s.execute(%s", conn, sqlRef)
 		switch {
 		case !sb.async:
 			return prefix + base, ")" + attribute
@@ -245,7 +251,8 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 
 	case metadata.CmdMany:
 		decodeHook := sb.rows.WriteDecodeHook(body, indent, query, sqliteResultType)
-		manyArgs := append([]string{conn, query.ConstantName, decodeHook}, expandParams(query)...)
+		sqlRef = writeSliceExpansion(body, indent, query)
+		manyArgs := append([]string{conn, sqlRef, decodeHook}, expandParamsFlattenSlices(query)...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call
 		// overhead) for zero benefit - the return annotation carries the type.
@@ -253,11 +260,33 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	}
 }
 
+// writeSliceExpansion writes the runtime replacement of every sqlc.slice
+// placeholder - one "?" per element, or "NULL" for an empty sequence so that
+// "IN (NULL)" matches no rows - and returns the expression holding the final
+// SQL: a local "sql" variable, or the untouched constant without slices.
+func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query) string {
+	params := sliceParams(query)
+	if len(params) == 0 {
+		return query.ConstantName
+	}
+	src := query.ConstantName
+	for _, param := range params {
+		body.WriteWrappedCall(indent, "sql = "+src+".replace(", []string{
+			writer.PyQuote("/*SLICE:" + param.marker + "*/?"),
+			fmt.Sprintf(`",".join("?" * len(%s)) or "NULL"`, param.expr),
+			"1",
+		}, ")")
+		src = "sql"
+	}
+
+	return "sql"
+}
+
 // writeSqliteCall writes stmtHead+argsSegment+stmtTail on one line, hoisting a
 // too-long parameter tuple into a local _args variable first so the statement
 // stays within the line limit.
 func writeSqliteCall(body *writer.CodeWriter, indent int, query model.Query, stmtHead, stmtTail string) {
-	parts := expandParams(query)
+	parts := expandParamsFlattenSlices(query)
 	segment := ""
 	switch {
 	case len(parts) == 1:

@@ -191,6 +191,151 @@ func TestExpandParams(t *testing.T) {
 	}
 }
 
+func TestExpandParamsFlattenSlices(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name  string
+		query model.Query
+		want  []string
+	}{
+		{
+			name: "slice params are star-unpacked between plain params",
+			query: model.Query{
+				Params: []model.QueryValue{
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+					{Name: "note", Type: model.PyType{Type: "str", SQLType: "text", IsNullable: true}},
+				},
+			},
+			want: []string{"name", "*ids", "note"},
+		},
+		{
+			name: "converted slice unpacks the element-wise conversion",
+			query: model.Query{
+				Params: []model.QueryValue{
+					{Name: "days", Type: model.PyType{
+						Type:          "float",
+						IsList:        true,
+						IsOverride:    true,
+						DefaultType:   "datetime.date",
+						SqlcSliceName: "days",
+					}},
+				},
+			},
+			want: []string{"*[datetime.date(v) for v in days]"},
+		},
+		{
+			name: "bundled table field slice unpacks the attribute",
+			query: model.Query{
+				Params: []model.QueryValue{
+					{
+						EmitTable: true,
+						Name:      "params",
+						Type:      model.PyType{Type: "GetRowsParams"},
+						Table: &model.Table{
+							Name: "GetRowsParams",
+							Columns: []model.Column{
+								{Name: "name", DBName: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+								{
+									Name:   "ids",
+									DBName: "id",
+									Type:   model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []string{"params.name", "*params.ids"},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := expandParamsFlattenSlices(tc.query); !slices.Equal(got, tc.want) {
+				t.Errorf("expandParamsFlattenSlices() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSliceParams(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name  string
+		query model.Query
+		want  []sliceParam
+	}{
+		{
+			name: "no slices",
+			query: model.Query{
+				Params: []model.QueryValue{
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "empty value skipped",
+			query: model.Query{
+				Params: []model.QueryValue{{}},
+			},
+			want: nil,
+		},
+		{
+			name: "plain and escaped slice params keep the raw marker name",
+			query: model.Query{
+				Params: []model.QueryValue{
+					{Name: "for_", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "for"}},
+					{Name: "names", Type: model.PyType{Type: "str", SQLType: "text", IsList: true, SqlcSliceName: "names"}},
+				},
+			},
+			want: []sliceParam{{marker: "for", expr: "for_"}, {marker: "names", expr: "names"}},
+		},
+		{
+			name: "bundled table fields contribute their slices",
+			query: model.Query{
+				Params: []model.QueryValue{
+					{
+						EmitTable: true,
+						Name:      "params",
+						Type:      model.PyType{Type: "GetRowsParams"},
+						Table: &model.Table{
+							Name: "GetRowsParams",
+							Columns: []model.Column{
+								{Name: "name", DBName: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+								{
+									Name:   "ids",
+									DBName: "id",
+									Type:   model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []sliceParam{{marker: "ids", expr: "params.ids"}},
+		},
+		{
+			name: "emit table without table falls through to the plain path",
+			query: model.Query{
+				Params: []model.QueryValue{
+					{EmitTable: true, Name: "params", Type: model.PyType{Type: "GetRowsParams"}},
+				},
+			},
+			want: nil,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := sliceParams(tc.query); !slices.Equal(got, tc.want) {
+				t.Errorf("sliceParams() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestWriteQueryDocstring(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

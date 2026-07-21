@@ -50,22 +50,74 @@ func writeFuncSignature(
 // ("params.a, params.b") so drivers receive positional values. :copyfrom params
 // are never passed through here - writeCopyFromBody builds its own records list.
 func expandParams(query model.Query) []string {
+	return expandParamsImpl(query, false)
+}
+
+// expandParamsFlattenSlices additionally star-unpacks sqlc.slice parameters
+// ("*ids"), so after runtime placeholder expansion every "?" binds one element.
+func expandParamsFlattenSlices(query model.Query) []string {
+	return expandParamsImpl(query, true)
+}
+
+func expandParamsImpl(query model.Query, flattenSlices bool) []string {
 	parts := make([]string, 0, len(query.Params))
+	appendPart := func(expr string, typ model.PyType) {
+		converted := convertParamExpr(expr, typ)
+		if flattenSlices && typ.SqlcSliceName != "" {
+			converted = "*" + converted
+		}
+		parts = append(parts, converted)
+	}
 	for _, param := range query.Params {
 		if param.IsEmpty() {
 			continue
 		}
 		if param.EmitTable && param.Table != nil {
 			for _, col := range param.Table.Columns {
-				parts = append(parts, convertParamExpr(fmt.Sprintf("%s.%s", param.Name, col.Name), col.Type))
+				appendPart(fmt.Sprintf("%s.%s", param.Name, col.Name), col.Type)
 			}
 
 			continue
 		}
-		parts = append(parts, convertParamExpr(param.Name, param.Type))
+		appendPart(param.Name, param.Type)
 	}
 
 	return parts
+}
+
+type sliceParam struct {
+	// marker is the raw sqlc.slice name inside the /*SLICE:name*/? placeholder.
+	marker string
+	// expr is the Python expression holding the passed sequence.
+	expr string
+}
+
+// sliceParams collects the sqlc.slice parameters of a query, including fields
+// of a bundled Params class.
+func sliceParams(query model.Query) []sliceParam {
+	var params []sliceParam
+	for _, param := range query.Params {
+		if param.IsEmpty() {
+			continue
+		}
+		if param.EmitTable && param.Table != nil {
+			for _, col := range param.Table.Columns {
+				if col.Type.SqlcSliceName != "" {
+					params = append(
+						params,
+						sliceParam{marker: col.Type.SqlcSliceName, expr: fmt.Sprintf("%s.%s", param.Name, col.Name)},
+					)
+				}
+			}
+
+			continue
+		}
+		if param.Type.SqlcSliceName != "" {
+			params = append(params, sliceParam{marker: param.Type.SqlcSliceName, expr: param.Name})
+		}
+	}
+
+	return params
 }
 
 // writeQueryDocstring writes the docstring for a generated query function.
