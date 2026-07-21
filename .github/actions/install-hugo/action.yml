@@ -3,7 +3,7 @@ description: Download, checksum-verify, and install the Hugo extended .deb packa
 
 inputs:
   hugo-version:
-    description: The Hugo version to install.
+    description: The Hugo version to install. Must have a pinned digest below.
     required: false
     default: "0.164.0"
 
@@ -14,10 +14,15 @@ runs:
       env:
         HUGO_VERSION: ${{ inputs.hugo-version }}
       run: |
+        # Digests are pinned here (established out of band from the official
+        # release) so a tampered release cannot pass verification by also
+        # swapping its checksum file. Bump this map when raising the version.
+        case "${HUGO_VERSION}" in
+          0.164.0) sha256="8325f3653032d0fc536503691f4833dc4eb6c6be02ee62466758f3f37a7f2fcd" ;;
+          *) echo "Unsupported Hugo version: ${HUGO_VERSION} (add its pinned digest to install-hugo)" >&2; exit 1 ;;
+        esac
         deb="hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
-        base="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}"
-        wget -O /tmp/hugo.deb "${base}/${deb}"
-        wget -O /tmp/hugo_checksums.txt "${base}/hugo_${HUGO_VERSION}_checksums.txt"
-        sha="$(awk -v f="$deb" '$2 == f {print $1}' /tmp/hugo_checksums.txt)"
-        echo "${sha}  /tmp/hugo.deb" | sha256sum -c -
+        url="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/${deb}"
+        wget -O /tmp/hugo.deb "${url}"
+        echo "${sha256}  /tmp/hugo.deb" | sha256sum -c -
         sudo dpkg -i /tmp/hugo.deb

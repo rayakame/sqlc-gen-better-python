@@ -24,10 +24,11 @@ on:
 permissions:
   contents: read
 
-# Serialize per PR (and separately for main) so pushes to the gh-pages branch
-# do not race; never cancel an in-progress deploy.
+# One constant group serializes every docs run, so the deploy and preview
+# jobs never push to the gh-pages branch concurrently; never cancel an
+# in-progress deploy.
 concurrency:
-  group: docs-${{ github.event.pull_request.number || github.ref }}
+  group: docs-gh-pages
   cancel-in-progress: false
 
 jobs:
