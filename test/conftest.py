@@ -100,7 +100,7 @@ def sqlite3_conn(
     conn.commit()
     yield conn
 
-    conn.executescript("DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_override_conversion;DELETE FROM test_type_override;DELETE FROM test_case_sensitivity;DELETE FROM test_reserved_args;DELETE FROM test_unknown_override;DELETE FROM test_any_param;")
+    conn.executescript("DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_override_conversion;DELETE FROM test_type_override;DELETE FROM test_case_sensitivity;DELETE FROM test_reserved_args;DELETE FROM test_unknown_override;DELETE FROM test_any_param;DELETE FROM test_slice;")
     conn.commit()
     conn.close()
 
@@ -115,7 +115,7 @@ async def aiosqlite_conn(
     await conn.commit()
     yield conn
 
-    await conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_type_override;""")
+    await conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_type_override;DELETE FROM test_slice;""")
     await conn.commit()
     await conn.close()
 
@@ -137,14 +137,16 @@ async def asyncpg_delete_all(dsn: str) -> None:
 async def aiosqlite_delete_all(dsn: str) -> None:
     conn = await aiosqlite.connect(dsn, detect_types=sqlite3.PARSE_DECLTYPES)
 
-    # DROP IF EXISTS: these tables only exist once the sqlite3 driver schema
-    # ran, and the schema recreates them (IF NOT EXISTS) on the next run.
-    # Without this an aborted run leaves the fixed-id rows behind and the next
-    # run fails with an IntegrityError.
+    # DROP IF EXISTS: most of these tables only exist once the sqlite3 driver
+    # schema ran; test_slice is in both schemas but is dropped so older db
+    # files pick up column changes. The schemas recreate everything
+    # (IF NOT EXISTS) on the next run. Without this an aborted run leaves the
+    # fixed-id rows behind and the next run fails with an IntegrityError.
     await conn.executescript("""
         DELETE FROM test_sqlite_types;
         DELETE FROM test_inner_sqlite_types;
         DELETE FROM test_type_override;
+        DROP TABLE IF EXISTS test_slice;
         DROP TABLE IF EXISTS test_override_conversion;
         DROP TABLE IF EXISTS test_case_sensitivity;
         DROP TABLE IF EXISTS test_reserved_args;

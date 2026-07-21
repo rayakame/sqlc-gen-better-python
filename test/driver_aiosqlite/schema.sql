@@ -83,3 +83,11 @@ CREATE TABLE IF NOT EXISTS test_type_override
     id                    integer PRIMARY KEY NOT NULL,
     text_test             text
 );
+-- Variable-length IN lists via sqlc.slice: the /*SLICE:name*/ placeholder in
+-- the SQL constant is expanded at call time, one "?" per element.
+CREATE TABLE IF NOT EXISTS test_slice
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    name                  text                NOT NULL,
+    note                  text
+);

@@ -544,6 +544,119 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 				"",
 			}, "\n"),
 		},
+		{
+			name:      "many struct sync slice expanded after decode hook",
+			sqlDriver: config.SQLDriverSQLite,
+			query: model.Query{
+				Cmd:          metadata.CmdMany,
+				ConstantName: "GET_ROWS",
+				FuncName:     "get_rows",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+				},
+				Returns: sqliteAuthorReturn(),
+			},
+			want: strings.Join([]string{
+				"def get_rows(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int]) -> QueryResults[models.Author]:",
+				"    def _decode_hook(row: sqlite3.Row) -> models.Author:",
+				"        return models.Author(id=row[0], name=row[1])",
+				"",
+				`    sql = GET_ROWS.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)`,
+				"    return QueryResults(conn, sql, _decode_hook, *ids)",
+				"",
+			}, "\n"),
+		},
+		{
+			name:      "one async slice between plain params",
+			sqlDriver: config.SQLDriverAioSQLite,
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: "GET_ROW",
+				FuncName:     "get_row",
+				Params: []model.QueryValue{
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+					{Name: "note", Type: model.PyType{Type: "str", SQLType: "text", IsNullable: true}},
+				},
+				Returns: sqliteAuthorReturn(),
+			},
+			want: strings.Join([]string{
+				"async def get_row(conn: aiosqlite.Connection, *, name: str, ids: collections.abc.Sequence[int], note: str | None) -> models.Author | None:",
+				`    sql = GET_ROW.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)`,
+				"    row = await (await conn.execute(sql, (name, *ids, note))).fetchone()",
+				"    if row is None:",
+				"        return None",
+				"    return models.Author(id=row[0], name=row[1])",
+				"",
+			}, "\n"),
+		},
+		{
+			name:      "exec sync two slices replaced sequentially",
+			sqlDriver: config.SQLDriverSQLite,
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				ConstantName: "DELETE_ROWS",
+				FuncName:     "delete_rows",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+					{Name: "names", Type: model.PyType{Type: "str", SQLType: "text", IsList: true, SqlcSliceName: "names"}},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def delete_rows(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int], names: collections.abc.Sequence[str]) -> None:",
+				`    sql = DELETE_ROWS.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)`,
+				`    sql = sql.replace("/*SLICE:names*/?", ",".join("?" * len(names)) or "NULL", 1)`,
+				"    conn.execute(sql, (*ids, *names))",
+				"",
+			}, "\n"),
+		},
+		{
+			// sqlc merges same-named sqlc.slice uses into one parameter but
+			// keeps a marker per use site: all of them are replaced and the
+			// arguments are repeated once per occurrence.
+			name:      "exec sync reused slice replaces all markers and repeats args",
+			sqlDriver: config.SQLDriverSQLite,
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) OR ref_id IN (/*SLICE:ids*/?)",
+				ConstantName: "DELETE_LINKED",
+				FuncName:     "delete_linked",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def delete_linked(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int]) -> None:",
+				`    sql = DELETE_LINKED.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL")`,
+				"    conn.execute(sql, (*ids, *ids))",
+				"",
+			}, "\n"),
+		},
+		{
+			// A plain placeholder between the reuse sites: arguments follow
+			// the SQL text order, not the parameter order.
+			name:      "exec sync reused slice keeps text order around plain params",
+			sqlDriver: config.SQLDriverSQLite,
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
+				ConstantName: "DELETE_BETWEEN",
+				FuncName:     "delete_between",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def delete_between(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int], name: str) -> None:",
+				`    sql = DELETE_BETWEEN.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL")`,
+				"    conn.execute(sql, (*ids, name, *ids))",
+				"",
+			}, "\n"),
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

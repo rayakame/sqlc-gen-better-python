@@ -12,6 +12,7 @@ __all__: collections.abc.Sequence[str] = (
     "TestInnerSqliteType",
     "TestOverrideConversion",
     "TestReservedArg",
+    "TestSlice",
     "TestSqliteType",
     "TestTypeOverride",
     "TestUnknownOverride",
@@ -158,6 +159,23 @@ class TestReservedArg:
 
     id_: int
     conn: str
+
+
+@attrs.define()
+class TestSlice:
+    """Model representing TestSlice.
+
+    Attributes
+    ----------
+    id_ : int
+    name : str
+    note : str | None
+
+    """
+
+    id_: int
+    name: str
+    note: str | None
 
 
 @attrs.define()

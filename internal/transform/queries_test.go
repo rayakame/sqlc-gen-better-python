@@ -167,20 +167,27 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 		name        string
 		emitClasses bool
 		column      string
+		sqlcSlice   bool
 		want        string
 	}{
 		{name: "conn collides in functions mode", emitClasses: false, column: "conn", want: "conn_2"},
 		{name: "self is free in functions mode", emitClasses: false, column: "self", want: "self"},
 		{name: "self collides in classes mode", emitClasses: true, column: "self", want: "self_2"},
 		{name: "conn is free in classes mode", emitClasses: true, column: "conn", want: "conn"},
+		// Slice queries write the expanded SQL into a local named "sql"
+		// before binding, so the name is reserved exactly there.
+		{name: "sql collides in a slice query", emitClasses: false, column: "sql", sqlcSlice: true, want: "sql_2"},
+		{name: "sql is free without slices", emitClasses: false, column: "sql", want: "sql"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+			column := queryCol(tc.column, "int4", nil)
+			column.IsSqlcSlice = tc.sqlcSlice
 			query := buildSingleQuery(t, &config.Config{EmitClasses: tc.emitClasses}, &plugin.Query{
 				Name:   "Ping",
 				Cmd:    ":exec",
-				Params: []*plugin.Parameter{{Number: 1, Column: queryCol(tc.column, "int4", nil)}},
+				Params: []*plugin.Parameter{{Number: 1, Column: column}},
 			})
 
 			if query.Params[0].Name != tc.want {

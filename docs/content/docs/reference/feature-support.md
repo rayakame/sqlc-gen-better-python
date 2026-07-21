@@ -12,12 +12,12 @@ Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
 supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 
 {{< callout type="info" >}}
-  Known issue in `v0.5.1`: a query using `sqlc.slice` is generated with sqlc's
-  `/*SLICE:name*/` placeholder left in place, so it fails at runtime. A fix is
-  landing before the next release - see
-  [issue #210](https://github.com/rayakame/sqlc-gen-better-python/issues/210).
-  On PostgreSQL, `= ANY($1::type[])` is the idiomatic form anyway and is
-  unaffected.
+  `sqlc.slice` is for the SQLite drivers, where a list cannot be passed to the
+  `IN` operator: the generated function expands the placeholder at call time,
+  one `?` per element, and an empty sequence matches no rows. Because the SQL
+  is built per call, it cannot be used with prepared statements. On PostgreSQL
+  the macro is not needed - use `= ANY($1::type[])`, which accepts the sequence
+  directly.
 {{< /callout >}}
 
 ## Query commands

@@ -70,7 +70,15 @@ func TestBuildPyType(t *testing.T) {
 			name:    "sqlc slice parameter",
 			options: typeTestBaseOptions,
 			column:  &plugin.Column{Name: "ids", Type: &plugin.Identifier{Name: "int4"}, NotNull: true, IsSqlcSlice: true},
-			want:    model.PyType{SQLType: "int4", Type: types.Int, IsList: true, DefaultType: types.Int},
+			want:    model.PyType{SQLType: "int4", Type: types.Int, IsList: true, DefaultType: types.Int, SqlcSliceName: "ids"},
+		},
+		{
+			// The generated expansion calls len() on the sequence, so a slice
+			// against a nullable column must not become "Sequence[T] | None".
+			name:    "sqlc slice parameter on nullable column stays required",
+			options: typeTestBaseOptions,
+			column:  &plugin.Column{Name: "notes", Type: &plugin.Identifier{Name: "text"}, IsSqlcSlice: true},
+			want:    model.PyType{SQLType: "text", Type: "str", IsList: true, DefaultType: "str", SqlcSliceName: "notes"},
 		},
 		{
 			// DDL casing survives into the identifier; SQLType must come out
@@ -108,6 +116,24 @@ func TestBuildPyType(t *testing.T) {
 			options: typeTestOverrideOptions,
 			column:  &plugin.Column{Name: "uid", Type: &plugin.Identifier{Schema: "pg_catalog", Name: "uuid"}, NotNull: true},
 			want:    model.PyType{SQLType: "pg_catalog.uuid", Type: "str", IsOverride: true, DefaultType: "uuid.UUID"},
+		},
+		{
+			name:    "db_type override on sqlc slice parameter keeps slice name",
+			options: typeTestOverrideOptions,
+			column: &plugin.Column{
+				Name:        "uids",
+				Type:        &plugin.Identifier{Schema: "pg_catalog", Name: "uuid"},
+				NotNull:     true,
+				IsSqlcSlice: true,
+			},
+			want: model.PyType{
+				SQLType:       "pg_catalog.uuid",
+				Type:          "str",
+				IsList:        true,
+				IsOverride:    true,
+				DefaultType:   "uuid.UUID",
+				SqlcSliceName: "uids",
+			},
 		},
 		{
 			name:    "db_type override on enum column disables enum handling",

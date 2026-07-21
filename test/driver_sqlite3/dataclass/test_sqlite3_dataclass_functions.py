@@ -36,6 +36,7 @@ from test.driver_sqlite3.dataclass.functions import queries_any_param
 from test.driver_sqlite3.dataclass.functions import queries_case
 from test.driver_sqlite3.dataclass.functions import queries_override_adapter
 from test.driver_sqlite3.dataclass.functions import queries_override_converter
+from test.driver_sqlite3.dataclass.functions import queries_slice
 from test.driver_sqlite3.dataclass.functions import queries_unknown_override
 
 OVERRIDE_PRICE = 12.5
@@ -45,6 +46,8 @@ CASE_DEC = decimal.Decimal("12.34")
 RESERVED_ARG_ID = 525252
 UNKNOWN_OVERRIDE_ID = 545454
 ANY_PARAM_ID = 565656
+SLICE_ID_BASE = 585858
+SLICE_ROW_COUNT = 4
 
 
 class TestSqlite3DataclassFunctions:
@@ -1056,3 +1059,98 @@ class TestSqlite3DataclassFunctions:
     def test_iterate_any_param_ids(self, sqlite3_conn: sqlite3.Connection) -> None:
         seen = list(queries_any_param.list_any_param_ids(conn=sqlite3_conn, tag=pathlib.PurePosixPath("a/b")))
         assert seen == [ANY_PARAM_ID]
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::insert_slice_rows")
+    def test_insert_slice_rows(self, sqlite3_conn: sqlite3.Connection) -> None:
+        for offset, (name, note) in enumerate((("a", "x"), ("b", "y"), ("c", None), ("b", "y"))):
+            queries_slice.insert_slice_row(conn=sqlite3_conn, id_=SLICE_ID_BASE + offset, name=name, note=note)
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_rows(self, sqlite3_conn: sqlite3.Connection) -> None:
+        result = queries_slice.get_slice_rows(conn=sqlite3_conn, ids=[SLICE_ID_BASE, SLICE_ID_BASE + 2])
+        assert isinstance(result, queries_slice.QueryResults)
+        rows = result()
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 2, name="c", note=None),
+        ]
+        assert list(result) == rows
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows_empty_slice", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_rows_empty_slice(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # An empty sequence expands the placeholder to NULL: IN (NULL)
+        # matches no rows instead of raising.
+        assert queries_slice.get_slice_rows(conn=sqlite3_conn, ids=[])() == []
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_row_filtered", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_row_filtered(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # Plain params surround the slice, so this proves the flattened
+        # argument tuple binds in SQL text order.
+        row = queries_slice.get_slice_row_filtered(
+            conn=sqlite3_conn,
+            name="b",
+            ids=[SLICE_ID_BASE + 1, SLICE_ID_BASE + 3],
+            id_=SLICE_ID_BASE + 1,
+        )
+        assert row == models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y")
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_row_filtered_not_found", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_row_filtered_not_found(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_slice.get_slice_row_filtered(conn=sqlite3_conn, name="a", ids=[SLICE_ID_BASE], id_=SLICE_ID_BASE) is None
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows_by_notes", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_rows_by_notes(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The slice targets a nullable column; the parameter is still a plain
+        # Sequence, and rows whose note is NULL never match.
+        rows = queries_slice.get_slice_rows_by_notes(conn=sqlite3_conn, notes=["y"])()
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE + 1, name="b", note="y"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert queries_slice.get_slice_rows_by_notes(conn=sqlite3_conn, notes=[])() == []
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_rows_by_name_or_note(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # The same slice name is used twice, so every marker occurrence is
+        # expanded and the sequence is bound once per occurrence.
+        rows = queries_slice.get_slice_rows_by_name_or_note(conn=sqlite3_conn, names=["b", "x"])()
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 1, name="b", note="y"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert queries_slice.get_slice_rows_by_name_or_note(conn=sqlite3_conn, names=[])() == []
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note_filtered", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_slice_rows_by_name_or_note_filtered(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # A plain parameter sits between the two uses of the slice, so this
+        # proves the flattened arguments follow SQL text order.
+        rows = queries_slice.get_slice_rows_by_name_or_note_filtered(conn=sqlite3_conn, names=["b", "x"], id_=SLICE_ID_BASE + 1)()
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert queries_slice.get_slice_rows_by_name_or_note_filtered(conn=sqlite3_conn, names=[], id_=SLICE_ID_BASE)() == []
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_first_slice_name_two_slices(self, sqlite3_conn: sqlite3.Connection) -> None:
+        name = queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[SLICE_ID_BASE + 1], names=["a"])
+        assert name == "a"
+        assert queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[], names=[]) is None
+
+    @pytest.mark.dependency(
+        depends=[
+            "Sqlite3TestDataclassFunctions::get_slice_rows",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_empty_slice",
+            "Sqlite3TestDataclassFunctions::get_slice_row_filtered",
+            "Sqlite3TestDataclassFunctions::get_slice_row_filtered_not_found",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_by_notes",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note",
+            "Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
+            "Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices",
+        ]
+    )
+    def test_delete_slice_rows(self, sqlite3_conn: sqlite3.Connection) -> None:
+        assert queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[]) == 0
+        deleted = queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[SLICE_ID_BASE + offset for offset in range(SLICE_ROW_COUNT)])
+        assert deleted == SLICE_ROW_COUNT

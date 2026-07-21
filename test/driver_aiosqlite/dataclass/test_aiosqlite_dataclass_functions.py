@@ -32,6 +32,10 @@ import pytest
 
 from test.driver_aiosqlite.dataclass.functions import models
 from test.driver_aiosqlite.dataclass.functions import queries
+from test.driver_aiosqlite.dataclass.functions import queries_slice
+
+SLICE_ID_BASE = 595959
+SLICE_ROW_COUNT = 4
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -996,3 +1000,122 @@ class TestDataclassFunctions:
     )
     async def test_delete_type_override(self, aiosqlite_conn: aiosqlite.Connection, override_model: models.TestTypeOverride) -> None:
         await queries.delete_type_override(conn=aiosqlite_conn, id_=override_model.id_)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(name="AiosqliteTestDataclassFunctions::insert_slice_rows")
+    async def test_insert_slice_rows(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        for offset, (name, note) in enumerate((("a", "x"), ("b", "y"), ("c", None), ("b", "y"))):
+            await queries_slice.insert_slice_row(conn=aiosqlite_conn, id_=SLICE_ID_BASE + offset, name=name, note=note)
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        rows = await queries_slice.get_slice_rows(conn=aiosqlite_conn, ids=[SLICE_ID_BASE, SLICE_ID_BASE + 2])
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 2, name="c", note=None),
+        ]
+        seen = [row async for row in queries_slice.get_slice_rows(conn=aiosqlite_conn, ids=[SLICE_ID_BASE, SLICE_ID_BASE + 2])]
+        assert seen == rows
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows_empty_slice",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows_empty_slice(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # An empty sequence expands the placeholder to NULL: IN (NULL)
+        # matches no rows instead of raising.
+        assert await queries_slice.get_slice_rows(conn=aiosqlite_conn, ids=[]) == []
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_row_filtered",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_row_filtered(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # Plain params surround the slice, so this proves the flattened
+        # argument tuple binds in SQL text order.
+        row = await queries_slice.get_slice_row_filtered(
+            conn=aiosqlite_conn,
+            name="b",
+            ids=[SLICE_ID_BASE + 1, SLICE_ID_BASE + 3],
+            id_=SLICE_ID_BASE + 1,
+        )
+        assert row == models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y")
+        assert await queries_slice.get_slice_row_filtered(conn=aiosqlite_conn, name="a", ids=[SLICE_ID_BASE], id_=SLICE_ID_BASE) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows_by_notes",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows_by_notes(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # The slice targets a nullable column; the parameter is still a plain
+        # Sequence, and rows whose note is NULL never match.
+        rows = await queries_slice.get_slice_rows_by_notes(conn=aiosqlite_conn, notes=["y"])
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE + 1, name="b", note="y"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert await queries_slice.get_slice_rows_by_notes(conn=aiosqlite_conn, notes=[]) == []
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows_by_name_or_note(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # The same slice name is used twice, so every marker occurrence is
+        # expanded and the sequence is bound once per occurrence.
+        rows = await queries_slice.get_slice_rows_by_name_or_note(conn=aiosqlite_conn, names=["b", "x"])
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 1, name="b", note="y"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert await queries_slice.get_slice_rows_by_name_or_note(conn=aiosqlite_conn, names=[]) == []
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_slice_rows_by_name_or_note_filtered(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        # A plain parameter sits between the two uses of the slice, so this
+        # proves the flattened arguments follow SQL text order.
+        rows = await queries_slice.get_slice_rows_by_name_or_note_filtered(conn=aiosqlite_conn, names=["b", "x"], id_=SLICE_ID_BASE + 1)
+        assert rows == [
+            models.TestSlice(id_=SLICE_ID_BASE, name="a", note="x"),
+            models.TestSlice(id_=SLICE_ID_BASE + 3, name="b", note="y"),
+        ]
+        assert await queries_slice.get_slice_rows_by_name_or_note_filtered(conn=aiosqlite_conn, names=[], id_=SLICE_ID_BASE) == []
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        name="AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
+        depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
+    )
+    async def test_get_first_slice_name_two_slices(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        assert await queries_slice.get_first_slice_name(conn=aiosqlite_conn, ids=[SLICE_ID_BASE + 1], names=["a"]) == "a"
+        assert await queries_slice.get_first_slice_name(conn=aiosqlite_conn, ids=[], names=[]) is None
+
+    @pytest.mark.asyncio(loop_scope="session")
+    @pytest.mark.dependency(
+        depends=[
+            "AiosqliteTestDataclassFunctions::get_slice_rows",
+            "AiosqliteTestDataclassFunctions::get_slice_rows_empty_slice",
+            "AiosqliteTestDataclassFunctions::get_slice_row_filtered",
+            "AiosqliteTestDataclassFunctions::get_slice_rows_by_notes",
+            "AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note",
+            "AiosqliteTestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
+            "AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
+        ],
+    )
+    async def test_delete_slice_rows(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        assert await queries_slice.delete_slice_rows(conn=aiosqlite_conn, ids=[]) == 0
+        deleted = await queries_slice.delete_slice_rows(conn=aiosqlite_conn, ids=[SLICE_ID_BASE + offset for offset in range(SLICE_ROW_COUNT)])
+        assert deleted == SLICE_ROW_COUNT

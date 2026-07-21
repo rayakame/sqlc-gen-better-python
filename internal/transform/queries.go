@@ -70,6 +70,16 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			} else {
 				seen["conn"]++
 			}
+			// Slice queries materialize the expanded SQL into a local named
+			// "sql" before any parameter is read; a parameter with that name
+			// would be silently overwritten by the query text.
+			for _, param := range pluginQuery.Params {
+				if param.GetColumn().GetIsSqlcSlice() {
+					seen["sql"]++
+
+					break
+				}
+			}
 			for _, param := range pluginQuery.Params {
 				query.Params = append(query.Params, model.QueryValue{
 					Name: model.DedupName(model.ParamName(param), seen),

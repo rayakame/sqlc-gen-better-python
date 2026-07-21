@@ -8,6 +8,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "TestInnerSqliteType",
+    "TestSlice",
     "TestSqliteType",
     "TestTypeOverride",
 )
@@ -87,6 +88,21 @@ class TestInnerSqliteType:
     text_test: str | None
     clob_test: str | None
     json_test: str | None
+
+
+@dataclasses.dataclass()
+class TestSlice:
+    """Model representing TestSlice.
+
+    Attributes:
+        id_: int
+        name: str
+        note: str | None
+    """
+
+    id_: int
+    name: str
+    note: str | None
 
 
 @dataclasses.dataclass()
