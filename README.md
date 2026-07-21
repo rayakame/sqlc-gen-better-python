@@ -83,6 +83,16 @@ Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
 supported. Which query commands are available depends on the driver - see the
 [feature support matrix](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/feature-support/).
 
+## Used by
+
+[<img src="docs/static/images/used-by/nmarkov.png" alt="nMarkov logo" height="48">](https://nmarkov.xyz/)
+
+**[nMarkov](https://nmarkov.xyz/)** - a Discord chatbot that learns from your
+server's messages and generates its own.
+
+Using `sqlc-gen-better-python` in your project? [Open an issue](https://github.com/rayakame/sqlc-gen-better-python/issues)
+to get listed here.
+
 ## Development
 
 Contributions are very welcome, for more information and help please read

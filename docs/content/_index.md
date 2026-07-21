@@ -159,6 +159,25 @@ Generated code is held to the same standard as hand-written code:
 <div class="hx:mt-16"></div>
 
 {{< hextra/hero-section >}}
+  Used by
+{{< /hextra/hero-section >}}
+
+Projects running their database layer on generated code:
+
+<div class="hx:mt-6 hx:flex hx:flex-wrap hx:gap-4 hx:items-center">
+  <a href="https://nmarkov.xyz/" target="_blank" rel="noreferrer" class="hx:flex hx:items-center hx:gap-4">
+    <img src="images/used-by/nmarkov.png" alt="nMarkov logo" width="48" height="48" style="border-radius: 8px;" />
+    <span><strong>nMarkov</strong> - a Discord chatbot that learns from your server's messages and generates its own.</span>
+  </a>
+</div>
+
+Using `sqlc-gen-better-python` in your project?
+[Open an issue](https://github.com/rayakame/sqlc-gen-better-python/issues) to get
+listed here.
+
+<div class="hx:mt-16"></div>
+
+{{< hextra/hero-section >}}
   Set up in three steps
 {{< /hextra/hero-section >}}
 
