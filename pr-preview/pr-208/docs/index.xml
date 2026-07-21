@@ -517,10 +517,11 @@ data-copied-label="Copied!"
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Whenever the generated code registers type conversions - which it does for
-&lt;code&gt;date&lt;/code&gt;, &lt;code&gt;datetime&lt;/code&gt;/&lt;code&gt;timestamp&lt;/code&gt;, &lt;code&gt;decimal&lt;/code&gt;, &lt;code&gt;bool&lt;/code&gt;, and &lt;code&gt;blob&lt;/code&gt; columns - both
-SQLite drivers need &lt;code&gt;detect_types=sqlite3.PARSE_DECLTYPES&lt;/code&gt; on the connection,
-because converters only run when declared-type parsing is enabled. See
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;When a query &lt;em&gt;returns&lt;/em&gt; a &lt;code&gt;date&lt;/code&gt;, &lt;code&gt;datetime&lt;/code&gt;/&lt;code&gt;timestamp&lt;/code&gt;, &lt;code&gt;decimal&lt;/code&gt;, &lt;code&gt;bool&lt;/code&gt;, or
+&lt;code&gt;blob&lt;/code&gt; column, the generated code registers a converter for it - and converters
+only run if the connection was opened with
+&lt;code&gt;detect_types=sqlite3.PARSE_DECLTYPES&lt;/code&gt;. Adapters, which send those types as
+parameters, work without it. See
 &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
