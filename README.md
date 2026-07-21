@@ -79,9 +79,8 @@ and the full plugin option list in the
   ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/docstrings/)).
 - Generated code passes **pyright strict** and **ruff**.
 
-The [sqlc macros](https://docs.sqlc.dev/en/latest/reference/macros.html)
-`sqlc.arg`, `sqlc.narg` and `sqlc.embed` are supported (`sqlc.slice` is not).
-Which query commands are available depends on the driver - see the
+Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
+supported. Which query commands are available depends on the driver - see the
 [feature support matrix](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/feature-support/).
 
 ## Development

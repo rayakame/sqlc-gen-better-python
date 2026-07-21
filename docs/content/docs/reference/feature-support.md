@@ -8,15 +8,16 @@ Which sqlc features and query commands the plugin supports.
 
 ## Macros
 
-Of the [sqlc macros](https://docs.sqlc.dev/en/latest/reference/macros.html),
-`sqlc.arg`, `sqlc.narg`, and `sqlc.embed` are supported.
+Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
+supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 
-{{< callout type="warning" >}}
-  **`sqlc.slice` is not supported.** The parameter is typed as a
-  `collections.abc.Sequence[...]`, but the `/*SLICE:name*/` placeholder that sqlc
-  emits is never expanded, so the query fails at runtime when the driver is handed
-  a list. On PostgreSQL, use `= ANY($1::type[])` instead - that is fully
-  supported, including with [converters](/docs/guide/converters).
+{{< callout type="info" >}}
+  Known issue in `v0.5.1`: a query using `sqlc.slice` is generated with sqlc's
+  `/*SLICE:name*/` placeholder left in place, so it fails at runtime. A fix is
+  landing before the next release - see
+  [issue #210](https://github.com/rayakame/sqlc-gen-better-python/issues/210).
+  On PostgreSQL, `= ANY($1::type[])` is the idiomatic form anyway and is
+  unaffected.
 {{< /callout >}}
 
 ## Query commands
