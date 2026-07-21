@@ -244,7 +244,7 @@ SQL type.&lt;/p&gt;
 &lt;a href="#how-a-columns-type-is-built" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The tables below give the &lt;strong&gt;base&lt;/strong&gt; Python type for a SQL type. Two modifiers are
 applied on top, based on the column:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Nullable&lt;/strong&gt; (the column is not &lt;code&gt;NOT NULL&lt;/code&gt;): &lt;code&gt; | None&lt;/code&gt; is appended, e.g.
+&lt;li&gt;&lt;strong&gt;Nullable&lt;/strong&gt; (the column is not &lt;code&gt;NOT NULL&lt;/code&gt;): &lt;code&gt;| None&lt;/code&gt; is appended, e.g.
 &lt;code&gt;str | None&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Array / list&lt;/strong&gt; (a Postgres array column, or a &lt;code&gt;sqlc.slice&lt;/code&gt; parameter): the
 base type is wrapped as &lt;code&gt;collections.abc.Sequence[T]&lt;/code&gt;.&lt;/li&gt;
