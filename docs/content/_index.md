@@ -4,27 +4,28 @@ layout: hextra-home
 ---
 
 {{< hextra/hero-badge >}}
-  <div class="hx-w-2 hx-h-2 hx-rounded-full hx-bg-primary-400"></div>
+  <div class="hx:w-2 hx:h-2 hx:rounded-full hx:bg-primary-400"></div>
   <span>Free, open source, self-hosted</span>
 {{< /hextra/hero-badge >}}
 
-<div class="hx-mt-6 hx-mb-6">
+<div class="hx:mt-6 hx:mb-6">
 {{< hextra/hero-headline >}}
   Type-safe Python from your SQL
 {{< /hextra/hero-headline >}}
 </div>
 
-<div class="hx-mb-12">
+<div class="hx:mb-12">
 {{< hextra/hero-subtitle >}}
-  A sqlc plugin that generates modern, fully typed Python database&nbsp;<br class="sm:hx-block hx-hidden" />code from plain SQL - models plus async query functions.
+  A sqlc plugin that generates modern, fully typed Python database code from plain SQL - models plus async query functions.
 {{< /hextra/hero-subtitle >}}
 </div>
 
-<div class="hx-mb-6">
-{{< hextra/hero-button text="Get Started" link="docs/getting-started" >}}
+<div class="hx:mb-6 hx:flex hx:gap-4 hx:flex-wrap hx:items-center">
+{{< hextra/hero-button text="Documentation" link="docs" >}}
+{{< hextra/hero-button text="Join the Discord" link="https://discord.gg/hikari" style="background: #5865f2;" >}}
 </div>
 
-<div class="hx-mt-6"></div>
+<div class="hx:mt-6"></div>
 
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
