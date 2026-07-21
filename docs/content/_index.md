@@ -63,6 +63,27 @@ layout: hextra-home
 <div class="hx:mt-16"></div>
 
 {{< hextra/hero-section >}}
+  Used by
+{{< /hextra/hero-section >}}
+
+Projects running their database layer on generated code:
+
+<div class="hx:mt-8 hx:flex hx:flex-wrap hx:gap-4 hx:items-center">
+  <a href="https://nmarkov.xyz/" target="_blank" rel="noreferrer" class="hx:flex hx:items-center hx:gap-4 hx:text-lg">
+    <img src="images/used-by/nmarkov.png" alt="nMarkov logo" width="64" height="64" style="border-radius: 10px;" />
+    <span><strong>nMarkov</strong> - a Discord chatbot that learns from your server's messages and generates its own.</span>
+  </a>
+</div>
+
+<div class="hx:mt-6"></div>
+
+Using `sqlc-gen-better-python` in your project?
+[Open an issue](https://github.com/rayakame/sqlc-gen-better-python/issues) to get
+listed here.
+
+<div class="hx:mt-16"></div>
+
+{{< hextra/hero-section >}}
   From SQL to Python
 {{< /hextra/hero-section >}}
 

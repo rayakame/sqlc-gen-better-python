@@ -22,6 +22,16 @@ aliases and generics, and `enum.StrEnum`).
 
 Questions or feedback? Join the [Discord](https://discord.gg/hikari).
 
+## Used by
+
+[<img src="docs/static/images/used-by/nmarkov.png" alt="nMarkov logo" height="72">](https://nmarkov.xyz/)
+
+**[nMarkov](https://nmarkov.xyz/)** - a Discord chatbot that learns from your
+server's messages and generates its own.
+
+Using `sqlc-gen-better-python` in your project? [Open an issue](https://github.com/rayakame/sqlc-gen-better-python/issues)
+to get listed here.
+
 > [!NOTE]  
 > Every Release before `v1.0.0`, including this one is an beta release. 
 > These versions are primarly released for interested people who want to test this plugin and help make it better.
