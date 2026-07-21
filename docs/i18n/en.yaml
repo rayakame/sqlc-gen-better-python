@@ -1,0 +1,4 @@
+# Overrides theme defaults. Hugo merges these over the theme's own i18n strings.
+
+# Footer copyright. Kept in step with the LICENSE holder.
+copyright: "Copyright (c) 2025-present Rayakame"

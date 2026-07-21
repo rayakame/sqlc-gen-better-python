@@ -1,0 +1,11 @@
+/* Hextra bottom-aligns card content (margin-top: auto) so that text sits under
+   a card image. Text-only cards in a stretched grid row then get a gap above
+   the title when a taller sibling sets the row height, so top-align those and
+   keep the original behaviour for cards that do have an image. */
+.hextra-card > div {
+  margin-top: 0;
+}
+
+.hextra-card-image ~ div {
+  margin-top: auto;
+}
