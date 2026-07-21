@@ -66,7 +66,7 @@ jobs:
       # never deletes previews of still-open PRs; force: false rebases
       # instead of force-pushing, tolerating concurrent preview pushes.
       - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           branch: gh-pages
           folder: docs/public
