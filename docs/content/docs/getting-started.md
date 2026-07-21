@@ -1,8 +1,8 @@
 ---
 title: Getting Started
-weight: 2
+weight: 1
 prev: /docs
-next: converters
+next: /docs/guide
 ---
 
 ## Prerequisites
@@ -56,7 +56,7 @@ per query file, and (when your schema has enums) an `enums.py`.
 
 ## Next steps
 
-- Full option reference and driver support: see the
-  [project README](https://github.com/rayakame/sqlc-gen-better-python#configuration-options)
-  while the remaining pages are ported here.
-- Plug in your own serialization with [Converters](converters).
+- Work through the [Guide](/docs/guide) - configuration, drivers, model types,
+  writing queries, and every feature, each with real generated output.
+- Look up specifics in the [Reference](/docs/reference): the full option list,
+  SQL-to-Python type mappings, and per-driver support.

@@ -12,10 +12,15 @@ A WASM plugin for SQLC allowing the generation of Python code.
 The generated code requires **Python 3.12 or newer** (it uses PEP 695 type
 aliases and generics, and `enum.StrEnum`).
 
-**Documentation: https://rayakame.github.io/sqlc-gen-better-python/**
-(The docs site is new; some feature references still live in this README below
-while they are ported over.)
+## Documentation
 
+**https://rayakame.github.io/sqlc-gen-better-python/**
+
+- [Getting Started](https://rayakame.github.io/sqlc-gen-better-python/docs/getting-started/) - install the plugin and generate your first models.
+- [Guide](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/) - configuration, drivers, model types, writing queries, and every feature, each with real generated output.
+- [Reference](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/) - all configuration options, SQL-to-Python type mappings, and per-driver feature support.
+
+Questions or feedback? Join the [Discord](https://discord.gg/hikari).
 
 > [!NOTE]  
 > Every Release before `v1.0.0`, including this one is an beta release. 
@@ -24,7 +29,6 @@ while they are ported over.)
 > Everything that is implemented works and is being used in production environments already.
 > Since `v0.5.0` this includes full support for PostgreSQL enums and a fourth model type, `pydantic`.
 > Feel free to lmk any wanted features and I'm going to do my best on implementing them with the time I have rn.
-
 
 ## Example Config
 
@@ -51,171 +55,33 @@ sql:
 
 ```
 
-More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/reference/config.html)
+More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/reference/config.html),
+and the full plugin option list in the
+[configuration reference](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/configuration-options/).
 
-## Configuration Options
+## Features
 
-| Name                             | Type           | Required | Description                                                                                                                                                                                                               |
-|----------------------------------|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `package`                        | string         | yes      | The name of the package where the generated files will be located                                                                                                                                                         |
-| `emit_init_file`                 | bool           | yes      | If set to to `false` there will be no `__init__.py` file created in the package that you specified. Only set this to false if you know that you already have a `__init__.py` file otherwise the generated code wont work. |
-| `sql_driver`                     | string         | yes      | The name of the sql driver you want to use. Valid options are listed [here](#feature-support)                                                                                                                             |
-| `model_type`                     | string         | no       | The model type you want to use. This can be one of `dataclass`, `msgspec`, `attrs` or [`pydantic`](#pydantic-models). Defaults to `dataclass`                                                                             |
-| `initialisms`                    | list[string]   | no       | An array of [initialisms](https://google.github.io/styleguide/go/decisions.html#initialisms) to upper-case. For example, `app_id` becomes `AppID`. Defaults to `["id"]`.                                                  |
-| `emit_exact_table_names`         | bool           | no       | If `true`, model names will mirror table names. Otherwise sqlc attempts to singularize plural table names.                                                                                                                |
-| `emit_classes`                   | bool           | no       | If `true`, every query function will be put into a class called `Querier`. Otherwise every function will be a standalone function.                                                                                        |
-| `inflection_exclude_table_names` | list[string]   | no       | An array of table names that should not be turned singular. Only applies if `emit_exact_table_names` is `false`.                                                                                                          |
-| `omit_unused_models`             | bool           | no       | If set to `true` and there are models/tables that are not used in any query, they wont be turned into models.                                                                                                             |
-| `omit_typechecking_block`        | bool           | no       | If set to `true`, will not wrap all non-builtin types behind a `typing.TYPE_CHECKING` block. Defaults to `false`                                                                                                          |
-| `docstrings`                     | string         | no       | If set, there will be docstrings generated in the selected format. This can be one of `google`, `numpy`, `pep257` and `none`. `none` will not generate any docstrings.                                                    |
-| `docstrings_emit_sql`            | bool           | no       | If set to `false` the SQL code for each query wont be included in the docstrings. This defaults to `true` but is not used when `docstrings` is not set or set to `none`                                                   |
-| `query_parameter_limit`          | integer        | no       | If set to a non-negative value, queries with more parameters than the limit get them bundled into a single `params: <Query>Params` argument instead of expanded arguments. If unset or negative, parameters are never bundled (`:copyfrom` always uses a Params class). |
-| `omit_kwargs_limit`              | integer        | no       | This can be used to set a limit where any query with less or equal amounts of parameters will not require kwargs for the parameters. This defaults to `0` which makes every query require kwargs for their parameters.    |
-| `speedups`                       | bool           | no       | If set to `true` the plugin will use other librarys for type conversion. Needs extra dependecys to be installed. This option currently only affects `sqlite3` & `aiosqlite` and uses the library `ciso8601`               |
-| `overrides`                      | list[Override] | no       | A list of [type overrides](#type-overrides).                                                                                                                                                                              |
-| `converters`                     | list[Converter]| no       | A list of [converters](#converters): named pairs of your own functions that serialize and deserialize a column value, referenced by an override.                                                                          |
-| `debug`                          | bool           | no       | If set to `true`, there will be debug logs generated into a `log.txt` file when executing `sqlc generate`. Defaults to `false`                                                                                            |
+- **Four model types** - `dataclass`, `attrs`, `msgspec`, or `pydantic`
+  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/model-types/)).
+- **Three drivers** - `asyncpg` for PostgreSQL, `aiosqlite` and `sqlite3` for SQLite
+  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/drivers/)).
+- **Typed query functions** - one module per query file, one function per query
+  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/writing-queries/)).
+- **PostgreSQL enums** as `enum.StrEnum` classes
+  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/enums/)).
+- **Type overrides and converters** - swap a column's Python type, or plug in your
+  own encode/decode functions
+  ([overrides](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/type-overrides/),
+  [converters](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/converters/)).
+- **Typed JSON columns** via msgspec structs
+  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/working-with-json/)).
+- **Optional docstrings** in `google`, `numpy`, or `pep257` convention
+  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/docstrings/)).
+- Generated code passes **pyright strict** and **ruff**.
 
-### Type Overrides
-
-Similar to `sqlc-gen-go` this plugin supports overriding types with your own. You can either override the type of every
-column that has a specific sql type, or you can overwrite the type of specific columns.
-
-```yaml
-# filename: sqlc.yaml
-# ...
-options:
-  # ...
-  overrides:
-    - db_type: text
-      py_type:
-        import: collections
-        package: UserString
-        type: UserString
-    - column: table_name.text_column
-      py_type:
-        import: collections
-        type: collections.UserString
-
-```
-
-### Converters
-
-An override replaces a column's type, but conversion is done by calling that type
-(`Preferences(value)`), which does not work for things like JSON. A converter names
-two of your own functions instead, used whenever the column is read or written:
-
-```yaml
-# filename: sqlc.yaml
-# ...
-options:
-  # ...
-  converters:
-    - name: prefs
-      py_type:
-        import: myapp.models
-        package: Preferences
-        type: Preferences
-      to_db: myapp.converters.encode_preferences
-      from_db: myapp.converters.decode_preferences
-  overrides:
-    - db_type: jsonb
-      converter: prefs
-    - column: users.preferences
-      converter: prefs
-```
-
-```python
-# generated
-preferences=myapp.converters.decode_preferences(row[1])                     # read
-await conn.execute(CREATE_USER, id_, myapp.converters.encode_preferences(preferences))  # write
-```
-
-A converter is referenced by an override, so it applies to whichever columns that
-override matches, and `converter` replaces `py_type` on the override itself.
-
-Both directions are required. `to_db` and `from_db` are dotted paths; their module is
-imported and the function called fully qualified, so the names can never collide with
-generated code.
-
-`to_db` must return the type the column would have had without the override (`jsonb` is
-a `str`, `bytea` a `memoryview`), and `from_db` receives that same type. For a column
-whose SQL type the plugin does not recognise there is no such type, so `to_db` must
-return one the driver accepts.
-
-Your functions never see `None`: nullable columns are guarded, so a NULL stays `None`
-without calling the converter. List columns convert element-wise.
-
-### Enums
-
-PostgreSQL enum types generate an `enums.py` module containing `enum.StrEnum` classes:
-
-```python
-class Mood(enum.StrEnum):
-    SAD = "sad"
-    OK = "ok"
-    HAPPY = "happy"
-```
-
-Enum columns are typed with these classes in models and query functions, and values read
-from the database are coerced into them. Enums in non-default schemas get schema-qualified
-class names (e.g. `CustomMood` for `custom.mood`), so same-named enums never collide.
-
-### Identifier sanitization
-
-SQL identifiers that are not valid Python names are sanitized: invalid characters become
-underscores, digit-leading columns/parameters get a `column_` prefix, table names that
-would produce a digit-leading, keyword or empty class name get a `Model` prefix, digit-
-or underscore-leading enum values get a `VALUE_` prefix, and colliding results are
-deduplicated with numeric suffixes. Field names also prefix leading underscores, since
-attrs and pydantic treat such fields as private.
-
-One caveat: sanitization checks characters with Go's Unicode tables, which differ from
-Python's identifier rules in exotic cases (e.g. characters that may not START an
-identifier in Python, or two names that Python normalizes to the same identifier via
-NFKC). Such schemas are not detected; stick to ASCII identifiers if in doubt.
-
-### Pydantic models
-
-With `model_type: pydantic`, models are generated as `pydantic.BaseModel` subclasses
-(requires `pydantic >= 2.9`). Two things to be aware of:
-
-- Every generated class sets `model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)`.
-  This is required for field types pydantic has no core schema for (e.g. `memoryview` for
-  `bytea`/`blob` columns and custom override types); those fields are still validated with
-  an `isinstance` check, and all other fields get full pydantic validation on construction.
-- Unlike the other model types, pydantic resolves field annotations at runtime, so the
-  generated files import the referenced modules at runtime instead of inside
-  `if typing.TYPE_CHECKING:` blocks. If you lint generated code with ruff, set
-  `lint.flake8-type-checking.runtime-evaluated-base-classes = ["pydantic.BaseModel"]`.
-
-### SQLite type conversion
-
-For the `sqlite3` and `aiosqlite` drivers, the generated code registers adapters and
-converters (for `date`, `datetime`/`timestamp`, `decimal`, `bool` and `blob` columns) via
-`register_adapter`/`register_converter`. For these to work, you must open your connection
-with declared-type parsing enabled:
-
-```python
-conn = sqlite3.connect(dsn, detect_types=sqlite3.PARSE_DECLTYPES)
-```
-
-## Feature Support
-
-Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is supported.
-The supported [query commands](https://docs.sqlc.dev/en/latest/reference/query-annotations.html) depend on the SQL
-driver you are using, supported commands are listed below.
-> Every `:batch*` command is not supported by this plugin and probably will never be.
-
-> Prepared Queries are not planned for the near future, but will be implemented sooner or later
-
-|           | `:exec` | `:execresult` | `:execrows` | `:execlastid` | `:many` | `:one` | `:copyfrom` |
-|-----------|---------|---------------|-------------|---------------|---------|--------|-------------|
-| aiosqlite | yes     | yes           | yes         | yes           | yes     | yes    | no          |
-| sqlite3   | yes     | yes           | yes         | yes           | yes     | yes    | no          |
-| asyncpg   | yes     | yes           | yes         | no            | yes     | yes    | yes         |
-| psycopg2  | no      | no            | no          | no            | no      | no     | no          |
-| mysql     | no      | no            | no          | no            | no      | no     | no          |
+Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
+supported. Which query commands are available depends on the driver - see the
+[feature support matrix](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/feature-support/).
 
 ## Development
 
