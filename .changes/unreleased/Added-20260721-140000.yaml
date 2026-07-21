@@ -1,6 +1,0 @@
-kind: Added
-body: 'Documentation site at https://rayakame.github.io/sqlc-gen-better-python/, with a getting started page, a guide covering configuration, drivers, model types, writing queries, enums, type overrides, converters, working with JSON, docstrings, SQLite type conversion and naming, and a reference for every configuration option, the SQL to Python type mappings of both engines and per-driver feature support. Every generated code example is taken from the committed test fixtures. The README now links to the site instead of documenting each feature inline.'
-time: 2026-07-21T14:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "208"
