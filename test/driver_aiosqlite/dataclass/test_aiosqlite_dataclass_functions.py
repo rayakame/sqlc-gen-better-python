@@ -36,7 +36,6 @@ from test.driver_aiosqlite.dataclass.functions import queries_slice
 
 SLICE_ID_BASE = 595959
 SLICE_ROW_COUNT = 4
-SLICE_NAME_MATCH_COUNT = 3
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -1066,12 +1065,12 @@ class TestDataclassFunctions:
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
-        name="AiosqliteTestDataclassFunctions::count_slice_rows_two_slices",
+        name="AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
         depends=["AiosqliteTestDataclassFunctions::insert_slice_rows"],
     )
-    async def test_count_slice_rows_two_slices(self, aiosqlite_conn: aiosqlite.Connection) -> None:
-        assert await queries_slice.count_slice_rows(conn=aiosqlite_conn, ids=[SLICE_ID_BASE], names=["b"]) == SLICE_NAME_MATCH_COUNT
-        assert await queries_slice.count_slice_rows(conn=aiosqlite_conn, ids=[], names=[]) == 0
+    async def test_get_first_slice_name_two_slices(self, aiosqlite_conn: aiosqlite.Connection) -> None:
+        assert await queries_slice.get_first_slice_name(conn=aiosqlite_conn, ids=[SLICE_ID_BASE + 1], names=["a"]) == "a"
+        assert await queries_slice.get_first_slice_name(conn=aiosqlite_conn, ids=[], names=[]) is None
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
@@ -1080,7 +1079,7 @@ class TestDataclassFunctions:
             "AiosqliteTestDataclassFunctions::get_slice_rows_empty_slice",
             "AiosqliteTestDataclassFunctions::get_slice_row_filtered",
             "AiosqliteTestDataclassFunctions::get_slice_rows_by_notes",
-            "AiosqliteTestDataclassFunctions::count_slice_rows_two_slices",
+            "AiosqliteTestDataclassFunctions::get_first_slice_name_two_slices",
         ],
     )
     async def test_delete_slice_rows(self, aiosqlite_conn: aiosqlite.Connection) -> None:

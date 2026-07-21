@@ -9,8 +9,8 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
-    "count_slice_rows",
     "delete_slice_rows",
+    "get_first_slice_name",
     "get_slice_row_filtered",
     "get_slice_rows",
     "get_slice_rows_by_notes",
@@ -45,8 +45,8 @@ GET_SLICE_ROWS_BY_NOTES: typing.Final[str] = """-- name: GetSliceRowsByNotes :ma
 SELECT id, name, note FROM test_slice WHERE note IN (/*SLICE:notes*/?) ORDER BY id
 """
 
-COUNT_SLICE_ROWS: typing.Final[str] = """-- name: CountSliceRows :one
-SELECT count(*) FROM test_slice WHERE id IN (/*SLICE:ids*/?) OR name IN (/*SLICE:names*/?)
+GET_FIRST_SLICE_NAME: typing.Final[str] = """-- name: GetFirstSliceName :one
+SELECT name FROM test_slice WHERE id IN (/*SLICE:ids*/?) OR name IN (/*SLICE:names*/?) ORDER BY id LIMIT 1
 """
 
 DELETE_SLICE_ROWS: typing.Final[str] = """-- name: DeleteSliceRows :execrows
@@ -216,11 +216,11 @@ def get_slice_rows_by_notes(conn: aiosqlite.Connection, *, notes: collections.ab
     return QueryResults(conn, sql, _decode_hook, *notes)
 
 
-async def count_slice_rows(conn: aiosqlite.Connection, *, ids: collections.abc.Sequence[int], names: collections.abc.Sequence[str]) -> int | None:
-    """Fetch one from the db using the SQL query with `name: CountSliceRows :one`.
+async def get_first_slice_name(conn: aiosqlite.Connection, *, ids: collections.abc.Sequence[int], names: collections.abc.Sequence[str]) -> str | None:
+    """Fetch one from the db using the SQL query with `name: GetFirstSliceName :one`.
 
     ```sql
-    SELECT count(*) FROM test_slice WHERE id IN (/*SLICE:ids*/?) OR name IN (/*SLICE:names*/?)
+    SELECT name FROM test_slice WHERE id IN (/*SLICE:ids*/?) OR name IN (/*SLICE:names*/?) ORDER BY id LIMIT 1
     ```
 
     Args:
@@ -230,9 +230,9 @@ async def count_slice_rows(conn: aiosqlite.Connection, *, ids: collections.abc.S
         names: collections.abc.Sequence[str].
 
     Returns:
-        Result of type `int` fetched from the db. Will be `None` if not found.
+        Result of type `str` fetched from the db. Will be `None` if not found.
     """
-    sql = COUNT_SLICE_ROWS.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)
+    sql = GET_FIRST_SLICE_NAME.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)
     sql = sql.replace("/*SLICE:names*/?", ",".join("?" * len(names)) or "NULL", 1)
     row = await (await conn.execute(sql, (*ids, *names))).fetchone()
     if row is None:

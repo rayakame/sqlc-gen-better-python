@@ -10,8 +10,8 @@ SELECT * FROM test_slice WHERE name = ? AND id IN (sqlc.slice('ids')) AND id != 
 -- name: GetSliceRowsByNotes :many
 SELECT * FROM test_slice WHERE note IN (sqlc.slice('notes')) ORDER BY id;
 
--- name: CountSliceRows :one
-SELECT count(*) FROM test_slice WHERE id IN (sqlc.slice('ids')) OR name IN (sqlc.slice('names'));
+-- name: GetFirstSliceName :one
+SELECT name FROM test_slice WHERE id IN (sqlc.slice('ids')) OR name IN (sqlc.slice('names')) ORDER BY id LIMIT 1;
 
 -- name: DeleteSliceRows :execrows
 DELETE FROM test_slice WHERE id IN (sqlc.slice('ids'));

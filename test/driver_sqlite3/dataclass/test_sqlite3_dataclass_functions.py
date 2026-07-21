@@ -48,7 +48,6 @@ UNKNOWN_OVERRIDE_ID = 545454
 ANY_PARAM_ID = 565656
 SLICE_ID_BASE = 585858
 SLICE_ROW_COUNT = 4
-SLICE_NAME_MATCH_COUNT = 3
 
 
 class TestSqlite3DataclassFunctions:
@@ -1110,13 +1109,13 @@ class TestSqlite3DataclassFunctions:
         ]
         assert queries_slice.get_slice_rows_by_notes(conn=sqlite3_conn, notes=[])() == []
 
-    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::count_slice_rows_two_slices", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
-    def test_count_slice_rows_two_slices(self, sqlite3_conn: sqlite3.Connection) -> None:
-        count = queries_slice.count_slice_rows(conn=sqlite3_conn, ids=[SLICE_ID_BASE], names=["b"])
-        assert count == SLICE_NAME_MATCH_COUNT
-        assert queries_slice.count_slice_rows(conn=sqlite3_conn, ids=[], names=[]) == 0
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices", depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"])
+    def test_get_first_slice_name_two_slices(self, sqlite3_conn: sqlite3.Connection) -> None:
+        name = queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[SLICE_ID_BASE + 1], names=["a"])
+        assert name == "a"
+        assert queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[], names=[]) is None
 
-    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_slice_rows", "Sqlite3TestDataclassFunctions::get_slice_row_filtered", "Sqlite3TestDataclassFunctions::get_slice_rows_by_notes", "Sqlite3TestDataclassFunctions::count_slice_rows_two_slices"])
+    @pytest.mark.dependency(depends=["Sqlite3TestDataclassFunctions::get_slice_rows", "Sqlite3TestDataclassFunctions::get_slice_row_filtered", "Sqlite3TestDataclassFunctions::get_slice_rows_by_notes", "Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices"])
     def test_delete_slice_rows(self, sqlite3_conn: sqlite3.Connection) -> None:
         assert queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[]) == 0
         deleted = queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[SLICE_ID_BASE + offset for offset in range(SLICE_ROW_COUNT)])
