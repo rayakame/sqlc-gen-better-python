@@ -37,6 +37,7 @@ class TestFieldNaming:
     id_: int
     outputs: str
 ```
+
 Standard library, no dependencies. The safe default.
   {{< /tab >}}
 
@@ -47,6 +48,7 @@ class TestFieldNaming:
     id_: int
     outputs: str
 ```
+
 Requires `attrs`. Slotted classes with concise definitions.
   {{< /tab >}}
 
@@ -56,6 +58,7 @@ class TestFieldNaming(msgspec.Struct):
     id_: int
     outputs: str
 ```
+
 Requires `msgspec`. Very fast serialization/validation; pairs well with
 [working with JSON](/docs/guide/working-with-json).
   {{< /tab >}}
@@ -68,6 +71,7 @@ class TestFieldNaming(pydantic.BaseModel):
     id_: int
     outputs: str
 ```
+
 Requires `pydantic >= 2.9`. Full runtime validation on construction.
   {{< /tab >}}
 

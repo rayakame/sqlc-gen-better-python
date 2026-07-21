@@ -56,10 +56,11 @@ user = queries.get_field_naming(conn, id_=1)
 ```
 
 {{< callout type="warning" >}}
-  Whenever the generated code registers type conversions - which it does for
-  `date`, `datetime`/`timestamp`, `decimal`, `bool`, and `blob` columns - both
-  SQLite drivers need `detect_types=sqlite3.PARSE_DECLTYPES` on the connection,
-  because converters only run when declared-type parsing is enabled. See
+  When a query *returns* a `date`, `datetime`/`timestamp`, `decimal`, `bool`, or
+  `blob` column, the generated code registers a converter for it - and converters
+  only run if the connection was opened with
+  `detect_types=sqlite3.PARSE_DECLTYPES`. Adapters, which send those types as
+  parameters, work without it. See
   [SQLite type conversion](/docs/guide/sqlite-type-conversion).
 {{< /callout >}}
 

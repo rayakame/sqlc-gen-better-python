@@ -85,8 +85,6 @@ supported. Which query commands are available depends on the driver - see the
 
 ## Development
 
-A roadmap of what is planned & worked on can be found [here](https://github.com/users/rayakame/projects/1/).
-
 Contributions are very welcome, for more information and help please read
 the [contribution guidelines](https://github.com/rayakame/sqlc-gen-better-python/blob/main/CONTRIBUTING.md).
 

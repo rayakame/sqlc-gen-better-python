@@ -67,6 +67,7 @@ class Preferences(msgspec.Struct):
     languages: list[str] = msgspec.field(default_factory=list)
     email_opt_in: bool | None = None
 ```
+
 Structs nest freely - `Preferences` holds a `Theme`, plus a list and an optional
 field. `msgspec` handles all of it.
   {{< /tab >}}
@@ -86,6 +87,7 @@ def encode_preferences(value: Preferences) -> str:
 def decode_preferences(value: str) -> Preferences:
     return msgspec.json.decode(value, type=Preferences)
 ```
+
 The `type=` argument is what makes decoding *typed* - msgspec builds real
 `Preferences` objects and validates the payload while parsing.
   {{< /tab >}}
@@ -226,6 +228,7 @@ def decode_preferences(value: str) -> Preferences:
         email_opt_in=raw.get("email_opt_in"),
     )
 ```
+
 No dependencies, but no validation - and nested objects must be rebuilt by hand,
 since `json.loads` leaves `theme` as a plain `dict`.
   {{< /tab >}}
@@ -244,6 +247,7 @@ def encode_preferences(value: Preferences) -> str:
 def decode_preferences(value: str) -> Preferences:
     return Preferences.model_validate_json(value)
 ```
+
 Full validation, nested models rebuilt for you, and `model_validate_json` parses
 straight from the string.
   {{< /tab >}}
