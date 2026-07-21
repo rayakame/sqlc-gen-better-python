@@ -1573,7 +1573,10 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;so the call becomes &lt;code&gt;QueriesFieldNamings(conn).get_field_naming(id_=1)&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>Enums</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</guid><description>
+&lt;p&gt;so the call becomes
+&lt;code&gt;user = await QueriesFieldNamings(conn).get_field_naming(id_=1)&lt;/code&gt; - without the
+&lt;code&gt;await&lt;/code&gt; on the synchronous &lt;code&gt;sqlite3&lt;/code&gt; driver, where the method is a plain
+function.&lt;/p&gt;</description></item><item><title>Enums</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-208/docs/guide/enums/</guid><description>
 &lt;p&gt;PostgreSQL enum types become &lt;code&gt;enum.StrEnum&lt;/code&gt; classes in a generated &lt;code&gt;enums.py&lt;/code&gt;
 module. Columns of that type are annotated with the class, and values read from
 the database are coerced into it.&lt;/p&gt;
