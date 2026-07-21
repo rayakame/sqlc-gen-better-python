@@ -1,6 +1,0 @@
-kind: Fixed
-body: '`sqlc.slice` works on the sqlite drivers: generated functions now expand the `/*SLICE:name*/` placeholder at call time, one `?` per element (`NULL` for an empty sequence, so `IN (NULL)` matches no rows), and unpack the sequence into the positional arguments in SQL text order. Previously the placeholder was left in the SQL and binding the sequence raised `sqlite3.ProgrammingError`. Overridden and converted slice parameters keep their element-wise conversion. On PostgreSQL use `= ANY($1::type[])` instead, which sqlc itself intends there.'
-time: 2026-07-21T21:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "211"
