@@ -39,7 +39,7 @@ sql:
 ```
 
 {{< callout type="warning" >}}
-  Always pin the `sha256` of the release you use &mdash; `sqlc` refuses to run a
+  Always pin the `sha256` of the release you use - `sqlc` refuses to run a
   plugin whose hash does not match. Each release lists its hash.
 {{< /callout >}}
 

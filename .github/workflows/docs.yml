@@ -69,8 +69,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write
-      id-token: write
+      pages: write # deploy-pages publishes the built site to GitHub Pages
+      id-token: write # deploy-pages uses OIDC to verify the deployment origin
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

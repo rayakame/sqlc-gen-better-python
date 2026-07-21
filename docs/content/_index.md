@@ -16,7 +16,7 @@ layout: hextra-home
 
 <div class="hx-mb-12">
 {{< hextra/hero-subtitle >}}
-  A sqlc plugin that generates modern, fully typed Python database&nbsp;<br class="sm:hx-block hx-hidden" />code from plain SQL &mdash; models plus async query functions.
+  A sqlc plugin that generates modern, fully typed Python database&nbsp;<br class="sm:hx-block hx-hidden" />code from plain SQL - models plus async query functions.
 {{< /hextra/hero-subtitle >}}
 </div>
 
@@ -29,7 +29,7 @@ layout: hextra-home
 {{< hextra/feature-grid >}}
   {{< hextra/feature-card
     title="Four model types"
-    subtitle="Generate dataclass, attrs, msgspec, or pydantic models &mdash; pick per codegen block."
+    subtitle="Generate dataclass, attrs, msgspec, or pydantic models - pick per codegen block."
   >}}
   {{< hextra/feature-card
     title="Three drivers"

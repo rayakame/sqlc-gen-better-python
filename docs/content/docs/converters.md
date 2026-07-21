@@ -121,5 +121,5 @@ overrides:
 {{< /tabs >}}
 
 A `get_user` query then returns a fully typed `User` (set field and all), and a
-`create_user` query accepts one directly &mdash; the plugin inserts the
+`create_user` query accepts one directly - the plugin inserts the
 `decode_user` / `encode_user` calls for you.
