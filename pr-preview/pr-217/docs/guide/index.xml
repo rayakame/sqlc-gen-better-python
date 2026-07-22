@@ -66,7 +66,7 @@ whose hash does not match. Each release lists its hash.&lt;/div&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;sql_driver&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, or &lt;code&gt;sqlite3&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, or &lt;code&gt;sqlite3&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;emit_init_file&lt;/code&gt;&lt;/td&gt;
@@ -111,8 +111,9 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;h2&gt;Common pitfalls&lt;span class="hx:absolute hx:-mt-20" id="common-pitfalls"&gt;&lt;/span&gt;
 &lt;a href="#common-pitfalls" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Driver/engine mismatch.&lt;/strong&gt; &lt;code&gt;sql_driver: asyncpg&lt;/code&gt; requires &lt;code&gt;engine: &amp;quot;postgresql&amp;quot;&lt;/code&gt;;
-&lt;code&gt;aiosqlite&lt;/code&gt;/&lt;code&gt;sqlite3&lt;/code&gt; require &lt;code&gt;engine: &amp;quot;sqlite&amp;quot;&lt;/code&gt;. A mismatch is an error.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Driver/engine mismatch.&lt;/strong&gt; &lt;code&gt;sql_driver: asyncpg&lt;/code&gt; and &lt;code&gt;psycopg_async&lt;/code&gt; require
+&lt;code&gt;engine: &amp;quot;postgresql&amp;quot;&lt;/code&gt;; &lt;code&gt;aiosqlite&lt;/code&gt;/&lt;code&gt;sqlite3&lt;/code&gt; require &lt;code&gt;engine: &amp;quot;sqlite&amp;quot;&lt;/code&gt;. A
+mismatch is an error.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Forgetting &lt;code&gt;emit_init_file&lt;/code&gt;.&lt;/strong&gt; It has no default and generation fails if it
 is omitted. Set it to &lt;code&gt;true&lt;/code&gt; unless the package already has an &lt;code&gt;__init__.py&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;A stale &lt;code&gt;sha256&lt;/code&gt;.&lt;/strong&gt; When you bump the plugin version, update the hash too.&lt;/li&gt;
@@ -542,25 +543,45 @@ data-copied-label="Copied!"
 &lt;a href="#execresult-execrows-execlastid" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Variants of &lt;code&gt;:exec&lt;/code&gt; that return something about the write:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execrows&lt;/code&gt;&lt;/strong&gt; - the number of affected rows (&lt;code&gt;int&lt;/code&gt;). For statements that
-affect no rows, such as &lt;code&gt;CREATE TABLE&lt;/code&gt;, asyncpg reports &lt;code&gt;0&lt;/code&gt; and the SQLite
-drivers report &lt;code&gt;-1&lt;/code&gt;.&lt;/li&gt;
+affect no rows, such as &lt;code&gt;CREATE TABLE&lt;/code&gt;, asyncpg reports &lt;code&gt;0&lt;/code&gt; while psycopg and
+the SQLite drivers report &lt;code&gt;-1&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execlastid&lt;/code&gt;&lt;/strong&gt; - the cursor&amp;rsquo;s &lt;code&gt;lastrowid&lt;/code&gt;, typed &lt;code&gt;int | None&lt;/code&gt; - it is &lt;code&gt;None&lt;/code&gt;
 when no row was affected. SQLite drivers only, and note it is the last
 &lt;em&gt;affected&lt;/em&gt; row, not strictly the last inserted one.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execresult&lt;/code&gt;&lt;/strong&gt; - the driver&amp;rsquo;s raw result, which differs per driver: a &lt;code&gt;str&lt;/code&gt;
-status tag on asyncpg, and a &lt;code&gt;sqlite3.Cursor&lt;/code&gt; / &lt;code&gt;aiosqlite.Cursor&lt;/code&gt; on the
-SQLite drivers.&lt;/li&gt;
+status tag on asyncpg, a &lt;code&gt;psycopg.AsyncCursor&lt;/code&gt; on psycopg, and a
+&lt;code&gt;sqlite3.Cursor&lt;/code&gt; / &lt;code&gt;aiosqlite.Cursor&lt;/code&gt; on the SQLite drivers.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;See the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/reference/feature-support/"&gt;feature support matrix&lt;/a&gt; for which
 driver supports which.&lt;/p&gt;
 &lt;h3&gt;&lt;code&gt;:copyfrom&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="copyfrom"&gt;&lt;/span&gt;
-&lt;a href="#copyfrom" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;asyncpg only. Bulk-inserts rows via &lt;code&gt;copy_records_to_table&lt;/code&gt;, taking a sequence of
-generated &lt;code&gt;&amp;lt;Name&amp;gt;Params&lt;/code&gt; objects and returning the affected row count:&lt;/p&gt;
+&lt;a href="#copyfrom" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;PostgreSQL drivers only. Bulk-inserts rows, taking a sequence of generated
+&lt;code&gt;&amp;lt;Name&amp;gt;Params&lt;/code&gt; objects and returning the affected row count. asyncpg goes
+through &lt;code&gt;copy_records_to_table&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;test_copy_from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;ConnectionLike&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;abc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Sequence&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;TestCopyFromParams&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;records&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[(&lt;/span&gt;&lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;float_test&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;int_test&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;copy_records_to_table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;test_copy_from&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;id&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;float_test&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;int_test&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;records&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;records&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="ow"&gt;and&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt; &lt;span class="o"&gt;:=&lt;/span&gt; &lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;isdigit&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;psycopg streams the rows through &lt;code&gt;cursor.copy()&lt;/code&gt; instead:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;test_copy_from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;ConnectionLike&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;abc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Sequence&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;TestCopyFromParams&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cursor&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;cur&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;cur&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;COPY &amp;#34;test_copy_from&amp;#34; (&amp;#34;id&amp;#34;, &amp;#34;float_test&amp;#34;, &amp;#34;int_test&amp;#34;) FROM STDIN&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write_row&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;float_test&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;int_test&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;cur&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rowcount&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
