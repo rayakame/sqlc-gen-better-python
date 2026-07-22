@@ -25,15 +25,15 @@ supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 The supported [query annotations](https://docs.sqlc.dev/en/latest/reference/query-annotations.html)
 depend on the driver:
 
-| Command | aiosqlite | sqlite3 | asyncpg |
-|---|---|---|---|
-| `:one` | yes | yes | yes |
-| `:many` | yes | yes | yes |
-| `:exec` | yes | yes | yes |
-| `:execresult` | yes | yes | yes |
-| `:execrows` | yes | yes | yes |
-| `:execlastid` | yes | yes | no |
-| `:copyfrom` | no | no | yes |
+| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async |
+|---|---|---|---|---|
+| `:one` | yes | yes | yes | yes |
+| `:many` | yes | yes | yes | yes |
+| `:exec` | yes | yes | yes | yes |
+| `:execresult` | yes | yes | yes | yes |
+| `:execrows` | yes | yes | yes | yes |
+| `:execlastid` | yes | yes | no | no |
+| `:copyfrom` | no | no | yes | yes |
 
 See [Writing queries](/docs/guide/writing-queries) for what each command
 generates.
@@ -50,4 +50,5 @@ generates.
 - **`:batch*` commands** (`:batchexec`, `:batchmany`, `:batchone`) are not
   supported and likely never will be.
 - **Prepared queries** are not planned for the near future.
-- **`psycopg2` and `mysql`** drivers are not currently supported.
+- **`psycopg2` and `mysql`** drivers are not currently supported; Psycopg 3
+  is, via the async `psycopg_async` driver.

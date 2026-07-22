@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -54,9 +56,15 @@ func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query)
 		all = append(all, className)
 	}
 
+	// psycopg's typed execute() takes LiteralString query text, not str, so
+	// the constants keep their literal type there instead of widening.
+	constType := types.Str
+	if r.config.SqlDriver == config.SQLDriverPsycopgAsync {
+		constType = "typing.LiteralString"
+	}
 	for _, query := range queries {
 		constantsBody.WriteLine(
-			fmt.Sprintf(`%s: typing.Final[str] = """-- name: %s %s`, query.ConstantName, query.QueryName, query.Cmd),
+			fmt.Sprintf(`%s: typing.Final[%s] = """-- name: %s %s`, query.ConstantName, constType, query.QueryName, query.Cmd),
 		)
 		constantsBody.WriteLine(query.SQL)
 		constantsBody.WriteLine(`"""`)

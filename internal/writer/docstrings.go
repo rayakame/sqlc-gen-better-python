@@ -190,8 +190,16 @@ func (w *CodeWriter) WriteQueryClassConnDocstring(connType string) {
 
 // WriteQueryResultsClassDocstring writes the QueryResults class docstring.
 func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string) {
+	w.writeQueryResultsClassDocstring(connType, resultType, false)
+}
+
+func (w *CodeWriter) writeQueryResultsClassDocstring(connType, resultType string, namedParams bool) {
 	if !w.DocstringsEnabled() {
 		return
+	}
+	argsName, argsDesc := "*args", "Arguments that should be sent when executing the sql query."
+	if namedParams {
+		argsName, argsDesc = "params", "Named arguments that should be sent when executing the sql query."
 	}
 	w.WriteIndentedString(1, `"""Helper class that allows both iteration and normal fetching of data from the db.`)
 	if w.docstringConvention == config.DocstringConventionNumpy {
@@ -207,8 +215,8 @@ func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string
 			memberIndent,
 			fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", resultType),
 		)
-		w.WriteIndentedLine(1, "*args")
-		w.WriteIndentedLine(memberIndent, "Arguments that should be sent when executing the sql query.")
+		w.WriteIndentedLine(1, argsName)
+		w.WriteIndentedLine(memberIndent, argsDesc)
 		w.NewLine()
 		w.WriteIndentedLine(1, `"""`)
 	} else {
@@ -219,8 +227,16 @@ func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string
 
 // WriteQueryResultsInitDocstring writes the QueryResults __init__ docstring.
 func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string) {
+	w.writeQueryResultsInitDocstring(connType, resultType, false)
+}
+
+func (w *CodeWriter) writeQueryResultsInitDocstring(connType, resultType string, namedParams bool) {
 	if !w.DocstringsEnabled() {
 		return
+	}
+	argsName, argsDesc := "*args", "Arguments that should be sent when executing the sql query."
+	if namedParams {
+		argsName, argsDesc = "params", "Named arguments that should be sent when executing the sql query."
 	}
 	w.WriteIndentedString(memberIndent, `"""Initialize the QueryResults instance.`)
 	switch w.docstringConvention {
@@ -239,8 +255,8 @@ func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string)
 			detailIndent,
 			fmt.Sprintf("A callback that turns an `%s` object into `T` that will be returned.", resultType),
 		)
-		w.WriteIndentedLine(entryIndent, "*args:")
-		w.WriteIndentedLine(detailIndent, "Arguments that should be sent when executing the sql query.")
+		w.WriteIndentedLine(entryIndent, argsName+":")
+		w.WriteIndentedLine(detailIndent, argsDesc)
 		w.WriteIndentedLine(memberIndent, `"""`)
 	case config.DocstringConventionPEP257:
 		w.NNewLine(2)
@@ -254,7 +270,7 @@ func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string)
 			memberIndent,
 			fmt.Sprintf("decode_hook -- A callback that turns an `%s` object into `T` that will be returned.", resultType),
 		)
-		w.WriteIndentedLine(memberIndent, "*args -- Arguments that should be sent when executing the sql query.")
+		w.WriteIndentedLine(memberIndent, argsName+" -- "+argsDesc)
 		w.WriteIndentedLine(memberIndent, `"""`)
 	}
 }

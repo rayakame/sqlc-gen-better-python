@@ -147,9 +147,9 @@ func TestBuildQueriesExecBasics(t *testing.T) {
 		t.Errorf("Returns = %+v, want %+v", query.Returns, want)
 	}
 	wantParams := []model.QueryValue{
-		{Name: "name", Type: pyStr},
-		{Name: "dollar_2", Type: pyInt},
-		{Name: "for_", Type: pyStr},
+		{Name: "name", Type: pyStr, Number: 1},
+		{Name: "dollar_2", Type: pyInt, Number: 2},
+		{Name: "for_", Type: pyStr, Number: 3},
 	}
 	if len(query.Params) != len(wantParams) {
 		t.Fatalf("Params = %+v, want %d params", query.Params, len(wantParams))
@@ -259,9 +259,9 @@ func TestBuildQueriesCopyFrom(t *testing.T) {
 		t.Errorf("params class identifier = %+v, want an empty identifier", param.Table.Identifier)
 	}
 	wantColumns := []model.Column{
-		{Name: "id_", DBName: "id", Type: pyInt},
-		{Name: "name", DBName: "name", Type: pyStr},
-		{Name: "name_2", DBName: "name", Type: pyStr},
+		{Name: "id_", DBName: "id", Type: pyInt, Number: 1},
+		{Name: "name", DBName: "name", Type: pyStr, Number: 2},
+		{Name: "name_2", DBName: "name", Type: pyStr, Number: 3},
 	}
 	if len(param.Table.Columns) != len(wantColumns) {
 		t.Fatalf("params class columns = %+v, want %d columns", param.Table.Columns, len(wantColumns))
@@ -506,5 +506,78 @@ func TestBuildQueriesEmbedUnknownTable(t *testing.T) {
 	}
 	if want := (model.Column{Name: "data", DBName: "data", Type: pyStr}); query.Returns.Table.Columns[0] != want {
 		t.Errorf("row column[0] = %+v, want plain column %+v", query.Returns.Table.Columns[0], want)
+	}
+}
+
+func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		driver  config.SQLDriver
+		query   *plugin.Query
+		wantSQL string
+	}{
+		{
+			name:   "parameterized query is rewritten for psycopg",
+			driver: config.SQLDriverPsycopgAsync,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = $1 AND name LIKE 'a%'",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = %(p1)s AND name LIKE 'a%%'",
+		},
+		{
+			name:   "parameterless query stays untouched",
+			driver: config.SQLDriverPsycopgAsync,
+			query: &plugin.Query{
+				Name:    "CountAuthors",
+				Cmd:     ":one",
+				Text:    "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+				Columns: []*plugin.Column{queryCol("count", "int8", nil)},
+			},
+			wantSQL: "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+		},
+		{
+			name:   "copyfrom stays untouched",
+			driver: config.SQLDriverPsycopgAsync,
+			query: &plugin.Query{
+				Name: "CopyAuthors",
+				Cmd:  ":copyfrom",
+				Text: "INSERT INTO test_authors (id) VALUES ($1)",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				InsertIntoTable: &plugin.Identifier{Name: "test_authors"},
+			},
+			wantSQL: "INSERT INTO test_authors (id) VALUES ($1)",
+		},
+		{
+			name:   "asyncpg keeps native placeholders",
+			driver: config.SQLDriverAsyncpg,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = $1",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = $1",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			query := buildSingleQuery(t, &config.Config{SqlDriver: tc.driver}, tc.query)
+			if query.SQL != tc.wantSQL {
+				t.Errorf("SQL = %q, want %q", query.SQL, tc.wantSQL)
+			}
+		})
 	}
 }

@@ -4,11 +4,80 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
+
+// plainParams builds the expanded parameter list of a query, keeping names
+// clear of the implicit first argument and of the locals generated bodies
+// introduce.
+func (t *Transformer) plainParams(pluginQuery *plugin.Query) []model.QueryValue {
+	params := make([]model.QueryValue, 0, len(pluginQuery.Params))
+	seen := make(map[string]int, len(pluginQuery.Params)+1)
+	// The implicit first argument of every generated function must never
+	// collide with a parameter name: a column literally named "conn" (or
+	// "self" in classes mode) would otherwise produce a duplicate argument
+	// and a SyntaxError in the generated module.
+	if t.config.EmitClasses {
+		seen["self"]++
+	} else {
+		seen["conn"]++
+	}
+	// Slice queries materialize the expanded SQL into a local named "sql"
+	// before any parameter is read; a parameter with that name would be
+	// silently overwritten by the query text.
+	for _, param := range pluginQuery.Params {
+		if param.GetColumn().GetIsSqlcSlice() {
+			seen["sql"]++
+
+			break
+		}
+	}
+	// The psycopg driver hoists an overlong params dict into a local named
+	// "sql_params" before binding, so the name is reserved for every
+	// parameterized psycopg query.
+	if t.config.SqlDriver == config.SQLDriverPsycopgAsync && len(pluginQuery.Params) > 0 {
+		seen["sql_params"]++
+	}
+	for _, param := range pluginQuery.Params {
+		params = append(params, model.QueryValue{
+			Name:   model.DedupName(model.ParamName(param), seen),
+			Type:   t.buildPyType(param.Column),
+			Number: param.Number,
+		})
+	}
+
+	return params
+}
+
+// bundledParams builds the single Params-class parameter used by :copyfrom
+// and query_parameter_limit queries. Field order follows the sqlc parameter
+// array, and each field keeps its parameter number for name-binding drivers.
+func (t *Transformer) bundledParams(pluginQuery *plugin.Query, queryName string, isCopyFrom bool) []model.QueryValue {
+	columns := make([]pyColumn, 0, len(pluginQuery.Params))
+	for _, param := range pluginQuery.Params {
+		columns = append(columns, pyColumn{
+			column: param.Column,
+			embed:  nil,
+		})
+	}
+	table := t.columnsToClass(queryName+"Params", columns)
+	for i := range table.Columns {
+		table.Columns[i].Number = pluginQuery.Params[i].Number
+	}
+
+	return []model.QueryValue{
+		{
+			Table:     utils.ToPtr(table),
+			Name:      "params",
+			Type:      model.PyType{Type: table.Name, IsList: isCopyFrom},
+			EmitTable: true,
+		},
+	}
+}
 
 func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 	queries := make([]model.Query, 0, len(t.req.Queries))
@@ -40,52 +109,19 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			ModuleName:   moduleName,
 			Table:        pluginQuery.InsertIntoTable,
 		}
+		// psycopg rejects PostgreSQL-native $N placeholders and scans the
+		// whole text for pyformat ones as soon as parameters are passed, so
+		// parameterized queries are rewritten once here. :copyfrom never
+		// executes its SQL - the driver builds a COPY statement instead.
+		if t.config.SqlDriver == config.SQLDriverPsycopgAsync &&
+			len(pluginQuery.Params) > 0 && query.Cmd != metadata.CmdCopyFrom {
+			query.SQL = rewritePsycopgSQL(pluginQuery.Text)
+		}
 
 		if query.Cmd == metadata.CmdCopyFrom || t.config.IsOverQueryParameterLimit(len(pluginQuery.Params)) {
-			columns := make([]pyColumn, 0, len(pluginQuery.Params))
-			for _, param := range pluginQuery.Params {
-				columns = append(columns, pyColumn{
-					column: param.Column,
-					embed:  nil,
-				})
-			}
-			table := t.columnsToClass(query.QueryName+"Params", columns)
-			query.Params = []model.QueryValue{
-				{
-					Table:     utils.ToPtr(table),
-					Name:      "params",
-					Type:      model.PyType{Type: table.Name, IsList: query.Cmd == metadata.CmdCopyFrom},
-					EmitTable: true,
-				},
-			}
+			query.Params = t.bundledParams(pluginQuery, query.QueryName, query.Cmd == metadata.CmdCopyFrom)
 		} else {
-			query.Params = make([]model.QueryValue, 0, len(pluginQuery.Params))
-			seen := make(map[string]int, len(pluginQuery.Params)+1)
-			// The implicit first argument of every generated function must
-			// never collide with a parameter name: a column literally named
-			// "conn" (or "self" in classes mode) would otherwise produce a
-			// duplicate argument and a SyntaxError in the generated module.
-			if t.config.EmitClasses {
-				seen["self"]++
-			} else {
-				seen["conn"]++
-			}
-			// Slice queries materialize the expanded SQL into a local named
-			// "sql" before any parameter is read; a parameter with that name
-			// would be silently overwritten by the query text.
-			for _, param := range pluginQuery.Params {
-				if param.GetColumn().GetIsSqlcSlice() {
-					seen["sql"]++
-
-					break
-				}
-			}
-			for _, param := range pluginQuery.Params {
-				query.Params = append(query.Params, model.QueryValue{
-					Name: model.DedupName(model.ParamName(param), seen),
-					Type: t.buildPyType(param.Column),
-				})
-			}
+			query.Params = t.plainParams(pluginQuery)
 		}
 
 		if query.Cmd == metadata.CmdExecLastId {

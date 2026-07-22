@@ -217,3 +217,87 @@ func TestWriteQueryResultsAwaitFunction(t *testing.T) {
 		}
 	})
 }
+
+func TestWriteQueryResultsClassHeaderNamedParams(t *testing.T) {
+	t.Parallel()
+	w := newWriter(config.DocstringConventionNone)
+	w.QueryResults.WriteQueryResultsClassHeaderNamedParams(
+		"ConnectionLike",
+		[]string{"self._cursor = None"},
+		"psycopg.rows.TupleRow",
+		true,
+	)
+	want := strings.Join([]string{
+		"class QueryResults[T]:",
+		"    __slots__ = (\"_conn\", \"_cursor\", \"_decode_hook\", \"_iterator\", \"_params\", \"_sql\")",
+		"",
+		"    def __init__(",
+		"        self,",
+		"        conn: ConnectionLike,",
+		"        sql: typing.LiteralString,",
+		"        decode_hook: collections.abc.Callable[[psycopg.rows.TupleRow], T],",
+		"        params: dict[str, QueryResultsArgsType] | None = None,",
+		"    ) -> None:",
+		"        self._conn = conn",
+		"        self._sql: typing.LiteralString = sql",
+		"        self._decode_hook = decode_hook",
+		"        self._params = params",
+		"        self._cursor = None",
+		"",
+		"    def __aiter__(self) -> QueryResults[T]:",
+		"        return self",
+		"",
+		"",
+	}, "\n")
+	if got := w.String(); got != want {
+		t.Errorf("WriteQueryResultsClassHeaderNamedParams() = %q, want %q", got, want)
+	}
+}
+
+func TestWriteQueryResultsClassHeaderNamedParamsDocstrings(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name       string
+		convention config.DocstringConvention
+		wants      []string
+	}{
+		{
+			// The class docstring lists parameters only under numpy.
+			name:       "numpy class docstring names params",
+			convention: config.DocstringConventionNumpy,
+			wants: []string{
+				"    params\n        Named arguments that should be sent when executing the sql query.",
+			},
+		},
+		{
+			name:       "google init docstring names params",
+			convention: config.DocstringConventionGoogle,
+			wants: []string{
+				"            params:\n                Named arguments that should be sent when executing the sql query.",
+			},
+		},
+		{
+			name:       "pep257 init docstring names params",
+			convention: config.DocstringConventionPEP257,
+			wants: []string{
+				"        params -- Named arguments that should be sent when executing the sql query.",
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			w := newWriter(tc.convention)
+			w.QueryResults.WriteQueryResultsClassHeaderNamedParams("ConnectionLike", nil, "psycopg.rows.TupleRow", true)
+			got := w.String()
+			if strings.Contains(got, "*args") {
+				t.Errorf("output still mentions *args: %q", got)
+			}
+			for _, want := range tc.wants {
+				if !strings.Contains(got, want) {
+					t.Errorf("output missing %q\ngot: %q", want, got)
+				}
+			}
+		})
+	}
+}

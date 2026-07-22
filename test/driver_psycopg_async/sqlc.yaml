@@ -1,0 +1,292 @@
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: file://sqlc-gen-better-python.wasm
+      sha256: 98fcfe52c90484d16ec4f6d092066479e9c940fe98c191d6844caf3c7c5e0679
+sql:
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: postgresql
+    codegen:
+      - out: /attrs/classes
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.attrs.classes
+          sql_driver: psycopg_async
+          model_type: attrs
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: numpy
+          speedups: true
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: postgresql
+    codegen:
+      - out: /attrs/functions
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.attrs.functions
+          sql_driver: psycopg_async
+          model_type: attrs
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: numpy
+          speedups: true
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: postgresql
+    codegen:
+      - out: /dataclass/classes
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.dataclass.classes
+          sql_driver: psycopg_async
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+      - queries_converters.sql
+    engine: postgresql
+    codegen:
+      - out: /dataclass/functions
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.dataclass.functions
+          sql_driver: psycopg_async
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+            - column: test_converters.prefs
+              converter: prefs
+            - column: test_converters.maybe_prefs
+              converter: prefs
+            - column: test_converters.tags
+              converter: tags
+            # db_type (not column) so the converter reaches the ANY($1::type[])
+            # parameter, which column overrides are not linked to.
+            - db_type: converter_label
+              converter: label
+          converters:
+            - name: prefs
+              py_type:
+                import: test.converters
+                package: Preferences
+                type: Preferences
+              to_db: test.converters.encode_preferences
+              from_db: test.converters.decode_preferences
+            - name: tags
+              py_type:
+                type: frozenset[str]
+              to_db: test.converters.encode_tags
+              from_db: test.converters.decode_tags
+            - name: label
+              py_type:
+                import: pathlib
+                package: PurePosixPath
+                type: PurePosixPath
+              to_db: test.converters.encode_label
+              from_db: test.converters.decode_label
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: postgresql
+    codegen:
+      - out: /msgspec/classes
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.msgspec.classes
+          sql_driver: psycopg_async
+          model_type: msgspec
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: postgresql
+    codegen:
+      - out: /msgspec/functions
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.msgspec.functions
+          sql_driver: psycopg_async
+          model_type: msgspec
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: postgresql
+    codegen:
+      - out: /pydantic/classes
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.pydantic.classes
+          sql_driver: psycopg_async
+          model_type: pydantic
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_enum_override.sql
+      - queries_copy_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: postgresql
+    codegen:
+      - out: /pydantic/functions
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.pydantic.functions
+          sql_driver: psycopg_async
+          model_type: pydantic
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_copy_override.amount
+              py_type:
+                type: float
+  # omit_typechecking_block coverage: the driver hook and QueryResultsArgsType
+  # must stay runtime-safe when emitted at module level (PEP 695 aliases are
+  # lazy). Both modules are import-tested at runtime.

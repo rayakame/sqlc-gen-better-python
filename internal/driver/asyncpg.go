@@ -90,7 +90,7 @@ func (d *AsyncpgDriver) WriteQueryResultsClass(body *writer.CodeWriter) string {
 	body.WriteIndentedLine(3, "raise")
 	body.WriteIndentedLine(2, "return self._decode_hook(record)")
 
-	return "QueryResults"
+	return queryResultsClassName
 }
 
 // SupportsCommand returns if the driver supports the command.

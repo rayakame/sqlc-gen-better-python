@@ -6,11 +6,12 @@ next: /docs/guide/model-types
 ---
 
 The `sql_driver` option picks which database library the generated code targets.
-It must match your `engine`. Three drivers are supported:
+It must match your `engine`. Four drivers are supported:
 
 | Driver | Engine | Style |
 |---|---|---|
 | `asyncpg` | `postgresql` | async |
+| `psycopg_async` | `postgresql` | async |
 | `aiosqlite` | `sqlite` | async |
 | `sqlite3` | `sqlite` | sync |
 
@@ -35,8 +36,40 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-asyncpg is the only driver that supports `:copyfrom` (bulk insert via
-`copy_records_to_table`).
+asyncpg supports `:copyfrom` (bulk insert via `copy_records_to_table`).
+
+## psycopg_async (PostgreSQL)
+
+```python
+import asyncio
+
+import psycopg
+
+from app.db import queries
+
+
+async def main() -> None:
+    conn = await psycopg.AsyncConnection.connect("postgresql://user:pass@localhost/db")
+    user = await queries.get_field_naming(conn, id_=1)
+
+
+asyncio.run(main())
+```
+
+The generated code targets [Psycopg 3](https://www.psycopg.org/psycopg3/) with
+its default tuple rows - the connection annotation is
+`psycopg.AsyncConnection[psycopg.rows.TupleRow]`, so a connection configured
+with another row factory is rejected by pyright. `:copyfrom` streams rows
+through `cursor.copy()`.
+
+{{< callout type="info" >}}
+  Modules returning `json`/`jsonb` columns register a raw-text loader on
+  psycopg's process-global adapters map at import time, so those columns stay
+  `str` exactly like on asyncpg - including for
+  [converters](/docs/guide/converters). On Windows, psycopg's async support
+  requires the `SelectorEventLoop`; the default `ProactorEventLoop` is
+  rejected.
+{{< /callout >}}
 
 ## aiosqlite (async SQLite)
 

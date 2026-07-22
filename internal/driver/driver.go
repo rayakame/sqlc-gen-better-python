@@ -8,7 +8,10 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 )
 
-const decodeRowsExpr = "return [self._decode_hook(row) for row in result]"
+const (
+	decodeRowsExpr        = "return [self._decode_hook(row) for row in result]"
+	queryResultsClassName = "QueryResults"
+)
 
 type Driver interface {
 	// Name returns the Python module name (e.g., "asyncpg", "aiosqlite", "sqlite3").
@@ -53,6 +56,8 @@ func New(conf *config.Config) (Driver, error) {
 	switch conf.SqlDriver {
 	case config.SQLDriverAsyncpg:
 		return newAsyncpgDriver(), nil
+	case config.SQLDriverPsycopgAsync:
+		return newPsycopgDriver(true), nil
 	case config.SQLDriverAioSQLite:
 		return newSqliteDriver("aiosqlite", true), nil
 	case config.SQLDriverSQLite:

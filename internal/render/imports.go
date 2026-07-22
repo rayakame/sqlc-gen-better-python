@@ -536,6 +536,26 @@ func (r *ImportResolver) addDriverImports(
 			}
 		}
 
+	case config.SQLDriverPsycopgAsync:
+		// The module is psycopg regardless of the driver option name.
+		// psycopg.rows.TupleRow appears in the ConnectionLike alias of every
+		// query module, not only in :many decode hooks. The loader
+		// registrations run at import time and reference
+		// psycopg.types.string.TextLoader, forcing psycopg runtime - and then
+		// psycopg.rows follows, since a TYPE_CHECKING submodule import of a
+		// runtime-imported parent trips ruff's TC004.
+		if len(driver.PsycopgJSONTypesReturned(queries)) != 0 {
+			std["psycopg"] = importSpec{Module: "psycopg"}
+			std["psycopg.types.string"] = importSpec{Module: "psycopg.types.string"}
+			std["psycopg.rows"] = importSpec{Module: "psycopg.rows"}
+		} else {
+			typeChecking["psycopg"] = importSpec{Module: "psycopg"}
+			typeChecking["psycopg.rows"] = importSpec{Module: "psycopg.rows"}
+		}
+		if hasMany && r.hasSimpleReturn(queries) {
+			std["operator"] = importSpec{Module: moduleOperator}
+		}
+
 	case config.SQLDriverAioSQLite:
 		// register_adapter/register_converter calls need the module at runtime.
 		if conversions.Any() {

@@ -170,7 +170,7 @@ func (sb *sqliteBase) WriteQueryResultsClass(body *writer.CodeWriter) string {
 	body.WriteIndentedLine(3, "raise")
 	body.WriteIndentedLine(2, "return self._decode_hook(record)")
 
-	return "QueryResults"
+	return queryResultsClassName
 }
 
 func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Config, query model.Query, indent int) {

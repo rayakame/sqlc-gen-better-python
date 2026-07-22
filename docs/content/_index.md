@@ -34,9 +34,9 @@ layout: hextra-home
     subtitle="Generate dataclass, attrs, msgspec, or pydantic models - pick per codegen block."
   >}}
   {{< hextra/feature-card
-    title="Three drivers"
+    title="Four drivers"
     link="docs/guide/drivers"
-    subtitle="asyncpg for PostgreSQL, plus aiosqlite and sqlite3 for SQLite."
+    subtitle="asyncpg and psycopg for PostgreSQL, plus aiosqlite and sqlite3 for SQLite."
   >}}
   {{< hextra/feature-card
     title="Strictly typed output"
