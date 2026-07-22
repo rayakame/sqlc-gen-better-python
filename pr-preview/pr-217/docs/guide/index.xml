@@ -210,8 +210,8 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;The generated code targets &lt;a href="https://www.psycopg.org/psycopg3/"target="_blank" rel="noopener"&gt;Psycopg 3&lt;/a&gt; with
-its default tuple rows - the connection annotation is
+&lt;p&gt;The generated code targets &lt;a href="https://www.psycopg.org/psycopg3/"target="_blank" rel="noopener"&gt;Psycopg 3&lt;/a&gt;
+(3.2 or newer) with its default tuple rows - the connection annotation is
 &lt;code&gt;psycopg.AsyncConnection[psycopg.rows.TupleRow]&lt;/code&gt;, so a connection configured
 with another row factory is rejected by pyright. &lt;code&gt;:copyfrom&lt;/code&gt; streams rows
 through &lt;code&gt;cursor.copy()&lt;/code&gt;.&lt;/p&gt;
@@ -739,7 +739,7 @@ from a &lt;code&gt;public.mood&lt;/code&gt; that would become &lt;code&gt;Mood&l
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Enum classes are a PostgreSQL feature - SQLite has no native enum type, so this
-applies to the &lt;code&gt;asyncpg&lt;/code&gt; driver.&lt;/div&gt;
+applies to the PostgreSQL drivers (&lt;code&gt;asyncpg&lt;/code&gt; and &lt;code&gt;psycopg_async&lt;/code&gt;).&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;</description></item><item><title>Type overrides</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/type-overrides/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/type-overrides/</guid><description>
 &lt;p&gt;An override replaces the Python type the plugin would pick for a column with one

@@ -476,10 +476,10 @@ generates.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;code&gt;:execlastid&lt;/code&gt; relies on a last-inserted-row id, which asyncpg/PostgreSQL do not
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;code&gt;:execlastid&lt;/code&gt; relies on a last-inserted-row id, which PostgreSQL does not
 provide; use a &lt;code&gt;RETURNING&lt;/code&gt; clause with &lt;code&gt;:one&lt;/code&gt; instead. &lt;code&gt;:copyfrom&lt;/code&gt; maps to
-asyncpg&amp;rsquo;s bulk &lt;code&gt;copy_records_to_table&lt;/code&gt;, which the SQLite drivers have no
-equivalent for.&lt;/div&gt;
+PostgreSQL&amp;rsquo;s bulk &lt;code&gt;COPY&lt;/code&gt; protocol (&lt;code&gt;copy_records_to_table&lt;/code&gt; on asyncpg,
+&lt;code&gt;cursor.copy()&lt;/code&gt; on psycopg), which the SQLite drivers have no equivalent for.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h3&gt;Prepared queries&lt;span class="hx:absolute hx:-mt-20" id="prepared-queries"&gt;&lt;/span&gt;
