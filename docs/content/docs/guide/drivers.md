@@ -18,6 +18,11 @@ It must match your `engine`. Four drivers are supported:
 Every generated query function takes the connection as its first argument, so you
 open and manage the connection yourself and pass it in.
 
+Both PostgreSQL drivers produce the same models and type contract, so choosing
+between them is about the driver itself: pick `asyncpg` when raw driver
+throughput is the priority, and `psycopg_async` to stay in the psycopg
+ecosystem (libpq, pipeline mode, PgBouncer friendliness) at comparable speed.
+
 ## asyncpg (PostgreSQL)
 
 ```python
