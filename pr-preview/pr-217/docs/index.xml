@@ -558,8 +558,7 @@ data-copied-label="Copied!"
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;conn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;psycopg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;AsyncConnection&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;postgresql://user:pass@localhost/mydb&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;psycopg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;AsyncConnection&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;postgresql://user:pass@localhost/mydb&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_user&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -1187,7 +1186,7 @@ parameters, work without it. See
 &lt;/div&gt;
 &lt;h2&gt;Command support&lt;span class="hx:absolute hx:-mt-20" id="command-support"&gt;&lt;/span&gt;
 &lt;a href="#command-support" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Not every &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/writing-queries/"&gt;query command&lt;/a&gt; works on every driver -
-for example &lt;code&gt;:copyfrom&lt;/code&gt; is asyncpg-only and &lt;code&gt;:execlastid&lt;/code&gt; is SQLite-only. The
+for example &lt;code&gt;:copyfrom&lt;/code&gt; is PostgreSQL-only and &lt;code&gt;:execlastid&lt;/code&gt; is SQLite-only. The
 full matrix is in the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/reference/feature-support/"&gt;feature support reference&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Type mappings</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/reference/type-mappings/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/reference/type-mappings/</guid><description>
 &lt;p&gt;How the plugin maps SQL types to Python types, per engine. These are the
 built-in defaults; a &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; or
@@ -1464,9 +1463,10 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;strong&gt;psycopg&lt;/strong&gt; prepares a query server-side once it has been executed
-&lt;code&gt;prepare_threshold&lt;/code&gt; times on the connection (5 by default). Set it to &lt;code&gt;0&lt;/code&gt; to
-prepare from the first execution, or &lt;code&gt;None&lt;/code&gt; to never prepare:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;psycopg&lt;/strong&gt; prepares a query server-side once it has been executed more than
+&lt;code&gt;prepare_threshold&lt;/code&gt; times on the connection - with the default of 5, the
+sixth execution is the first prepared one. Set it to &lt;code&gt;0&lt;/code&gt; to prepare from the
+first execution, or &lt;code&gt;None&lt;/code&gt; to never prepare:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;conn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;psycopg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;AsyncConnection&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;dsn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;prepare_threshold&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button

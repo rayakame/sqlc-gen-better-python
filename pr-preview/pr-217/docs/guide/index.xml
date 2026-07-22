@@ -285,7 +285,7 @@ parameters, work without it. See
 &lt;/div&gt;
 &lt;h2&gt;Command support&lt;span class="hx:absolute hx:-mt-20" id="command-support"&gt;&lt;/span&gt;
 &lt;a href="#command-support" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Not every &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/writing-queries/"&gt;query command&lt;/a&gt; works on every driver -
-for example &lt;code&gt;:copyfrom&lt;/code&gt; is asyncpg-only and &lt;code&gt;:execlastid&lt;/code&gt; is SQLite-only. The
+for example &lt;code&gt;:copyfrom&lt;/code&gt; is PostgreSQL-only and &lt;code&gt;:execlastid&lt;/code&gt; is SQLite-only. The
 full matrix is in the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/reference/feature-support/"&gt;feature support reference&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Model types</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/model-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-217/docs/guide/model-types/</guid><description>
 &lt;p&gt;The &lt;code&gt;model_type&lt;/code&gt; option controls what kind of class the plugin generates for each
 table. All four produce the same fields with the same annotations - they differ
