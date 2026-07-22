@@ -118,5 +118,5 @@ user = queries.get_field_naming(conn, id_=1)
 ## Command support
 
 Not every [query command](/docs/guide/writing-queries) works on every driver -
-for example `:copyfrom` is asyncpg-only and `:execlastid` is SQLite-only. The
+for example `:copyfrom` is PostgreSQL-only and `:execlastid` is SQLite-only. The
 full matrix is in the [feature support reference](/docs/reference/feature-support).

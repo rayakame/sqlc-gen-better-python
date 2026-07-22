@@ -468,18 +468,17 @@ from app.db import query
 
 
 async def main() -> None:
-    conn = await psycopg.AsyncConnection.connect("postgresql://user:pass@localhost/mydb")
+    async with await psycopg.AsyncConnection.connect("postgresql://user:pass@localhost/mydb") as conn:
+        user = await query.get_user(conn, id_=1)
+        if user is not None:
+            print(user.name)
 
-    user = await query.get_user(conn, id_=1)
-    if user is not None:
-        print(user.name)
+        # every row at once
+        users = await query.list_users(conn)
 
-    # every row at once
-    users = await query.list_users(conn)
-
-    # or iterate
-    async for user in query.list_users(conn):
-        print(user.name)
+        # or iterate
+        async for user in query.list_users(conn):
+            print(user.name)
 
 
 asyncio.run(main())

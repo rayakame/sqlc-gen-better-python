@@ -64,9 +64,10 @@ query gets prepared and which knob controls it:
   )
   ```
 
-- **psycopg** prepares a query server-side once it has been executed
-  `prepare_threshold` times on the connection (5 by default). Set it to `0` to
-  prepare from the first execution, or `None` to never prepare:
+- **psycopg** prepares a query server-side once it has been executed more than
+  `prepare_threshold` times on the connection - with the default of 5, the
+  sixth execution is the first prepared one. Set it to `0` to prepare from the
+  first execution, or `None` to never prepare:
 
   ```python
   conn = await psycopg.AsyncConnection.connect(dsn, prepare_threshold=0)
