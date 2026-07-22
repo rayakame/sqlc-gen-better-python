@@ -61,8 +61,8 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-The generated code targets [Psycopg 3](https://www.psycopg.org/psycopg3/) with
-its default tuple rows - the connection annotation is
+The generated code targets [Psycopg 3](https://www.psycopg.org/psycopg3/)
+(3.2 or newer) with its default tuple rows - the connection annotation is
 `psycopg.AsyncConnection[psycopg.rows.TupleRow]`, so a connection configured
 with another row factory is rejected by pyright. `:copyfrom` streams rows
 through `cursor.copy()`.

@@ -109,7 +109,7 @@ class TestOmitTcClasses:
         assert queries_obj.conn is psycopg_async_conn
         results = queries_obj.list_enum_override_by_ids(dollar_1=list(CLASSES_IDS))
         seen: dict[int, str] = {}
-        # The cursor-based async-for path requires a transaction.
+        # Exercise the cursor-based async-for path.
         async with queries_obj.conn.transaction():
             async for row in results:
                 assert isinstance(row, classes_models.TestEnumOverride)
@@ -174,7 +174,7 @@ class TestOmitTcFunctions:
     async def test_iterate_enum_override_by_ids(self, psycopg_async_conn: psycopg.AsyncConnection[psycopg.rows.TupleRow]) -> None:
         results = functions_queries.list_enum_override_by_ids(conn=psycopg_async_conn, dollar_1=list(FUNCTIONS_IDS))
         seen: dict[int, str] = {}
-        # The cursor-based async-for path requires a transaction.
+        # Exercise the cursor-based async-for path.
         async with psycopg_async_conn.transaction():
             async for row in results:
                 assert isinstance(row, functions_models.TestEnumOverride)

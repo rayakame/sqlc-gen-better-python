@@ -923,7 +923,7 @@ class TestDataclassFunctions:
     async def test_iterate_enum_override_by_ids(self, psycopg_async_conn: psycopg.AsyncConnection[psycopg.rows.TupleRow]) -> None:
         results = queries_enum_override.list_enum_override_by_ids(conn=psycopg_async_conn, dollar_1=[520004])
         seen: dict[int, str] = {}
-        # The cursor-based async-for path requires a transaction.
+        # Exercise the cursor-based async-for path.
         async with psycopg_async_conn.transaction():
             async for row in results:
                 assert isinstance(row, models.TestEnumOverride)
@@ -1001,7 +1001,7 @@ class TestDataclassFunctions:
     @pytest.mark.dependency(name="TestDataclassFunctions::iterate_converted", depends=["TestDataclassFunctions::insert_converted"])
     async def test_iterate_converted_by_tags(self, psycopg_async_conn: psycopg.AsyncConnection[psycopg.rows.TupleRow]) -> None:
         results = queries_converters.list_converted_by_tags(conn=psycopg_async_conn, tags=frozenset({"a", "b"}))
-        # The cursor-based async-for path requires a transaction.
+        # Exercise the cursor-based async-for path.
         async with psycopg_async_conn.transaction():
             seen = [row async for row in results]
         assert seen == [CONVERTER_ID]

@@ -469,6 +469,53 @@ func TestPsycopgWriteQueryFunc(t *testing.T) {
 			}, "\n"),
 		},
 		{
+			name: "one long params hoist into sql_params",
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: "GET_LONG",
+				FuncName:     "get_long",
+				Params: []model.QueryValue{
+					{Name: longName, Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int", SQLType: "bigint"}},
+			},
+			want: strings.Join([]string{
+				"async def get_long(",
+				"    conn: ConnectionLike,",
+				"    " + longName + ": int,",
+				") -> int | None:",
+				"    sql_params = {",
+				`        "p1": ` + longName + ",",
+				"    }",
+				"    row = await (await conn.execute(GET_LONG, sql_params)).fetchone()",
+				"    if row is None:",
+				"        return None",
+				"    return row[0]",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "one long constant explodes into the nested await layout",
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: longName,
+				FuncName:     "get_named",
+				Returns:      model.QueryValue{Type: model.PyType{Type: "int", SQLType: "bigint"}},
+			},
+			want: strings.Join([]string{
+				"async def get_named(conn: ConnectionLike) -> int | None:",
+				"    row = await (",
+				"        await conn.execute(",
+				"            " + longName + ",",
+				"        )",
+				"    ).fetchone()",
+				"    if row is None:",
+				"        return None",
+				"    return row[0]",
+				"",
+			}, "\n"),
+		},
+		{
 			name: "many struct return with decode hook",
 			query: model.Query{
 				Cmd:          metadata.CmdMany,
@@ -520,6 +567,9 @@ func TestPsycopgWriteQueryFunc(t *testing.T) {
 func TestPsycopgWriteQueryFuncCopyFrom(t *testing.T) {
 	t.Parallel()
 	longName := strings.Repeat("c", 340)
+	// Long enough that write_row((...)) overflows, short enough that the
+	// one-element tuple still fits on its own line.
+	bandName := strings.Repeat("d", 280)
 	cases := []struct {
 		name  string
 		query model.Query
@@ -655,10 +705,78 @@ func TestPsycopgWriteQueryFuncCopyFrom(t *testing.T) {
 				"    async with conn.cursor() as cur:",
 				`        async with cur.copy('COPY "wide" ("a", "b") FROM STDIN') as copy:`,
 				"            for param in params:",
-				"                await copy.write_row((",
-				"                    param." + longName + ",",
-				"                    param.b,",
-				"                ))",
+				"                await copy.write_row(",
+				"                    (",
+				"                        param." + longName + ",",
+				"                        param.b,",
+				"                    )",
+				"                )",
+				"        return cur.rowcount",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "copyfrom long single-column row keeps the one-line tuple",
+			query: model.Query{
+				Cmd:          metadata.CmdCopyFrom,
+				ConstantName: "COPY_ONE",
+				FuncName:     "copy_one",
+				Table:        &plugin.Identifier{Name: "one"},
+				Params: []model.QueryValue{{
+					EmitTable: true,
+					Name:      "params",
+					Type:      model.PyType{Type: "CopyOneParams", IsList: true},
+					Table: &model.Table{
+						Name: "CopyOneParams",
+						Columns: []model.Column{
+							{Name: bandName, DBName: "a", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+						},
+					},
+				}},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int"}},
+			},
+			want: strings.Join([]string{
+				"async def copy_one(conn: ConnectionLike, params: collections.abc.Sequence[CopyOneParams]) -> int:",
+				"    async with conn.cursor() as cur:",
+				`        async with cur.copy('COPY "one" ("a") FROM STDIN') as copy:`,
+				"            for param in params:",
+				"                await copy.write_row(",
+				"                    (param." + bandName + ",)",
+				"                )",
+				"        return cur.rowcount",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "copyfrom overlong single-column row explodes the tuple too",
+			query: model.Query{
+				Cmd:          metadata.CmdCopyFrom,
+				ConstantName: "COPY_HUGE",
+				FuncName:     "copy_huge",
+				Table:        &plugin.Identifier{Name: "huge"},
+				Params: []model.QueryValue{{
+					EmitTable: true,
+					Name:      "params",
+					Type:      model.PyType{Type: "CopyHugeParams", IsList: true},
+					Table: &model.Table{
+						Name: "CopyHugeParams",
+						Columns: []model.Column{
+							{Name: longName, DBName: "a", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+						},
+					},
+				}},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int"}},
+			},
+			want: strings.Join([]string{
+				"async def copy_huge(conn: ConnectionLike, params: collections.abc.Sequence[CopyHugeParams]) -> int:",
+				"    async with conn.cursor() as cur:",
+				`        async with cur.copy('COPY "huge" ("a") FROM STDIN') as copy:`,
+				"            for param in params:",
+				"                await copy.write_row(",
+				"                    (",
+				"                        param." + longName + ",",
+				"                    )",
+				"                )",
 				"        return cur.rowcount",
 				"",
 			}, "\n"),

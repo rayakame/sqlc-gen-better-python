@@ -861,7 +861,7 @@ class TestMsgspecFunctions:
     async def test_iterate_enum_override_by_ids(self, psycopg_async_conn: psycopg.AsyncConnection[psycopg.rows.TupleRow]) -> None:
         results = queries_enum_override.list_enum_override_by_ids(conn=psycopg_async_conn, dollar_1=[434343])
         seen: dict[int, str] = {}
-        # The cursor-based async-for path requires a transaction.
+        # Exercise the cursor-based async-for path.
         async with psycopg_async_conn.transaction():
             async for row in results:
                 assert isinstance(row, models.TestEnumOverride)

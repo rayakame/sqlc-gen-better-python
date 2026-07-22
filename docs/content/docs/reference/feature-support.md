@@ -39,10 +39,10 @@ See [Writing queries](/docs/guide/writing-queries) for what each command
 generates.
 
 {{< callout type="info" >}}
-  `:execlastid` relies on a last-inserted-row id, which asyncpg/PostgreSQL do not
+  `:execlastid` relies on a last-inserted-row id, which PostgreSQL does not
   provide; use a `RETURNING` clause with `:one` instead. `:copyfrom` maps to
-  asyncpg's bulk `copy_records_to_table`, which the SQLite drivers have no
-  equivalent for.
+  PostgreSQL's bulk `COPY` protocol (`copy_records_to_table` on asyncpg,
+  `cursor.copy()` on psycopg), which the SQLite drivers have no equivalent for.
 {{< /callout >}}
 
 ### Prepared queries

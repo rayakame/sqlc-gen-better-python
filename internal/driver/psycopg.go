@@ -186,23 +186,23 @@ func psycopgParamEntries(query model.Query) []string {
 	return entries
 }
 
-// writePsycopgCall writes head+leadArgs+dict+tail on one line, hoisting a
+// writePsycopgCall writes head+leadArgs+dict+")" on one line, hoisting a
 // too-long params dict into a local sql_params variable first; overlong
-// statements without a dict wrap through WriteWrappedCall like every other
-// driver. Only :many modules define QueryResultsArgsType, so only the :many
-// hoist is annotated with it - there the declared type must match the
-// QueryResults parameter exactly (dict is invariant), while conn.execute()
-// accepts any string mapping.
-func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, head string, leadArgs []string, tail string) {
+// statements wrap through WriteWrappedCall like every other driver. Only
+// :many modules define QueryResultsArgsType, so only the :many hoist is
+// annotated with it - there the declared type must match the QueryResults
+// parameter exactly (dict is invariant), while conn.execute() accepts any
+// string mapping.
+func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, head string, leadArgs []string) {
 	entries := psycopgParamEntries(query)
 	if len(entries) == 0 {
-		body.WriteWrappedCall(indent, head, leadArgs, tail)
+		body.WriteWrappedCall(indent, head, leadArgs, ")")
 
 		return
 	}
 
 	dict := "{" + strings.Join(entries, ", ") + "}"
-	stmt := head + strings.Join(append(slices.Clone(leadArgs), dict), ", ") + tail
+	stmt := head + strings.Join(append(slices.Clone(leadArgs), dict), ", ") + ")"
 	if body.FitsLine(indent, stmt) {
 		body.WriteIndentedLine(indent, stmt)
 
@@ -218,7 +218,46 @@ func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, he
 		body.WriteIndentedLine(indent+1, entry+",")
 	}
 	body.WriteIndentedLine(indent, "}")
-	body.WriteWrappedCall(indent, head, append(slices.Clone(leadArgs), "sql_params"), tail)
+	body.WriteWrappedCall(indent, head, append(slices.Clone(leadArgs), "sql_params"), ")")
+}
+
+// writePsycopgOneCall writes the :one fetch statement. Its tail closes two
+// parentheses, which WriteWrappedCall's exploded form cannot express in a
+// ruff-stable way, so the overlong case emits ruff format's nested-await
+// layout instead.
+func writePsycopgOneCall(body *writer.CodeWriter, indent int, query model.Query, conn string) {
+	entries := psycopgParamEntries(query)
+	head := fmt.Sprintf("row = await (await %s.execute(", conn)
+	args := []string{query.ConstantName}
+	if len(entries) != 0 {
+		dict := "{" + strings.Join(entries, ", ") + "}"
+		stmt := head + query.ConstantName + ", " + dict + ")).fetchone()"
+		if body.FitsLine(indent, stmt) {
+			body.WriteIndentedLine(indent, stmt)
+
+			return
+		}
+		body.WriteIndentedLine(indent, "sql_params = {")
+		for _, entry := range entries {
+			body.WriteIndentedLine(indent+1, entry+",")
+		}
+		body.WriteIndentedLine(indent, "}")
+		args = append(args, "sql_params")
+	}
+
+	stmt := head + strings.Join(args, ", ") + ")).fetchone()"
+	if body.FitsLine(indent, stmt) {
+		body.WriteIndentedLine(indent, stmt)
+
+		return
+	}
+	body.WriteIndentedLine(indent, "row = await (")
+	body.WriteIndentedLine(indent+1, fmt.Sprintf("await %s.execute(", conn))
+	for _, arg := range args {
+		body.WriteIndentedLine(indent+2, arg+",")
+	}
+	body.WriteIndentedLine(indent+1, ")")
+	body.WriteIndentedLine(indent, ").fetchone()")
 }
 
 func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Config, query model.Query, indent int) {
@@ -246,20 +285,20 @@ func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	constArg := []string{query.ConstantName}
 	switch query.Cmd {
 	case metadata.CmdExec:
-		writePsycopgCall(body, indent, query, execHead, constArg, ")")
+		writePsycopgCall(body, indent, query, execHead, constArg)
 
 	case metadata.CmdExecResult:
-		writePsycopgCall(body, indent, query, "return "+execHead, constArg, ")")
+		writePsycopgCall(body, indent, query, "return "+execHead, constArg)
 
 	case metadata.CmdExecRows:
-		writePsycopgCall(body, indent, query, "cur = "+execHead, constArg, ")")
+		writePsycopgCall(body, indent, query, "cur = "+execHead, constArg)
 		body.WriteIndentedLine(indent, "return cur.rowcount")
 
 	case metadata.CmdCopyFrom:
 		p.writeCopyFromBody(body, query, conn, indent)
 
 	case metadata.CmdOne:
-		writePsycopgCall(body, indent, query, "row = await ("+execHead, constArg, ")).fetchone()")
+		writePsycopgOneCall(body, indent, query, conn)
 		body.WriteIndentedLine(indent, "if row is None:")
 		body.WriteIndentedLine(indent+1, "return None")
 
@@ -277,7 +316,6 @@ func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 			query,
 			"return QueryResults(",
 			[]string{conn, query.ConstantName, decodeHook},
-			")",
 		)
 	}
 }
@@ -325,14 +363,25 @@ func (p *psycopgBase) writeCopyFromBody(body *writer.CodeWriter, query model.Que
 	}
 	body.WriteIndentedLine(loopIndent, "for param in "+query.Params[0].Name+":")
 	writeRow := "await copy.write_row(" + rowTuple + ")"
-	if body.FitsLine(rowIndent, writeRow) {
+	switch {
+	case body.FitsLine(rowIndent, writeRow):
 		body.WriteIndentedLine(rowIndent, writeRow)
-	} else {
-		body.WriteIndentedLine(rowIndent, "await copy.write_row((")
+	case len(rowParts) == 1 && body.FitsLine(rowIndent+1, rowTuple):
+		// ruff format keeps a fitting one-element tuple on a single line -
+		// its required trailing comma is not a magic one.
+		body.WriteIndentedLine(rowIndent, "await copy.write_row(")
+		body.WriteIndentedLine(rowIndent+1, rowTuple)
+		body.WriteIndentedLine(rowIndent, ")")
+	default:
+		// ruff format's stable layout: the tuple opens on its own line inside
+		// the call and the magic trailing comma keeps it exploded.
+		body.WriteIndentedLine(rowIndent, "await copy.write_row(")
+		body.WriteIndentedLine(rowIndent+1, "(")
 		for _, part := range rowParts {
-			body.WriteIndentedLine(rowIndent+1, part+",")
+			body.WriteIndentedLine(rowIndent+2, part+",")
 		}
-		body.WriteIndentedLine(rowIndent, "))")
+		body.WriteIndentedLine(rowIndent+1, ")")
+		body.WriteIndentedLine(rowIndent, ")")
 	}
 	body.WriteIndentedLine(copyIndent, "return cur.rowcount")
 }

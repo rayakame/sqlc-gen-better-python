@@ -810,8 +810,8 @@ class TestPydanticClasses:
     async def test_iterate_enum_override_by_ids(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
         results = queries_enum_override_obj.list_enum_override_by_ids(dollar_1=[520006])
         seen: dict[int, str] = {}
-        # The cursor-based async-for path requires a transaction; going
-        # through the conn property also covers its generated accessor.
+        # Exercise the cursor-based async-for path; going through the conn
+        # property also covers its generated accessor.
         async with queries_enum_override_obj.conn.transaction():
             async for row in results:
                 assert isinstance(row, models.TestEnumOverride)

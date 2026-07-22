@@ -205,6 +205,19 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 			want:   "row_2",
 		},
 		{name: "row is free in a psycopg exec query", driver: config.SQLDriverPsycopgAsync, column: "row", want: "row"},
+		{
+			name:   "decode hook collides in a psycopg many query",
+			driver: config.SQLDriverPsycopgAsync,
+			cmd:    ":many",
+			column: "_decode_hook",
+			want:   "_decode_hook_2",
+		},
+		{
+			name:   "decode hook is free in a psycopg exec query",
+			driver: config.SQLDriverPsycopgAsync,
+			column: "_decode_hook",
+			want:   "_decode_hook",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
