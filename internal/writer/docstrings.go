@@ -189,11 +189,8 @@ func (w *CodeWriter) WriteQueryClassConnDocstring(connType string) {
 // --- QueryResults docstrings --------------------------------------------------
 
 // WriteQueryResultsClassDocstring writes the QueryResults class docstring.
-func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string) {
-	w.writeQueryResultsClassDocstring(connType, resultType, false)
-}
-
-func (w *CodeWriter) writeQueryResultsClassDocstring(connType, resultType string, namedParams bool) {
+// namedParams switches the argument documentation from *args to params.
+func (w *CodeWriter) WriteQueryResultsClassDocstring(connType, resultType string, namedParams bool) {
 	if !w.DocstringsEnabled() {
 		return
 	}
@@ -226,11 +223,8 @@ func (w *CodeWriter) writeQueryResultsClassDocstring(connType, resultType string
 }
 
 // WriteQueryResultsInitDocstring writes the QueryResults __init__ docstring.
-func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string) {
-	w.writeQueryResultsInitDocstring(connType, resultType, false)
-}
-
-func (w *CodeWriter) writeQueryResultsInitDocstring(connType, resultType string, namedParams bool) {
+// namedParams switches the argument documentation from *args to params.
+func (w *CodeWriter) WriteQueryResultsInitDocstring(connType, resultType string, namedParams bool) {
 	if !w.DocstringsEnabled() {
 		return
 	}
@@ -398,11 +392,12 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		summaryFmt = "Execute SQL query with `name: %s %s`."
 	case metadata.CmdExecRows:
 		summaryFmt = "Execute SQL query with `name: %s %s` and return the number of affected rows."
-		// Both sqlite drivers return cursor.rowcount, which is -1 for
-		// non-DML statements per DB-API; only asyncpg's status-string parse
-		// falls back to 0.
+		// The sqlite drivers and psycopg return cursor.rowcount, which is -1
+		// for statements without a row count; only asyncpg's status-string
+		// parse falls back to 0.
 		noRows := "0"
-		if w.docstringDriver == config.SQLDriverAioSQLite || w.docstringDriver == config.SQLDriverSQLite {
+		if w.docstringDriver == config.SQLDriverAioSQLite || w.docstringDriver == config.SQLDriverSQLite ||
+			w.docstringDriver == config.SQLDriverPsycopgAsync {
 			noRows = "-1"
 		}
 		ret = &retDoc{

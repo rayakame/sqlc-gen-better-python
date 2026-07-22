@@ -89,7 +89,7 @@ func (w *QueryResultsWriter) writeClassHeader(
 	// PEP 695 class-scoped type parameter: no module-level TypeVar and no
 	// typing.Generic base needed on Python 3.12+.
 	w.writer.WriteLine("class QueryResults[T]:")
-	w.writer.writeQueryResultsClassDocstring(connType, driverReturnType, namedParams)
+	w.writer.WriteQueryResultsClassDocstring(connType, driverReturnType, namedParams)
 	w.writer.WriteIndentedLine(1, slots)
 	w.writer.NewLine()
 	w.writer.WriteIndentedLine(1, "def __init__(")
@@ -99,7 +99,7 @@ func (w *QueryResultsWriter) writeClassHeader(
 	w.writer.WriteIndentedLine(methodBodyIndent, fmt.Sprintf("decode_hook: collections.abc.Callable[[%s], T],", driverReturnType))
 	w.writer.WriteIndentedLine(methodBodyIndent, argsParam)
 	w.writer.WriteIndentedLine(1, ") -> None:")
-	w.writer.writeQueryResultsInitDocstring(connType, driverReturnType, namedParams)
+	w.writer.WriteQueryResultsInitDocstring(connType, driverReturnType, namedParams)
 	w.writer.WriteIndentedLine(methodBodyIndent, "self._conn = conn")
 	w.writer.WriteIndentedLine(methodBodyIndent, sqlAssign)
 	w.writer.WriteIndentedLine(methodBodyIndent, "self._decode_hook = decode_hook")

@@ -166,6 +166,8 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 	cases := []struct {
 		name        string
 		emitClasses bool
+		driver      config.SQLDriver
+		cmd         string
 		column      string
 		sqlcSlice   bool
 		want        string
@@ -178,15 +180,44 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 		// before binding, so the name is reserved exactly there.
 		{name: "sql collides in a slice query", emitClasses: false, column: "sql", sqlcSlice: true, want: "sql_2"},
 		{name: "sql is free without slices", emitClasses: false, column: "sql", want: "sql"},
+		// psycopg query bodies introduce locals of their own: the hoisted
+		// params dict, the :execrows cursor, and the :one row.
+		{
+			name:   "sql_params collides for psycopg",
+			driver: config.SQLDriverPsycopgAsync,
+			column: "sql_params",
+			want:   "sql_params_2",
+		},
+		{name: "sql_params is free for asyncpg", driver: config.SQLDriverAsyncpg, column: "sql_params", want: "sql_params"},
+		{
+			name:   "cur collides in a psycopg execrows query",
+			driver: config.SQLDriverPsycopgAsync,
+			cmd:    ":execrows",
+			column: "cur",
+			want:   "cur_2",
+		},
+		{name: "cur is free in a psycopg exec query", driver: config.SQLDriverPsycopgAsync, column: "cur", want: "cur"},
+		{
+			name:   "row collides in a psycopg one query",
+			driver: config.SQLDriverPsycopgAsync,
+			cmd:    ":one",
+			column: "row",
+			want:   "row_2",
+		},
+		{name: "row is free in a psycopg exec query", driver: config.SQLDriverPsycopgAsync, column: "row", want: "row"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			column := queryCol(tc.column, "int4", nil)
 			column.IsSqlcSlice = tc.sqlcSlice
-			query := buildSingleQuery(t, &config.Config{EmitClasses: tc.emitClasses}, &plugin.Query{
+			cmd := tc.cmd
+			if cmd == "" {
+				cmd = ":exec"
+			}
+			query := buildSingleQuery(t, &config.Config{EmitClasses: tc.emitClasses, SqlDriver: tc.driver}, &plugin.Query{
 				Name:   "Ping",
-				Cmd:    ":exec",
+				Cmd:    cmd,
 				Params: []*plugin.Parameter{{Number: 1, Column: column}},
 			})
 

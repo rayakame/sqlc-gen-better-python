@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 98fcfe52c90484d16ec4f6d092066479e9c940fe98c191d6844caf3c7c5e0679
+      sha256: face79847022c5066f8166fa53b2b199d40353cbb0f22b36c550bb857f0203fa
 sql:
   - schema: schema.sql
     queries:
@@ -290,3 +290,41 @@ sql:
   # omit_typechecking_block coverage: the driver hook and QueryResultsArgsType
   # must stay runtime-safe when emitted at module level (PEP 695 aliases are
   # lazy). Both modules are import-tested at runtime.
+  - schema: schema.sql
+    queries: queries_enum_override.sql
+    engine: postgresql
+    codegen:
+      - out: /omit_tc/classes
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.omit_tc.classes
+          sql_driver: psycopg_async
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          omit_typechecking_block: true
+          docstrings: google
+          overrides:
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries: queries_enum_override.sql
+    engine: postgresql
+    codegen:
+      - out: /omit_tc/functions
+        plugin: python
+        options:
+          package: test.driver_psycopg_async.omit_tc.functions
+          sql_driver: psycopg_async
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          omit_typechecking_block: true
+          docstrings: google
+          overrides:
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str

@@ -1284,7 +1284,7 @@ class Queries:
         ltxtquery_test : str
 
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": id_,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1450,7 +1450,7 @@ class Queries:
         ltxtquery_test : str | None
 
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": table_id,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1653,7 +1653,7 @@ class Queries:
             The result returned when executing the query.
 
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": id_,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1863,10 +1863,10 @@ class Queries:
         Returns
         -------
         int
-            The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": id_,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1923,7 +1923,7 @@ class Queries:
         Returns
         -------
         int
-            The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
         cur = await self._conn.execute(UPDATE_ROWS_TEST_POSTGRES_TYPE, {"p1": id_})
@@ -1945,7 +1945,7 @@ class Queries:
         Returns
         -------
         int
-            The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
         cur = await self._conn.execute(DELETE_ONE_ROWS_TEST_POSTGRES_TYPE, {"p1": id_})
@@ -1965,7 +1965,7 @@ class Queries:
         Returns
         -------
         int
-            The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
         cur = await self._conn.execute(CREATE_ROWS_TABLE)
@@ -2216,7 +2216,7 @@ class Queries:
         Returns
         -------
         int
-            The number of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number of affected rows. This will be -1 for queries like `CREATE TABLE`.
 
         """
         cur = await self._conn.execute(DELETE_ONE_TEST_ENUM_TYPE, {"p1": id_})

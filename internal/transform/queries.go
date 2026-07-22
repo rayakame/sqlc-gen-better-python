@@ -36,11 +36,17 @@ func (t *Transformer) plainParams(pluginQuery *plugin.Query) []model.QueryValue 
 			break
 		}
 	}
-	// The psycopg driver hoists an overlong params dict into a local named
-	// "sql_params" before binding, so the name is reserved for every
-	// parameterized psycopg query.
-	if t.config.SqlDriver == config.SQLDriverPsycopgAsync && len(pluginQuery.Params) > 0 {
+	// psycopg query bodies introduce locals a parameter must not clobber: an
+	// overlong params dict hoists into "sql_params", :execrows reads the
+	// cursor via "cur", and :one fetches into "row".
+	if t.config.SqlDriver == config.SQLDriverPsycopgAsync {
 		seen["sql_params"]++
+		switch pluginQuery.Cmd {
+		case metadata.CmdExecRows:
+			seen["cur"]++
+		case metadata.CmdOne:
+			seen["row"]++
+		}
 	}
 	for _, param := range pluginQuery.Params {
 		params = append(params, model.QueryValue{

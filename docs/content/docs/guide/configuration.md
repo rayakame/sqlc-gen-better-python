@@ -54,7 +54,7 @@ sql:
 | Option | What it does |
 |---|---|
 | `package` | The name of the generated package. |
-| `sql_driver` | `asyncpg`, `aiosqlite`, or `sqlite3` - must match the `engine`. See [Drivers](/docs/guide/drivers). |
+| `sql_driver` | `asyncpg`, `psycopg_async`, `aiosqlite`, or `sqlite3` - must match the `engine`. See [Drivers](/docs/guide/drivers). |
 | `emit_init_file` | Whether to emit `__init__.py`. Must be set explicitly. |
 
 Everything else is optional and has a sensible default. The most common ones to
@@ -88,8 +88,9 @@ queries - for example a `msgspec` package and a `dataclass` package:
 
 ## Common pitfalls
 
-- **Driver/engine mismatch.** `sql_driver: asyncpg` requires `engine: "postgresql"`;
-  `aiosqlite`/`sqlite3` require `engine: "sqlite"`. A mismatch is an error.
+- **Driver/engine mismatch.** `sql_driver: asyncpg` and `psycopg_async` require
+  `engine: "postgresql"`; `aiosqlite`/`sqlite3` require `engine: "sqlite"`. A
+  mismatch is an error.
 - **Forgetting `emit_init_file`.** It has no default and generation fails if it
   is omitted. Set it to `true` unless the package already has an `__init__.py`.
 - **A stale `sha256`.** When you bump the plugin version, update the hash too.

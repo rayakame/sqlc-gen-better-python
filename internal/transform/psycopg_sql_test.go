@@ -40,6 +40,11 @@ func TestRewritePsycopgSQL(t *testing.T) {
 			want: `SELECT E'a\'b $1 %%', %(p2)s`,
 		},
 		{
+			name: "escape string honors quote doubling too",
+			sql:  "SELECT E'it''s $1', $2",
+			want: "SELECT E'it''s $1', %(p2)s",
+		},
+		{
 			name: "identifier ending in e does not start an escape string",
 			sql:  "SELECT note FROM t WHERE note LIKE'%' AND id = $1",
 			want: "SELECT note FROM t WHERE note LIKE'%%' AND id = %(p1)s",
@@ -65,9 +70,34 @@ func TestRewritePsycopgSQL(t *testing.T) {
 			want: "SELECT 1 $ 2 $abc, %(p1)s",
 		},
 		{
+			name: "identifier containing dollar-digits stays text",
+			sql:  "SELECT col$2 FROM t WHERE id = $1",
+			want: "SELECT col$2 FROM t WHERE id = %(p1)s",
+		},
+		{
+			name: "identifier with dollar-tag shaped tail stays text",
+			sql:  "SELECT a$x$ FROM t WHERE id = $1",
+			want: "SELECT a$x$ FROM t WHERE id = %(p1)s",
+		},
+		{
+			name: "multi-byte dollar quote tag stays text",
+			sql:  "SELECT $\xc3\xa9$50% $1$\xc3\xa9$, $2",
+			want: "SELECT $\xc3\xa9$50%% $1$\xc3\xa9$, %(p2)s",
+		},
+		{
+			name: "multi-byte identifier before string is not an escape string",
+			sql:  "SELECT entr\xc3\xa9e'\\' AS x, $1",
+			want: "SELECT entr\xc3\xa9e'\\' AS x, %(p1)s",
+		},
+		{
 			name: "line comment stays text",
 			sql:  "SELECT $1 -- not $2 or 50%\nFROM t",
 			want: "SELECT %(p1)s -- not $2 or 50%%\nFROM t",
+		},
+		{
+			name: "carriage return ends a line comment",
+			sql:  "SELECT $1 -- note\r, $2",
+			want: "SELECT %(p1)s -- note\r, %(p2)s",
 		},
 		{
 			name: "trailing line comment without newline",

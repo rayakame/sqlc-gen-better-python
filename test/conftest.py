@@ -40,6 +40,19 @@ PSYCOPG_ASYNC_PATH = pathlib.Path(__file__).parent / "driver_psycopg_async"
 AIOSQLITE_PATH = pathlib.Path(__file__).parent / "driver_aiosqlite"
 SQLITE3_PATH = pathlib.Path(__file__).parent / "driver_sqlite3"
 
+# Both postgres suites share the same tables, so their session teardowns must
+# clean the same list; a single constant keeps them from diverging.
+_POSTGRES_CLEANUP: typing.Final = """
+    DELETE FROM test_postgres_types;
+    DELETE FROM test_inner_postgres_types;
+    DELETE FROM test_copy_from;
+    DELETE FROM test_copy_override;
+    DELETE FROM test_converters;
+    DELETE FROM test_converter_array;
+    DELETE FROM test_invalid_identifiers;
+    DELETE FROM "3rd_party_stats";
+"""
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
@@ -81,16 +94,7 @@ async def asyncpg_conn(
 
     await conn.execute((ASYNCPG_PATH / "schema.sql").read_text())
     yield conn
-    await conn.execute("""
-        DELETE FROM test_postgres_types;
-        DELETE FROM test_inner_postgres_types;
-        DELETE FROM test_copy_from;
-        DELETE FROM test_copy_override;
-        DELETE FROM test_converters;
-        DELETE FROM test_converter_array;
-        DELETE FROM test_invalid_identifiers;
-        DELETE FROM "3rd_party_stats";
-    """)
+    await conn.execute(_POSTGRES_CLEANUP)
     await conn.close()
 
 
@@ -117,16 +121,7 @@ async def psycopg_async_conn(
     schema = typing.cast("typing.LiteralString", (PSYCOPG_ASYNC_PATH / "schema.sql").read_text())
     await conn.execute(schema)
     yield conn
-    await conn.execute("""
-        DELETE FROM test_postgres_types;
-        DELETE FROM test_inner_postgres_types;
-        DELETE FROM test_copy_from;
-        DELETE FROM test_copy_override;
-        DELETE FROM test_converters;
-        DELETE FROM test_converter_array;
-        DELETE FROM test_invalid_identifiers;
-        DELETE FROM "3rd_party_stats";
-    """)
+    await conn.execute(_POSTGRES_CLEANUP)
     await conn.close()
 
 

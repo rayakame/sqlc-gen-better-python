@@ -190,7 +190,7 @@ class QueriesEnumOverride:
         def _decode_hook(row: psycopg.rows.TupleRow) -> models.TestEnumOverride:
             return models.TestEnumOverride(id_=row[0], mood_test=str(row[1]))
 
-        return QueryResults(self._conn, LIST_ENUM_OVERRIDE_BY_IDS, _decode_hook, {"p1": dollar_1})
+        return QueryResults(self._conn, LIST_ENUM_OVERRIDE_BY_IDS, _decode_hook, {"p1": list(dollar_1)})
 
     async def count_enum_override_by_moods(self, *, dollar_1: collections.abc.Sequence[enums.TestMood]) -> int | None:
         """Fetch one from the db using the SQL query with `name: CountEnumOverrideByMoods :one`.
@@ -205,7 +205,7 @@ class QueriesEnumOverride:
         Returns:
             Result of type `int` fetched from the db. Will be `None` if not found.
         """
-        row = await (await self._conn.execute(COUNT_ENUM_OVERRIDE_BY_MOODS, {"p1": dollar_1})).fetchone()
+        row = await (await self._conn.execute(COUNT_ENUM_OVERRIDE_BY_MOODS, {"p1": list(dollar_1)})).fetchone()
         if row is None:
             return None
         return row[0]

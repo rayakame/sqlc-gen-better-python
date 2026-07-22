@@ -198,7 +198,7 @@ def list_enum_override_by_ids(conn: ConnectionLike, *, dollar_1: collections.abc
     def _decode_hook(row: psycopg.rows.TupleRow) -> models.TestEnumOverride:
         return models.TestEnumOverride(id_=row[0], mood_test=str(row[1]))
 
-    return QueryResults(conn, LIST_ENUM_OVERRIDE_BY_IDS, _decode_hook, {"p1": dollar_1})
+    return QueryResults(conn, LIST_ENUM_OVERRIDE_BY_IDS, _decode_hook, {"p1": list(dollar_1)})
 
 
 async def count_enum_override_by_moods(conn: ConnectionLike, *, dollar_1: collections.abc.Sequence[enums.TestMood]) -> int | None:
@@ -220,7 +220,7 @@ async def count_enum_override_by_moods(conn: ConnectionLike, *, dollar_1: collec
         Result fetched from the db. Will be `None` if not found.
 
     """
-    row = await (await conn.execute(COUNT_ENUM_OVERRIDE_BY_MOODS, {"p1": dollar_1})).fetchone()
+    row = await (await conn.execute(COUNT_ENUM_OVERRIDE_BY_MOODS, {"p1": list(dollar_1)})).fetchone()
     if row is None:
         return None
     return row[0]

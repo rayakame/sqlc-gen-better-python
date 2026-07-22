@@ -16,11 +16,9 @@ const (
 	psycopgResultType = "psycopg.rows.TupleRow"
 )
 
-// psycopgBase is the driver implementation for psycopg (Psycopg 3). Only the
-// async flavor is exposed today; the flag keeps a future sync twin cheap.
+// psycopgBase is the driver implementation for psycopg (Psycopg 3).
 type psycopgBase struct {
-	async bool
-	rows  *RowBuilder
+	rows *RowBuilder
 }
 
 var _ Driver = (*psycopgBase)(nil)
@@ -28,10 +26,9 @@ var _ Driver = (*psycopgBase)(nil)
 // newPsycopgDriver creates the psycopg driver. Runtime value conversion is
 // identical to asyncpg: bytea, inet, and cidr convert inline; json and jsonb
 // keep their str wire type via registered loaders, see WriteConversionSetup.
-func newPsycopgDriver(async bool) *psycopgBase {
+func newPsycopgDriver() *psycopgBase {
 	return &psycopgBase{
-		async: async,
-		rows:  newRowBuilder(asyncpgNeedsConversion),
+		rows: newRowBuilder(asyncpgNeedsConversion),
 	}
 }
 
@@ -41,8 +38,8 @@ func (p *psycopgBase) Name() string { return "psycopg" }
 // ConnType returns "ConnectionLike".
 func (p *psycopgBase) ConnType() string { return psycopgConnType }
 
-// IsAsync reports whether this is the async psycopg driver.
-func (p *psycopgBase) IsAsync() bool { return p.async }
+// IsAsync returns true; only the async psycopg flavor exists.
+func (p *psycopgBase) IsAsync() bool { return true }
 
 // NeedsConversion reports whether a SQL type needs runtime conversion.
 func (p *psycopgBase) NeedsConversion(sqlType string) bool {
@@ -139,26 +136,30 @@ func (p *psycopgBase) WriteQueryResultsClass(body *writer.CodeWriter) string {
 	body.QueryResults.WriteQueryResultsClassHeaderNamedParams(psycopgConnType, []string{
 		fmt.Sprintf("self._cursor: psycopg.AsyncCursor[%s] | None = None", psycopgResultType),
 		fmt.Sprintf("self._iterator: collections.abc.AsyncIterator[%s] | None = None", psycopgResultType),
-	}, psycopgResultType, p.async)
+	}, psycopgResultType, true)
 	body.QueryResults.WriteQueryResultsAwaitFunction([]string{
 		"result = await (await self._conn.execute(self._sql, self._params)).fetchall()",
 		decodeRowsExpr,
 	})
-	body.NewLine()
-	body.WriteIndentedLine(1, "async def __anext__(self) -> T:")
-	body.WriteQueryResultsNextDocstring("a psycopg cursor", p.async)
-	body.WriteIndentedLine(2, "if self._cursor is None or self._iterator is None:")
-	body.WriteIndentedLine(3, "self._cursor = await self._conn.execute(self._sql, self._params)")
-	body.WriteIndentedLine(3, "self._iterator = self._cursor.__aiter__()")
-	body.WriteIndentedLine(2, "try:")
-	body.WriteIndentedLine(3, "record = await self._iterator.__anext__()")
-	body.WriteIndentedLine(2, "except StopAsyncIteration:")
-	body.WriteIndentedLine(3, "self._cursor = None")
-	body.WriteIndentedLine(3, "self._iterator = None")
-	body.WriteIndentedLine(3, "raise")
-	body.WriteIndentedLine(2, "return self._decode_hook(record)")
+	writeAsyncNextMethod(body, "a psycopg cursor", "self._cursor = await self._conn.execute(self._sql, self._params)")
 
 	return queryResultsClassName
+}
+
+// psycopgParamValue converts a parameter expression for the binding dict.
+// Beyond the shared override conversion, unconverted sequence parameters are
+// copied into a list: psycopg only dumps lists as arrays (a tuple becomes a
+// composite record), while the annotation permits any sequence like asyncpg.
+func psycopgParamValue(expr string, typ model.PyType) string {
+	converted := convertParamExpr(expr, typ)
+	if !typ.IsList || converted != expr {
+		return converted
+	}
+	if typ.IsNullable {
+		return fmt.Sprintf("list(%s) if %s is not None else None", expr, expr)
+	}
+
+	return "list(" + expr + ")"
 }
 
 // psycopgParamEntries returns the named-binding dict entries for a query's
@@ -166,7 +167,7 @@ func (p *psycopgBase) WriteQueryResultsClass(body *writer.CodeWriter) string {
 func psycopgParamEntries(query model.Query) []string {
 	entries := make([]string, 0, len(query.Params))
 	appendEntry := func(number int32, expr string, typ model.PyType) {
-		entries = append(entries, fmt.Sprintf(`"p%d": %s`, number, convertParamExpr(expr, typ)))
+		entries = append(entries, fmt.Sprintf(`"p%d": %s`, number, psycopgParamValue(expr, typ)))
 	}
 	for _, param := range query.Params {
 		if param.IsEmpty() {
@@ -185,31 +186,39 @@ func psycopgParamEntries(query model.Query) []string {
 	return entries
 }
 
-// writePsycopgCall writes stmtHead+dict+stmtTail on one line, hoisting a
-// too-long params dict into a local sql_params variable first so the
-// statement stays within the line limit.
-func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, stmtHead, stmtTail string) {
+// writePsycopgCall writes head+leadArgs+dict+tail on one line, hoisting a
+// too-long params dict into a local sql_params variable first; overlong
+// statements without a dict wrap through WriteWrappedCall like every other
+// driver. Only :many modules define QueryResultsArgsType, so only the :many
+// hoist is annotated with it - there the declared type must match the
+// QueryResults parameter exactly (dict is invariant), while conn.execute()
+// accepts any string mapping.
+func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, head string, leadArgs []string, tail string) {
 	entries := psycopgParamEntries(query)
 	if len(entries) == 0 {
-		body.WriteIndentedLine(indent, stmtHead+stmtTail)
+		body.WriteWrappedCall(indent, head, leadArgs, tail)
 
 		return
 	}
 
-	segment := ", {" + strings.Join(entries, ", ") + "}"
-	stmt := stmtHead + segment + stmtTail
+	dict := "{" + strings.Join(entries, ", ") + "}"
+	stmt := head + strings.Join(append(slices.Clone(leadArgs), dict), ", ") + tail
 	if body.FitsLine(indent, stmt) {
 		body.WriteIndentedLine(indent, stmt)
 
 		return
 	}
 
-	body.WriteIndentedLine(indent, "sql_params: dict[str, QueryResultsArgsType] = {")
+	hoist := "sql_params = {"
+	if query.Cmd == metadata.CmdMany {
+		hoist = "sql_params: dict[str, QueryResultsArgsType] = {"
+	}
+	body.WriteIndentedLine(indent, hoist)
 	for _, entry := range entries {
 		body.WriteIndentedLine(indent+1, entry+",")
 	}
 	body.WriteIndentedLine(indent, "}")
-	body.WriteIndentedLine(indent, stmtHead+", sql_params"+stmtTail)
+	body.WriteWrappedCall(indent, head, append(slices.Clone(leadArgs), "sql_params"), tail)
 }
 
 func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Config, query model.Query, indent int) {
@@ -233,23 +242,24 @@ func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	indent++
 	writeQueryDocstring(body, p, config, query, indent, docRetType)
 
-	execHead := fmt.Sprintf("await %s.execute(%s", conn, query.ConstantName)
+	execHead := fmt.Sprintf("await %s.execute(", conn)
+	constArg := []string{query.ConstantName}
 	switch query.Cmd {
 	case metadata.CmdExec:
-		writePsycopgCall(body, indent, query, execHead, ")")
+		writePsycopgCall(body, indent, query, execHead, constArg, ")")
 
 	case metadata.CmdExecResult:
-		writePsycopgCall(body, indent, query, "return "+execHead, ")")
+		writePsycopgCall(body, indent, query, "return "+execHead, constArg, ")")
 
 	case metadata.CmdExecRows:
-		writePsycopgCall(body, indent, query, "cur = "+execHead, ")")
+		writePsycopgCall(body, indent, query, "cur = "+execHead, constArg, ")")
 		body.WriteIndentedLine(indent, "return cur.rowcount")
 
 	case metadata.CmdCopyFrom:
 		p.writeCopyFromBody(body, query, conn, indent)
 
 	case metadata.CmdOne:
-		writePsycopgCall(body, indent, query, "row = await ("+execHead, ")).fetchone()")
+		writePsycopgCall(body, indent, query, "row = await ("+execHead, constArg, ")).fetchone()")
 		body.WriteIndentedLine(indent, "if row is None:")
 		body.WriteIndentedLine(indent+1, "return None")
 
@@ -265,7 +275,8 @@ func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 			body,
 			indent,
 			query,
-			fmt.Sprintf("return QueryResults(%s, %s, %s", conn, query.ConstantName, decodeHook),
+			"return QueryResults(",
+			[]string{conn, query.ConstantName, decodeHook},
 			")",
 		)
 	}
@@ -281,7 +292,7 @@ func (p *psycopgBase) writeCopyFromBody(body *writer.CodeWriter, query model.Que
 		// Overridden columns convert back to their DefaultType here too:
 		// copy() receives the raw row values, so this is the only place the
 		// conversion can happen for :copyfrom.
-		rowParts = append(rowParts, convertParamExpr("param."+col.Name, col.Type))
+		rowParts = append(rowParts, psycopgParamValue("param."+col.Name, col.Type))
 		columnParts = append(columnParts, quoteSQLIdent(col.DBName))
 	}
 
@@ -302,7 +313,16 @@ func (p *psycopgBase) writeCopyFromBody(body *writer.CodeWriter, query model.Que
 	loopIndent := copyIndent + 1
 	rowIndent := loopIndent + 1
 	body.WriteIndentedLine(indent, fmt.Sprintf("async with %s.cursor() as cur:", conn))
-	body.WriteIndentedLine(copyIndent, fmt.Sprintf("async with cur.copy(%s) as copy:", writer.PyQuote(copyStmt)))
+	copyCall := fmt.Sprintf("async with cur.copy(%s) as copy:", writer.PyQuote(copyStmt))
+	if body.FitsLine(copyIndent, copyCall) {
+		body.WriteIndentedLine(copyIndent, copyCall)
+	} else {
+		// Matches ruff format's layout for an overlong single-string call:
+		// the string moves to its own line WITHOUT a magic trailing comma.
+		body.WriteIndentedLine(copyIndent, "async with cur.copy(")
+		body.WriteIndentedLine(loopIndent, writer.PyQuote(copyStmt))
+		body.WriteIndentedLine(copyIndent, ") as copy:")
+	}
 	body.WriteIndentedLine(loopIndent, "for param in "+query.Params[0].Name+":")
 	writeRow := "await copy.write_row(" + rowTuple + ")"
 	if body.FitsLine(rowIndent, writeRow) {

@@ -1225,7 +1225,7 @@ class Queries:
             lquery_test: str.
             ltxtquery_test: str.
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": id_,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1389,7 +1389,7 @@ class Queries:
             lquery_test: str | None.
             ltxtquery_test: str | None.
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": table_id,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1584,7 +1584,7 @@ class Queries:
         Returns:
             The result of type `psycopg.AsyncCursor[psycopg.rows.TupleRow]` returned when executing the query.
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": id_,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1783,9 +1783,9 @@ class Queries:
             ltxtquery_test: str.
 
         Returns:
-            The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
         """
-        sql_params: dict[str, QueryResultsArgsType] = {
+        sql_params = {
             "p1": id_,
             "p2": serial_test,
             "p3": serial4_test,
@@ -1839,7 +1839,7 @@ class Queries:
             id_: int.
 
         Returns:
-            The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
         """
         cur = await self._conn.execute(UPDATE_ROWS_TEST_POSTGRES_TYPE, {"p1": id_})
         return cur.rowcount
@@ -1857,7 +1857,7 @@ class Queries:
             id_: int.
 
         Returns:
-            The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
         """
         cur = await self._conn.execute(DELETE_ONE_ROWS_TEST_POSTGRES_TYPE, {"p1": id_})
         return cur.rowcount
@@ -1874,7 +1874,7 @@ class Queries:
         ```
 
         Returns:
-            The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
         """
         cur = await self._conn.execute(CREATE_ROWS_TABLE)
         return cur.rowcount
@@ -2084,7 +2084,7 @@ class Queries:
             id_: int.
 
         Returns:
-            The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+            The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
         """
         cur = await self._conn.execute(DELETE_ONE_TEST_ENUM_TYPE, {"p1": id_})
         return cur.rowcount

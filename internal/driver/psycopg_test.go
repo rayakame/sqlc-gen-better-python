@@ -309,10 +309,90 @@ func TestPsycopgWriteQueryFunc(t *testing.T) {
 				"    conn: ConnectionLike,",
 				"    " + longName + ": int,",
 				") -> None:",
-				"    sql_params: dict[str, QueryResultsArgsType] = {",
+				"    sql_params = {",
 				`        "p1": ` + longName + ",",
 				"    }",
 				"    await conn.execute(HOIST, sql_params)",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "exec array param copies into a list",
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				ConstantName: "DELETE_MANY",
+				FuncName:     "delete_many",
+				Params: []model.QueryValue{
+					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "bigint", IsList: true}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"async def delete_many(conn: ConnectionLike, ids: collections.abc.Sequence[int]) -> None:",
+				`    await conn.execute(DELETE_MANY, {"p1": list(ids)})`,
+				"",
+			}, "\n"),
+		},
+		{
+			name: "exec nullable array param guards the list copy",
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				ConstantName: "SET_TAGS",
+				FuncName:     "set_tags",
+				Params: []model.QueryValue{
+					{Name: "tags", Type: model.PyType{Type: "str", SQLType: "text", IsList: true, IsNullable: true}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"async def set_tags(conn: ConnectionLike, tags: collections.abc.Sequence[str] | None) -> None:",
+				`    await conn.execute(SET_TAGS, {"p1": list(tags) if tags is not None else None})`,
+				"",
+			}, "\n"),
+		},
+		{
+			name: "exec overridden array param converts element-wise without a list copy",
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				ConstantName: "SET_PRICES",
+				FuncName:     "set_prices",
+				Params: []model.QueryValue{
+					{Name: "prices", Type: model.PyType{
+						Type:        "float",
+						SQLType:     "numeric",
+						IsList:      true,
+						IsOverride:  true,
+						DefaultType: "decimal.Decimal",
+					}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"async def set_prices(conn: ConnectionLike, prices: collections.abc.Sequence[float]) -> None:",
+				`    await conn.execute(SET_PRICES, {"p1": [decimal.Decimal(v) for v in prices]})`,
+				"",
+			}, "\n"),
+		},
+		{
+			name: "many long params hoist keeps the args-type annotation",
+			query: model.Query{
+				Cmd:          metadata.CmdMany,
+				ConstantName: "LIST_LONG",
+				FuncName:     "list_long",
+				Params: []model.QueryValue{
+					{Name: longName, Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int", SQLType: "bigint"}},
+			},
+			want: strings.Join([]string{
+				"def list_long(",
+				"    conn: ConnectionLike,",
+				"    " + longName + ": int,",
+				") -> QueryResults[int]:",
+				"    sql_params: dict[str, QueryResultsArgsType] = {",
+				`        "p1": ` + longName + ",",
+				"    }",
+				"    return QueryResults(conn, LIST_LONG, operator.itemgetter(0), sql_params)",
 				"",
 			}, "\n"),
 		},
@@ -461,6 +541,12 @@ func TestPsycopgWriteQueryFuncCopyFrom(t *testing.T) {
 						Columns: []model.Column{
 							{Name: "id_", DBName: "id", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
 							{Name: "name", DBName: "name", Type: model.PyType{Type: "str", SQLType: "text"}, Number: 2},
+							{
+								Name:   "tags",
+								DBName: "tags",
+								Type:   model.PyType{Type: "str", SQLType: "text", IsList: true},
+								Number: 3,
+							},
 						},
 					},
 				}},
@@ -469,9 +555,41 @@ func TestPsycopgWriteQueryFuncCopyFrom(t *testing.T) {
 			want: strings.Join([]string{
 				"async def copy_authors(conn: ConnectionLike, params: collections.abc.Sequence[CopyAuthorsParams]) -> int:",
 				"    async with conn.cursor() as cur:",
-				`        async with cur.copy('COPY "authors" ("id", "name") FROM STDIN') as copy:`,
+				`        async with cur.copy('COPY "authors" ("id", "name", "tags") FROM STDIN') as copy:`,
 				"            for param in params:",
-				"                await copy.write_row((param.id_, param.name))",
+				"                await copy.write_row((param.id_, param.name, list(param.tags)))",
+				"        return cur.rowcount",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "copyfrom long copy statement explodes",
+			query: model.Query{
+				Cmd:          metadata.CmdCopyFrom,
+				ConstantName: "COPY_BIG",
+				FuncName:     "copy_big",
+				Table:        &plugin.Identifier{Name: "big"},
+				Params: []model.QueryValue{{
+					EmitTable: true,
+					Name:      "params",
+					Type:      model.PyType{Type: "CopyBigParams", IsList: true},
+					Table: &model.Table{
+						Name: "CopyBigParams",
+						Columns: []model.Column{
+							{Name: "d", DBName: longName, Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+						},
+					},
+				}},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int"}},
+			},
+			want: strings.Join([]string{
+				"async def copy_big(conn: ConnectionLike, params: collections.abc.Sequence[CopyBigParams]) -> int:",
+				"    async with conn.cursor() as cur:",
+				"        async with cur.copy(",
+				`            'COPY "big" ("` + longName + `") FROM STDIN'`,
+				"        ) as copy:",
+				"            for param in params:",
+				"                await copy.write_row((param.d,))",
 				"        return cur.rowcount",
 				"",
 			}, "\n"),

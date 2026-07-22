@@ -57,7 +57,7 @@ func New(conf *config.Config) (Driver, error) {
 	case config.SQLDriverAsyncpg:
 		return newAsyncpgDriver(), nil
 	case config.SQLDriverPsycopgAsync:
-		return newPsycopgDriver(true), nil
+		return newPsycopgDriver(), nil
 	case config.SQLDriverAioSQLite:
 		return newSqliteDriver("aiosqlite", true), nil
 	case config.SQLDriverSQLite:

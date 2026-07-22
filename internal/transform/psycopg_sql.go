@@ -21,6 +21,15 @@ func rewritePsycopgSQL(sql string) string {
 			out.WriteString("%%")
 			i++
 		case c == '$':
+			// A $ directly after an identifier byte continues that identifier
+			// (PostgreSQL's ident_cont includes $), so col$2 is a column name,
+			// never a parameter or dollar-quote start.
+			if i > 0 && isIdentContByte(sql[i-1]) {
+				out.WriteByte(c)
+				i++
+
+				continue
+			}
 			if num, end := scanParamNumber(sql, i); end != -1 {
 				out.WriteString("%(p" + num + ")s")
 				i = end
@@ -44,11 +53,13 @@ func rewritePsycopgSQL(sql string) string {
 			writeDoubled(&out, sql[i:end])
 			i = end
 		case c == '-' && strings.HasPrefix(sql[i:], "--"):
-			end := strings.IndexByte(sql[i:], '\n')
+			// PostgreSQL ends a line comment at \n or a bare \r; the
+			// terminator itself is copied as ordinary text.
+			end := strings.IndexAny(sql[i:], "\r\n")
 			if end == -1 {
 				end = len(sql)
 			} else {
-				end += i + 1
+				end += i
 			}
 			writeDoubled(&out, sql[i:end])
 			i = end
@@ -90,7 +101,7 @@ func scanParamNumber(sql string, i int) (string, int) {
 // and an unterminated quote swallows the rest of the input.
 func scanDollarQuote(sql string, i int) int {
 	j := i + 1
-	if j < len(sql) && (sql[j] == '_' || isAlphaByte(sql[j])) {
+	if j < len(sql) && (sql[j] == '_' || isAlphaByte(sql[j]) || sql[j] >= 0x80) {
 		for j < len(sql) && isIdentByte(sql[j]) {
 			j++
 		}
@@ -117,16 +128,19 @@ func isEscapeString(sql string, i int) bool {
 		return false
 	}
 	// The e must be its own token, not the tail of an identifier like "table".
-	return i < 2 || !isIdentByte(sql[i-2])
+	return i < 2 || !isIdentContByte(sql[i-2])
 }
 
 // scanStringLiteral returns the index after a single-quoted literal starting
-// at i, honoring ” doubling and, for escape strings, backslash escapes.
+// at i, honoring quote doubling and, for escape strings, backslash escapes.
 func scanStringLiteral(sql string, i int, escapes bool) int {
+	if !escapes {
+		return scanQuoted(sql, i, '\'')
+	}
 	j := i + 1
 	for j < len(sql) {
 		switch {
-		case escapes && sql[j] == '\\':
+		case sql[j] == '\\':
 			j += 2
 		case sql[j] != '\'':
 			j++
@@ -190,6 +204,15 @@ func isAlphaByte(c byte) bool {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
 
+// isIdentByte matches PostgreSQL's dolq_cont: dollar-quote tag bytes, which
+// are the identifier bytes except the dollar sign. Bytes >= 0x80 cover the
+// multi-byte characters PostgreSQL allows in identifiers and tags.
 func isIdentByte(c byte) bool {
-	return isAlphaByte(c) || (c >= '0' && c <= '9') || c == '_'
+	return isAlphaByte(c) || (c >= '0' && c <= '9') || c == '_' || c >= 0x80
+}
+
+// isIdentContByte matches PostgreSQL's ident_cont: identifier continuation
+// bytes, which additionally include the dollar sign.
+func isIdentContByte(c byte) bool {
+	return isIdentByte(c) || c == '$'
 }

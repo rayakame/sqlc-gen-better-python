@@ -1263,7 +1263,7 @@ async def create_one_test_postgres_type(
         lquery_test: str.
         ltxtquery_test: str.
     """
-    sql_params: dict[str, QueryResultsArgsType] = {
+    sql_params = {
         "p1": id_,
         "p2": serial_test,
         "p3": serial4_test,
@@ -1430,7 +1430,7 @@ async def create_one_test_postgres_inner_type(
         lquery_test: str | None.
         ltxtquery_test: str | None.
     """
-    sql_params: dict[str, QueryResultsArgsType] = {
+    sql_params = {
         "p1": table_id,
         "p2": serial_test,
         "p3": serial4_test,
@@ -1634,7 +1634,7 @@ async def create_result_one_test_postgres_type(
     Returns:
         The result of type `psycopg.AsyncCursor[psycopg.rows.TupleRow]` returned when executing the query.
     """
-    sql_params: dict[str, QueryResultsArgsType] = {
+    sql_params = {
         "p1": id_,
         "p2": serial_test,
         "p3": serial4_test,
@@ -1842,9 +1842,9 @@ async def create_rows_one_test_postgres_type(
         ltxtquery_test: str.
 
     Returns:
-        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
-    sql_params: dict[str, QueryResultsArgsType] = {
+    sql_params = {
         "p1": id_,
         "p2": serial_test,
         "p3": serial4_test,
@@ -1901,7 +1901,7 @@ async def update_rows_test_postgres_type(conn: ConnectionLike, *, id_: int) -> i
         id_: int.
 
     Returns:
-        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     cur = await conn.execute(UPDATE_ROWS_TEST_POSTGRES_TYPE, {"p1": id_})
     return cur.rowcount
@@ -1922,7 +1922,7 @@ async def delete_one_rows_test_postgres_type(conn: ConnectionLike, *, id_: int) 
         id_: int.
 
     Returns:
-        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     cur = await conn.execute(DELETE_ONE_ROWS_TEST_POSTGRES_TYPE, {"p1": id_})
     return cur.rowcount
@@ -1944,7 +1944,7 @@ async def create_rows_table(conn: ConnectionLike) -> int:
             Connection object of type `ConnectionLike` used to execute the query.
 
     Returns:
-        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     cur = await conn.execute(CREATE_ROWS_TABLE)
     return cur.rowcount
@@ -2192,7 +2192,7 @@ async def delete_one_test_enum_type(conn: ConnectionLike, *, id_: int) -> int:
         id_: int.
 
     Returns:
-        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.
+        The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.
     """
     cur = await conn.execute(DELETE_ONE_TEST_ENUM_TYPE, {"p1": id_})
     return cur.rowcount

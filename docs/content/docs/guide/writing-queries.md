@@ -104,28 +104,40 @@ async def set_field_naming_outputs(conn: ConnectionLike, *, id_: int, outputs: s
 Variants of `:exec` that return something about the write:
 
 - **`:execrows`** - the number of affected rows (`int`). For statements that
-  affect no rows, such as `CREATE TABLE`, asyncpg reports `0` and the SQLite
-  drivers report `-1`.
+  affect no rows, such as `CREATE TABLE`, asyncpg reports `0` while psycopg and
+  the SQLite drivers report `-1`.
 - **`:execlastid`** - the cursor's `lastrowid`, typed `int | None` - it is `None`
   when no row was affected. SQLite drivers only, and note it is the last
   *affected* row, not strictly the last inserted one.
 - **`:execresult`** - the driver's raw result, which differs per driver: a `str`
-  status tag on asyncpg, and a `sqlite3.Cursor` / `aiosqlite.Cursor` on the
-  SQLite drivers.
+  status tag on asyncpg, a `psycopg.AsyncCursor` on psycopg, and a
+  `sqlite3.Cursor` / `aiosqlite.Cursor` on the SQLite drivers.
 
 See the [feature support matrix](/docs/reference/feature-support) for which
 driver supports which.
 
 ### `:copyfrom`
 
-asyncpg only. Bulk-inserts rows via `copy_records_to_table`, taking a sequence of
-generated `<Name>Params` objects and returning the affected row count:
+PostgreSQL drivers only. Bulk-inserts rows, taking a sequence of generated
+`<Name>Params` objects and returning the affected row count. asyncpg goes
+through `copy_records_to_table`:
 
 ```python
 async def test_copy_from(conn: ConnectionLike, *, params: collections.abc.Sequence[TestCopyFromParams]) -> int:
     records = [(param.id_, param.float_test, param.int_test) for param in params]
     r = await conn.copy_records_to_table("test_copy_from", columns=["id", "float_test", "int_test"], records=records)
     return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0
+```
+
+psycopg streams the rows through `cursor.copy()` instead:
+
+```python
+async def test_copy_from(conn: ConnectionLike, *, params: collections.abc.Sequence[TestCopyFromParams]) -> int:
+    async with conn.cursor() as cur:
+        async with cur.copy('COPY "test_copy_from" ("id", "float_test", "int_test") FROM STDIN') as copy:
+            for param in params:
+                await copy.write_row((param.id_, param.float_test, param.int_test))
+        return cur.rowcount
 ```
 
 ## Parameters
