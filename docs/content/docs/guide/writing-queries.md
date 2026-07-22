@@ -140,44 +140,10 @@ async def test_copy_from(conn: ConnectionLike, *, params: collections.abc.Sequen
         return cur.rowcount
 ```
 
-### Prepared queries
-
-Coming from sqlc's Go workflow you might look for an
-[`emit_prepared_queries`](https://docs.sqlc.dev/en/latest/howto/prepared_query.html)
-equivalent. There is none, on purpose: every supported Python driver already
-prepares statements automatically, so the generated code gets prepared-query
-performance without any extra codegen. What differs per driver is *when* a
-query gets prepared and which knob controls it:
-
-- **asyncpg** prepares every query it runs and keeps it in a per-connection
-  LRU statement cache (100 entries by default). Tune it at connect time:
-
-  ```python
-  conn = await asyncpg.connect(
-      dsn,
-      statement_cache_size=200,  # default 100; 0 disables the cache
-  )
-  ```
-
-- **psycopg** prepares a query server-side once it has been executed
-  `prepare_threshold` times on the connection (5 by default). Set it to `0` to
-  prepare from the first execution, or `None` to never prepare:
-
-  ```python
-  conn = await psycopg.AsyncConnection.connect(dsn, prepare_threshold=0)
-  ```
-
-- **sqlite3 / aiosqlite** expose no explicit prepare API, but the `sqlite3`
-  module compiles each statement once and reuses it through an internal
-  per-connection cache (128 entries by default). Raise it with the
-  `cached_statements` argument of `connect()` if you have more distinct
-  queries than that.
-
-{{< callout type="warning" >}}
-  Behind PgBouncer in transaction-pooling mode, server-side prepared
-  statements belong to a connection you do not control. Disable them there:
-  `statement_cache_size=0` for asyncpg, `prepare_threshold=None` for psycopg.
-{{< /callout >}}
+Looking for prepared queries? Every supported driver prepares statements
+automatically - see
+[prepared queries](/docs/reference/feature-support#prepared-queries) in the
+feature support reference for the per-driver details.
 
 ## Parameters
 
