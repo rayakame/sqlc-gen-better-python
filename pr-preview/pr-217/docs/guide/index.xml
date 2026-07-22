@@ -153,6 +153,10 @@ It must match your &lt;code&gt;engine&lt;/code&gt;. Four drivers are supported:&
 &lt;/table&gt;
 &lt;p&gt;Every generated query function takes the connection as its first argument, so you
 open and manage the connection yourself and pass it in.&lt;/p&gt;
+&lt;p&gt;Both PostgreSQL drivers produce the same models and type contract, so choosing
+between them is about the driver itself: pick &lt;code&gt;asyncpg&lt;/code&gt; when raw driver
+throughput is the priority, and &lt;code&gt;psycopg_async&lt;/code&gt; to stay in the psycopg
+ecosystem (libpq, pipeline mode, PgBouncer friendliness) at comparable speed.&lt;/p&gt;
 &lt;h2&gt;asyncpg (PostgreSQL)&lt;span class="hx:absolute hx:-mt-20" id="asyncpg-postgresql"&gt;&lt;/span&gt;
 &lt;a href="#asyncpg-postgresql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncio&lt;/span&gt;
