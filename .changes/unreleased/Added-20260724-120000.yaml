@@ -3,4 +3,4 @@ body: 'Synchronous Psycopg 3 support: the new `sql_driver` value `psycopg_sync` 
 time: 2026-07-24T12:00:00.0000000Z
 custom:
     Author: Rayakame
-    PR: "221"
+    PR: "222"
