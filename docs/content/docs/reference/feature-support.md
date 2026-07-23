@@ -25,29 +25,69 @@ supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 The supported [query annotations](https://docs.sqlc.dev/en/latest/reference/query-annotations.html)
 depend on the driver:
 
-| Command | aiosqlite | sqlite3 | asyncpg |
-|---|---|---|---|
-| `:one` | yes | yes | yes |
-| `:many` | yes | yes | yes |
-| `:exec` | yes | yes | yes |
-| `:execresult` | yes | yes | yes |
-| `:execrows` | yes | yes | yes |
-| `:execlastid` | yes | yes | no |
-| `:copyfrom` | no | no | yes |
+| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async |
+|---|---|---|---|---|
+| `:one` | yes | yes | yes | yes |
+| `:many` | yes | yes | yes | yes |
+| `:exec` | yes | yes | yes | yes |
+| `:execresult` | yes | yes | yes | yes |
+| `:execrows` | yes | yes | yes | yes |
+| `:execlastid` | yes | yes | no | no |
+| `:copyfrom` | no | no | yes | yes |
 
 See [Writing queries](/docs/guide/writing-queries) for what each command
 generates.
 
 {{< callout type="info" >}}
-  `:execlastid` relies on a last-inserted-row id, which asyncpg/PostgreSQL do not
+  `:execlastid` relies on a last-inserted-row id, which PostgreSQL does not
   provide; use a `RETURNING` clause with `:one` instead. `:copyfrom` maps to
-  asyncpg's bulk `copy_records_to_table`, which the SQLite drivers have no
-  equivalent for.
+  PostgreSQL's bulk `COPY` protocol (`copy_records_to_table` on asyncpg,
+  `cursor.copy()` on psycopg), which the SQLite drivers have no equivalent for.
+{{< /callout >}}
+
+### Prepared queries
+
+Coming from sqlc's Go workflow you might look for an
+[`emit_prepared_queries`](https://docs.sqlc.dev/en/latest/howto/prepared_query.html)
+equivalent. There is none, on purpose: every supported Python driver already
+prepares statements automatically, so the generated code gets prepared-query
+performance without any extra codegen. What differs per driver is *when* a
+query gets prepared and which knob controls it:
+
+- **asyncpg** prepares every query it runs and keeps it in a per-connection
+  LRU statement cache (100 entries by default). Tune it at connect time:
+
+  ```python
+  conn = await asyncpg.connect(
+      dsn,
+      statement_cache_size=200,  # default 100; 0 disables the cache
+  )
+  ```
+
+- **psycopg** prepares a query server-side once it has been executed more than
+  `prepare_threshold` times on the connection - with the default of 5, the
+  sixth execution is the first prepared one. Set it to `0` to prepare from the
+  first execution, or `None` to never prepare:
+
+  ```python
+  conn = await psycopg.AsyncConnection.connect(dsn, prepare_threshold=0)
+  ```
+
+- **sqlite3 / aiosqlite** expose no explicit prepare API, but the `sqlite3`
+  module compiles each statement once and reuses it through an internal
+  per-connection cache (128 entries by default). Raise it with the
+  `cached_statements` argument of `connect()` if you have more distinct
+  queries than that.
+
+{{< callout type="warning" >}}
+  Behind PgBouncer in transaction-pooling mode, server-side prepared
+  statements belong to a connection you do not control. Disable them there:
+  `statement_cache_size=0` for asyncpg, `prepare_threshold=None` for psycopg.
 {{< /callout >}}
 
 ## Not supported
 
 - **`:batch*` commands** (`:batchexec`, `:batchmany`, `:batchone`) are not
   supported and likely never will be.
-- **Prepared queries** are not planned for the near future.
-- **`psycopg2` and `mysql`** drivers are not currently supported.
+- **`psycopg2` and `mysql`** drivers are not currently supported; Psycopg 3
+  is, via the async `psycopg_async` driver.

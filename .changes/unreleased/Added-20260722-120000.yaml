@@ -1,0 +1,6 @@
+kind: Added
+body: 'Psycopg 3 support: the new `sql_driver` value `psycopg_async` generates asyncio code for `psycopg` with the same commands as asyncpg, including `:copyfrom` via `cursor.copy()`. Queries are rewritten to psycopg''s named pyformat placeholders at generation time and bind their parameters as a dict, the type contract matches asyncpg exactly (returned `json`/`jsonb` columns stay `str` via a registered raw-text loader, so converters behave identically), and the generated code passes pyright strict against psycopg''s `LiteralString` query typing. Requires `psycopg >= 3.2`.'
+time: 2026-07-22T12:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "217"

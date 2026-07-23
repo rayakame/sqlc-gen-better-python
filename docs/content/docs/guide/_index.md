@@ -37,7 +37,7 @@ Start with the essentials, then dip into feature pages as you need them:
 
 {{< cards >}}
   {{< card link="configuration" title="Configuration" subtitle="The sqlc.yaml plugin block and the core options." >}}
-  {{< card link="drivers" title="Drivers" subtitle="asyncpg, aiosqlite, and sqlite3 - and which query commands each supports." >}}
+  {{< card link="drivers" title="Drivers" subtitle="asyncpg, psycopg, aiosqlite, and sqlite3 - and which query commands each supports." >}}
   {{< card link="model-types" title="Model types" subtitle="dataclass, attrs, msgspec, or pydantic models." >}}
   {{< card link="writing-queries" title="Writing queries" subtitle="How query annotations become typed Python functions." >}}
 {{< /cards >}}

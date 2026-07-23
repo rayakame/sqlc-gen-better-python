@@ -50,6 +50,40 @@ async def insert_item(conn: ConnectionLike, *, id_: int) -> None:
 `,
 		},
 		{
+			name:    "psycopg rewrites placeholders and binds by name",
+			engine:  "postgresql",
+			options: `{"package":"testpkg","sql_driver":"psycopg_async","emit_init_file":false}`,
+			queries: []*plugin.Query{{
+				Name:     "InsertItem",
+				Cmd:      metadata.CmdExec,
+				Text:     "INSERT INTO test_items (id) VALUES ($1)",
+				Filename: "queries.sql",
+				Params:   []*plugin.Parameter{{Number: 1, Column: pgColumn("id", "int4", true)}},
+			}},
+			want: sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("insert_item",)
+
+import typing
+
+if typing.TYPE_CHECKING:
+    import collections.abc
+    import psycopg
+    import psycopg.rows
+
+    type ConnectionLike = psycopg.AsyncConnection[psycopg.rows.TupleRow]
+
+
+INSERT_ITEM: typing.Final[typing.LiteralString] = """-- name: InsertItem :exec
+INSERT INTO test_items (id) VALUES (%(p1)s)
+"""
+
+
+async def insert_item(conn: ConnectionLike, *, id_: int) -> None:
+    await conn.execute(INSERT_ITEM, {"p1": id_})
+`,
+		},
+		{
 			name:    "exec in classes mode",
 			engine:  "postgresql",
 			options: `{"package":"testpkg","sql_driver":"asyncpg","emit_init_file":false,"emit_classes":true}`,

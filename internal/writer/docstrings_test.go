@@ -363,7 +363,7 @@ func TestWriteQueryResultsClassDocstring(t *testing.T) {
 			name: "none",
 			conv: config.DocstringConventionNone,
 			write: func(w *writer.CodeWriter) {
-				w.WriteQueryResultsClassDocstring("asyncpg.Connection", "asyncpg.Record")
+				w.WriteQueryResultsClassDocstring("asyncpg.Connection", "asyncpg.Record", false)
 			},
 			want: "",
 		},
@@ -371,7 +371,7 @@ func TestWriteQueryResultsClassDocstring(t *testing.T) {
 			name: "numpy has parameters section",
 			conv: config.DocstringConventionNumpy,
 			write: func(w *writer.CodeWriter) {
-				w.WriteQueryResultsClassDocstring("asyncpg.Connection", "asyncpg.Record")
+				w.WriteQueryResultsClassDocstring("asyncpg.Connection", "asyncpg.Record", false)
 			},
 			want: lines(
 				`    """Helper class that allows both iteration and normal fetching of data from the db.`,
@@ -395,7 +395,7 @@ func TestWriteQueryResultsClassDocstring(t *testing.T) {
 			name: "pep257 stays one line",
 			conv: config.DocstringConventionPEP257,
 			write: func(w *writer.CodeWriter) {
-				w.WriteQueryResultsClassDocstring("asyncpg.Connection", "asyncpg.Record")
+				w.WriteQueryResultsClassDocstring("asyncpg.Connection", "asyncpg.Record", false)
 			},
 			want: lines(`    """Helper class that allows both iteration and normal fetching of data from the db."""`, ``),
 		},
@@ -409,7 +409,7 @@ func TestWriteQueryResultsInitDocstring(t *testing.T) {
 			name: "none",
 			conv: config.DocstringConventionNone,
 			write: func(w *writer.CodeWriter) {
-				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record")
+				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record", false)
 			},
 			want: "",
 		},
@@ -417,7 +417,7 @@ func TestWriteQueryResultsInitDocstring(t *testing.T) {
 			name: "numpy",
 			conv: config.DocstringConventionNumpy,
 			write: func(w *writer.CodeWriter) {
-				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record")
+				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record", false)
 			},
 			want: lines(`        """Initialize the QueryResults instance."""`),
 		},
@@ -425,7 +425,7 @@ func TestWriteQueryResultsInitDocstring(t *testing.T) {
 			name: "google",
 			conv: config.DocstringConventionGoogle,
 			write: func(w *writer.CodeWriter) {
-				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record")
+				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record", false)
 			},
 			want: lines(
 				`        """Initialize the QueryResults instance.`,
@@ -446,7 +446,7 @@ func TestWriteQueryResultsInitDocstring(t *testing.T) {
 			name: "pep257",
 			conv: config.DocstringConventionPEP257,
 			write: func(w *writer.CodeWriter) {
-				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record")
+				w.WriteQueryResultsInitDocstring("asyncpg.Connection", "asyncpg.Record", false)
 			},
 			want: lines(
 				`        """Initialize the QueryResults instance.`,

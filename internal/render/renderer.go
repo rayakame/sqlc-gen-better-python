@@ -36,7 +36,9 @@ func (r *Renderer) RenderAll(enums []model.Enum, tables []model.Table, queries [
 	queriesModuleMap := make(map[string][]model.Query)
 	for _, query := range queries {
 		if !r.driver.SupportsCommand(query.Cmd) {
-			return nil, fmt.Errorf(`unsupported cmd "%s" for driver "%s"`, query.Cmd, r.driver.Name())
+			// Name the sql_driver config value, not driver.Name(): for psycopg
+			// the module name and the option value differ.
+			return nil, fmt.Errorf(`unsupported cmd "%s" for driver "%s"`, query.Cmd, r.config.SqlDriver)
 		}
 
 		innerQueries, ok := queriesModuleMap[query.ModuleName]

@@ -659,3 +659,17 @@ func TestWriteExecRowsReturn(t *testing.T) {
 		})
 	}
 }
+
+func TestPsycopgParamEntries(t *testing.T) {
+	t.Parallel()
+	query := model.Query{
+		Params: []model.QueryValue{
+			{},
+			{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}, Number: 2},
+		},
+	}
+	want := []string{`"p2": name`}
+	if got := psycopgParamEntries(query); !slices.Equal(got, want) {
+		t.Errorf("psycopgParamEntries() = %q, want %q", got, want)
+	}
+}

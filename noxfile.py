@@ -15,6 +15,7 @@ SCRIPT_PATHS = ["noxfile.py", PATH_TO_PROJECT / "scripts", PATH_TO_PROJECT / "te
 
 DRIVER_PATHS = {
     "asyncpg": PATH_TO_PROJECT / "test" / "driver_asyncpg",
+    "psycopg_async": PATH_TO_PROJECT / "test" / "driver_psycopg_async",
     "aiosqlite": PATH_TO_PROJECT / "test" / "driver_aiosqlite",
     "sqlite3": PATH_TO_PROJECT / "test" / "driver_sqlite3",
 }
@@ -22,7 +23,7 @@ DRIVER_PATHS = {
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["ruff_format", "asyncpg", "sqlite3", "aiosqlite", "pyright", "ruff", "pytest"]
+options.sessions = ["ruff_format", "asyncpg", "psycopg_async", "sqlite3", "aiosqlite", "pyright", "ruff", "pytest"]
 
 DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
 
@@ -135,6 +136,24 @@ def asyncpg_check(session: nox.Session) -> None:
     sqlc_check(session, "asyncpg")
     session.run("pyright", DRIVER_PATHS["asyncpg"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["asyncpg"])
+
+
+@nox.session(reuse_venv=True)
+def psycopg_async(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_generate(session, "psycopg_async")
+    session.run("pyright", DRIVER_PATHS["psycopg_async"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["psycopg_async"])
+
+
+@nox.session(reuse_venv=True)
+def psycopg_async_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_check(session, "psycopg_async")
+    session.run("pyright", DRIVER_PATHS["psycopg_async"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["psycopg_async"])
 
 
 @nox.session(reuse_venv=True)

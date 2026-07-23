@@ -76,21 +76,9 @@ func (d *AsyncpgDriver) WriteQueryResultsClass(body *writer.CodeWriter) string {
 		"result = await self._conn.fetch(self._sql, *self._args)",
 		decodeRowsExpr,
 	})
-	body.NewLine()
-	body.WriteIndentedLine(1, "async def __anext__(self) -> T:")
-	body.WriteQueryResultsNextDocstring("an asyncpg cursor", d.IsAsync())
-	body.WriteIndentedLine(2, "if self._cursor is None or self._iterator is None:")
-	body.WriteIndentedLine(3, "self._cursor = self._conn.cursor(self._sql, *self._args)")
-	body.WriteIndentedLine(3, "self._iterator = self._cursor.__aiter__()")
-	body.WriteIndentedLine(2, "try:")
-	body.WriteIndentedLine(3, "record = await self._iterator.__anext__()")
-	body.WriteIndentedLine(2, "except StopAsyncIteration:")
-	body.WriteIndentedLine(3, "self._cursor = None")
-	body.WriteIndentedLine(3, "self._iterator = None")
-	body.WriteIndentedLine(3, "raise")
-	body.WriteIndentedLine(2, "return self._decode_hook(record)")
+	writeAsyncNextMethod(body, "an asyncpg cursor", "self._cursor = self._conn.cursor(self._sql, *self._args)")
 
-	return "QueryResults"
+	return queryResultsClassName
 }
 
 // SupportsCommand returns if the driver supports the command.
