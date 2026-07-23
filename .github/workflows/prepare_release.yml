@@ -23,20 +23,20 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Batch changes
-        uses: miniscruff/changie-action@11bcad388e7973948cbcecb10863baf024d5f607 # v3
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.0.1
         with:
           version: latest
           args: batch ${{ github.event.inputs.version }}
 
       - name: Merge changes
-        uses: miniscruff/changie-action@11bcad388e7973948cbcecb10863baf024d5f607 # v3
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.0.1
         with:
           version: latest
           args: merge
 
       - name: Get the latest version
         id: latest
-        uses: miniscruff/changie-action@11bcad388e7973948cbcecb10863baf024d5f607 # v3
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.0.1
         with:
           version: latest
           args: latest
