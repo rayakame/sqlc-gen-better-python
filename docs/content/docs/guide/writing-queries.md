@@ -110,8 +110,9 @@ Variants of `:exec` that return something about the write:
   when no row was affected. SQLite drivers only, and note it is the last
   *affected* row, not strictly the last inserted one.
 - **`:execresult`** - the driver's raw result, which differs per driver: a `str`
-  status tag on asyncpg, a `psycopg.AsyncCursor` on psycopg, and a
-  `sqlite3.Cursor` / `aiosqlite.Cursor` on the SQLite drivers.
+  status tag on asyncpg, a `psycopg.AsyncCursor` / `psycopg.Cursor` on the
+  psycopg drivers, and a `sqlite3.Cursor` / `aiosqlite.Cursor` on the SQLite
+  drivers.
 
 See the [feature support matrix](/docs/reference/feature-support) for which
 driver supports which.
@@ -129,7 +130,8 @@ async def test_copy_from(conn: ConnectionLike, *, params: collections.abc.Sequen
     return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0
 ```
 
-psycopg streams the rows through `cursor.copy()` instead:
+psycopg streams the rows through `cursor.copy()` instead (`psycopg_sync`
+emits the same body without `async`/`await`):
 
 ```python
 async def test_copy_from(conn: ConnectionLike, *, params: collections.abc.Sequence[TestCopyFromParams]) -> int:

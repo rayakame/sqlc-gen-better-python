@@ -16,6 +16,8 @@ func TestNew(t *testing.T) {
 		wantAsync bool
 	}{
 		{name: "asyncpg", sqlDriver: config.SQLDriverAsyncpg, wantName: "asyncpg", wantAsync: true},
+		{name: "psycopg_async", sqlDriver: config.SQLDriverPsycopgAsync, wantName: "psycopg", wantAsync: true},
+		{name: "psycopg_sync", sqlDriver: config.SQLDriverPsycopgSync, wantName: "psycopg", wantAsync: false},
 		{name: "aiosqlite", sqlDriver: config.SQLDriverAioSQLite, wantName: "aiosqlite", wantAsync: true},
 		{name: "sqlite3", sqlDriver: config.SQLDriverSQLite, wantName: "sqlite3", wantAsync: false},
 	}

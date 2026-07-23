@@ -36,6 +36,14 @@ pip install "psycopg[binary]"
 
   {{< /tab >}}
 
+  {{< tab name="psycopg_sync" >}}
+
+```bash
+pip install "psycopg[binary]"
+```
+
+  {{< /tab >}}
+
   {{< tab name="aiosqlite" >}}
 
 ```bash
@@ -108,6 +116,32 @@ sql:
           package: "db"
           emit_init_file: true
           sql_driver: "psycopg_async"
+          model_type: "dataclass"
+```
+
+  {{< /tab >}}
+
+  {{< tab name="psycopg_sync" >}}
+
+```yaml
+# filename: sqlc.yaml
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.6.0/sqlc-gen-better-python.wasm
+      sha256: 16f5affb502f2ec65ca61f6fc5ddd993449c4a4fc281996c3c9a9bc2e35b1474
+sql:
+  - engine: "postgresql"
+    queries: "query.sql"
+    schema: "schema.sql"
+    codegen:
+      - out: "app/db"
+        plugin: python
+        options:
+          package: "db"
+          emit_init_file: true
+          sql_driver: "psycopg_sync"
           model_type: "dataclass"
 ```
 
@@ -205,6 +239,19 @@ CREATE TABLE users
 
   {{< /tab >}}
 
+  {{< tab name="psycopg_sync" >}}
+
+```sql
+-- filename: schema.sql
+CREATE TABLE users
+(
+    id   bigint PRIMARY KEY NOT NULL,
+    name text               NOT NULL
+);
+```
+
+  {{< /tab >}}
+
   {{< tab name="aiosqlite" >}}
 
 ```sql
@@ -255,6 +302,19 @@ SELECT * FROM users ORDER BY name;
   {{< /tab >}}
 
   {{< tab name="psycopg_async" >}}
+
+```sql
+-- filename: query.sql
+-- name: GetUser :one
+SELECT * FROM users WHERE id = $1;
+
+-- name: ListUsers :many
+SELECT * FROM users ORDER BY name;
+```
+
+  {{< /tab >}}
+
+  {{< tab name="psycopg_sync" >}}
 
 ```sql
 -- filename: query.sql
@@ -353,6 +413,30 @@ class User:
 # query.py
 async def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
     row = await (await conn.execute(GET_USER, {"p1": id_})).fetchone()
+    if row is None:
+        return None
+    return models.User(id_=row[0], name=row[1])
+
+
+def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
+    ...
+```
+
+  {{< /tab >}}
+
+  {{< tab name="psycopg_sync" >}}
+
+```python
+# models.py
+@dataclasses.dataclass()
+class User:
+    id_: int
+    name: str
+
+
+# query.py
+def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
+    row = conn.execute(GET_USER, {"p1": id_}).fetchone()
     if row is None:
         return None
     return models.User(id_=row[0], name=row[1])
@@ -482,6 +566,28 @@ async def main() -> None:
 
 
 asyncio.run(main())
+```
+
+  {{< /tab >}}
+
+  {{< tab name="psycopg_sync" >}}
+
+```python
+import psycopg
+
+from app.db import query
+
+with psycopg.connect("postgresql://user:pass@localhost/mydb") as conn:
+    user = query.get_user(conn, id_=1)
+    if user is not None:
+        print(user.name)
+
+    # every row at once
+    users = query.list_users(conn)()
+
+    # or iterate
+    for user in query.list_users(conn):
+        print(user.name)
 ```
 
   {{< /tab >}}

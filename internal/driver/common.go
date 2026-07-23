@@ -284,19 +284,24 @@ func sliceParams(query model.Query) []sliceParam {
 	return params
 }
 
-// writeAsyncNextMethod writes the cursor-backed __anext__ shared by the async
-// QueryResults classes: open the cursor lazily via cursorInit, forward one
+// writeCursorNextMethod writes the cursor-backed __next__/__anext__ shared by
+// the asyncpg and psycopg QueryResults classes (the sqlite drivers emit their
+// own variant inline): open the cursor lazily via cursorInit, forward one
 // record, and reset both fields on exhaustion so iteration can restart.
-func writeAsyncNextMethod(body *writer.CodeWriter, cursorDesc, cursorInit string) {
+func writeCursorNextMethod(body *writer.CodeWriter, async bool, cursorDesc, cursorInit string) {
+	nextDef, iterDunder, nextDunder, stopExc, awaitKw := "def __next__", "__iter__", "__next__", "StopIteration", ""
+	if async {
+		nextDef, iterDunder, nextDunder, stopExc, awaitKw = "async def __anext__", "__aiter__", "__anext__", "StopAsyncIteration", awaitPrefix
+	}
 	body.NewLine()
-	body.WriteIndentedLine(1, "async def __anext__(self) -> T:")
-	body.WriteQueryResultsNextDocstring(cursorDesc, true)
+	body.WriteIndentedLine(1, nextDef+"(self) -> T:")
+	body.WriteQueryResultsNextDocstring(cursorDesc, async)
 	body.WriteIndentedLine(2, "if self._cursor is None or self._iterator is None:")
 	body.WriteIndentedLine(3, cursorInit)
-	body.WriteIndentedLine(3, "self._iterator = self._cursor.__aiter__()")
+	body.WriteIndentedLine(3, fmt.Sprintf("self._iterator = self._cursor.%s()", iterDunder))
 	body.WriteIndentedLine(2, "try:")
-	body.WriteIndentedLine(3, "record = await self._iterator.__anext__()")
-	body.WriteIndentedLine(2, "except StopAsyncIteration:")
+	body.WriteIndentedLine(3, fmt.Sprintf("record = %sself._iterator.%s()", awaitKw, nextDunder))
+	body.WriteIndentedLine(2, "except "+stopExc+":")
 	body.WriteIndentedLine(3, "self._cursor = None")
 	body.WriteIndentedLine(3, "self._iterator = None")
 	body.WriteIndentedLine(3, "raise")
