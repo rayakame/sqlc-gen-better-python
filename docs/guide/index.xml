@@ -66,7 +66,7 @@ whose hash does not match. Each release lists its hash.&lt;/div&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;sql_driver&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, or &lt;code&gt;sqlite3&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, or &lt;code&gt;sqlite3&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;emit_init_file&lt;/code&gt;&lt;/td&gt;
@@ -111,14 +111,15 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;h2&gt;Common pitfalls&lt;span class="hx:absolute hx:-mt-20" id="common-pitfalls"&gt;&lt;/span&gt;
 &lt;a href="#common-pitfalls" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Driver/engine mismatch.&lt;/strong&gt; &lt;code&gt;sql_driver: asyncpg&lt;/code&gt; requires &lt;code&gt;engine: &amp;quot;postgresql&amp;quot;&lt;/code&gt;;
-&lt;code&gt;aiosqlite&lt;/code&gt;/&lt;code&gt;sqlite3&lt;/code&gt; require &lt;code&gt;engine: &amp;quot;sqlite&amp;quot;&lt;/code&gt;. A mismatch is an error.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Driver/engine mismatch.&lt;/strong&gt; &lt;code&gt;sql_driver: asyncpg&lt;/code&gt; and &lt;code&gt;psycopg_async&lt;/code&gt; require
+&lt;code&gt;engine: &amp;quot;postgresql&amp;quot;&lt;/code&gt;; &lt;code&gt;aiosqlite&lt;/code&gt;/&lt;code&gt;sqlite3&lt;/code&gt; require &lt;code&gt;engine: &amp;quot;sqlite&amp;quot;&lt;/code&gt;. A
+mismatch is an error.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Forgetting &lt;code&gt;emit_init_file&lt;/code&gt;.&lt;/strong&gt; It has no default and generation fails if it
 is omitted. Set it to &lt;code&gt;true&lt;/code&gt; unless the package already has an &lt;code&gt;__init__.py&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;A stale &lt;code&gt;sha256&lt;/code&gt;.&lt;/strong&gt; When you bump the plugin version, update the hash too.&lt;/li&gt;
 &lt;/ul&gt;</description></item><item><title>Drivers</title><link>https://rayakame.github.io/sqlc-gen-better-python/docs/guide/drivers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/docs/guide/drivers/</guid><description>
 &lt;p&gt;The &lt;code&gt;sql_driver&lt;/code&gt; option picks which database library the generated code targets.
-It must match your &lt;code&gt;engine&lt;/code&gt;. Three drivers are supported:&lt;/p&gt;
+It must match your &lt;code&gt;engine&lt;/code&gt;. Four drivers are supported:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -130,6 +131,11 @@ It must match your &lt;code&gt;engine&lt;/code&gt;. Three drivers are supported:
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;postgresql&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;async&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;psycopg_async&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;postgresql&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;async&lt;/td&gt;
 &lt;/tr&gt;
@@ -147,6 +153,10 @@ It must match your &lt;code&gt;engine&lt;/code&gt;. Three drivers are supported:
 &lt;/table&gt;
 &lt;p&gt;Every generated query function takes the connection as its first argument, so you
 open and manage the connection yourself and pass it in.&lt;/p&gt;
+&lt;p&gt;Both PostgreSQL drivers produce the same models and type contract, so choosing
+between them is about the driver itself: pick &lt;code&gt;asyncpg&lt;/code&gt; when raw driver
+throughput is the priority, and &lt;code&gt;psycopg_async&lt;/code&gt; to stay in the psycopg
+ecosystem (libpq, pipeline mode, PgBouncer friendliness) at comparable speed.&lt;/p&gt;
 &lt;h2&gt;asyncpg (PostgreSQL)&lt;span class="hx:absolute hx:-mt-20" id="asyncpg-postgresql"&gt;&lt;/span&gt;
 &lt;a href="#asyncpg-postgresql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncio&lt;/span&gt;
@@ -173,8 +183,49 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;asyncpg is the only driver that supports &lt;code&gt;:copyfrom&lt;/code&gt; (bulk insert via
-&lt;code&gt;copy_records_to_table&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;asyncpg supports &lt;code&gt;:copyfrom&lt;/code&gt; (bulk insert via &lt;code&gt;copy_records_to_table&lt;/code&gt;).&lt;/p&gt;
+&lt;h2&gt;psycopg_async (PostgreSQL)&lt;span class="hx:absolute hx:-mt-20" id="psycopg_async-postgresql"&gt;&lt;/span&gt;
+&lt;a href="#psycopg_async-postgresql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncio&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;psycopg&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;app.db&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;queries&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;conn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;psycopg&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;AsyncConnection&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;postgresql://user:pass@localhost/db&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;queries&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_field_naming&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;asyncio&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The generated code targets &lt;a href="https://www.psycopg.org/psycopg3/"target="_blank" rel="noopener"&gt;Psycopg 3&lt;/a&gt;
+(3.2 or newer) with its default tuple rows - the connection annotation is
+&lt;code&gt;psycopg.AsyncConnection[psycopg.rows.TupleRow]&lt;/code&gt;, so a connection configured
+with another row factory is rejected by pyright. &lt;code&gt;:copyfrom&lt;/code&gt; streams rows
+through &lt;code&gt;cursor.copy()&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Modules returning &lt;code&gt;json&lt;/code&gt;/&lt;code&gt;jsonb&lt;/code&gt; columns register a raw-text loader on
+psycopg&amp;rsquo;s process-global adapters map at import time, so those columns stay
+&lt;code&gt;str&lt;/code&gt; exactly like on asyncpg - including for
+&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/docs/guide/converters/"&gt;converters&lt;/a&gt;. On Windows, psycopg&amp;rsquo;s async support
+requires the &lt;code&gt;SelectorEventLoop&lt;/code&gt;; the default &lt;code&gt;ProactorEventLoop&lt;/code&gt; is
+rejected.&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;h2&gt;aiosqlite (async SQLite)&lt;span class="hx:absolute hx:-mt-20" id="aiosqlite-async-sqlite"&gt;&lt;/span&gt;
 &lt;a href="#aiosqlite-async-sqlite" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncio&lt;/span&gt;
@@ -234,7 +285,7 @@ parameters, work without it. See
 &lt;/div&gt;
 &lt;h2&gt;Command support&lt;span class="hx:absolute hx:-mt-20" id="command-support"&gt;&lt;/span&gt;
 &lt;a href="#command-support" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Not every &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/docs/guide/writing-queries/"&gt;query command&lt;/a&gt; works on every driver -
-for example &lt;code&gt;:copyfrom&lt;/code&gt; is asyncpg-only and &lt;code&gt;:execlastid&lt;/code&gt; is SQLite-only. The
+for example &lt;code&gt;:copyfrom&lt;/code&gt; is PostgreSQL-only and &lt;code&gt;:execlastid&lt;/code&gt; is SQLite-only. The
 full matrix is in the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/docs/reference/feature-support/"&gt;feature support reference&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Model types</title><link>https://rayakame.github.io/sqlc-gen-better-python/docs/guide/model-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/docs/guide/model-types/</guid><description>
 &lt;p&gt;The &lt;code&gt;model_type&lt;/code&gt; option controls what kind of class the plugin generates for each
 table. All four produce the same fields with the same annotations - they differ
@@ -496,20 +547,21 @@ data-copied-label="Copied!"
 &lt;a href="#execresult-execrows-execlastid" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Variants of &lt;code&gt;:exec&lt;/code&gt; that return something about the write:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execrows&lt;/code&gt;&lt;/strong&gt; - the number of affected rows (&lt;code&gt;int&lt;/code&gt;). For statements that
-affect no rows, such as &lt;code&gt;CREATE TABLE&lt;/code&gt;, asyncpg reports &lt;code&gt;0&lt;/code&gt; and the SQLite
-drivers report &lt;code&gt;-1&lt;/code&gt;.&lt;/li&gt;
+affect no rows, such as &lt;code&gt;CREATE TABLE&lt;/code&gt;, asyncpg reports &lt;code&gt;0&lt;/code&gt; while psycopg and
+the SQLite drivers report &lt;code&gt;-1&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execlastid&lt;/code&gt;&lt;/strong&gt; - the cursor&amp;rsquo;s &lt;code&gt;lastrowid&lt;/code&gt;, typed &lt;code&gt;int | None&lt;/code&gt; - it is &lt;code&gt;None&lt;/code&gt;
 when no row was affected. SQLite drivers only, and note it is the last
 &lt;em&gt;affected&lt;/em&gt; row, not strictly the last inserted one.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execresult&lt;/code&gt;&lt;/strong&gt; - the driver&amp;rsquo;s raw result, which differs per driver: a &lt;code&gt;str&lt;/code&gt;
-status tag on asyncpg, and a &lt;code&gt;sqlite3.Cursor&lt;/code&gt; / &lt;code&gt;aiosqlite.Cursor&lt;/code&gt; on the
-SQLite drivers.&lt;/li&gt;
+status tag on asyncpg, a &lt;code&gt;psycopg.AsyncCursor&lt;/code&gt; on psycopg, and a
+&lt;code&gt;sqlite3.Cursor&lt;/code&gt; / &lt;code&gt;aiosqlite.Cursor&lt;/code&gt; on the SQLite drivers.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;See the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/docs/reference/feature-support/"&gt;feature support matrix&lt;/a&gt; for which
 driver supports which.&lt;/p&gt;
 &lt;h3&gt;&lt;code&gt;:copyfrom&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="copyfrom"&gt;&lt;/span&gt;
-&lt;a href="#copyfrom" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;asyncpg only. Bulk-inserts rows via &lt;code&gt;copy_records_to_table&lt;/code&gt;, taking a sequence of
-generated &lt;code&gt;&amp;lt;Name&amp;gt;Params&lt;/code&gt; objects and returning the affected row count:&lt;/p&gt;
+&lt;a href="#copyfrom" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;PostgreSQL drivers only. Bulk-inserts rows, taking a sequence of generated
+&lt;code&gt;&amp;lt;Name&amp;gt;Params&lt;/code&gt; objects and returning the affected row count. asyncpg goes
+through &lt;code&gt;copy_records_to_table&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;test_copy_from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;ConnectionLike&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;abc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Sequence&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;TestCopyFromParams&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;records&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[(&lt;/span&gt;&lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;float_test&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;int_test&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
@@ -526,6 +578,29 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;psycopg streams the rows through &lt;code&gt;cursor.copy()&lt;/code&gt; instead:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;test_copy_from&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;ConnectionLike&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;collections&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;abc&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Sequence&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;TestCopyFromParams&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cursor&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;cur&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;cur&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;COPY &amp;#34;test_copy_from&amp;#34; (&amp;#34;id&amp;#34;, &amp;#34;float_test&amp;#34;, &amp;#34;int_test&amp;#34;) FROM STDIN&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;params&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;copy&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write_row&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;float_test&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;param&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;int_test&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;cur&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rowcount&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Looking for prepared queries? Every supported driver prepares statements
+automatically - see
+&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/docs/reference/feature-support/#prepared-queries"&gt;prepared queries&lt;/a&gt; in the
+feature support reference for the per-driver details.&lt;/p&gt;
 &lt;h2&gt;Parameters&lt;span class="hx:absolute hx:-mt-20" id="parameters"&gt;&lt;/span&gt;
 &lt;a href="#parameters" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;By default every parameter is &lt;strong&gt;keyword-only&lt;/strong&gt; (note the &lt;code&gt;*,&lt;/code&gt; in the signatures
 above), which keeps call sites readable and order-independent. Two options tune
@@ -664,7 +739,7 @@ from a &lt;code&gt;public.mood&lt;/code&gt; that would become &lt;code&gt;Mood&l
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Enum classes are a PostgreSQL feature - SQLite has no native enum type, so this
-applies to the &lt;code&gt;asyncpg&lt;/code&gt; driver.&lt;/div&gt;
+applies to the PostgreSQL drivers (&lt;code&gt;asyncpg&lt;/code&gt; and &lt;code&gt;psycopg_async&lt;/code&gt;).&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;</description></item><item><title>Type overrides</title><link>https://rayakame.github.io/sqlc-gen-better-python/docs/guide/type-overrides/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/docs/guide/type-overrides/</guid><description>
 &lt;p&gt;An override replaces the Python type the plugin would pick for a column with one
