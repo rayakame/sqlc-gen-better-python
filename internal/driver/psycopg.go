@@ -186,27 +186,29 @@ func psycopgParamEntries(query model.Query) []string {
 	return entries
 }
 
-// writePsycopgCall writes head+leadArgs+dict+")" on one line, hoisting a
-// too-long params dict into a local sql_params variable first; overlong
-// statements wrap through WriteWrappedCall like every other driver. Only
-// :many modules define QueryResultsArgsType, so only the :many hoist is
-// annotated with it - there the declared type must match the QueryResults
-// parameter exactly (dict is invariant), while conn.execute() accepts any
-// string mapping.
-func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, head string, leadArgs []string) {
+// psycopgParamsArg returns the argument expression carrying the query's
+// binding dict, with ok=false for parameterless queries. When inlineStmt (the
+// caller's complete single-line statement around the dict literal) fits the
+// line, the literal itself is returned; otherwise the dict is hoisted into a
+// local sql_params first and that name is returned for the caller's own
+// statement assembly. Only :many modules define QueryResultsArgsType, so only
+// the :many hoist is annotated with it - there the declared type must match
+// the QueryResults parameter exactly (dict is invariant), while
+// conn.execute() accepts any string mapping.
+func psycopgParamsArg(
+	body *writer.CodeWriter,
+	indent int,
+	query model.Query,
+	inlineStmt func(dict string) string,
+) (string, bool) {
 	entries := psycopgParamEntries(query)
 	if len(entries) == 0 {
-		body.WriteWrappedCall(indent, head, leadArgs, ")")
-
-		return
+		return "", false
 	}
 
 	dict := "{" + strings.Join(entries, ", ") + "}"
-	stmt := head + strings.Join(append(slices.Clone(leadArgs), dict), ", ") + ")"
-	if body.FitsLine(indent, stmt) {
-		body.WriteIndentedLine(indent, stmt)
-
-		return
+	if body.FitsLine(indent, inlineStmt(dict)) {
+		return dict, true
 	}
 
 	hoist := "sql_params = {"
@@ -218,7 +220,23 @@ func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, he
 		body.WriteIndentedLine(indent+1, entry+",")
 	}
 	body.WriteIndentedLine(indent, "}")
-	body.WriteWrappedCall(indent, head, append(slices.Clone(leadArgs), "sql_params"), ")")
+
+	return "sql_params", true
+}
+
+// writePsycopgCall writes head+leadArgs+dict+")" on one line, hoisting a
+// too-long params dict into a local sql_params variable first; overlong
+// statements wrap through WriteWrappedCall like every other driver.
+func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, head string, leadArgs []string) {
+	arg, ok := psycopgParamsArg(body, indent, query, func(dict string) string {
+		return head + strings.Join(append(slices.Clone(leadArgs), dict), ", ") + ")"
+	})
+	if !ok {
+		body.WriteWrappedCall(indent, head, leadArgs, ")")
+
+		return
+	}
+	body.WriteWrappedCall(indent, head, append(slices.Clone(leadArgs), arg), ")")
 }
 
 // writePsycopgOneCall writes the :one fetch statement. Its tail closes two
@@ -226,23 +244,12 @@ func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, he
 // ruff-stable way, so the overlong case emits ruff format's nested-await
 // layout instead.
 func writePsycopgOneCall(body *writer.CodeWriter, indent int, query model.Query, conn string) {
-	entries := psycopgParamEntries(query)
 	head := fmt.Sprintf("row = await (await %s.execute(", conn)
 	args := []string{query.ConstantName}
-	if len(entries) != 0 {
-		dict := "{" + strings.Join(entries, ", ") + "}"
-		stmt := head + query.ConstantName + ", " + dict + ")).fetchone()"
-		if body.FitsLine(indent, stmt) {
-			body.WriteIndentedLine(indent, stmt)
-
-			return
-		}
-		body.WriteIndentedLine(indent, "sql_params = {")
-		for _, entry := range entries {
-			body.WriteIndentedLine(indent+1, entry+",")
-		}
-		body.WriteIndentedLine(indent, "}")
-		args = append(args, "sql_params")
+	if arg, ok := psycopgParamsArg(body, indent, query, func(dict string) string {
+		return head + query.ConstantName + ", " + dict + ")).fetchone()"
+	}); ok {
+		args = append(args, arg)
 	}
 
 	stmt := head + strings.Join(args, ", ") + ")).fetchone()"

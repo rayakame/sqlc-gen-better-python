@@ -77,11 +77,11 @@ func (w *QueryResultsWriter) writeClassHeader(
 	namedParams bool,
 ) {
 	slots := `__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")`
-	argsParam, argsAssign := "*args: QueryResultsArgsType,", "self._args = args"
+	paramsParam, paramsAssign := "*args: QueryResultsArgsType,", "self._args = args"
 	sqlParam, sqlAssign := "sql: str,", "self._sql = sql"
 	if namedParams {
 		slots = `__slots__ = ("_conn", "_cursor", "_decode_hook", "_iterator", "_params", "_sql")`
-		argsParam, argsAssign = "params: dict[str, QueryResultsArgsType] | None = None,", "self._params = params"
+		paramsParam, paramsAssign = "params: dict[str, QueryResultsArgsType] | None = None,", "self._params = params"
 		// psycopg's typed execute() requires LiteralString query text, and
 		// the attribute needs the annotation too - inference widens to str.
 		sqlParam, sqlAssign = "sql: typing.LiteralString,", "self._sql: typing.LiteralString = sql"
@@ -97,13 +97,13 @@ func (w *QueryResultsWriter) writeClassHeader(
 	w.writer.WriteIndentedLine(methodBodyIndent, fmt.Sprintf("conn: %s,", connType))
 	w.writer.WriteIndentedLine(methodBodyIndent, sqlParam)
 	w.writer.WriteIndentedLine(methodBodyIndent, fmt.Sprintf("decode_hook: collections.abc.Callable[[%s], T],", driverReturnType))
-	w.writer.WriteIndentedLine(methodBodyIndent, argsParam)
+	w.writer.WriteIndentedLine(methodBodyIndent, paramsParam)
 	w.writer.WriteIndentedLine(1, ") -> None:")
 	w.writer.WriteQueryResultsInitDocstring(connType, driverReturnType, namedParams)
 	w.writer.WriteIndentedLine(methodBodyIndent, "self._conn = conn")
 	w.writer.WriteIndentedLine(methodBodyIndent, sqlAssign)
 	w.writer.WriteIndentedLine(methodBodyIndent, "self._decode_hook = decode_hook")
-	w.writer.WriteIndentedLine(methodBodyIndent, argsAssign)
+	w.writer.WriteIndentedLine(methodBodyIndent, paramsAssign)
 	for _, line := range initFields {
 		w.writer.WriteIndentedLine(methodBodyIndent, line)
 	}

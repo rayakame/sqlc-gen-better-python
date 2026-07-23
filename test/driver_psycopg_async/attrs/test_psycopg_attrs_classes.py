@@ -764,8 +764,11 @@ class TestAttrsClasses:
     @pytest.mark.dependency(name="TestAttrsClasses::insert_enum_override")
     async def test_insert_enum_override(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
         # The overridden parameter is a plain str; the generated code converts
-        # it back to enums.TestMood before it reaches the driver.
-        await queries_enum_override_obj.insert_enum_override(id_=520001, mood_test="happy")
+        # it back to enums.TestMood before it reaches the driver. The mood is
+        # suite-specific: the count test filters the shared table by mood
+        # alone, so a row leaked by another suite using the same mood would
+        # break its exact-count assertion.
+        await queries_enum_override_obj.insert_enum_override(id_=520001, mood_test="ok")
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsClasses::insert_enum_override"])
@@ -773,7 +776,7 @@ class TestAttrsClasses:
         mood = await queries_enum_override_obj.get_enum_override_mood(id_=520001)
         assert mood is not None
         assert isinstance(mood, str)
-        assert mood == "happy"
+        assert mood == "ok"
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsClasses::insert_enum_override"])
@@ -788,7 +791,7 @@ class TestAttrsClasses:
         # (QueryResultsArgsType) and the runtime QueryResults plumbing.
         rows = await queries_enum_override_obj.list_enum_override_by_ids(dollar_1=[520001])
         assert len(rows) == 1
-        assert rows[0].mood_test == "happy"
+        assert rows[0].mood_test == "ok"
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsClasses::insert_enum_override"])
@@ -801,12 +804,12 @@ class TestAttrsClasses:
             async for row in results:
                 assert isinstance(row, models.TestEnumOverride)
                 seen[row.id_] = row.mood_test
-        assert seen == {520001: "happy"}
+        assert seen == {520001: "ok"}
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestAttrsClasses::count_enum_override", depends=["TestAttrsClasses::insert_enum_override"])
     async def test_count_enum_override_by_moods(self, queries_enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
-        count = await queries_enum_override_obj.count_enum_override_by_moods(dollar_1=[enums.TestMood.HAPPY, enums.TestMood.SAD])
+        count = await queries_enum_override_obj.count_enum_override_by_moods(dollar_1=[enums.TestMood.OK, enums.TestMood.SAD])
         assert count == 1
 
     @pytest.mark.asyncio(loop_scope="session")

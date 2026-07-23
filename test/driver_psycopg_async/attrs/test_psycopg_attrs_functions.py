@@ -843,8 +843,11 @@ class TestAttrsFunctions:
     @pytest.mark.dependency(name="TestAttrsFunctions::insert_enum_override")
     async def test_insert_enum_override(self, psycopg_async_conn: psycopg.AsyncConnection[psycopg.rows.TupleRow]) -> None:
         # The overridden parameter is a plain str; the generated code converts
-        # it back to enums.TestMood before it reaches the driver.
-        await queries_enum_override.insert_enum_override(conn=psycopg_async_conn, id_=520002, mood_test="happy")
+        # it back to enums.TestMood before it reaches the driver. The mood is
+        # suite-specific: the count test filters the shared table by mood
+        # alone, so a row leaked by another suite using the same mood would
+        # break its exact-count assertion.
+        await queries_enum_override.insert_enum_override(conn=psycopg_async_conn, id_=520002, mood_test="24h")
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsFunctions::insert_enum_override"])
@@ -852,7 +855,7 @@ class TestAttrsFunctions:
         mood = await queries_enum_override.get_enum_override_mood(conn=psycopg_async_conn, id_=520002)
         assert mood is not None
         assert isinstance(mood, str)
-        assert mood == "happy"
+        assert mood == "24h"
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsFunctions::insert_enum_override"])
@@ -867,7 +870,7 @@ class TestAttrsFunctions:
         # (QueryResultsArgsType) and the runtime QueryResults plumbing.
         rows = await queries_enum_override.list_enum_override_by_ids(conn=psycopg_async_conn, dollar_1=[520002])
         assert len(rows) == 1
-        assert rows[0].mood_test == "happy"
+        assert rows[0].mood_test == "24h"
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(depends=["TestAttrsFunctions::insert_enum_override"])
@@ -879,12 +882,12 @@ class TestAttrsFunctions:
             async for row in results:
                 assert isinstance(row, models.TestEnumOverride)
                 seen[row.id_] = row.mood_test
-        assert seen == {520002: "happy"}
+        assert seen == {520002: "24h"}
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="TestAttrsFunctions::count_enum_override", depends=["TestAttrsFunctions::insert_enum_override"])
     async def test_count_enum_override_by_moods(self, psycopg_async_conn: psycopg.AsyncConnection[psycopg.rows.TupleRow]) -> None:
-        count = await queries_enum_override.count_enum_override_by_moods(conn=psycopg_async_conn, dollar_1=[enums.TestMood.HAPPY, enums.TestMood.SAD])
+        count = await queries_enum_override.count_enum_override_by_moods(conn=psycopg_async_conn, dollar_1=[enums.TestMood.VALUE_24H, enums.TestMood.SAD])
         assert count == 1
 
     @pytest.mark.asyncio(loop_scope="session")
