@@ -22,10 +22,13 @@ from __future__ import annotations
 import asyncio
 import pathlib
 import sqlite3
+import sys
 import typing
 
 import aiosqlite
 import asyncpg
+import psycopg
+import psycopg.rows
 import pytest
 
 if typing.TYPE_CHECKING:
@@ -33,8 +36,22 @@ if typing.TYPE_CHECKING:
 import pytest_asyncio
 
 ASYNCPG_PATH = pathlib.Path(__file__).parent / "driver_asyncpg"
+PSYCOPG_ASYNC_PATH = pathlib.Path(__file__).parent / "driver_psycopg_async"
 AIOSQLITE_PATH = pathlib.Path(__file__).parent / "driver_aiosqlite"
 SQLITE3_PATH = pathlib.Path(__file__).parent / "driver_sqlite3"
+
+# Both postgres suites share the same tables, so their session teardowns must
+# clean the same list; a single constant keeps them from diverging.
+_POSTGRES_CLEANUP: typing.Final = """
+    DELETE FROM test_postgres_types;
+    DELETE FROM test_inner_postgres_types;
+    DELETE FROM test_copy_from;
+    DELETE FROM test_copy_override;
+    DELETE FROM test_converters;
+    DELETE FROM test_converter_array;
+    DELETE FROM test_invalid_identifiers;
+    DELETE FROM "3rd_party_stats";
+"""
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -77,16 +94,34 @@ async def asyncpg_conn(
 
     await conn.execute((ASYNCPG_PATH / "schema.sql").read_text())
     yield conn
-    await conn.execute("""
-        DELETE FROM test_postgres_types;
-        DELETE FROM test_inner_postgres_types;
-        DELETE FROM test_copy_from;
-        DELETE FROM test_copy_override;
-        DELETE FROM test_converters;
-        DELETE FROM test_converter_array;
-        DELETE FROM test_invalid_identifiers;
-        DELETE FROM "3rd_party_stats";
-    """)
+    await conn.execute(_POSTGRES_CLEANUP)
+    await conn.close()
+
+
+if sys.platform == "win32":
+
+    @pytest.fixture(scope="session")
+    def event_loop_policy() -> asyncio.AbstractEventLoopPolicy:
+        # psycopg's async support refuses the default ProactorEventLoop.
+        return asyncio.WindowsSelectorEventLoopPolicy()
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def psycopg_async_conn(
+    request: pytest.FixtureRequest,
+) -> collections.abc.AsyncGenerator[psycopg.AsyncConnection[psycopg.rows.TupleRow], typing.Any]:
+    dsn = get_dsn(request.config)
+    # autocommit matches asyncpg's per-statement semantics and keeps one
+    # failing test from poisoning the shared connection's transaction.
+    conn = await psycopg.AsyncConnection.connect(dsn, autocommit=True)
+
+    # The schema shares its tables with the asyncpg suite; both suites clean
+    # the same tables at session end, which is idempotent. psycopg's execute
+    # is typed LiteralString, hence the cast for the file contents.
+    schema = typing.cast("typing.LiteralString", (PSYCOPG_ASYNC_PATH / "schema.sql").read_text())
+    await conn.execute(schema)
+    yield conn
+    await conn.execute(_POSTGRES_CLEANUP)
     await conn.close()
 
 

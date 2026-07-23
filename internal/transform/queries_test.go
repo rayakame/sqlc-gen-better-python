@@ -147,9 +147,9 @@ func TestBuildQueriesExecBasics(t *testing.T) {
 		t.Errorf("Returns = %+v, want %+v", query.Returns, want)
 	}
 	wantParams := []model.QueryValue{
-		{Name: "name", Type: pyStr},
-		{Name: "dollar_2", Type: pyInt},
-		{Name: "for_", Type: pyStr},
+		{Name: "name", Type: pyStr, Number: 1},
+		{Name: "dollar_2", Type: pyInt, Number: 2},
+		{Name: "for_", Type: pyStr, Number: 3},
 	}
 	if len(query.Params) != len(wantParams) {
 		t.Fatalf("Params = %+v, want %d params", query.Params, len(wantParams))
@@ -166,6 +166,8 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 	cases := []struct {
 		name        string
 		emitClasses bool
+		driver      config.SQLDriver
+		cmd         string
 		column      string
 		sqlcSlice   bool
 		want        string
@@ -178,15 +180,57 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 		// before binding, so the name is reserved exactly there.
 		{name: "sql collides in a slice query", emitClasses: false, column: "sql", sqlcSlice: true, want: "sql_2"},
 		{name: "sql is free without slices", emitClasses: false, column: "sql", want: "sql"},
+		// psycopg query bodies introduce locals of their own: the hoisted
+		// params dict, the :execrows cursor, and the :one row.
+		{
+			name:   "sql_params collides for psycopg",
+			driver: config.SQLDriverPsycopgAsync,
+			column: "sql_params",
+			want:   "sql_params_2",
+		},
+		{name: "sql_params is free for asyncpg", driver: config.SQLDriverAsyncpg, column: "sql_params", want: "sql_params"},
+		{
+			name:   "cur collides in a psycopg execrows query",
+			driver: config.SQLDriverPsycopgAsync,
+			cmd:    ":execrows",
+			column: "cur",
+			want:   "cur_2",
+		},
+		{name: "cur is free in a psycopg exec query", driver: config.SQLDriverPsycopgAsync, column: "cur", want: "cur"},
+		{
+			name:   "row collides in a psycopg one query",
+			driver: config.SQLDriverPsycopgAsync,
+			cmd:    ":one",
+			column: "row",
+			want:   "row_2",
+		},
+		{name: "row is free in a psycopg exec query", driver: config.SQLDriverPsycopgAsync, column: "row", want: "row"},
+		{
+			name:   "decode hook collides in a psycopg many query",
+			driver: config.SQLDriverPsycopgAsync,
+			cmd:    ":many",
+			column: "_decode_hook",
+			want:   "_decode_hook_2",
+		},
+		{
+			name:   "decode hook is free in a psycopg exec query",
+			driver: config.SQLDriverPsycopgAsync,
+			column: "_decode_hook",
+			want:   "_decode_hook",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			column := queryCol(tc.column, "int4", nil)
 			column.IsSqlcSlice = tc.sqlcSlice
-			query := buildSingleQuery(t, &config.Config{EmitClasses: tc.emitClasses}, &plugin.Query{
+			cmd := tc.cmd
+			if cmd == "" {
+				cmd = ":exec"
+			}
+			query := buildSingleQuery(t, &config.Config{EmitClasses: tc.emitClasses, SqlDriver: tc.driver}, &plugin.Query{
 				Name:   "Ping",
-				Cmd:    ":exec",
+				Cmd:    cmd,
 				Params: []*plugin.Parameter{{Number: 1, Column: column}},
 			})
 
@@ -259,9 +303,9 @@ func TestBuildQueriesCopyFrom(t *testing.T) {
 		t.Errorf("params class identifier = %+v, want an empty identifier", param.Table.Identifier)
 	}
 	wantColumns := []model.Column{
-		{Name: "id_", DBName: "id", Type: pyInt},
-		{Name: "name", DBName: "name", Type: pyStr},
-		{Name: "name_2", DBName: "name", Type: pyStr},
+		{Name: "id_", DBName: "id", Type: pyInt, Number: 1},
+		{Name: "name", DBName: "name", Type: pyStr, Number: 2},
+		{Name: "name_2", DBName: "name", Type: pyStr, Number: 3},
 	}
 	if len(param.Table.Columns) != len(wantColumns) {
 		t.Fatalf("params class columns = %+v, want %d columns", param.Table.Columns, len(wantColumns))
@@ -506,5 +550,78 @@ func TestBuildQueriesEmbedUnknownTable(t *testing.T) {
 	}
 	if want := (model.Column{Name: "data", DBName: "data", Type: pyStr}); query.Returns.Table.Columns[0] != want {
 		t.Errorf("row column[0] = %+v, want plain column %+v", query.Returns.Table.Columns[0], want)
+	}
+}
+
+func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		driver  config.SQLDriver
+		query   *plugin.Query
+		wantSQL string
+	}{
+		{
+			name:   "parameterized query is rewritten for psycopg",
+			driver: config.SQLDriverPsycopgAsync,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = $1 AND name LIKE 'a%'",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = %(p1)s AND name LIKE 'a%%'",
+		},
+		{
+			name:   "parameterless query stays untouched",
+			driver: config.SQLDriverPsycopgAsync,
+			query: &plugin.Query{
+				Name:    "CountAuthors",
+				Cmd:     ":one",
+				Text:    "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+				Columns: []*plugin.Column{queryCol("count", "int8", nil)},
+			},
+			wantSQL: "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+		},
+		{
+			name:   "copyfrom stays untouched",
+			driver: config.SQLDriverPsycopgAsync,
+			query: &plugin.Query{
+				Name: "CopyAuthors",
+				Cmd:  ":copyfrom",
+				Text: "INSERT INTO test_authors (id) VALUES ($1)",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				InsertIntoTable: &plugin.Identifier{Name: "test_authors"},
+			},
+			wantSQL: "INSERT INTO test_authors (id) VALUES ($1)",
+		},
+		{
+			name:   "asyncpg keeps native placeholders",
+			driver: config.SQLDriverAsyncpg,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = $1",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = $1",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			query := buildSingleQuery(t, &config.Config{SqlDriver: tc.driver}, tc.query)
+			if query.SQL != tc.wantSQL {
+				t.Errorf("SQL = %q, want %q", query.SQL, tc.wantSQL)
+			}
+		})
 	}
 }

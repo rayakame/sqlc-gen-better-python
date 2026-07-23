@@ -73,7 +73,8 @@ and the full plugin option list in the
 
 - **Four model types** - `dataclass`, `attrs`, `msgspec`, or `pydantic`
   ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/model-types/)).
-- **Three drivers** - `asyncpg` for PostgreSQL, `aiosqlite` and `sqlite3` for SQLite
+- **Four drivers** - `asyncpg` and `psycopg_async` for PostgreSQL, `aiosqlite`
+  and `sqlite3` for SQLite
   ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/drivers/)).
 - **Typed query functions** - one module per query file, one function per query
   ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/writing-queries/)).

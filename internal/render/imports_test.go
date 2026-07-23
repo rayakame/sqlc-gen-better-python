@@ -528,6 +528,50 @@ func TestQueryImports(t *testing.T) {
 			},
 		},
 		{
+			name: "psycopg json return forces runtime module for loaders",
+			conf: newImportsConfig(config.SQLDriverPsycopgAsync),
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "jsonb", Type: "str"})},
+			},
+			want: ImportResult{
+				Std: []string{"import psycopg", "import psycopg.rows", "import psycopg.types.string", "import typing"},
+				TypeChecking: []string{
+					"import collections.abc",
+				},
+			},
+		},
+		{
+			name: "psycopg without json returns keeps the module lazy",
+			conf: newImportsConfig(config.SQLDriverPsycopgAsync),
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "bigint", Type: "int"})},
+			},
+			want: ImportResult{
+				Std: []string{"import typing"},
+				TypeChecking: []string{
+					"import collections.abc",
+					"import psycopg",
+					"import psycopg.rows",
+				},
+			},
+		},
+		{
+			name: "psycopg many simple return imports operator",
+			conf: newImportsConfig(config.SQLDriverPsycopgAsync),
+			queries: []model.Query{
+				{Cmd: metadata.CmdMany, Returns: impScalar(model.PyType{SQLType: "bigint", Type: "int"})},
+			},
+			want: ImportResult{
+				Std: []string{"import operator", "import typing"},
+				TypeChecking: []string{
+					"import collections.abc",
+					"import psycopg",
+					"import psycopg.rows\n",
+					argsTypeBase + argsTypeTail,
+				},
+			},
+		},
+		{
 			name: "asyncpg many simple return imports operator",
 			conf: newImportsConfig(config.SQLDriverAsyncpg),
 			queries: []model.Query{

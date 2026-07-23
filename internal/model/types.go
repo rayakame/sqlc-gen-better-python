@@ -83,6 +83,10 @@ type Column struct {
 	DBName string // The raw database column name
 	Type   PyType
 
+	// Number is the 1-based sqlc parameter number when this column belongs
+	// to a bundled Params class; 0 for table model columns.
+	Number int32
+
 	Embed *Embed
 }
 
@@ -119,6 +123,10 @@ type QueryValue struct {
 	Table     *Table
 	Name      string
 	Type      PyType
+
+	// Number is the 1-based sqlc parameter number, used by drivers that
+	// bind by name (psycopg's %(pN)s); 0 for return values.
+	Number int32
 }
 
 type Embed struct {

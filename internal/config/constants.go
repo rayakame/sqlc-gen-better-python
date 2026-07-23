@@ -15,9 +15,10 @@ func (dr SQLDriver) String() string {
 }
 
 const (
-	SQLDriverSQLite    SQLDriver = "sqlite3"
-	SQLDriverAioSQLite SQLDriver = "aiosqlite"
-	SQLDriverAsyncpg   SQLDriver = "asyncpg"
+	SQLDriverSQLite       SQLDriver = "sqlite3"
+	SQLDriverAioSQLite    SQLDriver = "aiosqlite"
+	SQLDriverAsyncpg      SQLDriver = "asyncpg"
+	SQLDriverPsycopgAsync SQLDriver = "psycopg_async"
 )
 
 const (
@@ -28,9 +29,10 @@ const (
 )
 
 var driversEngine = map[SQLDriver]string{
-	SQLDriverSQLite:    "sqlite",
-	SQLDriverAioSQLite: "sqlite",
-	SQLDriverAsyncpg:   "postgresql",
+	SQLDriverSQLite:       "sqlite",
+	SQLDriverAioSQLite:    "sqlite",
+	SQLDriverAsyncpg:      "postgresql",
+	SQLDriverPsycopgAsync: "postgresql",
 }
 
 const (

@@ -6,16 +6,22 @@ next: /docs/guide/model-types
 ---
 
 The `sql_driver` option picks which database library the generated code targets.
-It must match your `engine`. Three drivers are supported:
+It must match your `engine`. Four drivers are supported:
 
 | Driver | Engine | Style |
 |---|---|---|
 | `asyncpg` | `postgresql` | async |
+| `psycopg_async` | `postgresql` | async |
 | `aiosqlite` | `sqlite` | async |
 | `sqlite3` | `sqlite` | sync |
 
 Every generated query function takes the connection as its first argument, so you
 open and manage the connection yourself and pass it in.
+
+Both PostgreSQL drivers produce the same models and type contract, so choosing
+between them is about the driver itself: pick `asyncpg` when raw driver
+throughput is the priority, and `psycopg_async` to stay in the psycopg
+ecosystem (libpq, pipeline mode, PgBouncer friendliness) at comparable speed.
 
 ## asyncpg (PostgreSQL)
 
@@ -35,8 +41,40 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-asyncpg is the only driver that supports `:copyfrom` (bulk insert via
-`copy_records_to_table`).
+asyncpg supports `:copyfrom` (bulk insert via `copy_records_to_table`).
+
+## psycopg_async (PostgreSQL)
+
+```python
+import asyncio
+
+import psycopg
+
+from app.db import queries
+
+
+async def main() -> None:
+    conn = await psycopg.AsyncConnection.connect("postgresql://user:pass@localhost/db")
+    user = await queries.get_field_naming(conn, id_=1)
+
+
+asyncio.run(main())
+```
+
+The generated code targets [Psycopg 3](https://www.psycopg.org/psycopg3/)
+(3.2 or newer) with its default tuple rows - the connection annotation is
+`psycopg.AsyncConnection[psycopg.rows.TupleRow]`, so a connection configured
+with another row factory is rejected by pyright. `:copyfrom` streams rows
+through `cursor.copy()`.
+
+{{< callout type="info" >}}
+  Modules returning `json`/`jsonb` columns register a raw-text loader on
+  psycopg's process-global adapters map at import time, so those columns stay
+  `str` exactly like on asyncpg - including for
+  [converters](/docs/guide/converters). On Windows, psycopg's async support
+  requires the `SelectorEventLoop`; the default `ProactorEventLoop` is
+  rejected.
+{{< /callout >}}
 
 ## aiosqlite (async SQLite)
 
@@ -80,5 +118,5 @@ user = queries.get_field_naming(conn, id_=1)
 ## Command support
 
 Not every [query command](/docs/guide/writing-queries) works on every driver -
-for example `:copyfrom` is asyncpg-only and `:execlastid` is SQLite-only. The
+for example `:copyfrom` is PostgreSQL-only and `:execlastid` is SQLite-only. The
 full matrix is in the [feature support reference](/docs/reference/feature-support).

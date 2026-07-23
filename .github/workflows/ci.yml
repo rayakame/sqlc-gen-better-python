@@ -175,6 +175,29 @@ jobs:
       - name: Run sqlc verify via nox
         run: |
           uv run nox -s asyncpg_check
+  psycopg-async:
+    runs-on: ubuntu-latest
+    name: "Run psycopg_async check via nox"
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.31"
+          python-version: "3.13"
+
+      - name: Install sqlc
+        uses: sqlc-dev/setup-sqlc@bac53b7fb28c039a6c7f5736fd1e89744021bdd6 # v5
+        with:
+          sqlc-version: '1.31.1'
+
+      - name: Run sqlc verify via nox
+        run: |
+          uv run nox -s psycopg_async_check
 
   aiosqlite:
     runs-on: ubuntu-latest
@@ -292,7 +315,7 @@ jobs:
           retention-days: 30
 
   ci-done:
-    needs: [ test, upload-coverage, asyncpg, aiosqlite, sqlite3, pyright, ruff, go-test, go-lint, test-build ]
+    needs: [ test, upload-coverage, asyncpg, psycopg-async, aiosqlite, sqlite3, pyright, ruff, go-test, go-lint, test-build ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest
