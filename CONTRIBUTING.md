@@ -11,6 +11,9 @@ that you should follow to ensure that your contribution is at its best.
 - [**sqlc**](https://docs.sqlc.dev/en/latest/overview/install.html) on your PATH, in the
   version CI pins (`sqlc-version` in `.github/workflows/ci.yml`). The sqlc version is
   stamped into every generated file header, so a different version diffs all fixtures.
+  The easiest way to get exactly that version without a Go toolchain is
+  [sqlc-bin](https://pypi.org/project/sqlc-bin/), whose package version tracks the
+  sqlc version: `uv tool install "sqlc-bin==1.31.1"`.
 - **Docker** (or a local PostgreSQL) - only needed for the runtime tests.
 
 One-time setup for the Python tooling:
