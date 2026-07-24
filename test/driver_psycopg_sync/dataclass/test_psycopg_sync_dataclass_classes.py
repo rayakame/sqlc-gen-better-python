@@ -39,19 +39,7 @@ from test.driver_psycopg_sync.dataclass.classes import enums
 from test.driver_psycopg_sync.dataclass.classes import models
 from test.driver_psycopg_sync.dataclass.classes import queries
 from test.driver_psycopg_sync.dataclass.classes import queries_enum_override
-
-
-class _NoRowCursor:
-    def fetchone(self) -> None:
-        pass
-
-
-class _NoRowConn:
-    # `SELECT count(*)` always returns exactly one row, so the generated
-    # not-found branch of the count queries needs a connection stub that
-    # misses.
-    def execute(self, _query: str, _params: object = None) -> _NoRowCursor:
-        return _NoRowCursor()
+from test.driver_psycopg_sync.no_row_conn import NoRowConn
 
 
 class TestDataclassClasses:
@@ -780,7 +768,7 @@ class TestDataclassClasses:
         psycopg_sync_conn.execute("DELETE FROM test_enum_override WHERE id = %(id)s", {"id": 520003})
 
     def test_count_enum_override_no_row(self) -> None:
-        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", _NoRowConn())
+        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", NoRowConn())
         no_row_queries = queries_enum_override.QueriesEnumOverride(conn=conn)
         count = no_row_queries.count_enum_override_by_moods(dollar_1=[enums.TestMood.HAPPY])
         assert count is None

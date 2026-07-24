@@ -338,7 +338,7 @@ jobs:
           retention-days: 30
 
   ci-done:
-    needs: [ test, upload-coverage, asyncpg, psycopg-async, psycopg-sync, aiosqlite, sqlite3, pyright, ruff, go-test, go-lint, test-build ]
+    needs: [test, upload-coverage, asyncpg, psycopg-async, psycopg-sync, aiosqlite, sqlite3, pyright, ruff, go-test, go-lint, test-build]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest

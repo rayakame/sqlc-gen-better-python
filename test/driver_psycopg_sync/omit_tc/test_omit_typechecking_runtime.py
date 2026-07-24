@@ -31,6 +31,7 @@ import typing
 
 import pytest
 
+from test.driver_psycopg_sync.no_row_conn import NoRowConn
 from test.driver_psycopg_sync.omit_tc.classes import enums as classes_enums
 from test.driver_psycopg_sync.omit_tc.classes import models as classes_models
 from test.driver_psycopg_sync.omit_tc.classes import queries_enum_override as classes_queries
@@ -47,19 +48,6 @@ if typing.TYPE_CHECKING:
 CLASSES_IDS: typing.Final[tuple[int, int]] = (510010, 520010)
 FUNCTIONS_IDS: typing.Final[tuple[int, int]] = (510011, 520011)
 MISSING_ID: typing.Final[int] = 987654321
-
-
-class _NoRowCursor:
-    def fetchone(self) -> None:
-        return None
-
-
-class _NoRowConn:
-    # `SELECT count(*)` always returns exactly one row, so the generated
-    # not-found branch of the count queries needs a connection stub that
-    # misses.
-    def execute(self, _query: str, _params: object = None) -> _NoRowCursor:
-        return _NoRowCursor()
 
 
 class TestOmitTcClasses:
@@ -114,7 +102,7 @@ class TestOmitTcClasses:
         assert queries_obj.count_enum_override_by_moods(dollar_1=[classes_enums.TestMood.VALUE_24H]) == 0
 
     def test_count_enum_override_no_row(self) -> None:
-        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", _NoRowConn())
+        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", NoRowConn())
         stub_queries_obj = classes_queries.QueriesEnumOverride(conn=conn)
         count = stub_queries_obj.count_enum_override_by_moods(dollar_1=[classes_enums.TestMood.HAPPY])
         assert count is None
@@ -170,7 +158,7 @@ class TestOmitTcFunctions:
         assert functions_queries.count_enum_override_by_moods(conn=psycopg_sync_conn, dollar_1=[functions_enums.TestMood.VALUE_24H]) == 0
 
     def test_count_enum_override_no_row(self) -> None:
-        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", _NoRowConn())
+        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", NoRowConn())
         count = functions_queries.count_enum_override_by_moods(conn=conn, dollar_1=[functions_enums.TestMood.HAPPY])
         assert count is None
 

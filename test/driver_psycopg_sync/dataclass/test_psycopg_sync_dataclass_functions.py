@@ -43,23 +43,11 @@ from test.driver_psycopg_sync.dataclass.functions import queries
 from test.driver_psycopg_sync.dataclass.functions import queries_converters
 from test.driver_psycopg_sync.dataclass.functions import queries_enum_override
 from test.driver_psycopg_sync.dataclass.functions import queries_invalid_identifiers
+from test.driver_psycopg_sync.no_row_conn import NoRowConn
 
 INVALID_IDENTIFIER_ID = 806060
 CONVERTER_ID = 710001
 CONVERTER_ARRAY_ID = 720001
-
-
-class _NoRowCursor:
-    def fetchone(self) -> None:
-        pass
-
-
-class _NoRowConn:
-    # `SELECT count(*)` always returns exactly one row, so the generated
-    # not-found branch of the count queries needs a connection stub that
-    # misses.
-    def execute(self, _query: str, _params: object = None) -> _NoRowCursor:
-        return _NoRowCursor()
 
 
 class TestDataclassFunctions:
@@ -881,7 +869,7 @@ class TestDataclassFunctions:
         assert count == 1
 
     def test_count_enum_override_no_row(self) -> None:
-        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", _NoRowConn())
+        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", NoRowConn())
         count = queries_enum_override.count_enum_override_by_moods(conn=conn, dollar_1=[enums.TestMood.HAPPY])
         assert count is None
 
