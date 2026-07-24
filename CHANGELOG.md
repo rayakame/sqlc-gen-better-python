@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.7.0 - 2026-07-24
+### Added
+* [#217](https://github.com/rayakame/sqlc-gen-better-python/pull/217) Psycopg 3 support: the new `sql_driver` value `psycopg_async` generates asyncio code for `psycopg` with the same commands as asyncpg, including `:copyfrom` via `cursor.copy()`. Queries are rewritten to psycopg's named pyformat placeholders at generation time and bind their parameters as a dict, the type contract matches asyncpg exactly (returned `json`/`jsonb` columns stay `str` via a registered raw-text loader, so converters behave identically), and the generated code passes pyright strict against psycopg's `LiteralString` query typing. Requires `psycopg >= 3.2`. ([Rayakame](https://github.com/Rayakame))
+* [#222](https://github.com/rayakame/sqlc-gen-better-python/pull/222) Synchronous Psycopg 3 support: the new `sql_driver` value `psycopg_sync` generates plain synchronous code for `psycopg` with the same supported commands (`:execlastid` stays excluded), models, placeholder rewriting, and type contract as `psycopg_async` - including `:copyfrom` via `cursor.copy()` and the raw-text loader keeping returned `json`/`jsonb` columns `str`. `:many` queries return the same `QueryResults` helper, called instead of awaited. Requires `psycopg >= 3.2`. ([Rayakame](https://github.com/Rayakame))
+
 ## v0.6.0 - 2026-07-21
 ### Added
 * [#186](https://github.com/rayakame/sqlc-gen-better-python/pull/186) Converters: a named pair of your own `to_db` / `from_db` functions that serialize and deserialize a column value, referenced by an override. Overrides could only convert by calling the type itself, which does not work for JSON and similar formats. The functions receive and return the type the column would have had without the override, are never called with `None` (nullable columns stay guarded), and convert list columns element-wise. ([Rayakame](https://github.com/Rayakame))
