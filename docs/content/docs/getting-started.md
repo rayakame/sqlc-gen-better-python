@@ -16,6 +16,14 @@ You need [`sqlc`](https://docs.sqlc.dev/en/latest/overview/install.html) on your
 `PATH` and **Python 3.12 or newer** (the generated code uses PEP 695 type aliases
 and generics, and `enum.StrEnum`).
 
+{{< callout type="info" >}}
+  Besides the official installation methods, sqlc is also pip-installable via
+  [sqlc-bin](https://pypi.org/project/sqlc-bin/), which ships the unmodified
+  official binaries - no Go toolchain required. `uv add --dev sqlc-bin` (or
+  `pip install sqlc-bin`) puts `sqlc` on your PATH, and the package version
+  tracks the sqlc version, so you can pin it like any other dependency.
+{{< /callout >}}
+
 Then install the database driver you want to use:
 
 {{< tabs >}}
