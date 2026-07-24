@@ -16,30 +16,36 @@ const (
 	psycopgResultType = "psycopg.rows.TupleRow"
 )
 
-// psycopgBase is the driver implementation for psycopg (Psycopg 3).
+// psycopgBase is the driver implementation for both psycopg (Psycopg 3)
+// flavors - psycopg_async and psycopg_sync. Psycopg's sync and async APIs
+// mirror each other method for method, so all emission differences between
+// the two are derived from the async flag.
 type psycopgBase struct {
-	rows *RowBuilder
+	async bool
+	rows  *RowBuilder
 }
 
 var _ Driver = (*psycopgBase)(nil)
 
-// newPsycopgDriver creates the psycopg driver. Runtime value conversion is
-// identical to asyncpg: bytea, inet, and cidr convert inline; json and jsonb
-// keep their str wire type via registered loaders, see WriteConversionSetup.
-func newPsycopgDriver() *psycopgBase {
+// newPsycopgDriver creates the driver for one psycopg flavor. Runtime value
+// conversion is identical to asyncpg: bytea, inet, and cidr convert inline;
+// json and jsonb keep their str wire type via registered loaders, see
+// WriteConversionSetup.
+func newPsycopgDriver(async bool) *psycopgBase {
 	return &psycopgBase{
-		rows: newRowBuilder(asyncpgNeedsConversion),
+		async: async,
+		rows:  newRowBuilder(asyncpgNeedsConversion),
 	}
 }
 
-// Name returns the Python module name, "psycopg".
+// Name returns the Python module name, "psycopg", for both flavors.
 func (p *psycopgBase) Name() string { return "psycopg" }
 
 // ConnType returns "ConnectionLike".
 func (p *psycopgBase) ConnType() string { return psycopgConnType }
 
-// IsAsync returns true; only the async psycopg flavor exists.
-func (p *psycopgBase) IsAsync() bool { return true }
+// IsAsync reports whether this is the psycopg_async flavor.
+func (p *psycopgBase) IsAsync() bool { return p.async }
 
 // NeedsConversion reports whether a SQL type needs runtime conversion.
 func (p *psycopgBase) NeedsConversion(sqlType string) bool {
@@ -72,7 +78,7 @@ func (p *psycopgBase) SupportsCommand(cmd string) bool {
 // expects tuple rows, and pyright rejects e.g. dict_row connections.
 func (p *psycopgBase) TypeCheckingHook() []string {
 	return []string{
-		fmt.Sprintf("type ConnectionLike = psycopg.AsyncConnection[%s]", psycopgResultType),
+		fmt.Sprintf("type ConnectionLike = psycopg.%s[%s]", p.connClass(), psycopgResultType),
 	}
 }
 
@@ -128,20 +134,32 @@ func (p *psycopgBase) WriteConversionSetup(body *writer.CodeWriter, _ *config.Co
 	return len(names) != 0
 }
 
-// WriteQueryResultsClass writes the async QueryResults class for psycopg
-// :many queries. Note the default cursor buffers the full result set client
-// side on execute; iteration decodes row by row but does not stream from the
-// server.
+// WriteQueryResultsClass writes the QueryResults class for psycopg :many
+// queries, in its sync or async variant. Note the default cursor buffers the
+// full result set client side on execute; iteration decodes row by row but
+// does not stream from the server.
 func (p *psycopgBase) WriteQueryResultsClass(body *writer.CodeWriter) string {
+	iteratorType := "Iterator"
+	if p.async {
+		iteratorType = "AsyncIterator"
+	}
 	body.QueryResults.WriteQueryResultsClassHeaderNamedParams(psycopgConnType, []string{
-		fmt.Sprintf("self._cursor: psycopg.AsyncCursor[%s] | None = None", psycopgResultType),
-		fmt.Sprintf("self._iterator: collections.abc.AsyncIterator[%s] | None = None", psycopgResultType),
-	}, psycopgResultType, true)
-	body.QueryResults.WriteQueryResultsAwaitFunction([]string{
-		"result = await (await self._conn.execute(self._sql, self._params)).fetchall()",
-		decodeRowsExpr,
-	})
-	writeAsyncNextMethod(body, "a psycopg cursor", "self._cursor = await self._conn.execute(self._sql, self._params)")
+		fmt.Sprintf("self._cursor: %s | None = None", p.cursorType()),
+		fmt.Sprintf("self._iterator: collections.abc.%s[%s] | None = None", iteratorType, psycopgResultType),
+	}, psycopgResultType, p.async)
+	if p.async {
+		body.QueryResults.WriteQueryResultsAwaitFunction([]string{
+			"result = await (await self._conn.execute(self._sql, self._params)).fetchall()",
+			decodeRowsExpr,
+		})
+		writeCursorNextMethod(body, true, "a psycopg cursor", "self._cursor = await self._conn.execute(self._sql, self._params)")
+	} else {
+		body.QueryResults.WriteQueryResultsCallFunction([]string{
+			"result = self._conn.execute(self._sql, self._params).fetchall()",
+			decodeRowsExpr,
+		})
+		writeCursorNextMethod(body, false, "a psycopg cursor", "self._cursor = self._conn.execute(self._sql, self._params)")
+	}
 
 	return queryResultsClassName
 }
@@ -239,36 +257,8 @@ func writePsycopgCall(body *writer.CodeWriter, indent int, query model.Query, he
 	body.WriteWrappedCall(indent, head, append(slices.Clone(leadArgs), arg), ")")
 }
 
-// writePsycopgOneCall writes the :one fetch statement. Its tail closes two
-// parentheses, which WriteWrappedCall's exploded form cannot express in a
-// ruff-stable way, so the overlong case emits ruff format's nested-await
-// layout instead.
-func writePsycopgOneCall(body *writer.CodeWriter, indent int, query model.Query, conn string) {
-	head := fmt.Sprintf("row = await (await %s.execute(", conn)
-	args := []string{query.ConstantName}
-	if arg, ok := psycopgParamsArg(body, indent, query, func(dict string) string {
-		return head + query.ConstantName + ", " + dict + ")).fetchone()"
-	}); ok {
-		args = append(args, arg)
-	}
-
-	stmt := head + strings.Join(args, ", ") + ")).fetchone()"
-	if body.FitsLine(indent, stmt) {
-		body.WriteIndentedLine(indent, stmt)
-
-		return
-	}
-	body.WriteIndentedLine(indent, "row = await (")
-	body.WriteIndentedLine(indent+1, fmt.Sprintf("await %s.execute(", conn))
-	for _, arg := range args {
-		body.WriteIndentedLine(indent+2, arg+",")
-	}
-	body.WriteIndentedLine(indent+1, ")")
-	body.WriteIndentedLine(indent, ").fetchone()")
-}
-
 func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Config, query model.Query, indent int) {
-	cursorType := fmt.Sprintf("psycopg.AsyncCursor[%s]", psycopgResultType)
+	cursorType := p.cursorType()
 	var annotation, docRetType string
 	switch query.Cmd {
 	case metadata.CmdExec:
@@ -288,7 +278,10 @@ func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	indent++
 	writeQueryDocstring(body, p, config, query, indent, docRetType)
 
-	execHead := fmt.Sprintf("await %s.execute(", conn)
+	execHead := conn + ".execute("
+	if p.async {
+		execHead = awaitPrefix + execHead
+	}
 	constArg := []string{query.ConstantName}
 	switch query.Cmd {
 	case metadata.CmdExec:
@@ -305,7 +298,7 @@ func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 		p.writeCopyFromBody(body, query, conn, indent)
 
 	case metadata.CmdOne:
-		writePsycopgOneCall(body, indent, query, conn)
+		p.writeOneCall(body, indent, query, conn)
 		body.WriteIndentedLine(indent, "if row is None:")
 		body.WriteIndentedLine(indent+1, "return None")
 
@@ -325,6 +318,63 @@ func (p *psycopgBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 			[]string{conn, query.ConstantName, decodeHook},
 		)
 	}
+}
+
+// connClass returns the psycopg connection class for this flavor.
+func (p *psycopgBase) connClass() string {
+	if p.async {
+		return "AsyncConnection"
+	}
+
+	return "Connection"
+}
+
+// cursorType returns the annotation of the cursor conn.execute() returns.
+func (p *psycopgBase) cursorType() string {
+	if p.async {
+		return fmt.Sprintf("psycopg.AsyncCursor[%s]", psycopgResultType)
+	}
+
+	return fmt.Sprintf("psycopg.Cursor[%s]", psycopgResultType)
+}
+
+// writeOneCall writes the :one fetch statement. The async flavor's tail
+// closes two parentheses, which WriteWrappedCall's exploded form cannot
+// express in a ruff-stable way, so its overlong case emits ruff format's
+// nested-await layout instead; the sync statement is a plain chained call
+// that wraps through WriteWrappedCall.
+func (p *psycopgBase) writeOneCall(body *writer.CodeWriter, indent int, query model.Query, conn string) {
+	head := "row = " + conn + ".execute("
+	tail := ").fetchone()"
+	if p.async {
+		head = "row = await (await " + conn + ".execute("
+		tail = ")).fetchone()"
+	}
+	args := []string{query.ConstantName}
+	if arg, ok := psycopgParamsArg(body, indent, query, func(dict string) string {
+		return head + query.ConstantName + ", " + dict + tail
+	}); ok {
+		args = append(args, arg)
+	}
+
+	if !p.async {
+		body.WriteWrappedCall(indent, head, args, tail)
+
+		return
+	}
+	stmt := head + strings.Join(args, ", ") + tail
+	if body.FitsLine(indent, stmt) {
+		body.WriteIndentedLine(indent, stmt)
+
+		return
+	}
+	body.WriteIndentedLine(indent, "row = await (")
+	body.WriteIndentedLine(indent+1, fmt.Sprintf("await %s.execute(", conn))
+	for _, arg := range args {
+		body.WriteIndentedLine(indent+2, arg+",")
+	}
+	body.WriteIndentedLine(indent+1, ")")
+	body.WriteIndentedLine(indent, ").fetchone()")
 }
 
 // writeCopyFromBody writes the body for a psycopg :copyfrom command: rows
@@ -354,35 +404,40 @@ func (p *psycopgBase) writeCopyFromBody(body *writer.CodeWriter, query model.Que
 		rowTuple = "(" + rowParts[0] + ",)"
 	}
 
+	withKw, awaitKw := "with", ""
+	if p.async {
+		withKw, awaitKw = "async with", awaitPrefix
+	}
+
 	copyIndent := indent + 1
 	loopIndent := copyIndent + 1
 	rowIndent := loopIndent + 1
-	body.WriteIndentedLine(indent, fmt.Sprintf("async with %s.cursor() as cur:", conn))
-	copyCall := fmt.Sprintf("async with cur.copy(%s) as copy:", writer.PyQuote(copyStmt))
+	body.WriteIndentedLine(indent, fmt.Sprintf("%s %s.cursor() as cur:", withKw, conn))
+	copyCall := fmt.Sprintf("%s cur.copy(%s) as copy:", withKw, writer.PyQuote(copyStmt))
 	if body.FitsLine(copyIndent, copyCall) {
 		body.WriteIndentedLine(copyIndent, copyCall)
 	} else {
 		// Matches ruff format's layout for an overlong single-string call:
 		// the string moves to its own line WITHOUT a magic trailing comma.
-		body.WriteIndentedLine(copyIndent, "async with cur.copy(")
+		body.WriteIndentedLine(copyIndent, withKw+" cur.copy(")
 		body.WriteIndentedLine(loopIndent, writer.PyQuote(copyStmt))
 		body.WriteIndentedLine(copyIndent, ") as copy:")
 	}
 	body.WriteIndentedLine(loopIndent, "for param in "+query.Params[0].Name+":")
-	writeRow := "await copy.write_row(" + rowTuple + ")"
+	writeRow := awaitKw + "copy.write_row(" + rowTuple + ")"
 	switch {
 	case body.FitsLine(rowIndent, writeRow):
 		body.WriteIndentedLine(rowIndent, writeRow)
 	case len(rowParts) == 1 && body.FitsLine(rowIndent+1, rowTuple):
 		// ruff format keeps a fitting one-element tuple on a single line -
 		// its required trailing comma is not a magic one.
-		body.WriteIndentedLine(rowIndent, "await copy.write_row(")
+		body.WriteIndentedLine(rowIndent, awaitKw+"copy.write_row(")
 		body.WriteIndentedLine(rowIndent+1, rowTuple)
 		body.WriteIndentedLine(rowIndent, ")")
 	default:
 		// ruff format's stable layout: the tuple opens on its own line inside
 		// the call and the magic trailing comma keeps it exploded.
-		body.WriteIndentedLine(rowIndent, "await copy.write_row(")
+		body.WriteIndentedLine(rowIndent, awaitKw+"copy.write_row(")
 		body.WriteIndentedLine(rowIndent+1, "(")
 		for _, part := range rowParts {
 			body.WriteIndentedLine(rowIndent+2, part+",")

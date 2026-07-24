@@ -37,7 +37,7 @@ it.
 |---|---|
 | **Python** | 3.12 or newer |
 | **Engines** | PostgreSQL, SQLite |
-| **Drivers** | `asyncpg`, `psycopg_async`, `aiosqlite`, `sqlite3` |
+| **Drivers** | `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3` |
 | **Model types** | `dataclass`, `attrs`, `msgspec`, `pydantic` |
 | **Docstrings** | `google`, `numpy`, `pep257`, or none |
 | **Checked with** | pyright (strict) and ruff |

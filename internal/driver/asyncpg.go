@@ -76,7 +76,7 @@ func (d *AsyncpgDriver) WriteQueryResultsClass(body *writer.CodeWriter) string {
 		"result = await self._conn.fetch(self._sql, *self._args)",
 		decodeRowsExpr,
 	})
-	writeAsyncNextMethod(body, "an asyncpg cursor", "self._cursor = self._conn.cursor(self._sql, *self._args)")
+	writeCursorNextMethod(body, true, "an asyncpg cursor", "self._cursor = self._conn.cursor(self._sql, *self._args)")
 
 	return queryResultsClassName
 }

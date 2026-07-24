@@ -25,15 +25,15 @@ supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 The supported [query annotations](https://docs.sqlc.dev/en/latest/reference/query-annotations.html)
 depend on the driver:
 
-| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async |
-|---|---|---|---|---|
-| `:one` | yes | yes | yes | yes |
-| `:many` | yes | yes | yes | yes |
-| `:exec` | yes | yes | yes | yes |
-| `:execresult` | yes | yes | yes | yes |
-| `:execrows` | yes | yes | yes | yes |
-| `:execlastid` | yes | yes | no | no |
-| `:copyfrom` | no | no | yes | yes |
+| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async | psycopg_sync |
+|---|---|---|---|---|---|
+| `:one` | yes | yes | yes | yes | yes |
+| `:many` | yes | yes | yes | yes | yes |
+| `:exec` | yes | yes | yes | yes | yes |
+| `:execresult` | yes | yes | yes | yes | yes |
+| `:execrows` | yes | yes | yes | yes | yes |
+| `:execlastid` | yes | yes | no | no | no |
+| `:copyfrom` | no | no | yes | yes | yes |
 
 See [Writing queries](/docs/guide/writing-queries) for what each command
 generates.
@@ -64,13 +64,14 @@ query gets prepared and which knob controls it:
   )
   ```
 
-- **psycopg** prepares a query server-side once it has been executed more than
-  `prepare_threshold` times on the connection - with the default of 5, the
-  sixth execution is the first prepared one. Set it to `0` to prepare from the
-  first execution, or `None` to never prepare:
+- **psycopg** (both flavors) prepares a query server-side once it has been
+  executed more than `prepare_threshold` times on the connection - with the
+  default of 5, the sixth execution is the first prepared one. Set it to `0`
+  to prepare from the first execution, or `None` to never prepare:
 
   ```python
-  conn = await psycopg.AsyncConnection.connect(dsn, prepare_threshold=0)
+  conn = await psycopg.AsyncConnection.connect(dsn, prepare_threshold=0)  # psycopg_async
+  conn = psycopg.connect(dsn, prepare_threshold=0)  # psycopg_sync
   ```
 
 - **sqlite3 / aiosqlite** expose no explicit prepare API, but the `sqlite3`
@@ -90,4 +91,5 @@ query gets prepared and which knob controls it:
 - **`:batch*` commands** (`:batchexec`, `:batchmany`, `:batchone`) are not
   supported and likely never will be.
 - **`psycopg2` and `mysql`** drivers are not currently supported; Psycopg 3
-  is, via the async `psycopg_async` driver.
+  is, via the `psycopg_async` (asyncio) and `psycopg_sync` (synchronous)
+  drivers.

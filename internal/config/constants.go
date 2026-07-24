@@ -19,7 +19,15 @@ const (
 	SQLDriverAioSQLite    SQLDriver = "aiosqlite"
 	SQLDriverAsyncpg      SQLDriver = "asyncpg"
 	SQLDriverPsycopgAsync SQLDriver = "psycopg_async"
+	SQLDriverPsycopgSync  SQLDriver = "psycopg_sync"
 )
+
+// IsPsycopg reports whether the driver is one of the two psycopg flavors,
+// which share the psycopg module, the %(pN)s placeholder rewrite, and the
+// LiteralString query-text contract.
+func (dr SQLDriver) IsPsycopg() bool {
+	return dr == SQLDriverPsycopgAsync || dr == SQLDriverPsycopgSync
+}
 
 const (
 	ModelTypeDataclass ModelType = "dataclass"
@@ -28,11 +36,17 @@ const (
 	ModelTypePydantic  ModelType = "pydantic"
 )
 
+const (
+	engineSQLite     = "sqlite"
+	enginePostgreSQL = "postgresql"
+)
+
 var driversEngine = map[SQLDriver]string{
-	SQLDriverSQLite:       "sqlite",
-	SQLDriverAioSQLite:    "sqlite",
-	SQLDriverAsyncpg:      "postgresql",
-	SQLDriverPsycopgAsync: "postgresql",
+	SQLDriverSQLite:       engineSQLite,
+	SQLDriverAioSQLite:    engineSQLite,
+	SQLDriverAsyncpg:      enginePostgreSQL,
+	SQLDriverPsycopgAsync: enginePostgreSQL,
+	SQLDriverPsycopgSync:  enginePostgreSQL,
 }
 
 const (

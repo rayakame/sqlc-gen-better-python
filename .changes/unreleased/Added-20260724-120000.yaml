@@ -1,0 +1,6 @@
+kind: Added
+body: 'Synchronous Psycopg 3 support: the new `sql_driver` value `psycopg_sync` generates plain synchronous code for `psycopg` with the same commands, models, placeholder rewriting, and type contract as `psycopg_async` - including `:copyfrom` via `cursor.copy()` and the raw-text loader keeping returned `json`/`jsonb` columns `str`. `:many` queries return the same `QueryResults` helper, called instead of awaited. Requires `psycopg >= 3.2`.'
+time: 2026-07-24T12:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "222"

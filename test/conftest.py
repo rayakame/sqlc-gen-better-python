@@ -37,10 +37,11 @@ import pytest_asyncio
 
 ASYNCPG_PATH = pathlib.Path(__file__).parent / "driver_asyncpg"
 PSYCOPG_ASYNC_PATH = pathlib.Path(__file__).parent / "driver_psycopg_async"
+PSYCOPG_SYNC_PATH = pathlib.Path(__file__).parent / "driver_psycopg_sync"
 AIOSQLITE_PATH = pathlib.Path(__file__).parent / "driver_aiosqlite"
 SQLITE3_PATH = pathlib.Path(__file__).parent / "driver_sqlite3"
 
-# Both postgres suites share the same tables, so their session teardowns must
+# All postgres suites share the same tables, so their session teardowns must
 # clean the same list; a single constant keeps them from diverging.
 _POSTGRES_CLEANUP: typing.Final = """
     DELETE FROM test_postgres_types;
@@ -50,6 +51,8 @@ _POSTGRES_CLEANUP: typing.Final = """
     DELETE FROM test_converters;
     DELETE FROM test_converter_array;
     DELETE FROM test_invalid_identifiers;
+    DELETE FROM test_enum_types;
+    DELETE FROM test_enum_override;
     DELETE FROM "3rd_party_stats";
 """
 
@@ -123,6 +126,22 @@ async def psycopg_async_conn(
     yield conn
     await conn.execute(_POSTGRES_CLEANUP)
     await conn.close()
+
+
+@pytest.fixture(scope="session")
+def psycopg_sync_conn(
+    request: pytest.FixtureRequest,
+) -> collections.abc.Generator[psycopg.Connection[psycopg.rows.TupleRow], typing.Any]:
+    dsn = get_dsn(request.config)
+    # autocommit matches the async psycopg fixture's semantics and keeps one
+    # failing test from poisoning the shared connection's transaction.
+    conn = psycopg.connect(dsn, autocommit=True)
+
+    schema = typing.cast("typing.LiteralString", (PSYCOPG_SYNC_PATH / "schema.sql").read_text())
+    conn.execute(schema)
+    yield conn
+    conn.execute(_POSTGRES_CLEANUP)
+    conn.close()
 
 
 @pytest.fixture(scope="class")

@@ -4,7 +4,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
@@ -40,7 +39,7 @@ func (t *Transformer) plainParams(pluginQuery *plugin.Query) []model.QueryValue 
 	// overlong params dict hoists into "sql_params", :execrows reads the
 	// cursor via "cur", :one fetches into "row", and :many may define a
 	// nested "_decode_hook".
-	if t.config.SqlDriver == config.SQLDriverPsycopgAsync {
+	if t.config.SqlDriver.IsPsycopg() {
 		seen["sql_params"]++
 		switch pluginQuery.Cmd {
 		case metadata.CmdExecRows:
@@ -122,7 +121,7 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 		// whole text for pyformat ones as soon as parameters are passed, so
 		// parameterized queries are rewritten once here. :copyfrom never
 		// executes its SQL - the driver builds a COPY statement instead.
-		if t.config.SqlDriver == config.SQLDriverPsycopgAsync &&
+		if t.config.SqlDriver.IsPsycopg() &&
 			len(pluginQuery.Params) > 0 && query.Cmd != metadata.CmdCopyFrom {
 			query.SQL = rewritePsycopgSQL(pluginQuery.Text)
 		}
