@@ -12,6 +12,14 @@ A WASM plugin for SQLC allowing the generation of Python code.
 The generated code requires **Python 3.12 or newer** (it uses PEP 695 type
 aliases and generics, and `enum.StrEnum`).
 
+> [!TIP]
+> Besides the [official installation methods](https://docs.sqlc.dev/en/latest/overview/install.html),
+> the `sqlc` CLI itself is also pip-installable via
+> [`sqlc-bin`](https://pypi.org/project/sqlc-bin/), which ships the unmodified
+> official binaries - no Go toolchain required: `pip install sqlc-bin` (or
+> `uv add --dev sqlc-bin`) puts `sqlc` on your PATH, pinnable like any other
+> Python dependency.
+
 ## Documentation
 
 **https://rayakame.github.io/sqlc-gen-better-python/**
