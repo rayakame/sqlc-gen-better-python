@@ -628,6 +628,13 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+{{< callout type="info" >}}
+  The `detect_types=sqlite3.PARSE_DECLTYPES` above is not needed for this schema,
+  but it is what makes generated converters work once your tables use dates,
+  decimals, booleans, or blobs. See
+  [SQLite type conversion](/docs/guide/sqlite-type-conversion).
+{{< /callout >}}
+
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
@@ -651,16 +658,16 @@ for user in query.list_users(conn):
     print(user.name)
 ```
 
-  {{< /tab >}}
-
-{{< /tabs >}}
-
 {{< callout type="info" >}}
   The `detect_types=sqlite3.PARSE_DECLTYPES` above is not needed for this schema,
   but it is what makes generated converters work once your tables use dates,
   decimals, booleans, or blobs. See
   [SQLite type conversion](/docs/guide/sqlite-type-conversion).
 {{< /callout >}}
+
+  {{< /tab >}}
+
+{{< /tabs >}}
 
 ## Next steps
 
