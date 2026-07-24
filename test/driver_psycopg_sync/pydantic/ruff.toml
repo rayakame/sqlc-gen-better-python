@@ -1,0 +1,9 @@
+extend="../../../ruff.toml"
+
+
+[lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+
+[lint.pydocstyle]
+convention = "google"

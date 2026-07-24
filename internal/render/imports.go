@@ -536,7 +536,7 @@ func (r *ImportResolver) addDriverImports(
 			}
 		}
 
-	case config.SQLDriverPsycopgAsync:
+	case config.SQLDriverPsycopgAsync, config.SQLDriverPsycopgSync:
 		// The module is psycopg regardless of the driver option name.
 		// psycopg.rows.TupleRow appears in the ConnectionLike alias of every
 		// query module, not only in :many decode hooks. The loader

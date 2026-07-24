@@ -397,7 +397,7 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		// parse falls back to 0.
 		noRows := "0"
 		if w.docstringDriver == config.SQLDriverAioSQLite || w.docstringDriver == config.SQLDriverSQLite ||
-			w.docstringDriver == config.SQLDriverPsycopgAsync {
+			w.docstringDriver.IsPsycopg() {
 			noRows = "-1"
 		}
 		ret = &retDoc{

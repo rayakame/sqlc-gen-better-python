@@ -39,6 +39,14 @@ func TestSQLDriverValidate(t *testing.T) {
 		{name: "sqlite3 with sqlite", driver: config.SQLDriverSQLite, engine: "sqlite"},
 		{name: "aiosqlite with sqlite", driver: config.SQLDriverAioSQLite, engine: "sqlite"},
 		{name: "asyncpg with postgresql", driver: config.SQLDriverAsyncpg, engine: "postgresql"},
+		{name: "psycopg_async with postgresql", driver: config.SQLDriverPsycopgAsync, engine: "postgresql"},
+		{name: "psycopg_sync with postgresql", driver: config.SQLDriverPsycopgSync, engine: "postgresql"},
+		{
+			name:    "psycopg_sync with sqlite",
+			driver:  config.SQLDriverPsycopgSync,
+			engine:  "sqlite",
+			wantErr: "SQL driver psycopg_sync does not support sqlite",
+		},
 		{
 			name:    "sqlite3 with postgresql",
 			driver:  config.SQLDriverSQLite,
@@ -132,6 +140,21 @@ func TestDocstringConventionValid(t *testing.T) {
 	for _, ds := range invalid {
 		if ds.Valid() {
 			t.Errorf("DocstringConvention(%q).Valid() = true, want false", string(ds))
+		}
+	}
+}
+
+func TestSQLDriverIsPsycopg(t *testing.T) {
+	t.Parallel()
+	for driver, want := range map[config.SQLDriver]bool{
+		config.SQLDriverPsycopgAsync: true,
+		config.SQLDriverPsycopgSync:  true,
+		config.SQLDriverAsyncpg:      false,
+		config.SQLDriverAioSQLite:    false,
+		config.SQLDriverSQLite:       false,
+	} {
+		if got := driver.IsPsycopg(); got != want {
+			t.Errorf("IsPsycopg(%q) = %v, want %v", driver, got, want)
 		}
 	}
 }

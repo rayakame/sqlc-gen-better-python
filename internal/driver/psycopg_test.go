@@ -832,3 +832,334 @@ func TestPsycopgWriteQueryFuncBundledParams(t *testing.T) {
 		t.Errorf("WriteQueryFunc() = %q, want %q", got, want)
 	}
 }
+
+func psycopgSyncTestConfig() *config.Config {
+	conf := psycopgTestConfig()
+	conf.SqlDriver = config.SQLDriverPsycopgSync
+
+	return conf
+}
+
+func newPsycopgSync(t *testing.T) driver.Driver {
+	t.Helper()
+	d, err := driver.New(psycopgSyncTestConfig())
+	if err != nil {
+		t.Fatalf("driver.New() error = %v", err)
+	}
+
+	return d
+}
+
+func TestPsycopgSyncDriverMetadata(t *testing.T) {
+	t.Parallel()
+	d := newPsycopgSync(t)
+	if got := d.Name(); got != "psycopg" {
+		t.Errorf("Name() = %q, want %q", got, "psycopg")
+	}
+	if got := d.ConnType(); got != "ConnectionLike" {
+		t.Errorf("ConnType() = %q, want %q", got, "ConnectionLike")
+	}
+	if d.IsAsync() {
+		t.Error("IsAsync() = true, want false")
+	}
+	wantHook := []string{"type ConnectionLike = psycopg.Connection[psycopg.rows.TupleRow]"}
+	if got := d.TypeCheckingHook(); !slices.Equal(got, wantHook) {
+		t.Errorf("TypeCheckingHook() = %q, want %q", got, wantHook)
+	}
+}
+
+func TestPsycopgSyncWriteQueryResultsClass(t *testing.T) {
+	t.Parallel()
+	d := newPsycopgSync(t)
+	w := writer.NewCodeWriter(psycopgSyncTestConfig())
+	if got := d.WriteQueryResultsClass(w); got != "QueryResults" {
+		t.Errorf("WriteQueryResultsClass() = %q, want %q", got, "QueryResults")
+	}
+	want := strings.Join([]string{
+		"class QueryResults[T]:",
+		`    __slots__ = ("_conn", "_cursor", "_decode_hook", "_iterator", "_params", "_sql")`,
+		"",
+		"    def __init__(",
+		"        self,",
+		"        conn: ConnectionLike,",
+		"        sql: typing.LiteralString,",
+		"        decode_hook: collections.abc.Callable[[psycopg.rows.TupleRow], T],",
+		"        params: dict[str, QueryResultsArgsType] | None = None,",
+		"    ) -> None:",
+		"        self._conn = conn",
+		"        self._sql: typing.LiteralString = sql",
+		"        self._decode_hook = decode_hook",
+		"        self._params = params",
+		"        self._cursor: psycopg.Cursor[psycopg.rows.TupleRow] | None = None",
+		"        self._iterator: collections.abc.Iterator[psycopg.rows.TupleRow] | None = None",
+		"",
+		"    def __iter__(self) -> QueryResults[T]:",
+		"        return self",
+		"",
+		"    def __call__(",
+		"        self,",
+		"    ) -> collections.abc.Sequence[T]:",
+		"        result = self._conn.execute(self._sql, self._params).fetchall()",
+		"        return [self._decode_hook(row) for row in result]",
+		"",
+		"    def __next__(self) -> T:",
+		"        if self._cursor is None or self._iterator is None:",
+		"            self._cursor = self._conn.execute(self._sql, self._params)",
+		"            self._iterator = self._cursor.__iter__()",
+		"        try:",
+		"            record = self._iterator.__next__()",
+		"        except StopIteration:",
+		"            self._cursor = None",
+		"            self._iterator = None",
+		"            raise",
+		"        return self._decode_hook(record)",
+	}, "\n") + "\n"
+	if got := w.String(); got != want {
+		t.Errorf("WriteQueryResultsClass() wrote %q, want %q", got, want)
+	}
+}
+
+func TestPsycopgSyncWriteQueryFunc(t *testing.T) {
+	t.Parallel()
+	longName := strings.Repeat("p", 340)
+	cases := []struct {
+		name  string
+		query model.Query
+		want  string
+	}{
+		{
+			name: "exec with params binds by number",
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				ConstantName: "DELETE_AUTHOR",
+				FuncName:     "delete_author",
+				Params: []model.QueryValue{
+					{Name: "author_id", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def delete_author(conn: ConnectionLike, author_id: int) -> None:",
+				`    conn.execute(DELETE_AUTHOR, {"p1": author_id})`,
+				"",
+			}, "\n"),
+		},
+		{
+			name: "exec long params hoisted into sql_params",
+			query: model.Query{
+				Cmd:          metadata.CmdExec,
+				ConstantName: "HOIST",
+				FuncName:     "hoist",
+				Params: []model.QueryValue{
+					{Name: longName, Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def hoist(",
+				"    conn: ConnectionLike,",
+				"    " + longName + ": int,",
+				") -> None:",
+				"    sql_params = {",
+				`        "p1": ` + longName + ",",
+				"    }",
+				"    conn.execute(HOIST, sql_params)",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "execresult returns the sync cursor",
+			query: model.Query{
+				Cmd:          metadata.CmdExecResult,
+				ConstantName: "UPDATE_ROWS",
+				FuncName:     "update_rows",
+				Params: []model.QueryValue{
+					{Name: "id_", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "None"}},
+			},
+			want: strings.Join([]string{
+				"def update_rows(conn: ConnectionLike, id_: int) -> psycopg.Cursor[psycopg.rows.TupleRow]:",
+				`    return conn.execute(UPDATE_ROWS, {"p1": id_})`,
+				"",
+			}, "\n"),
+		},
+		{
+			name: "execrows returns rowcount",
+			query: model.Query{
+				Cmd:          metadata.CmdExecRows,
+				ConstantName: "UPDATE_ROWS",
+				FuncName:     "update_rows",
+				Params: []model.QueryValue{
+					{Name: "id_", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int"}},
+			},
+			want: strings.Join([]string{
+				"def update_rows(conn: ConnectionLike, id_: int) -> int:",
+				`    cur = conn.execute(UPDATE_ROWS, {"p1": id_})`,
+				"    return cur.rowcount",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "one struct return chains fetchone",
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: "GET_AUTHOR",
+				FuncName:     "get_author",
+				Params: []model.QueryValue{
+					{Name: "id_", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: psycopgAuthorReturn(),
+			},
+			want: strings.Join([]string{
+				"def get_author(conn: ConnectionLike, id_: int) -> models.Author | None:",
+				`    row = conn.execute(GET_AUTHOR, {"p1": id_}).fetchone()`,
+				"    if row is None:",
+				"        return None",
+				"    return models.Author(id=row[0], name=row[1])",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "one long params hoist into sql_params",
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: "GET_LONG",
+				FuncName:     "get_long",
+				Params: []model.QueryValue{
+					{Name: longName, Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int", SQLType: "bigint"}},
+			},
+			want: strings.Join([]string{
+				"def get_long(",
+				"    conn: ConnectionLike,",
+				"    " + longName + ": int,",
+				") -> int | None:",
+				"    sql_params = {",
+				`        "p1": ` + longName + ",",
+				"    }",
+				"    row = conn.execute(GET_LONG, sql_params).fetchone()",
+				"    if row is None:",
+				"        return None",
+				"    return row[0]",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "one long constant wraps the chained call",
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: longName,
+				FuncName:     "get_named",
+				Returns:      model.QueryValue{Type: model.PyType{Type: "int", SQLType: "bigint"}},
+			},
+			want: strings.Join([]string{
+				"def get_named(conn: ConnectionLike) -> int | None:",
+				"    row = conn.execute(",
+				"        " + longName + ",",
+				"    ).fetchone()",
+				"    if row is None:",
+				"        return None",
+				"    return row[0]",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "many struct return matches the async emission",
+			query: model.Query{
+				Cmd:          metadata.CmdMany,
+				ConstantName: "LIST_AUTHORS",
+				FuncName:     "list_authors",
+				Params: []model.QueryValue{
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}, Number: 1},
+				},
+				Returns: psycopgAuthorReturn(),
+			},
+			want: strings.Join([]string{
+				"def list_authors(conn: ConnectionLike, name: str) -> QueryResults[models.Author]:",
+				"    def _decode_hook(row: psycopg.rows.TupleRow) -> models.Author:",
+				"        return models.Author(id=row[0], name=row[1])",
+				"",
+				`    return QueryResults(conn, LIST_AUTHORS, _decode_hook, {"p1": name})`,
+				"",
+			}, "\n"),
+		},
+		{
+			name: "many long params hoist keeps the args-type annotation",
+			query: model.Query{
+				Cmd:          metadata.CmdMany,
+				ConstantName: "LIST_LONG",
+				FuncName:     "list_long",
+				Params: []model.QueryValue{
+					{Name: longName, Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+				},
+				Returns: model.QueryValue{Type: model.PyType{Type: "int", SQLType: "bigint"}},
+			},
+			want: strings.Join([]string{
+				"def list_long(",
+				"    conn: ConnectionLike,",
+				"    " + longName + ": int,",
+				") -> QueryResults[int]:",
+				"    sql_params: dict[str, QueryResultsArgsType] = {",
+				`        "p1": ` + longName + ",",
+				"    }",
+				"    return QueryResults(conn, LIST_LONG, operator.itemgetter(0), sql_params)",
+				"",
+			}, "\n"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			d := newPsycopgSync(t)
+			conf := psycopgSyncTestConfig()
+			body := writer.NewCodeWriter(conf)
+			d.WriteQueryFunc(body, conf, tc.query, 0)
+			if got := body.String(); got != tc.want {
+				t.Errorf("WriteQueryFunc() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPsycopgSyncWriteQueryFuncCopyFrom(t *testing.T) {
+	t.Parallel()
+	d := newPsycopgSync(t)
+	conf := psycopgSyncTestConfig()
+	body := writer.NewCodeWriter(conf)
+	query := model.Query{
+		Cmd:          metadata.CmdCopyFrom,
+		ConstantName: "COPY_AUTHORS",
+		FuncName:     "copy_authors",
+		Table:        &plugin.Identifier{Name: "authors"},
+		Params: []model.QueryValue{{
+			EmitTable: true,
+			Name:      "params",
+			Type:      model.PyType{Type: "CopyAuthorsParams", IsList: true},
+			Table: &model.Table{
+				Name: "CopyAuthorsParams",
+				Columns: []model.Column{
+					{Name: "id_", DBName: "id", Type: model.PyType{Type: "int", SQLType: "bigint"}, Number: 1},
+					{Name: "name", DBName: "name", Type: model.PyType{Type: "str", SQLType: "text"}, Number: 2},
+				},
+			},
+		}},
+		Returns: model.QueryValue{Type: model.PyType{Type: "int"}},
+	}
+	d.WriteQueryFunc(body, conf, query, 0)
+	want := strings.Join([]string{
+		"def copy_authors(conn: ConnectionLike, params: collections.abc.Sequence[CopyAuthorsParams]) -> int:",
+		"    with conn.cursor() as cur:",
+		`        with cur.copy('COPY "authors" ("id", "name") FROM STDIN') as copy:`,
+		"            for param in params:",
+		"                copy.write_row((param.id_, param.name))",
+		"        return cur.rowcount",
+		"",
+	}, "\n")
+	if got := body.String(); got != want {
+		t.Errorf("WriteQueryFunc() = %q, want %q", got, want)
+	}
+}

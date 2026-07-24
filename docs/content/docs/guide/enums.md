@@ -64,5 +64,5 @@ from a `public.mood` that would become `Mood`.
 
 {{< callout type="info" >}}
   Enum classes are a PostgreSQL feature - SQLite has no native enum type, so this
-  applies to the PostgreSQL drivers (`asyncpg` and `psycopg_async`).
+  applies to the PostgreSQL drivers (`asyncpg`, `psycopg_async`, and `psycopg_sync`).
 {{< /callout >}}

@@ -755,6 +755,26 @@ func TestWriteQueryFunctionDocstring(t *testing.T) {
 			),
 		},
 		{
+			name:    "execrows psycopg_sync documents rowcount's -1",
+			conv:    config.DocstringConventionGoogle,
+			driver:  config.SQLDriverPsycopgSync,
+			omitSQL: true,
+			write: func(w *writer.CodeWriter) {
+				w.WriteQueryFunctionDocstring(1, execRowsQuery, "ConnectionLike", nil, "int")
+			},
+			want: lines(
+				"    \"\"\"Execute SQL query with `name: TouchAuthors :execrows` and return the number of affected rows.",
+				``,
+				`    Args:`,
+				`        conn:`,
+				"            Connection object of type `ConnectionLike` used to execute the query.",
+				``,
+				`    Returns:`,
+				"        The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.",
+				`    """`,
+			),
+		},
+		{
 			name:   "execrows sqlite3 pep257 normalizes sql lines",
 			conv:   config.DocstringConventionPEP257,
 			driver: config.SQLDriverSQLite,

@@ -218,6 +218,20 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 			column: "_decode_hook",
 			want:   "_decode_hook",
 		},
+		// The sync flavor shares every psycopg reservation.
+		{
+			name:   "sql_params collides for psycopg_sync",
+			driver: config.SQLDriverPsycopgSync,
+			column: "sql_params",
+			want:   "sql_params_2",
+		},
+		{
+			name:   "row collides in a psycopg_sync one query",
+			driver: config.SQLDriverPsycopgSync,
+			cmd:    ":one",
+			column: "row",
+			want:   "row_2",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -574,6 +588,20 @@ func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
 				Columns: []*plugin.Column{queryCol("name", "text", nil)},
 			},
 			wantSQL: "SELECT name FROM test_authors WHERE id = %(p1)s AND name LIKE 'a%%'",
+		},
+		{
+			name:   "parameterized query is rewritten for psycopg_sync",
+			driver: config.SQLDriverPsycopgSync,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = $1",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = %(p1)s",
 		},
 		{
 			name:   "parameterless query stays untouched",

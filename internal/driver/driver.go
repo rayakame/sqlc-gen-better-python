@@ -11,6 +11,7 @@ import (
 const (
 	decodeRowsExpr        = "return [self._decode_hook(row) for row in result]"
 	queryResultsClassName = "QueryResults"
+	awaitPrefix           = "await "
 )
 
 type Driver interface {
@@ -57,7 +58,9 @@ func New(conf *config.Config) (Driver, error) {
 	case config.SQLDriverAsyncpg:
 		return newAsyncpgDriver(), nil
 	case config.SQLDriverPsycopgAsync:
-		return newPsycopgDriver(), nil
+		return newPsycopgDriver(true), nil
+	case config.SQLDriverPsycopgSync:
+		return newPsycopgDriver(false), nil
 	case config.SQLDriverAioSQLite:
 		return newSqliteDriver("aiosqlite", true), nil
 	case config.SQLDriverSQLite:
