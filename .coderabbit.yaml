@@ -15,7 +15,7 @@ reviews:
   review_status: false
   review_details: false
   review_progress: true
-  commit_status: false
+  commit_status: true
   fail_commit_status: false
   collapse_walkthrough: true
   changed_files_summary: false
