@@ -6,32 +6,32 @@ inheritance: false
 reviews:
   profile: assertive
   request_changes_workflow: false
-  high_level_summary: true
+  high_level_summary: false
   high_level_summary_instructions: ''
   high_level_summary_placeholder: '`@coderabbitai` summary'
   high_level_summary_in_walkthrough: false
   auto_title_placeholder: '`@coderabbitai`'
   auto_title_instructions: ''
-  review_status: true
+  review_status: false
   review_details: false
   review_progress: true
-  commit_status: true
+  commit_status: false
   fail_commit_status: false
   collapse_walkthrough: true
-  changed_files_summary: true
-  sequence_diagrams: true
-  estimate_code_review_effort: true
-  assess_linked_issues: true
-  related_issues: true
-  related_prs: true
-  suggested_labels: true
+  changed_files_summary: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
   labeling_instructions: []
   mutually_exclusive_groups: {}
   auto_apply_labels: false
-  suggested_reviewers: true
+  suggested_reviewers: false
   auto_assign_reviewers: false
   suggested_reviewers_instructions: []
-  in_progress_fortune: true
+  in_progress_fortune: false
   poem: false
   enable_prompt_for_ai_agents: true
   path_filters:
@@ -44,9 +44,9 @@ reviews:
   slop_detection:
     enabled: true
   auto_review:
-    enabled: true
+    enabled: false
     description_keyword: ''
-    auto_incremental_review: true
+    auto_incremental_review: false
     auto_pause_after_reviewed_commits: 5
     ignore_title_keywords: []
     labels: []
@@ -55,17 +55,17 @@ reviews:
     ignore_usernames: []
   finishing_touches:
     docstrings:
-      enabled: true
+      enabled: false
     unit_tests:
       enabled: false
     simplify:
       enabled: false
     autofix:
-      enabled: true
+      enabled: false
     fix_ci:
-      enabled: true
+      enabled: false
     resolve_merge_conflict:
-      enabled: true
+      enabled: false
     custom: []
   pre_merge_checks:
     override_requested_reviewers_only: false
@@ -254,9 +254,9 @@ issue_enrichment:
   auto_enrich:
     enabled: false
   planning:
-    enabled: true
+    enabled: false
     auto_planning:
-      enabled: true
+      enabled: false
       labels: []
   labeling:
     labeling_instructions: []
