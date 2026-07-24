@@ -39,7 +39,7 @@ pip install asyncpg
   {{< tab name="psycopg_async" >}}
 
 ```bash
-pip install "psycopg[binary]"
+pip install "psycopg[binary]>=3.2"
 ```
 
   {{< /tab >}}
@@ -47,7 +47,7 @@ pip install "psycopg[binary]"
   {{< tab name="psycopg_sync" >}}
 
 ```bash
-pip install "psycopg[binary]"
+pip install "psycopg[binary]>=3.2"
 ```
 
   {{< /tab >}}
