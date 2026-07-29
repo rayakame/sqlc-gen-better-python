@@ -730,6 +730,19 @@ func TestConvertParamExprWire(t *testing.T) {
 			want: "x",
 		},
 		{
+			// A convertible SQL type with a typing.Any default cannot occur
+			// in real IR (a known type always maps to a real DefaultType),
+			// but the passthrough contract must hold defensively: the wire
+			// template assumes the default type and must not wrap.
+			name: "any default skips the wire even for a convertible type",
+			expr: "x",
+			typ: model.PyType{
+				Type: "u.U", SQLType: "date", IsOverride: true, DefaultType: types.Any,
+			},
+			wire: tursoWire,
+			want: "x",
+		},
+		{
 			name: "wire list converts element-wise",
 			expr: "xs",
 			typ:  model.PyType{SQLType: "date", Type: "datetime.date", IsList: true},

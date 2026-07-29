@@ -256,4 +256,3 @@ sql:
             - db_type: JULIANDAY
               py_type:
                 type: str
-

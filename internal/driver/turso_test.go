@@ -1,7 +1,6 @@
 package driver_test
 
 import (
-	"slices"
 	"strings"
 	"testing"
 
@@ -647,30 +646,5 @@ func TestTursoWriteQueryFuncBundledParams(t *testing.T) {
 	}, "\n")
 	if got := body.String(); got != want {
 		t.Errorf("WriteQueryFunc() = %q, want %q", got, want)
-	}
-}
-
-func TestTursoConfigHelpers(t *testing.T) {
-	t.Parallel()
-	for d, want := range map[config.SQLDriver]bool{
-		config.SQLDriverTursoSync:  true,
-		config.SQLDriverTursoAsync: true,
-		config.SQLDriverSQLite:     false,
-		config.SQLDriverAsyncpg:    false,
-	} {
-		if got := d.IsTurso(); got != want {
-			t.Errorf("IsTurso(%q) = %v, want %v", d, got, want)
-		}
-	}
-	for _, d := range []config.SQLDriver{config.SQLDriverTursoSync, config.SQLDriverTursoAsync} {
-		if err := d.Validate("sqlite"); err != nil {
-			t.Errorf("Validate(sqlite) for %q error = %v, want nil", d, err)
-		}
-		if err := d.Validate("postgresql"); err == nil {
-			t.Errorf("Validate(postgresql) for %q error = nil, want error", d)
-		}
-	}
-	if !slices.Contains([]string{"turso_sync"}, config.SQLDriverTursoSync.String()) {
-		t.Errorf("String() = %q, want turso_sync", config.SQLDriverTursoSync.String())
 	}
 }

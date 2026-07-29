@@ -16,6 +16,7 @@ SELECT name FROM test_slice WHERE id IN (sqlc.slice('ids')) OR name IN (sqlc.sli
 -- name: GetSliceRowsByNameOrNote :many
 SELECT * FROM test_slice WHERE name IN (sqlc.slice('names')) OR note IN (sqlc.slice('names')) ORDER BY id;
 
+-- Intentional AND/OR precedence: groups as (name IN (...) AND id != ?) OR note IN (...).
 -- name: GetSliceRowsByNameOrNoteFiltered :many
 SELECT * FROM test_slice WHERE name IN (sqlc.slice('names')) AND id != ? OR note IN (sqlc.slice('names')) ORDER BY id;
 

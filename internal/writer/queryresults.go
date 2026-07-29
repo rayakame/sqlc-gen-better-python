@@ -2,6 +2,8 @@ package writer
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 )
@@ -11,6 +13,10 @@ import (
 const (
 	methodBodyIndent = 2
 	nestedBodyIndent = 3
+
+	// slotIterator is the QueryResults iterator field, dropped from
+	// __slots__ for drivers that consume the cursor directly.
+	slotIterator = "_iterator"
 )
 
 type QueryResultsWriter struct {
@@ -27,7 +33,7 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeader(
 	driverReturnType string,
 	async bool,
 ) {
-	w.writeClassHeader(connType, initFields, driverReturnType, async, false, "")
+	w.writeClassHeader(connType, initFields, driverReturnType, async, false, true)
 }
 
 // WriteQueryResultsClassHeaderNamedParams writes the header variant for
@@ -38,7 +44,7 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeaderNamedParams(
 	driverReturnType string,
 	async bool,
 ) {
-	w.writeClassHeader(connType, initFields, driverReturnType, async, true, "")
+	w.writeClassHeader(connType, initFields, driverReturnType, async, true, true)
 }
 
 // WriteQueryResultsClassHeaderNoIterator writes the header variant for
@@ -50,8 +56,7 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeaderNoIterator(
 	driverReturnType string,
 	async bool,
 ) {
-	w.writeClassHeader(connType, initFields, driverReturnType, async, false,
-		`__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_sql")`)
+	w.writeClassHeader(connType, initFields, driverReturnType, async, false, false)
 }
 
 // WriteQueryResultsCallFunction writes the synchronous __call__ method.
@@ -88,21 +93,22 @@ func (w *QueryResultsWriter) writeClassHeader(
 	driverReturnType string,
 	async bool,
 	namedParams bool,
-	slotsOverride string,
+	withIterator bool,
 ) {
-	slots := `__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")`
+	slotFields := []string{"_args", "_conn", "_cursor", "_decode_hook", slotIterator, "_sql"}
 	paramsParam, paramsAssign := "*args: QueryResultsArgsType,", "self._args = args"
 	sqlParam, sqlAssign := "sql: str,", "self._sql = sql"
 	if namedParams {
-		slots = `__slots__ = ("_conn", "_cursor", "_decode_hook", "_iterator", "_params", "_sql")`
+		slotFields = []string{"_conn", "_cursor", "_decode_hook", slotIterator, "_params", "_sql"}
 		paramsParam, paramsAssign = "params: dict[str, QueryResultsArgsType] | None = None,", "self._params = params"
 		// psycopg's typed execute() requires LiteralString query text, and
 		// the attribute needs the annotation too - inference widens to str.
 		sqlParam, sqlAssign = "sql: typing.LiteralString,", "self._sql: typing.LiteralString = sql"
 	}
-	if slotsOverride != "" {
-		slots = slotsOverride
+	if !withIterator {
+		slotFields = slices.DeleteFunc(slotFields, func(field string) bool { return field == slotIterator })
 	}
+	slots := `__slots__ = ("` + strings.Join(slotFields, `", "`) + `")`
 	// PEP 695 class-scoped type parameter: no module-level TypeVar and no
 	// typing.Generic base needed on Python 3.12+.
 	w.writer.WriteLine("class QueryResults[T]:")

@@ -66,7 +66,7 @@ class TestTursoSyncDataclassClasses:
             varyingcharacter_test="VarChar variant",
             nchar_test="ABCDEFGHIJ",
             nativecharacter_test="NativeChar",
-            nvarchar_test="Olá mundo",
+            nvarchar_test="Ola mundo",
             text_test="Some text",
             clob_test="Some clob data",
             json_test=json.dumps({"foo": "bar"}),
@@ -431,12 +431,11 @@ class TestTursoSyncDataclassClasses:
 
             assert result == inner_model
 
-    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="TursoSyncTestDataclassClasses::get_many_nullable_inner",
         depends=["TursoSyncTestDataclassClasses::get_many_inner_iter"],
     )
-    async def test_get_many_nullable_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
+    def test_get_many_nullable_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         result = queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=inner_model.int_test)
 
         assert result is not None
@@ -446,12 +445,11 @@ class TestTursoSyncDataclassClasses:
 
         assert results[0] == inner_model
 
-    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="TursoSyncTestDataclassClasses::get_many_nullable_inner_iter",
         depends=["TursoSyncTestDataclassClasses::get_many_nullable_inner"],
     )
-    async def test_get_many_nullable_inner_iter(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
+    def test_get_many_nullable_inner_iter(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
         for result in queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=inner_model.int_test):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)

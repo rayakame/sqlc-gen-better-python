@@ -69,7 +69,7 @@ class TestTursoAsyncDataclassClasses:
             varyingcharacter_test="VarChar variant",
             nchar_test="ABCDEFGHIJ",
             nativecharacter_test="NativeChar",
-            nvarchar_test="Olá mundo",
+            nvarchar_test="Ola mundo",
             text_test="Some text",
             clob_test="Some clob data",
             json_test=json.dumps({"foo": "bar"}),

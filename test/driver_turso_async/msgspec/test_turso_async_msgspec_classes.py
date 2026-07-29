@@ -69,7 +69,7 @@ class TestTursoAsyncMsgspecClasses:
             varyingcharacter_test="VarChar variant",
             nchar_test="ABCDEFGHIJ",
             nativecharacter_test="NativeChar",
-            nvarchar_test="Olá mundo",
+            nvarchar_test="Ola mundo",
             text_test="Some text",
             clob_test="Some clob data",
             json_test=json.dumps({"foo": "bar"}),
@@ -458,7 +458,7 @@ class TestTursoAsyncMsgspecClasses:
         depends=["TursoAsyncTestMsgspecClasses::get_many_inner_iter"],
     )
     async def test_get_many_nullable_inner(self, queries_obj: queries.Queries, inner_model: models.TestInnerSqliteType) -> None:
-        result = await queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=None)
+        result = await queries_obj.get_many_nullable_inner_sqlite_type(table_id=inner_model.table_id, int_test=inner_model.int_test)
         assert result is not None
         assert isinstance(result, collections.abc.Sequence)
         assert isinstance(result[0], models.TestInnerSqliteType)

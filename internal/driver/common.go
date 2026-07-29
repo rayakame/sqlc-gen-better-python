@@ -365,11 +365,12 @@ func convertParamExprWire(expr string, typ model.PyType, wire wireConvertFunc) s
 		if typ.ConverterTo != "" {
 			callable = typ.ConverterTo
 		} else if typ.DefaultType == types.Any {
-			callable = ""
+			// A typing.Any default is not instantiable, so the value passes
+			// through unconverted and skips the wire conversion too - the
+			// wire templates assume the default Python type.
+			return expr
 		}
-		if callable != "" {
-			elemFmt = callable + "(%s)"
-		}
+		elemFmt = callable + "(%s)"
 	}
 	if wire != nil {
 		if wireFmt, ok := wire(typ.SQLType); ok {

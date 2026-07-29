@@ -130,7 +130,6 @@ sql:
                 import: collections
                 package: UserString
                 type: UserString
-
   - schema: schema.sql
     queries: queries.sql
     engine: sqlite
@@ -165,11 +164,9 @@ sql:
           omit_unused_models: true
           emit_init_file: true
           docstrings: google
-
           overrides:
             - column: test_type_override.text_test
               py_type:
                 import: collections
                 package: UserString
                 type: UserString
-

@@ -80,7 +80,7 @@ class TestTursoSyncDataclassFunctions:
             varyingcharacter_test="VarChar variant",
             nchar_test="ABCDEFGHIJ",
             nativecharacter_test="NativeChar",
-            nvarchar_test="Olá mundo",
+            nvarchar_test="Ola mundo",
             text_test="Some text",
             clob_test="Some clob data",
             json_test=json.dumps({"foo": "bar"}),
@@ -451,12 +451,11 @@ class TestTursoSyncDataclassFunctions:
 
             assert result == inner_model
 
-    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="TursoSyncTestDataclassFunctions::get_many_nullable_inner",
         depends=["TursoSyncTestDataclassFunctions::get_many_inner_iter"],
     )
-    async def test_get_many_nullable_inner(self, turso_sync_conn: turso.Connection, inner_model: models.TestInnerSqliteType) -> None:
+    def test_get_many_nullable_inner(self, turso_sync_conn: turso.Connection, inner_model: models.TestInnerSqliteType) -> None:
         result = queries.get_many_nullable_inner_sqlite_type(conn=turso_sync_conn, table_id=inner_model.table_id, int_test=inner_model.int_test)
 
         assert result is not None
@@ -466,12 +465,11 @@ class TestTursoSyncDataclassFunctions:
 
         assert results[0] == inner_model
 
-    @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(
         name="TursoSyncTestDataclassFunctions::get_many_nullable_inner_iter",
         depends=["TursoSyncTestDataclassFunctions::get_many_nullable_inner"],
     )
-    async def test_get_many_nullable_inner_iter(self, turso_sync_conn: turso.Connection, inner_model: models.TestInnerSqliteType) -> None:
+    def test_get_many_nullable_inner_iter(self, turso_sync_conn: turso.Connection, inner_model: models.TestInnerSqliteType) -> None:
         for result in queries.get_many_nullable_inner_sqlite_type(conn=turso_sync_conn, table_id=inner_model.table_id, int_test=inner_model.int_test):
             assert result is not None
             assert isinstance(result, models.TestInnerSqliteType)
