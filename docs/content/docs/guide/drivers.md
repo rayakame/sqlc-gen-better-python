@@ -6,7 +6,7 @@ next: /docs/guide/model-types
 ---
 
 The `sql_driver` option picks which database library the generated code targets.
-It must match your `engine`. Five drivers are supported:
+It must match your `engine`. Seven drivers are supported:
 
 | Driver | Engine | Style |
 |---|---|---|
@@ -15,6 +15,8 @@ It must match your `engine`. Five drivers are supported:
 | `psycopg_sync` | `postgresql` | sync |
 | `aiosqlite` | `sqlite` | async |
 | `sqlite3` | `sqlite` | sync |
+| `turso_async` | `sqlite` | async (experimental) |
+| `turso_sync` | `sqlite` | sync (experimental) |
 
 Every generated query function takes the connection as its first argument, so you
 open and manage the connection yourself and pass it in.
@@ -138,8 +140,63 @@ user = queries.get_field_naming(conn, id_=1)
   [SQLite type conversion](/docs/guide/sqlite-type-conversion).
 {{< /callout >}}
 
+## turso_sync / turso_async (Turso, experimental)
+
+[Turso](https://github.com/tursodatabase/turso) is an SQLite-compatible
+database engine; its [pyturso](https://pypi.org/project/pyturso/) package
+(`pip install pyturso`) mirrors the `sqlite3` module's API and adds a native
+asyncio variant. `turso_sync` targets the `turso` module, `turso_async` the
+`turso.aio` module - both use `engine: "sqlite"` and the same `?`
+placeholders and queries as the SQLite drivers.
+
+```python
+import turso
+
+from app.db import queries
+
+conn = turso.connect("app.db")
+user = queries.get_field_naming(conn, id_=1)
+```
+
+```python
+import asyncio
+
+import turso.aio
+
+from app.db import queries
+
+
+async def main() -> None:
+    conn = await turso.aio.connect("app.db")
+    user = await queries.get_field_naming(conn, id_=1)
+
+
+asyncio.run(main())
+```
+
+Unlike the `sqlite3` module, pyturso has no `detect_types` or
+`register_adapter`/`register_converter` machinery, so the generated code
+converts values inline in both directions: dates and datetimes bind via
+`isoformat()` and decode via `fromisoformat()`, decimals bind as strings,
+blobs bind as `bytes` and decode to `memoryview`, and booleans decode via
+`bool()`. No connection flags are needed, and the observable Python types
+match the SQLite drivers exactly (including decimal precision, which both
+cap at SQLite's REAL storage).
+
+{{< callout type="warning" >}}
+  The turso drivers are **experimental**: the Turso database has not reached
+  1.0 and pyturso is pre-1.0, so its API may still change. Known behavior
+  differences from the `sqlite3` module: `:execlastid` returns `None` when
+  the statement is an `UPDATE`/`DELETE` (turso's `lastrowid` only reflects
+  the cursor's own `INSERT`), `:execrows` reports `0` instead of `-1` for
+  statements like `CREATE TABLE`, and type overrides whose values rely on a
+  user-registered sqlite3 adapter have no turso equivalent - the override
+  type must bind natively (None, numbers, strings, or bytes).
+{{< /callout >}}
+
 ## Command support
 
 Not every [query command](/docs/guide/writing-queries) works on every driver -
-for example `:copyfrom` is PostgreSQL-only and `:execlastid` is SQLite-only. The
-full matrix is in the [feature support reference](/docs/reference/feature-support).
+for example `:copyfrom` is PostgreSQL-only and `:execlastid` is limited to the
+SQLite-engine drivers. The full matrix is in the
+[feature support reference](/docs/reference/feature-support).

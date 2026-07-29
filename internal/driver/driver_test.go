@@ -20,6 +20,8 @@ func TestNew(t *testing.T) {
 		{name: "psycopg_sync", sqlDriver: config.SQLDriverPsycopgSync, wantName: "psycopg", wantAsync: false},
 		{name: "aiosqlite", sqlDriver: config.SQLDriverAioSQLite, wantName: "aiosqlite", wantAsync: true},
 		{name: "sqlite3", sqlDriver: config.SQLDriverSQLite, wantName: "sqlite3", wantAsync: false},
+		{name: "turso_async", sqlDriver: config.SQLDriverTursoAsync, wantName: "turso.aio", wantAsync: true},
+		{name: "turso_sync", sqlDriver: config.SQLDriverTursoSync, wantName: "turso", wantAsync: false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

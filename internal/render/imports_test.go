@@ -554,6 +554,32 @@ func TestQueryImports(t *testing.T) {
 			},
 		},
 		{
+			name: "turso inline date return forces runtime datetime",
+			conf: newImportsConfig(config.SQLDriverTursoSync),
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "date", Type: "datetime.date"})},
+			},
+			want: ImportResult{
+				Std:          []string{"import datetime", "import typing"},
+				TypeChecking: []string{"import collections.abc", "import turso"},
+			},
+		},
+		{
+			name: "turso_async many simple return imports operator and adds the bytes member",
+			conf: newImportsConfig(config.SQLDriverTursoAsync),
+			queries: []model.Query{
+				{Cmd: metadata.CmdMany, Returns: impScalar(model.PyType{SQLType: "integer", Type: "int"})},
+			},
+			want: ImportResult{
+				Std: []string{"import operator", "import typing"},
+				TypeChecking: []string{
+					"import collections.abc",
+					"import turso.aio\n",
+					"type QueryResultsArgsType = int | float | str | memoryview | bytes | collections.abc.Sequence[QueryResultsArgsType] | None",
+				},
+			},
+		},
+		{
 			name: "psycopg without json returns keeps the module lazy",
 			conf: newImportsConfig(config.SQLDriverPsycopgAsync),
 			queries: []model.Query{

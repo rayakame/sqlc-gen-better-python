@@ -7,11 +7,21 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 )
 
+// SQL and Python type-name literals shared by the driver conversion tables.
+const (
+	sqlTypeDate      = "date"
+	sqlTypeDatetime  = "datetime"
+	sqlTypeTimestamp = "timestamp"
+	sqlTypeDecimal   = "decimal"
+	sqlTypeBlob      = "blob"
+	pyDatetimeDate   = "datetime.date"
+)
+
 // asyncpgConversions lists SQL types that need explicit Python-side
 // type conversion when using the asyncpg driver.
 var asyncpgConversions = map[string]struct{}{
 	"bytea":            {},
-	"blob":             {},
+	sqlTypeBlob:        {},
 	"pg_catalog.bytea": {},
 	"inet":             {},
 	"cidr":             {},
@@ -42,9 +52,9 @@ type sqliteConversion struct {
 // the adapter/converter pairs in generated modules.
 var sqliteConversions = []sqliteConversion{
 	{
-		pyType:       "datetime.date",
-		suffix:       "date",
-		sqlTypes:     []string{"date"},
+		pyType:       pyDatetimeDate,
+		suffix:       sqlTypeDate,
+		sqlTypes:     []string{sqlTypeDate},
 		adaptRet:     types.Str,
 		adaptBody:    "val.isoformat()",
 		convBody:     "datetime.date.fromisoformat(val.decode())",
@@ -52,8 +62,8 @@ var sqliteConversions = []sqliteConversion{
 	},
 	{
 		pyType:       types.Decimal,
-		suffix:       "decimal",
-		sqlTypes:     []string{"decimal"},
+		suffix:       sqlTypeDecimal,
+		sqlTypes:     []string{sqlTypeDecimal},
 		adaptRet:     types.Str,
 		adaptBody:    "str(val)",
 		convBody:     "decimal.Decimal(val.decode())",
@@ -61,8 +71,8 @@ var sqliteConversions = []sqliteConversion{
 	},
 	{
 		pyType:       "datetime.datetime",
-		suffix:       "datetime",
-		sqlTypes:     []string{"datetime", "timestamp"},
+		suffix:       sqlTypeDatetime,
+		sqlTypes:     []string{sqlTypeDatetime, sqlTypeTimestamp},
 		adaptRet:     types.Str,
 		adaptBody:    "val.isoformat()",
 		convBody:     "datetime.datetime.fromisoformat(val.decode())",
@@ -70,7 +80,7 @@ var sqliteConversions = []sqliteConversion{
 	},
 	{
 		pyType:       types.Bool,
-		suffix:       "bool",
+		suffix:       types.Bool,
 		sqlTypes:     []string{types.Bool, types.Boolean},
 		adaptRet:     types.Int,
 		adaptBody:    "int(val)",
@@ -78,9 +88,9 @@ var sqliteConversions = []sqliteConversion{
 		speedupsBody: "",
 	},
 	{
-		pyType:       "memoryview",
-		suffix:       "memoryview",
-		sqlTypes:     []string{"blob"},
+		pyType:       types.Memoryview,
+		suffix:       types.Memoryview,
+		sqlTypes:     []string{sqlTypeBlob},
 		adaptRet:     "bytes",
 		adaptBody:    "val.tobytes()",
 		convBody:     "memoryview(val)",
@@ -99,8 +109,8 @@ func findSqliteConversion(sqlType string) *sqliteConversion {
 	}
 	// Precision variants like "decimal(10,5)" keep their prefix; resolve them
 	// through the exact "decimal" key.
-	if strings.HasPrefix(sqlType, "decimal") {
-		return findSqliteConversion("decimal")
+	if strings.HasPrefix(sqlType, sqlTypeDecimal) {
+		return findSqliteConversion(sqlTypeDecimal)
 	}
 
 	return nil

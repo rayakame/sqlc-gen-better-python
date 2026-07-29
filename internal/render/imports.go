@@ -579,6 +579,17 @@ func (r *ImportResolver) addDriverImports(
 		if hasMany && r.hasSimpleReturn(queries) {
 			std["operator"] = importSpec{Module: moduleOperator}
 		}
+
+	case config.SQLDriverTursoSync, config.SQLDriverTursoAsync:
+		// Nothing registers at import time - turso conversion is inline - so
+		// the module (turso or turso.aio, from the driver's Name) is only
+		// ever an annotation import. The inline decode expressions force
+		// datetime/decimal to runtime through the ConvertsInline path shared
+		// with asyncpg instead.
+		typeChecking[r.drv.Name()] = importSpec{Module: r.drv.Name()}
+		if hasMany && r.hasSimpleReturn(queries) {
+			std["operator"] = importSpec{Module: moduleOperator}
+		}
 	}
 }
 
@@ -681,27 +692,39 @@ func (r *ImportResolver) buildQueryResult(std, typeChecking, local map[string]im
 		if len(result.TypeChecking) != 0 {
 			result.TypeChecking[len(result.TypeChecking)-1] += "\n"
 		}
-		members := []string{types.Int, types.Float, types.Str, types.Memoryview}
-		allSpecs := mergeMaps(std, typeChecking)
-		if _, ok := allSpecs["decimal"]; ok {
-			members = append(members, types.Decimal)
-		}
-		if _, ok := allSpecs["uuid"]; ok {
-			members = append(members, "uuid.UUID")
-		}
-		if _, ok := allSpecs[moduleDatetime]; ok {
-			members = append(members, "datetime.date", "datetime.time", "datetime.datetime", "datetime.timedelta")
-		}
-		members = append(members, passthroughParamTypes(queries)...)
-		// Array/sqlc.slice params are forwarded into QueryResults too, so the
-		// union needs a recursive Sequence member. The PEP 695 alias is lazy,
-		// so it is also safe at module level with omit_typechecking_block.
-		members = append(members, "collections.abc.Sequence[QueryResultsArgsType]", "None")
-		argsType := "type QueryResultsArgsType = " + strings.Join(members, " | ")
-		result.TypeChecking = append(result.TypeChecking, argsType)
+		result.TypeChecking = append(result.TypeChecking, r.queryResultsArgsType(std, typeChecking, queries))
 	}
 
 	return result
+}
+
+// queryResultsArgsType builds the QueryResultsArgsType alias emitted into
+// modules with :many queries.
+func (r *ImportResolver) queryResultsArgsType(std, typeChecking map[string]importSpec, queries []model.Query) string {
+	members := []string{types.Int, types.Float, types.Str, types.Memoryview}
+	if r.conf.SqlDriver.IsTurso() {
+		// Blob parameters reach QueryResults already wire-converted to
+		// bytes (pyturso rejects memoryview); the memoryview member stays
+		// for pass-through override values.
+		members = append(members, "bytes")
+	}
+	allSpecs := mergeMaps(std, typeChecking)
+	if _, ok := allSpecs["decimal"]; ok {
+		members = append(members, types.Decimal)
+	}
+	if _, ok := allSpecs["uuid"]; ok {
+		members = append(members, "uuid.UUID")
+	}
+	if _, ok := allSpecs[moduleDatetime]; ok {
+		members = append(members, "datetime.date", "datetime.time", "datetime.datetime", "datetime.timedelta")
+	}
+	members = append(members, passthroughParamTypes(queries)...)
+	// Array/sqlc.slice params are forwarded into QueryResults too, so the
+	// union needs a recursive Sequence member. The PEP 695 alias is lazy,
+	// so it is also safe at module level with omit_typechecking_block.
+	members = append(members, "collections.abc.Sequence[QueryResultsArgsType]", "None")
+
+	return "type QueryResultsArgsType = " + strings.Join(members, " | ")
 }
 
 func buildImportBlock(specs map[string]importSpec) []string {

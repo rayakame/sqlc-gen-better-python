@@ -673,3 +673,216 @@ func TestPsycopgParamEntries(t *testing.T) {
 		t.Errorf("psycopgParamEntries() = %q, want %q", got, want)
 	}
 }
+
+func TestConvertParamExprWire(t *testing.T) {
+	t.Parallel()
+	overrideDate := model.PyType{
+		Type: "float", SQLType: "date", IsOverride: true, DefaultType: "datetime.date",
+	}
+	converterDate := model.PyType{
+		Type: "float", SQLType: "date", IsOverride: true, DefaultType: "datetime.date",
+		ConverterTo: "conv.to_db", ConverterFrom: "conv.from_db",
+	}
+	unknownOverride := model.PyType{
+		Type: "u.U", SQLType: "sometype", IsOverride: true, DefaultType: types.Any,
+	}
+	cases := []struct {
+		name string
+		expr string
+		typ  model.PyType
+		wire wireConvertFunc
+		want string
+	}{
+		{name: "plain without wire", expr: "x", typ: model.PyType{SQLType: "text", Type: "str"}, want: "x"},
+		{
+			name: "wire without override",
+			expr: "x",
+			typ:  model.PyType{SQLType: "date", Type: "datetime.date"},
+			wire: tursoWire,
+			want: "x.isoformat()",
+		},
+		{
+			name: "wire skips natively bindable types",
+			expr: "x",
+			typ:  model.PyType{SQLType: "bool", Type: "bool"},
+			wire: tursoWire,
+			want: "x",
+		},
+		{
+			name: "wire composes onto override conversion",
+			expr: "x",
+			typ:  overrideDate,
+			wire: tursoWire,
+			want: "datetime.date(x).isoformat()",
+		},
+		{
+			name: "wire composes onto converter to_db",
+			expr: "x",
+			typ:  converterDate,
+			wire: tursoWire,
+			want: "conv.to_db(x).isoformat()",
+		},
+		{
+			name: "unknown override passes through even with wire",
+			expr: "x",
+			typ:  unknownOverride,
+			wire: tursoWire,
+			want: "x",
+		},
+		{
+			name: "wire list converts element-wise",
+			expr: "xs",
+			typ:  model.PyType{SQLType: "date", Type: "datetime.date", IsList: true},
+			wire: tursoWire,
+			want: "[v.isoformat() for v in xs]",
+		},
+		{
+			name: "wire nullable guards",
+			expr: "x",
+			typ:  model.PyType{SQLType: "blob", Type: "memoryview", IsNullable: true},
+			wire: tursoWire,
+			want: "bytes(x) if x is not None else None",
+		},
+		{
+			name: "wire nullable list guards the comprehension",
+			expr: "xs",
+			typ:  model.PyType{SQLType: "decimal", Type: "decimal.Decimal", IsList: true, IsNullable: true},
+			wire: tursoWire,
+			want: "[str(v) for v in xs] if xs is not None else None",
+		},
+		{
+			name: "override without wire keeps legacy shape",
+			expr: "x",
+			typ:  overrideDate,
+			want: "datetime.date(x)",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := convertParamExprWire(tc.expr, tc.typ, tc.wire); got != tc.want {
+				t.Errorf("convertParamExprWire(%q) = %q, want %q", tc.expr, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestExpandParamsFlattenSlicesWire(t *testing.T) {
+	t.Parallel()
+	query := model.Query{
+		SQL: "SELECT 1 FROM t WHERE d = ? AND id IN (/*SLICE:ids*/?)",
+		Params: []model.QueryValue{
+			{Name: "d", Type: model.PyType{SQLType: "date", Type: "datetime.date"}},
+			{Name: "ids", Type: model.PyType{SQLType: "integer", Type: "int", IsList: true, SqlcSliceName: "ids"}},
+		},
+	}
+	got := expandParamsFlattenSlicesWire(query, tursoWire)
+	want := []string{"d.isoformat()", "*ids"}
+	if len(got) != len(want) {
+		t.Fatalf("expandParamsFlattenSlicesWire() = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("part[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+func TestFindTursoConversion(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		sqlType   string
+		needs     bool
+		decodeFmt string
+		wireFmt   string
+		hasWire   bool
+	}{
+		{sqlType: "date", needs: true, decodeFmt: "datetime.date.fromisoformat(%s)", wireFmt: "%s.isoformat()", hasWire: true},
+		{
+			sqlType:   "datetime",
+			needs:     true,
+			decodeFmt: "datetime.datetime.fromisoformat(%s)",
+			wireFmt:   "%s.isoformat()",
+			hasWire:   true,
+		},
+		{
+			sqlType:   "timestamp",
+			needs:     true,
+			decodeFmt: "datetime.datetime.fromisoformat(%s)",
+			wireFmt:   "%s.isoformat()",
+			hasWire:   true,
+		},
+		{sqlType: "decimal", needs: true, decodeFmt: "decimal.Decimal(str(%s))", wireFmt: "str(%s)", hasWire: true},
+		{sqlType: "decimal(10,5)", needs: true, decodeFmt: "decimal.Decimal(str(%s))", wireFmt: "str(%s)", hasWire: true},
+		{sqlType: "bool", needs: true, decodeFmt: "bool(%s)", hasWire: false},
+		{sqlType: "boolean", needs: true, decodeFmt: "bool(%s)", hasWire: false},
+		{sqlType: "blob", needs: true, decodeFmt: "memoryview(%s)", wireFmt: "bytes(%s)", hasWire: true},
+		{sqlType: "text", needs: false},
+		{sqlType: "integer", needs: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.sqlType, func(t *testing.T) {
+			t.Parallel()
+			if got := tursoNeedsConversion(tc.sqlType); got != tc.needs {
+				t.Fatalf("tursoNeedsConversion(%q) = %v, want %v", tc.sqlType, got, tc.needs)
+			}
+			decodeFmt, ok := tursoDecodeExpr(tc.sqlType)
+			if ok != tc.needs || decodeFmt != tc.decodeFmt {
+				t.Errorf("tursoDecodeExpr(%q) = %q, %v, want %q, %v", tc.sqlType, decodeFmt, ok, tc.decodeFmt, tc.needs)
+			}
+			wireFmt, ok := tursoWire(tc.sqlType)
+			if ok != tc.hasWire || wireFmt != tc.wireFmt {
+				t.Errorf("tursoWire(%q) = %q, %v, want %q, %v", tc.sqlType, wireFmt, ok, tc.wireFmt, tc.hasWire)
+			}
+		})
+	}
+}
+
+func TestRowBuilderDecodeExpr(t *testing.T) {
+	t.Parallel()
+	rb := newRowBuilderWithDecode(tursoNeedsConversion, tursoDecodeExpr)
+	overrideDate := model.PyType{
+		Type: "float", SQLType: "date", IsOverride: true, DefaultType: "datetime.date",
+	}
+	cases := []struct {
+		name string
+		typ  model.PyType
+		want string
+	}{
+		{name: "no conversion", typ: model.PyType{SQLType: "text", Type: "str"}, want: "row[0]"},
+		{
+			name: "date decode",
+			typ:  model.PyType{SQLType: "date", Type: "datetime.date"},
+			want: "datetime.date.fromisoformat(row[0])",
+		},
+		{
+			name: "nullable decimal decode",
+			typ:  model.PyType{SQLType: "decimal(10,5)", Type: "decimal.Decimal", IsNullable: true},
+			want: "decimal.Decimal(str(row[0])) if row[0] is not None else None",
+		},
+		{
+			name: "list blob decode is element-wise",
+			typ:  model.PyType{SQLType: "blob", Type: "memoryview", IsList: true},
+			want: "[memoryview(v) for v in row[0]]",
+		},
+		{
+			name: "override keeps the constructor call",
+			typ:  overrideDate,
+			want: "float(row[0])",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := rb.convertExpr(tc.typ, "row[0]"); got != tc.want {
+				t.Errorf("convertExpr() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+
+	// A decode hook that never matches falls back to the constructor call.
+	fallback := newRowBuilderWithDecode(func(string) bool { return true }, func(string) (string, bool) { return "", false })
+	if got := fallback.convertExpr(model.PyType{SQLType: "text", Type: "str"}, "row[0]"); got != "str(row[0])" {
+		t.Errorf("fallback convertExpr() = %q, want %q", got, "str(row[0])")
+	}
+}

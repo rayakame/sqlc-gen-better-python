@@ -12,6 +12,10 @@ const (
 	decodeRowsExpr        = "return [self._decode_hook(row) for row in result]"
 	queryResultsClassName = "QueryResults"
 	awaitPrefix           = "await "
+	stopIteration         = "StopIteration"
+	stopAsyncIteration    = "StopAsyncIteration"
+	defNextSync           = "def __next__"
+	defNextAsync          = "async def __anext__"
 )
 
 type Driver interface {
@@ -65,6 +69,10 @@ func New(conf *config.Config) (Driver, error) {
 		return newSqliteDriver("aiosqlite", true), nil
 	case config.SQLDriverSQLite:
 		return newSqliteDriver("sqlite3", false), nil
+	case config.SQLDriverTursoAsync:
+		return newTursoDriver(true), nil
+	case config.SQLDriverTursoSync:
+		return newTursoDriver(false), nil
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver)
 	}

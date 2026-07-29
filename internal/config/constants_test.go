@@ -41,6 +41,14 @@ func TestSQLDriverValidate(t *testing.T) {
 		{name: "asyncpg with postgresql", driver: config.SQLDriverAsyncpg, engine: "postgresql"},
 		{name: "psycopg_async with postgresql", driver: config.SQLDriverPsycopgAsync, engine: "postgresql"},
 		{name: "psycopg_sync with postgresql", driver: config.SQLDriverPsycopgSync, engine: "postgresql"},
+		{name: "turso_sync with sqlite", driver: config.SQLDriverTursoSync, engine: "sqlite"},
+		{name: "turso_async with sqlite", driver: config.SQLDriverTursoAsync, engine: "sqlite"},
+		{
+			name:    "turso_async with postgresql",
+			driver:  config.SQLDriverTursoAsync,
+			engine:  "postgresql",
+			wantErr: "SQL driver turso_async does not support postgresql",
+		},
 		{
 			name:    "psycopg_sync with sqlite",
 			driver:  config.SQLDriverPsycopgSync,
@@ -155,6 +163,23 @@ func TestSQLDriverIsPsycopg(t *testing.T) {
 	} {
 		if got := driver.IsPsycopg(); got != want {
 			t.Errorf("IsPsycopg(%q) = %v, want %v", driver, got, want)
+		}
+	}
+}
+
+func TestSQLDriverIsTurso(t *testing.T) {
+	t.Parallel()
+	for driver, want := range map[config.SQLDriver]bool{
+		config.SQLDriverTursoSync:    true,
+		config.SQLDriverTursoAsync:   true,
+		config.SQLDriverSQLite:       false,
+		config.SQLDriverAioSQLite:    false,
+		config.SQLDriverAsyncpg:      false,
+		config.SQLDriverPsycopgSync:  false,
+		config.SQLDriverPsycopgAsync: false,
+	} {
+		if got := driver.IsTurso(); got != want {
+			t.Errorf("IsTurso(%q) = %v, want %v", driver, got, want)
 		}
 	}
 }

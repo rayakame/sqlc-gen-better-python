@@ -25,24 +25,26 @@ supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 The supported [query annotations](https://docs.sqlc.dev/en/latest/reference/query-annotations.html)
 depend on the driver:
 
-| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async | psycopg_sync |
-|---|---|---|---|---|---|
-| `:one` | yes | yes | yes | yes | yes |
-| `:many` | yes | yes | yes | yes | yes |
-| `:exec` | yes | yes | yes | yes | yes |
-| `:execresult` | yes | yes | yes | yes | yes |
-| `:execrows` | yes | yes | yes | yes | yes |
-| `:execlastid` | yes | yes | no | no | no |
-| `:copyfrom` | no | no | yes | yes | yes |
+| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async | psycopg_sync | turso_async | turso_sync |
+|---|---|---|---|---|---|---|---|
+| `:one` | yes | yes | yes | yes | yes | yes | yes |
+| `:many` | yes | yes | yes | yes | yes | yes | yes |
+| `:exec` | yes | yes | yes | yes | yes | yes | yes |
+| `:execresult` | yes | yes | yes | yes | yes | yes | yes |
+| `:execrows` | yes | yes | yes | yes | yes | yes | yes |
+| `:execlastid` | yes | yes | no | no | no | yes | yes |
+| `:copyfrom` | no | no | yes | yes | yes | no | no |
 
 See [Writing queries](/docs/guide/writing-queries) for what each command
 generates.
 
 {{< callout type="info" >}}
   `:execlastid` relies on a last-inserted-row id, which PostgreSQL does not
-  provide; use a `RETURNING` clause with `:one` instead. `:copyfrom` maps to
-  PostgreSQL's bulk `COPY` protocol (`copy_records_to_table` on asyncpg,
-  `cursor.copy()` on psycopg), which the SQLite drivers have no equivalent for.
+  provide; use a `RETURNING` clause with `:one` instead. On the turso drivers
+  it returns `None` for `UPDATE`/`DELETE` statements - turso's `lastrowid`
+  only reflects the cursor's own `INSERT`. `:copyfrom` maps to PostgreSQL's
+  bulk `COPY` protocol (`copy_records_to_table` on asyncpg, `cursor.copy()`
+  on psycopg), which the SQLite-engine drivers have no equivalent for.
 {{< /callout >}}
 
 ### Prepared queries

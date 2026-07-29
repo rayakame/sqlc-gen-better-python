@@ -301,3 +301,39 @@ func TestWriteQueryResultsClassHeaderNamedParamsDocstrings(t *testing.T) {
 		})
 	}
 }
+
+func TestWriteQueryResultsClassHeaderNoIterator(t *testing.T) {
+	t.Parallel()
+	w := newWriter(config.DocstringConventionNone)
+	w.QueryResults.WriteQueryResultsClassHeaderNoIterator(
+		"turso.Connection",
+		[]string{"self._cursor: turso.Cursor | None = None"},
+		"tuple[typing.Any, ...]",
+		false,
+	)
+	want := strings.Join([]string{
+		"class QueryResults[T]:",
+		"    __slots__ = (\"_args\", \"_conn\", \"_cursor\", \"_decode_hook\", \"_sql\")",
+		"",
+		"    def __init__(",
+		"        self,",
+		"        conn: turso.Connection,",
+		"        sql: str,",
+		"        decode_hook: collections.abc.Callable[[tuple[typing.Any, ...]], T],",
+		"        *args: QueryResultsArgsType,",
+		"    ) -> None:",
+		"        self._conn = conn",
+		"        self._sql = sql",
+		"        self._decode_hook = decode_hook",
+		"        self._args = args",
+		"        self._cursor: turso.Cursor | None = None",
+		"",
+		"    def __iter__(self) -> QueryResults[T]:",
+		"        return self",
+		"",
+		"",
+	}, "\n")
+	if got := w.String(); got != want {
+		t.Errorf("WriteQueryResultsClassHeaderNoIterator() = %q, want %q", got, want)
+	}
+}

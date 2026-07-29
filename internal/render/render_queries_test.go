@@ -403,6 +403,96 @@ def get_created(conn: sqlite3.Connection) -> datetime.date | None:
     return row[0]
 `,
 		},
+		{
+			name:    "turso_sync converts inline without registration",
+			engine:  "sqlite",
+			options: `{"package":"testpkg","sql_driver":"turso_sync","emit_init_file":false}`,
+			queries: []*plugin.Query{
+				{
+					Name:     "TouchItem",
+					Cmd:      metadata.CmdExec,
+					Text:     "UPDATE test_items SET created = ?",
+					Filename: "queries.sql",
+					Params:   []*plugin.Parameter{pgParam(pgColumn("created", "date", true))},
+				},
+				{
+					Name:     "GetCreated",
+					Cmd:      metadata.CmdOne,
+					Text:     "SELECT created FROM test_items LIMIT 1",
+					Filename: "queries.sql",
+					Columns:  []*plugin.Column{pgColumn("created", "date", true)},
+				},
+			},
+			want: sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = (
+    "get_created",
+    "touch_item",
+)
+
+import datetime
+import typing
+
+if typing.TYPE_CHECKING:
+    import collections.abc
+    import turso
+
+
+TOUCH_ITEM: typing.Final[str] = """-- name: TouchItem :exec
+UPDATE test_items SET created = ?
+"""
+
+GET_CREATED: typing.Final[str] = """-- name: GetCreated :one
+SELECT created FROM test_items LIMIT 1
+"""
+
+
+def touch_item(conn: turso.Connection, *, created: datetime.date) -> None:
+    conn.execute(TOUCH_ITEM, (created.isoformat(),))
+
+
+def get_created(conn: turso.Connection) -> datetime.date | None:
+    row = conn.execute(GET_CREATED).fetchone()
+    if row is None:
+        return None
+    return datetime.date.fromisoformat(row[0])
+`,
+		},
+		{
+			name:    "turso_async awaits the turso.aio api",
+			engine:  "sqlite",
+			options: `{"package":"testpkg","sql_driver":"turso_async","emit_init_file":false}`,
+			queries: []*plugin.Query{{
+				Name:     "GetCreated",
+				Cmd:      metadata.CmdOne,
+				Text:     "SELECT created FROM test_items LIMIT 1",
+				Filename: "queries.sql",
+				Columns:  []*plugin.Column{pgColumn("created", "date", true)},
+			}},
+			want: sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("get_created",)
+
+import datetime
+import typing
+
+if typing.TYPE_CHECKING:
+    import collections.abc
+    import turso.aio
+
+
+GET_CREATED: typing.Final[str] = """-- name: GetCreated :one
+SELECT created FROM test_items LIMIT 1
+"""
+
+
+async def get_created(conn: turso.aio.Connection) -> datetime.date | None:
+    row = await (await conn.execute(GET_CREATED)).fetchone()
+    if row is None:
+        return None
+    return datetime.date.fromisoformat(row[0])
+`,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

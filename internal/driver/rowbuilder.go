@@ -14,11 +14,23 @@ import (
 type RowBuilder struct {
 	// needsConversion checks whether a SQL type requires explicit conversion.
 	needsConversion func(string) bool
+	// decodeExpr returns the driver's decode-expression template (with one %s
+	// verb for the source value) for a SQL type, for drivers whose decoding is
+	// not a plain constructor call on the Python type. Nil or a false return
+	// falls back to the constructor call. Never consulted for overrides,
+	// enums, or user converters.
+	decodeExpr func(sqlType string) (string, bool)
 }
 
 // newRowBuilder creates a RowBuilder with the given conversion check function.
 func newRowBuilder(needsConversion func(string) bool) *RowBuilder {
-	return &RowBuilder{needsConversion: needsConversion}
+	return &RowBuilder{needsConversion: needsConversion, decodeExpr: nil}
+}
+
+// newRowBuilderWithDecode creates a RowBuilder whose non-override conversions
+// emit driver-specific decode expressions instead of constructor calls.
+func newRowBuilderWithDecode(needsConversion func(string) bool, decodeExpr func(sqlType string) (string, bool)) *RowBuilder {
+	return &RowBuilder{needsConversion: needsConversion, decodeExpr: decodeExpr}
 }
 
 // WriteStructReturn writes "return ModelType(col1=row[0], col2=row[1], ...)"
@@ -109,19 +121,28 @@ func (rb *RowBuilder) formatEmbedConstruction(col model.Column, idx *int) string
 }
 
 // convertExpr returns the Python expression converting a raw row value into
-// its target type: constructor call for scalars, an element-wise comprehension
-// for lists, both guarded against None for nullable values.
+// its target type: the element template applied to scalars, an element-wise
+// comprehension for lists, both guarded against None for nullable values.
 func (rb *RowBuilder) convertExpr(typ model.PyType, src string) string {
 	if !rb.columnNeedsConversion(typ) {
 		return src
 	}
-	callable := typ.Type
-	if typ.ConverterFrom != "" {
-		callable = typ.ConverterFrom
+	elemFmt := ""
+	if rb.decodeExpr != nil && !typ.DoOverride() && !typ.IsEnum && !typ.HasConverter() {
+		if custom, ok := rb.decodeExpr(typ.SQLType); ok {
+			elemFmt = custom
+		}
 	}
-	expr := fmt.Sprintf("%s(%s)", callable, src)
+	if elemFmt == "" {
+		callable := typ.Type
+		if typ.ConverterFrom != "" {
+			callable = typ.ConverterFrom
+		}
+		elemFmt = callable + "(%s)"
+	}
+	expr := fmt.Sprintf(elemFmt, src)
 	if typ.IsList {
-		expr = fmt.Sprintf("[%s(v) for v in %s]", callable, src)
+		expr = fmt.Sprintf("[%s for v in %s]", fmt.Sprintf(elemFmt, "v"), src)
 	}
 	if typ.IsNullable {
 		expr = fmt.Sprintf("%s if %s is not None else None", expr, src)

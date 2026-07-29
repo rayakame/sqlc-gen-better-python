@@ -1,0 +1,6 @@
+kind: Added
+body: 'Experimental Turso support: the new `sql_driver` values `turso_async` and `turso_sync` generate code for the `turso.aio` and `turso` modules of [pyturso](https://pypi.org/project/pyturso/), using `engine: "sqlite"` and the same queries as the SQLite drivers. pyturso has no adapter/converter registry, so all type conversion happens inline with observable types identical to the SQLite drivers; `:execlastid` returns `None` for UPDATE/DELETE and `:execrows` reports `0` for DDL. Marked experimental while Turso itself is pre-1.0.'
+time: 2026-07-29T12:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "226"

@@ -27,7 +27,7 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeader(
 	driverReturnType string,
 	async bool,
 ) {
-	w.writeClassHeader(connType, initFields, driverReturnType, async, false)
+	w.writeClassHeader(connType, initFields, driverReturnType, async, false, "")
 }
 
 // WriteQueryResultsClassHeaderNamedParams writes the header variant for
@@ -38,7 +38,20 @@ func (w *QueryResultsWriter) WriteQueryResultsClassHeaderNamedParams(
 	driverReturnType string,
 	async bool,
 ) {
-	w.writeClassHeader(connType, initFields, driverReturnType, async, true)
+	w.writeClassHeader(connType, initFields, driverReturnType, async, true, "")
+}
+
+// WriteQueryResultsClassHeaderNoIterator writes the header variant for
+// drivers whose cursor is consumed directly (no separate iterator object):
+// the _iterator slot is dropped and only initFields declare cursor state.
+func (w *QueryResultsWriter) WriteQueryResultsClassHeaderNoIterator(
+	connType string,
+	initFields []string,
+	driverReturnType string,
+	async bool,
+) {
+	w.writeClassHeader(connType, initFields, driverReturnType, async, false,
+		`__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_sql")`)
 }
 
 // WriteQueryResultsCallFunction writes the synchronous __call__ method.
@@ -75,6 +88,7 @@ func (w *QueryResultsWriter) writeClassHeader(
 	driverReturnType string,
 	async bool,
 	namedParams bool,
+	slotsOverride string,
 ) {
 	slots := `__slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")`
 	paramsParam, paramsAssign := "*args: QueryResultsArgsType,", "self._args = args"
@@ -85,6 +99,9 @@ func (w *QueryResultsWriter) writeClassHeader(
 		// psycopg's typed execute() requires LiteralString query text, and
 		// the attribute needs the annotation too - inference widens to str.
 		sqlParam, sqlAssign = "sql: typing.LiteralString,", "self._sql: typing.LiteralString = sql"
+	}
+	if slotsOverride != "" {
+		slots = slotsOverride
 	}
 	// PEP 695 class-scoped type parameter: no module-level TypeVar and no
 	// typing.Generic base needed on Python 3.12+.

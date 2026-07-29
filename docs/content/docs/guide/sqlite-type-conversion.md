@@ -98,3 +98,11 @@ options:
 This affects the `date` and `datetime`/`timestamp` converters only - `decimal`,
 `bool` and `blob` are unchanged. It adds `ciso8601` as a runtime dependency of the
 generated code, so only enable it if you install that package.
+
+## The turso drivers
+
+None of this page applies to the experimental `turso_sync`/`turso_async`
+drivers: pyturso has no `detect_types` or adapter/converter registry, so the
+generated code converts the same declared types inline instead - no
+`PARSE_DECLTYPES`, no registration, and `speedups` has no effect there. The
+resulting Python types are identical.
