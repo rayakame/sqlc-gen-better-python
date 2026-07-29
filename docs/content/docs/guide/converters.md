@@ -61,7 +61,7 @@ await conn.execute(CREATE_USER, id_, myapp.converters.encode_preferences(prefere
 Nullable columns are guarded, so your functions never receive `None`:
 
 ```python
-maybe_prefs=myapp.converters.decode_preferences(row[2]) if row[2] is not None else None
+maybe_prefs = myapp.converters.decode_preferences(row[2]) if row[2] is not None else None
 ```
 
 and list columns convert element-wise:
