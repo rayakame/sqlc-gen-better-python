@@ -3,4 +3,4 @@ body: 'Experimental Turso support: the new `sql_driver` values `turso_async` and
 time: 2026-07-29T12:00:00.0000000Z
 custom:
     Author: Rayakame
-    PR: "226"
+    PR: "230"
