@@ -16,8 +16,8 @@ aliases and generics, and `enum.StrEnum`).
 > Besides the [official installation methods](https://docs.sqlc.dev/en/latest/overview/install.html),
 > the `sqlc` CLI itself is also pip-installable via
 > [`sqlc-bin`](https://pypi.org/project/sqlc-bin/), which ships the unmodified
-> official binaries - no Go toolchain required: `pip install sqlc-bin` (or
-> `uv add --dev sqlc-bin`) puts `sqlc` on your PATH, pinnable like any other
+> official binaries - no Go toolchain required: `uv add --dev sqlc-bin` (or
+> `pip install sqlc-bin`) puts `sqlc` on your PATH, pinnable like any other
 > Python dependency.
 
 ## Documentation
