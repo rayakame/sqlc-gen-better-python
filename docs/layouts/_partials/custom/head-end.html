@@ -1,0 +1,6 @@
+{{/* Preview deploys (main's /preview/ and the PR previews) set the
+previewNoindex param so search engines never index duplicate content;
+crawlers honor the most restrictive robots meta on the page. */}}
+{{- if site.Params.previewNoindex -}}
+<meta name="robots" content="noindex, nofollow">
+{{- end -}}

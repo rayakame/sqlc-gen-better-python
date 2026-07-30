@@ -18,6 +18,12 @@ on:
       - "docs/**"
       - ".github/workflows/docs.yml"
       - ".github/actions/install-hugo/action.yml"
+  # Fires for releases published by hand; releases created by the release
+  # workflow's GITHUB_TOKEN cannot trigger this event, so that workflow
+  # dispatches this one explicitly instead.
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 # Publishing jobs raise this to write on themselves; keep the default read-only.
@@ -33,9 +39,64 @@ concurrency:
 
 jobs:
   # Production: build the site and publish it to the gh-pages branch root.
+  # Runs for a release (the release workflow dispatches it at the tag), a
+  # manual dispatch, or the merge of the release workflow's pin-update PR -
+  # the release tag predates that PR, so without this last deploy the root
+  # site would keep the previous release's wasm url/sha in its examples.
   deploy:
     name: "Deploy docs"
-    if: github.event_name != 'pull_request'
+    if: |
+      github.event_name == 'release' || github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       startsWith(github.event.pull_request.head.ref, 'release/update-readme-'))
+    runs-on: ubuntu-latest
+    # contents: write lets the deploy action push the built site to gh-pages.
+    permissions:
+      contents: write
+    steps:
+      # For the pin-update merge, build main (the released tag plus the pin
+      # commit) instead of the event's own ref; an empty ref is the default.
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && 'main' || '' }}
+
+      - name: Install Hugo (extended)
+        uses: ./.github/actions/install-hugo
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: docs/go.mod
+
+      # baseURL comes from hugo.yaml (the production root).
+      - name: Build with Hugo
+        working-directory: docs
+        env:
+          HUGO_ENVIRONMENT: production
+        run: hugo --minify --gc
+
+      # clean-exclude keeps the preview trees so a production deploy never
+      # deletes main's preview or previews of still-open PRs; force: false
+      # rebases instead of force-pushing, tolerating concurrent preview pushes.
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        with:
+          branch: gh-pages
+          folder: docs/public
+          clean-exclude: |
+            pr-preview/
+            preview/
+          force: false
+
+  # Main preview: every docs push to main deploys the current state under
+  # /preview/, leaving the root (latest release) untouched.
+  main-preview:
+    name: "Deploy main preview"
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     # contents: write lets the deploy action push the built site to gh-pages.
     permissions:
@@ -55,22 +116,23 @@ jobs:
         with:
           go-version-file: docs/go.mod
 
-      # baseURL comes from hugo.yaml (the production root).
+      # previewNoindex adds a robots noindex meta so the duplicate content
+      # under /preview/ never competes with the root site in search results.
       - name: Build with Hugo
         working-directory: docs
         env:
           HUGO_ENVIRONMENT: production
-        run: hugo --minify --gc
+          HUGO_PARAMS_PREVIEWNOINDEX: "true"
+        run: hugo --minify --gc --baseURL "https://sqlc-gen-better-python.rayakame.dev/preview/"
 
-      # clean-exclude keeps the pr-preview umbrella so a production deploy
-      # never deletes previews of still-open PRs; force: false rebases
-      # instead of force-pushing, tolerating concurrent preview pushes.
+      # target-folder scopes both the deploy and its cleaning to preview/,
+      # so the root site and the pr-preview umbrella are never touched.
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           branch: gh-pages
           folder: docs/public
-          clean-exclude: pr-preview/
+          target-folder: preview
           force: false
 
   # PR previews: build with a per-PR baseURL and publish under
@@ -110,6 +172,7 @@ jobs:
         working-directory: docs
         env:
           HUGO_ENVIRONMENT: production
+          HUGO_PARAMS_PREVIEWNOINDEX: "true"
           PR_NUMBER: ${{ github.event.number }}
         run: hugo --minify --gc --baseURL "https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-${PR_NUMBER}/"
 
@@ -119,3 +182,5 @@ jobs:
           source-dir: docs/public
           preview-branch: gh-pages
           umbrella-dir: pr-preview
+          # The PR comment's link defaults to <owner>.github.io/<repo>.
+          pages-base-url: sqlc-gen-better-python.rayakame.dev

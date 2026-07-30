@@ -104,3 +104,12 @@ jobs:
           tag_name: "refs/tags/${{ steps.latest.outputs.output }}"
           body_path: release_body.md
           files: ./sqlc-gen-better-python.wasm
+
+      # Releases created with GITHUB_TOKEN never fire the docs workflow's
+      # release trigger (workflow_dispatch is the documented exception), so
+      # dispatch the root docs deploy explicitly, pinned to the release tag.
+      - name: Deploy docs for the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.latest.outputs.output }}
+        run: gh workflow run docs.yml --ref "$RELEASE_TAG"
