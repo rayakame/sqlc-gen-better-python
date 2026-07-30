@@ -648,3 +648,130 @@ func TestTursoWriteQueryFuncBundledParams(t *testing.T) {
 		t.Errorf("WriteQueryFunc() = %q, want %q", got, want)
 	}
 }
+
+func TestTursoSpeedupsHelpers(t *testing.T) {
+	t.Parallel()
+	for sqlType, want := range map[string]bool{
+		"date": true, "datetime": true, "timestamp": true,
+		"decimal": false, "decimal(10,5)": false, "bool": false, "blob": false, "text": false,
+	} {
+		if got := driver.TursoSpeedupsDecodes(sqlType); got != want {
+			t.Errorf("TursoSpeedupsDecodes(%q) = %v, want %v", sqlType, got, want)
+		}
+	}
+
+	dateReturn := model.QueryValue{Type: model.PyType{Type: "datetime.date", SQLType: "date"}}
+	overriddenDate := model.QueryValue{Type: model.PyType{
+		Type: "str", SQLType: "date", IsOverride: true, DefaultType: "datetime.date",
+	}}
+	cases := []struct {
+		name    string
+		queries []model.Query
+		want    bool
+	}{
+		{name: "date scalar return", queries: []model.Query{{Returns: dateReturn}}, want: true},
+		{name: "date only as param", queries: []model.Query{{Params: []model.QueryValue{dateReturn}}}, want: false},
+		{name: "overridden date return decodes via the override", queries: []model.Query{{Returns: overriddenDate}}, want: false},
+		{name: "decimal return has no speedups variant", queries: []model.Query{{
+			Returns: model.QueryValue{Type: model.PyType{Type: "decimal.Decimal", SQLType: "decimal"}},
+		}}, want: false},
+		{
+			name: "embedded timestamp column",
+			queries: []model.Query{{Returns: model.QueryValue{
+				Table: &model.Table{Name: "Row", Columns: []model.Column{
+					{Name: "outer", Type: model.PyType{Type: "int", SQLType: "integer"}},
+					{Name: "inner", Embed: &model.Embed{Columns: []model.Column{
+						{Name: "ts", Type: model.PyType{Type: "datetime.datetime", SQLType: "timestamp"}},
+					}}},
+				}},
+				Type: model.PyType{Type: "models.Row"},
+			}}},
+			want: true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := driver.TursoSpeedupsUsed(tc.queries); got != tc.want {
+				t.Errorf("TursoSpeedupsUsed() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestTursoSpeedupsWriteQueryFunc(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name  string
+		query model.Query
+		want  string
+	}{
+		{
+			name: "one date return decodes via ciso8601",
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: "GET_DAY",
+				FuncName:     "get_day",
+				Returns:      model.QueryValue{Type: model.PyType{Type: "datetime.date", SQLType: "date"}},
+			},
+			want: strings.Join([]string{
+				"def get_day(conn: turso.Connection) -> datetime.date | None:",
+				"    row = conn.execute(GET_DAY).fetchone()",
+				"    if row is None:",
+				"        return None",
+				"    return ciso8601.parse_datetime(row[0]).date()",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "struct return mixes ciso8601 and unchanged decodes",
+			query: model.Query{
+				Cmd:          metadata.CmdOne,
+				ConstantName: "GET_ITEM",
+				FuncName:     "get_item",
+				Returns:      tursoItemReturn(),
+			},
+			want: strings.Join([]string{
+				"def get_item(conn: turso.Connection) -> models.Item | None:",
+				"    row = conn.execute(GET_ITEM).fetchone()",
+				"    if row is None:",
+				"        return None",
+				"    return models.Item(id_=row[0], day=ciso8601.parse_datetime(row[1]).date(), ts=ciso8601.parse_datetime(row[2]), amount=decimal.Decimal(str(row[3])), flag=bool(row[4]) if row[4] is not None else None, data=memoryview(row[5]))",
+				"",
+			}, "\n"),
+		},
+		{
+			name: "many timestamp return hooks through ciso8601",
+			query: model.Query{
+				Cmd:          metadata.CmdMany,
+				ConstantName: "LIST_TS",
+				FuncName:     "list_ts",
+				Returns:      model.QueryValue{Type: model.PyType{Type: "datetime.datetime", SQLType: "timestamp"}},
+			},
+			want: strings.Join([]string{
+				"def list_ts(conn: turso.Connection) -> QueryResults[datetime.datetime]:",
+				"    def _decode_hook(row: tuple[typing.Any, ...]) -> datetime.datetime:",
+				"        return ciso8601.parse_datetime(row[0])",
+				"",
+				"    return QueryResults(conn, LIST_TS, _decode_hook)",
+				"",
+			}, "\n"),
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			conf := tursoTestConfig(false)
+			conf.Speedups = true
+			d, err := driver.New(conf)
+			if err != nil {
+				t.Fatalf("driver.New() error = %v", err)
+			}
+			body := writer.NewCodeWriter(conf)
+			d.WriteQueryFunc(body, conf, tc.query, 0)
+			if got := body.String(); got != tc.want {
+				t.Errorf("WriteQueryFunc() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}

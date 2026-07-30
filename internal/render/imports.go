@@ -590,6 +590,11 @@ func (r *ImportResolver) addDriverImports(
 		if hasMany && r.hasSimpleReturn(queries) {
 			std["operator"] = importSpec{Module: moduleOperator}
 		}
+		// Speedups swaps the date/datetime decodes for ciso8601 calls, which
+		// only the return direction ever emits.
+		if r.conf.Speedups && driver.TursoSpeedupsUsed(queries) {
+			std["ciso8601"] = importSpec{Module: "ciso8601"}
+		}
 	}
 }
 
@@ -632,7 +637,7 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 				return
 			}
 			used = true
-			if isReturn && !typ.HasConverter() && (r.drv.ConvertsInline(typ.SQLType) || typ.DoOverride()) {
+			if isReturn && !typ.HasConverter() && (r.convertsInlineWithType(typ.SQLType) || typ.DoOverride()) {
 				typeChecking = false
 			}
 		}
@@ -655,12 +660,25 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 
 	if queryValue.Type.Type == name {
 		needsConv := isReturn && !queryValue.Type.HasConverter() &&
-			(r.drv.ConvertsInline(queryValue.Type.SQLType) || queryValue.Type.DoOverride())
+			(r.convertsInlineWithType(queryValue.Type.SQLType) || queryValue.Type.DoOverride())
 
 		return true, !needsConv
 	}
 
 	return false, false
+}
+
+// convertsInlineWithType reports whether an inline conversion references the
+// column's Python type at runtime. With turso speedups, the date/datetime
+// decodes call ciso8601 instead, so the type stays annotation-only; this must
+// NOT be used for decode-hook existence checks (hasSimpleReturn), where the
+// speedups variant still needs a hook.
+func (r *ImportResolver) convertsInlineWithType(sqlType string) bool {
+	if r.conf.Speedups && r.conf.SqlDriver.IsTurso() && driver.TursoSpeedupsDecodes(sqlType) {
+		return false
+	}
+
+	return r.drv.ConvertsInline(sqlType)
 }
 
 func (r *ImportResolver) addModelImport(std map[string]importSpec) {

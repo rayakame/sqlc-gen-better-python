@@ -70,9 +70,9 @@ func New(conf *config.Config) (Driver, error) {
 	case config.SQLDriverSQLite:
 		return newSqliteDriver("sqlite3", false), nil
 	case config.SQLDriverTursoAsync:
-		return newTursoDriver(true), nil
+		return newTursoDriver(true, conf.Speedups), nil
 	case config.SQLDriverTursoSync:
-		return newTursoDriver(false), nil
+		return newTursoDriver(false, conf.Speedups), nil
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver)
 	}

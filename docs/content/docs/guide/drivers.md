@@ -148,7 +148,7 @@ user = queries.get_field_naming(conn, id_=1)
   [SQLite type conversion](/docs/guide/sqlite-type-conversion).
 {{< /callout >}}
 
-## turso_sync / turso_async (Turso, experimental)
+## turso_sync / turso_async (Turso)
 
 [Turso](https://github.com/tursodatabase/turso) is an SQLite-compatible
 database engine; its [pyturso](https://pypi.org/project/pyturso/) package
@@ -182,14 +182,9 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-Unlike the `sqlite3` module, pyturso has no `detect_types` or
-`register_adapter`/`register_converter` machinery, so the generated code
-converts values inline in both directions: dates and datetimes bind via
-`isoformat()` and decode via `fromisoformat()`, decimals bind as strings,
-blobs bind as `bytes` and decode to `memoryview`, and booleans decode via
-`bool()`. No connection flags are needed, and the observable Python types
-match the SQLite drivers exactly (including decimal precision, which both
-cap at SQLite's REAL storage).
+Unlike the `sqlite3` module, no connection flags are needed - the generated
+code converts values inline, and the observable Python types match the
+SQLite drivers exactly.
 
 {{< callout type="warning" >}}
   The turso drivers are **experimental**: the Turso database has not reached

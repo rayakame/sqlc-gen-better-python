@@ -20,11 +20,15 @@ const tursoResultType = "tuple[typing.Any, ...]"
 // strings, and bytes, so both directions convert inline in generated code.
 // decodeFmt is the sqlite-converter equivalent (wire value -> Python type),
 // wireFmt the sqlite-adapter equivalent (Python type -> bindable value); an
-// empty wireFmt means the Python type binds natively.
+// empty wireFmt means the Python type binds natively. speedupsFmt replaces
+// decodeFmt when the speedups option is enabled ("" = no speedups variant);
+// the wire values are the same ISO strings the sqlite adapters store, so
+// ciso8601 parses them identically, just without the bytes decode.
 type tursoConversion struct {
-	sqlTypes  []string
-	decodeFmt string
-	wireFmt   string
+	sqlTypes    []string
+	decodeFmt   string
+	wireFmt     string
+	speedupsFmt string
 }
 
 const (
@@ -40,18 +44,24 @@ const (
 // fidelity matches the sqlite drivers exactly - NUMERIC affinity stores the
 // value as REAL either way, so both round-trip at double precision.
 var tursoConversions = []tursoConversion{
-	{sqlTypes: []string{sqlTypeDate}, decodeFmt: "datetime.date.fromisoformat(%s)", wireFmt: tursoWireIsoformat},
 	{
-		sqlTypes:  []string{sqlTypeDatetime, sqlTypeTimestamp},
-		decodeFmt: tursoDecodeDatetime,
-		wireFmt:   tursoWireIsoformat,
+		sqlTypes:    []string{sqlTypeDate},
+		decodeFmt:   "datetime.date.fromisoformat(%s)",
+		wireFmt:     tursoWireIsoformat,
+		speedupsFmt: "ciso8601.parse_datetime(%s).date()",
 	},
-	{sqlTypes: []string{sqlTypeDecimal}, decodeFmt: tursoDecodeDecimal, wireFmt: tursoWireStr},
+	{
+		sqlTypes:    []string{sqlTypeDatetime, sqlTypeTimestamp},
+		decodeFmt:   tursoDecodeDatetime,
+		wireFmt:     tursoWireIsoformat,
+		speedupsFmt: "ciso8601.parse_datetime(%s)",
+	},
+	{sqlTypes: []string{sqlTypeDecimal}, decodeFmt: tursoDecodeDecimal, wireFmt: tursoWireStr, speedupsFmt: ""},
 	// bool binds natively (it is a Python int); only the return direction
 	// needs the wrap back from the stored integer.
-	{sqlTypes: []string{types.Bool, types.Boolean}, decodeFmt: tursoDecodeBool, wireFmt: ""},
+	{sqlTypes: []string{types.Bool, types.Boolean}, decodeFmt: tursoDecodeBool, wireFmt: "", speedupsFmt: ""},
 	// pyturso rejects memoryview parameters, so blobs bind as bytes.
-	{sqlTypes: []string{sqlTypeBlob}, decodeFmt: "memoryview(%s)", wireFmt: "bytes(%s)"},
+	{sqlTypes: []string{sqlTypeBlob}, decodeFmt: "memoryview(%s)", wireFmt: "bytes(%s)", speedupsFmt: ""},
 }
 
 // findTursoConversion returns the conversion spec for a SQL type, or nil.
@@ -86,6 +96,67 @@ func tursoDecodeExpr(sqlType string) (string, bool) {
 	return "", false
 }
 
+// tursoSpeedupsDecodeExpr is tursoDecodeExpr with the speedups variants
+// substituted where they exist.
+func tursoSpeedupsDecodeExpr(sqlType string) (string, bool) {
+	if spec := findTursoConversion(sqlType); spec != nil {
+		if spec.speedupsFmt != "" {
+			return spec.speedupsFmt, true
+		}
+
+		return spec.decodeFmt, true
+	}
+
+	return "", false
+}
+
+// TursoSpeedupsDecodes reports whether the speedups option swaps this SQL
+// type's inline decode for a ciso8601 call, leaving the Python type's module
+// referenced only in annotations.
+func TursoSpeedupsDecodes(sqlType string) bool {
+	spec := findTursoConversion(sqlType)
+
+	return spec != nil && spec.speedupsFmt != ""
+}
+
+// TursoSpeedupsUsed reports whether any query RETURN decodes through a
+// speedups variant - i.e. whether the generated module references ciso8601
+// when the speedups option is enabled. Overridden and converter returns
+// decode through their own callables and never use the variant.
+func TursoSpeedupsUsed(queries []model.Query) bool {
+	uses := func(typ model.PyType) bool {
+		return !typ.DoOverride() && !typ.HasConverter() && TursoSpeedupsDecodes(typ.SQLType)
+	}
+	for _, query := range queries {
+		if query.Returns.IsEmpty() {
+			continue
+		}
+		if query.Returns.IsStruct() {
+			for _, col := range query.Returns.Table.Columns {
+				if col.Embed != nil {
+					for _, embedCol := range col.Embed.Columns {
+						if uses(embedCol.Type) {
+							return true
+						}
+					}
+
+					continue
+				}
+				if uses(col.Type) {
+					return true
+				}
+			}
+
+			continue
+		}
+		if uses(query.Returns.Type) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // tursoWire returns the wire-conversion template for a SQL type's parameters.
 func tursoWire(sqlType string) (string, bool) {
 	if spec := findTursoConversion(sqlType); spec != nil && spec.wireFmt != "" {
@@ -107,11 +178,17 @@ var _ Driver = (*tursoBase)(nil)
 
 // newTursoDriver creates the driver for one turso flavor. All type
 // conversion happens inline: returns decode through the RowBuilder's decode
-// expressions, parameters convert to their wire type via tursoWire.
-func newTursoDriver(async bool) *tursoBase {
+// expressions, parameters convert to their wire type via tursoWire. With
+// speedups, the date/datetime decodes go through ciso8601 instead.
+func newTursoDriver(async bool, speedups bool) *tursoBase {
+	decode := tursoDecodeExpr
+	if speedups {
+		decode = tursoSpeedupsDecodeExpr
+	}
+
 	return &tursoBase{
 		async: async,
-		rows:  newRowBuilderWithDecode(tursoNeedsConversion, tursoDecodeExpr),
+		rows:  newRowBuilderWithDecode(tursoNeedsConversion, decode),
 	}
 }
 

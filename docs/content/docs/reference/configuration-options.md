@@ -30,7 +30,7 @@ optional.
 | `docstrings_emit_sql` | bool | `true` | Include each query's SQL in its docstring. Ignored when `docstrings` is `none`. |
 | `query_parameter_limit` | int | *unset* | When set to a non-negative value, queries with more parameters than the limit bundle them into a single `params` argument. Unset or negative never bundles (except `:copyfrom`, which always uses a params class). |
 | `omit_kwargs_limit` | int | `0` | Queries with this many parameters or fewer do not require keyword arguments. `0` makes every parameter keyword-only. Must not be negative. |
-| `speedups` | bool | `false` | Use faster third-party libraries for type conversion. Currently affects `sqlite3`/`aiosqlite` only (uses `ciso8601`). See [SQLite type conversion](/docs/guide/sqlite-type-conversion). |
+| `speedups` | bool | `false` | Use faster third-party libraries for type conversion. Affects the sqlite and turso drivers (uses `ciso8601`). See [SQLite type conversion](/docs/guide/sqlite-type-conversion). |
 | `overrides` | list[Override] | `[]` | Replace the Python type of matching columns. See [Type overrides](/docs/guide/type-overrides). |
 | `converters` | list[Converter] | `[]` | Named encode/decode function pairs referenced by an override. See [Converters](/docs/guide/converters). |
 | `indent_char` | string | `" "` (space) | Character used for one indent step. |
