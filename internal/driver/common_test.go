@@ -899,3 +899,29 @@ func TestRowBuilderDecodeExpr(t *testing.T) {
 		t.Errorf("fallback convertExpr() = %q, want %q", got, "str(row[0])")
 	}
 }
+
+func TestTursoSpeedupsDecodeExpr(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		sqlType string
+		want    string
+		ok      bool
+	}{
+		{sqlType: "date", want: "ciso8601.parse_datetime(%s).date()", ok: true},
+		{sqlType: "timestamp", want: "ciso8601.parse_datetime(%s)", ok: true},
+		// No speedups variant: falls back to the plain decode.
+		{sqlType: "decimal(10,5)", want: "decimal.Decimal(str(%s))", ok: true},
+		{sqlType: "blob", want: "memoryview(%s)", ok: true},
+		// Non-convertible types report false, mirroring tursoDecodeExpr.
+		{sqlType: "text", want: "", ok: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.sqlType, func(t *testing.T) {
+			t.Parallel()
+			got, ok := tursoSpeedupsDecodeExpr(tc.sqlType)
+			if got != tc.want || ok != tc.ok {
+				t.Errorf("tursoSpeedupsDecodeExpr(%q) = %q, %v, want %q, %v", tc.sqlType, got, ok, tc.want, tc.ok)
+			}
+		})
+	}
+}

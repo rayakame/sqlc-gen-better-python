@@ -676,6 +676,41 @@ func TestTursoSpeedupsHelpers(t *testing.T) {
 			Returns: model.QueryValue{Type: model.PyType{Type: "decimal.Decimal", SQLType: "decimal"}},
 		}}, want: false},
 		{
+			name: "struct return with a top-level date column",
+			queries: []model.Query{{Returns: model.QueryValue{
+				Table: &model.Table{Name: "Row", Columns: []model.Column{
+					{Name: "id_", Type: model.PyType{Type: "int", SQLType: "integer"}},
+					{Name: "day", Type: model.PyType{Type: "datetime.date", SQLType: "date"}},
+				}},
+				Type: model.PyType{Type: "models.Row"},
+			}}},
+			want: true,
+		},
+		{
+			name: "embed without speedups columns",
+			queries: []model.Query{{Returns: model.QueryValue{
+				Table: &model.Table{Name: "Row", Columns: []model.Column{
+					{Name: "inner", Embed: &model.Embed{Columns: []model.Column{
+						{Name: "id_", Type: model.PyType{Type: "int", SQLType: "integer"}},
+					}}},
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+				}},
+				Type: model.PyType{Type: "models.Row"},
+			}}},
+			want: false,
+		},
+		{
+			name: "struct return without speedups columns",
+			queries: []model.Query{{Returns: model.QueryValue{
+				Table: &model.Table{Name: "Row", Columns: []model.Column{
+					{Name: "id_", Type: model.PyType{Type: "int", SQLType: "integer"}},
+					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
+				}},
+				Type: model.PyType{Type: "models.Row"},
+			}}},
+			want: false,
+		},
+		{
 			name: "embedded timestamp column",
 			queries: []model.Query{{Returns: model.QueryValue{
 				Table: &model.Table{Name: "Row", Columns: []model.Column{

@@ -37,6 +37,7 @@ const (
 	tursoDecodeDecimal  = "decimal.Decimal(str(%s))"
 	tursoDecodeBool     = "bool(%s)"
 	tursoWireStr        = "str(%s)"
+	tursoDecodeMemview  = "memoryview(%s)"
 )
 
 // tursoConversions mirrors the SQL type set of sqliteConversions: the same
@@ -61,7 +62,7 @@ var tursoConversions = []tursoConversion{
 	// needs the wrap back from the stored integer.
 	{sqlTypes: []string{types.Bool, types.Boolean}, decodeFmt: tursoDecodeBool, wireFmt: "", speedupsFmt: ""},
 	// pyturso rejects memoryview parameters, so blobs bind as bytes.
-	{sqlTypes: []string{sqlTypeBlob}, decodeFmt: "memoryview(%s)", wireFmt: "bytes(%s)", speedupsFmt: ""},
+	{sqlTypes: []string{sqlTypeBlob}, decodeFmt: tursoDecodeMemview, wireFmt: "bytes(%s)", speedupsFmt: ""},
 }
 
 // findTursoConversion returns the conversion spec for a SQL type, or nil.
