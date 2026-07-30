@@ -103,7 +103,7 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;speedups&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;bool&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Use faster third-party libraries for type conversion. Currently affects &lt;code&gt;sqlite3&lt;/code&gt;/&lt;code&gt;aiosqlite&lt;/code&gt; only (uses &lt;code&gt;ciso8601&lt;/code&gt;). See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;Use faster third-party libraries for type conversion. Affects the sqlite and turso drivers (uses &lt;code&gt;ciso8601&lt;/code&gt;). See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;overrides&lt;/code&gt;&lt;/td&gt;

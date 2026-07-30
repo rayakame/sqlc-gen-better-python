@@ -1038,7 +1038,7 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;speedups&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;bool&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Use faster third-party libraries for type conversion. Currently affects &lt;code&gt;sqlite3&lt;/code&gt;/&lt;code&gt;aiosqlite&lt;/code&gt; only (uses &lt;code&gt;ciso8601&lt;/code&gt;). See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;Use faster third-party libraries for type conversion. Affects the sqlite and turso drivers (uses &lt;code&gt;ciso8601&lt;/code&gt;). See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;overrides&lt;/code&gt;&lt;/td&gt;
@@ -1390,8 +1390,8 @@ parameters, work without it. See
 &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;h2&gt;turso_sync / turso_async (Turso, experimental)&lt;span class="hx:absolute hx:-mt-20" id="turso_sync--turso_async-turso-experimental"&gt;&lt;/span&gt;
-&lt;a href="#turso_sync--turso_async-turso-experimental" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/tursodatabase/turso"target="_blank" rel="noopener"&gt;Turso&lt;/a&gt; is an SQLite-compatible
+&lt;h2&gt;turso_sync / turso_async (Turso)&lt;span class="hx:absolute hx:-mt-20" id="turso_sync--turso_async-turso"&gt;&lt;/span&gt;
+&lt;a href="#turso_sync--turso_async-turso" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/tursodatabase/turso"target="_blank" rel="noopener"&gt;Turso&lt;/a&gt; is an SQLite-compatible
 database engine; its &lt;a href="https://pypi.org/project/pyturso/"target="_blank" rel="noopener"&gt;pyturso&lt;/a&gt; package
 (&lt;code&gt;pip install pyturso&lt;/code&gt;) mirrors the &lt;code&gt;sqlite3&lt;/code&gt; module&amp;rsquo;s API and adds a native
 asyncio variant. &lt;code&gt;turso_sync&lt;/code&gt; targets the &lt;code&gt;turso&lt;/code&gt; module, &lt;code&gt;turso_async&lt;/code&gt; the
@@ -1440,14 +1440,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Unlike the &lt;code&gt;sqlite3&lt;/code&gt; module, pyturso has no &lt;code&gt;detect_types&lt;/code&gt; or
-&lt;code&gt;register_adapter&lt;/code&gt;/&lt;code&gt;register_converter&lt;/code&gt; machinery, so the generated code
-converts values inline in both directions: dates and datetimes bind via
-&lt;code&gt;isoformat()&lt;/code&gt; and decode via &lt;code&gt;fromisoformat()&lt;/code&gt;, decimals bind as strings,
-blobs bind as &lt;code&gt;bytes&lt;/code&gt; and decode to &lt;code&gt;memoryview&lt;/code&gt;, and booleans decode via
-&lt;code&gt;bool()&lt;/code&gt;. No connection flags are needed, and the observable Python types
-match the SQLite drivers exactly (including decimal precision, which both
-cap at SQLite&amp;rsquo;s REAL storage).&lt;/p&gt;
+&lt;p&gt;Unlike the &lt;code&gt;sqlite3&lt;/code&gt; module, no connection flags are needed - the generated
+code converts values inline, and the observable Python types match the
+SQLite drivers exactly.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
@@ -3142,11 +3137,14 @@ data-copied-label="Copied!"
 &lt;code&gt;bool&lt;/code&gt; and &lt;code&gt;blob&lt;/code&gt; are unchanged. It adds &lt;code&gt;ciso8601&lt;/code&gt; as a runtime dependency of the
 generated code, so only enable it if you install that package.&lt;/p&gt;
 &lt;h2&gt;The turso drivers&lt;span class="hx:absolute hx:-mt-20" id="the-turso-drivers"&gt;&lt;/span&gt;
-&lt;a href="#the-turso-drivers" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;None of this page applies to the experimental &lt;code&gt;turso_sync&lt;/code&gt;/&lt;code&gt;turso_async&lt;/code&gt;
-drivers: pyturso has no &lt;code&gt;detect_types&lt;/code&gt; or adapter/converter registry, so the
-generated code converts the same declared types inline instead - no
-&lt;code&gt;PARSE_DECLTYPES&lt;/code&gt;, no registration, and &lt;code&gt;speedups&lt;/code&gt; has no effect there. The
-resulting Python types are identical.&lt;/p&gt;</description></item><item><title>Naming and identifiers</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/naming/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/naming/</guid><description>
+&lt;a href="#the-turso-drivers" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The registration model on this page does not apply to the experimental
+&lt;code&gt;turso_sync&lt;/code&gt;/&lt;code&gt;turso_async&lt;/code&gt; drivers: pyturso has no &lt;code&gt;detect_types&lt;/code&gt; or
+adapter/converter registry, so the generated code converts the same declared
+types inline instead - no &lt;code&gt;PARSE_DECLTYPES&lt;/code&gt; and no registration, with
+identical resulting Python types. The &lt;code&gt;speedups&lt;/code&gt; option works the same way as
+on the SQLite drivers: it swaps the inline &lt;code&gt;date&lt;/code&gt; and &lt;code&gt;datetime&lt;/code&gt;/&lt;code&gt;timestamp&lt;/code&gt;
+decodes for &lt;code&gt;ciso8601&lt;/code&gt; calls (&lt;code&gt;decimal&lt;/code&gt;, &lt;code&gt;bool&lt;/code&gt;, and &lt;code&gt;blob&lt;/code&gt; are unchanged)
+and adds &lt;code&gt;ciso8601&lt;/code&gt; as a runtime dependency of the generated code.&lt;/p&gt;</description></item><item><title>Naming and identifiers</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/naming/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-230/docs/guide/naming/</guid><description>
 &lt;p&gt;SQL identifiers are not always valid Python names, and SQL naming conventions are
 not Python&amp;rsquo;s. This page covers how table, column, and enum names are turned into
 Python names, and how invalid ones are sanitized.&lt;/p&gt;
