@@ -21,7 +21,7 @@ it.
 ## Explore by feature
 
 {{< cards >}}
-  {{< card link="guide/drivers" title="Drivers" icon="database" subtitle="asyncpg, psycopg, aiosqlite, and sqlite3." >}}
+  {{< card link="guide/drivers" title="Drivers" icon="database" subtitle="asyncpg, psycopg, aiosqlite, sqlite3, and turso." >}}
   {{< card link="guide/model-types" title="Model types" icon="cube" subtitle="dataclass, attrs, msgspec, or pydantic." >}}
   {{< card link="guide/writing-queries" title="Writing queries" icon="code" subtitle="How query annotations become typed functions." >}}
   {{< card link="guide/enums" title="Enums" icon="collection" subtitle="PostgreSQL enums as enum.StrEnum classes." >}}
