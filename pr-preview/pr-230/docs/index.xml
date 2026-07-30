@@ -1741,8 +1741,8 @@ on psycopg), which the SQLite-engine drivers have no equivalent for.&lt;/div&gt;
 &lt;h3&gt;Prepared queries&lt;span class="hx:absolute hx:-mt-20" id="prepared-queries"&gt;&lt;/span&gt;
 &lt;a href="#prepared-queries" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Coming from sqlc&amp;rsquo;s Go workflow you might look for an
 &lt;a href="https://docs.sqlc.dev/en/latest/howto/prepared_query.html"target="_blank" rel="noopener"&gt;&lt;code&gt;emit_prepared_queries&lt;/code&gt;&lt;/a&gt;
-equivalent. There is none, on purpose: every supported Python driver already
-prepares statements automatically, so the generated code gets prepared-query
+equivalent. There is none, on purpose: every stable driver already prepares
+statements automatically, so the generated code gets prepared-query
 performance without any extra codegen. What differs per driver is &lt;em&gt;when&lt;/em&gt; a
 query gets prepared and which knob controls it:&lt;/p&gt;
 &lt;ul&gt;
@@ -1792,6 +1792,11 @@ module compiles each statement once and reuses it through an internal
 per-connection cache (128 entries by default). Raise it with the
 &lt;code&gt;cached_statements&lt;/code&gt; argument of &lt;code&gt;connect()&lt;/code&gt; if you have more distinct
 queries than that.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;turso_sync / turso_async&lt;/strong&gt; (experimental) are the exception: pyturso
+currently has no statement cache and no tuning knob, so every execution
+prepares the statement anew.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
