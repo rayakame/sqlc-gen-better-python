@@ -46,6 +46,15 @@ asyncio.run(main())
 
 asyncpg supports `:copyfrom` (bulk insert via `copy_records_to_table`).
 
+{{< callout type="info" >}}
+  asyncpg itself ships without strict type annotations - install
+  [asyncpg-stubs](https://pypi.org/project/asyncpg-stubs/) so that pyright or
+  mypy understand generated annotations like
+  `asyncpg.Connection[asyncpg.Record]`. This only affects type checking:
+  the generated `ConnectionLike` alias is a lazy PEP 695 `type` statement
+  inside the `TYPE_CHECKING` block, so it is never evaluated at runtime.
+{{< /callout >}}
+
 ## psycopg_async (PostgreSQL)
 
 ```python
