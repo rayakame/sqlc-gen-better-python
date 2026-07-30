@@ -1,6 +1,6 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>sqlc-gen-better-python – Reference</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/</link><description>Recent content in Reference on sqlc-gen-better-python</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/index.xml" rel="self" type="application/rss+xml"/><item><title>Configuration options</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/configuration-options/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/configuration-options/</guid><description>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>sqlc-gen-better-python – Reference</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/</link><description>Recent content in Reference on sqlc-gen-better-python</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/index.xml" rel="self" type="application/rss+xml"/><item><title>Configuration options</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/configuration-options/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/configuration-options/</guid><description>
 &lt;p&gt;Every option the plugin accepts, set under &lt;code&gt;options:&lt;/code&gt; in the plugin&amp;rsquo;s &lt;code&gt;codegen&lt;/code&gt;
-block. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/configuration/"&gt;Configuration&lt;/a&gt; for where this block lives
+block. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/configuration/"&gt;Configuration&lt;/a&gt; for where this block lives
 in &lt;code&gt;sqlc.yaml&lt;/code&gt;.&lt;/p&gt;
 &lt;h2&gt;Options&lt;span class="hx:absolute hx:-mt-20" id="options"&gt;&lt;/span&gt;
 &lt;a href="#options" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;package&lt;/code&gt;, &lt;code&gt;sql_driver&lt;/code&gt;, and &lt;code&gt;emit_init_file&lt;/code&gt; are required; everything else is
@@ -37,7 +37,7 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;model_type&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;string&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;One of &lt;code&gt;dataclass&lt;/code&gt;, &lt;code&gt;attrs&lt;/code&gt;, &lt;code&gt;msgspec&lt;/code&gt;, &lt;code&gt;pydantic&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/model-types/"&gt;Model types&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;One of &lt;code&gt;dataclass&lt;/code&gt;, &lt;code&gt;attrs&lt;/code&gt;, &lt;code&gt;msgspec&lt;/code&gt;, &lt;code&gt;pydantic&lt;/code&gt;. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/model-types/"&gt;Model types&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;initialisms&lt;/code&gt;&lt;/td&gt;
@@ -55,7 +55,7 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;emit_classes&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;bool&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;If &lt;code&gt;true&lt;/code&gt;, each query file&amp;rsquo;s functions become methods on a class named after that file (&lt;code&gt;queries_field_namings.sql&lt;/code&gt; -&amp;gt; &lt;code&gt;QueriesFieldNamings&lt;/code&gt;). See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/writing-queries/"&gt;Writing queries&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;If &lt;code&gt;true&lt;/code&gt;, each query file&amp;rsquo;s functions become methods on a class named after that file (&lt;code&gt;queries_field_namings.sql&lt;/code&gt; -&amp;gt; &lt;code&gt;QueriesFieldNamings&lt;/code&gt;). See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/writing-queries/"&gt;Writing queries&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;inflection_exclude_table_names&lt;/code&gt;&lt;/td&gt;
@@ -79,7 +79,7 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;docstrings&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;string&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;none&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;One of &lt;code&gt;none&lt;/code&gt;, &lt;code&gt;google&lt;/code&gt;, &lt;code&gt;numpy&lt;/code&gt;, &lt;code&gt;pep257&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/docstrings/"&gt;Docstrings&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;One of &lt;code&gt;none&lt;/code&gt;, &lt;code&gt;google&lt;/code&gt;, &lt;code&gt;numpy&lt;/code&gt;, &lt;code&gt;pep257&lt;/code&gt;. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/docstrings/"&gt;Docstrings&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;docstrings_emit_sql&lt;/code&gt;&lt;/td&gt;
@@ -103,19 +103,19 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;speedups&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;bool&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Use faster third-party libraries for type conversion. Affects the sqlite and turso drivers (uses &lt;code&gt;ciso8601&lt;/code&gt;). See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;Use faster third-party libraries for type conversion. Affects the sqlite and turso drivers (uses &lt;code&gt;ciso8601&lt;/code&gt;). See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;overrides&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;list[Override]&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;[]&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Replace the Python type of matching columns. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/"&gt;Type overrides&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;Replace the Python type of matching columns. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/"&gt;Type overrides&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;converters&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;list[Converter]&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;[]&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;Named encode/decode function pairs referenced by an override. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;Converters&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;Named encode/decode function pairs referenced by an override. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;Converters&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;indent_char&lt;/code&gt;&lt;/td&gt;
@@ -204,7 +204,7 @@ specifying both, or neither, is an error.&lt;/p&gt;
 &lt;/table&gt;
 &lt;p&gt;When both a &lt;code&gt;column&lt;/code&gt; and a &lt;code&gt;db_type&lt;/code&gt; override could match, the column match wins.&lt;/p&gt;
 &lt;h3&gt;&lt;code&gt;converter&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="converter"&gt;&lt;/span&gt;
-&lt;a href="#converter" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;An entry in &lt;code&gt;converters&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;Converters&lt;/a&gt;.&lt;/p&gt;
+&lt;a href="#converter" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;An entry in &lt;code&gt;converters&lt;/code&gt;. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;Converters&lt;/a&gt;.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -235,10 +235,10 @@ specifying both, or neither, is an error.&lt;/p&gt;
 &lt;td&gt;&lt;em&gt;required&lt;/em&gt; - dotted path to a function that turns the wire value into the Python type.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
-&lt;/table&gt;</description></item><item><title>Type mappings</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/type-mappings/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/type-mappings/</guid><description>
+&lt;/table&gt;</description></item><item><title>Type mappings</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/type-mappings/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/type-mappings/</guid><description>
 &lt;p&gt;How the plugin maps SQL types to Python types, per engine. These are the
-built-in defaults; a &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; or
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt; replaces the type for a specific column or
+built-in defaults; a &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; or
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt; replaces the type for a specific column or
 SQL type.&lt;/p&gt;
 &lt;h2&gt;How a column&amp;rsquo;s type is built&lt;span class="hx:absolute hx:-mt-20" id="how-a-columns-type-is-built"&gt;&lt;/span&gt;
 &lt;a href="#how-a-columns-type-is-built" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The tables below give the &lt;strong&gt;base&lt;/strong&gt; Python type for a SQL type. Two modifiers are
@@ -322,7 +322,7 @@ base type is wrapped as &lt;code&gt;collections.abc.Sequence[T]&lt;/code&gt;.&lt
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;a user-defined &lt;code&gt;ENUM&lt;/code&gt; type&lt;/td&gt;
-&lt;td&gt;the generated &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/enums/"&gt;enum class&lt;/a&gt;, e.g. &lt;code&gt;enums.Mood&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the generated &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/enums/"&gt;enum class&lt;/a&gt;, e.g. &lt;code&gt;enums.Mood&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;anything else&lt;/td&gt;
@@ -334,8 +334,8 @@ base type is wrapped as &lt;code&gt;collections.abc.Sequence[T]&lt;/code&gt;.&lt
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;A SQL type the plugin does not recognize falls back to &lt;code&gt;typing.Any&lt;/code&gt;. If that
-happens for a type you use often, add a &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt;
-or &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt; so it gets a real Python type.&lt;/div&gt;
+happens for a type you use often, add a &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt;
+or &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt; so it gets a real Python type.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;SQLite&lt;span class="hx:absolute hx:-mt-20" id="sqlite"&gt;&lt;/span&gt;
@@ -390,7 +390,7 @@ prefix (so &lt;code&gt;varchar(255)&lt;/code&gt; matches &lt;code&gt;varchar&lt;
 &lt;/table&gt;
 &lt;p&gt;For the two SQLite drivers, several of these types also need runtime adapters and
 converters (registered in the generated code) to round-trip correctly - see
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Feature support</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/feature-support/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/feature-support/</guid><description>
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Feature support</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/feature-support/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/feature-support/</guid><description>
 &lt;p&gt;Which sqlc features and query commands the plugin supports.&lt;/p&gt;
 &lt;h2&gt;Macros&lt;span class="hx:absolute hx:-mt-20" id="macros"&gt;&lt;/span&gt;
 &lt;a href="#macros" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every &lt;a href="https://docs.sqlc.dev/en/latest/reference/macros.html"target="_blank" rel="noopener"&gt;sqlc macro&lt;/a&gt; is
@@ -495,7 +495,7 @@ depend on the driver:&lt;/p&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/writing-queries/"&gt;Writing queries&lt;/a&gt; for what each command
+&lt;p&gt;See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/writing-queries/"&gt;Writing queries&lt;/a&gt; for what each command
 generates.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;

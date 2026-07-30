@@ -1,7 +1,7 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>sqlc-gen-better-python – Guide</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/</link><description>Recent content in Guide on sqlc-gen-better-python</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/index.xml" rel="self" type="application/rss+xml"/><item><title>Configuration</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/configuration/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/configuration/</guid><description>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>sqlc-gen-better-python – Guide</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/</link><description>Recent content in Guide on sqlc-gen-better-python</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/index.xml" rel="self" type="application/rss+xml"/><item><title>Configuration</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/configuration/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/configuration/</guid><description>
 &lt;p&gt;Everything the plugin does is driven by your &lt;code&gt;sqlc.yaml&lt;/code&gt;. This page covers how
 the plugin is wired in and how its options are structured. For the exhaustive
-option list, see the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/configuration-options/"&gt;configuration options reference&lt;/a&gt;.&lt;/p&gt;
+option list, see the &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/configuration-options/"&gt;configuration options reference&lt;/a&gt;.&lt;/p&gt;
 &lt;h2&gt;Anatomy of &lt;code&gt;sqlc.yaml&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="anatomy-of-sqlcyaml"&gt;&lt;/span&gt;
 &lt;a href="#anatomy-of-sqlcyaml" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Two parts matter: a &lt;code&gt;plugins&lt;/code&gt; entry that declares the WASM plugin, and a
 &lt;code&gt;codegen&lt;/code&gt; entry inside your &lt;code&gt;sql&lt;/code&gt; block that runs it with a set of &lt;code&gt;options&lt;/code&gt;.&lt;/p&gt;
@@ -66,7 +66,7 @@ whose hash does not match. Each release lists its hash.&lt;/div&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;sql_driver&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;psycopg_sync&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, &lt;code&gt;sqlite3&lt;/code&gt;, &lt;code&gt;turso_async&lt;/code&gt;, or &lt;code&gt;turso_sync&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;psycopg_sync&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, &lt;code&gt;sqlite3&lt;/code&gt;, &lt;code&gt;turso_async&lt;/code&gt;, or &lt;code&gt;turso_sync&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;emit_init_file&lt;/code&gt;&lt;/td&gt;
@@ -75,9 +75,9 @@ whose hash does not match. Each release lists its hash.&lt;/div&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;Everything else is optional and has a sensible default. The most common ones to
-reach for next are &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/model-types/"&gt;&lt;code&gt;model_type&lt;/code&gt;&lt;/a&gt; and
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/docstrings/"&gt;&lt;code&gt;docstrings&lt;/code&gt;&lt;/a&gt;. The full list, with types and defaults,
-is in the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/configuration-options/"&gt;reference&lt;/a&gt;.&lt;/p&gt;
+reach for next are &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/model-types/"&gt;&lt;code&gt;model_type&lt;/code&gt;&lt;/a&gt; and
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/docstrings/"&gt;&lt;code&gt;docstrings&lt;/code&gt;&lt;/a&gt;. The full list, with types and defaults,
+is in the &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/configuration-options/"&gt;reference&lt;/a&gt;.&lt;/p&gt;
 &lt;h2&gt;Multiple outputs&lt;span class="hx:absolute hx:-mt-20" id="multiple-outputs"&gt;&lt;/span&gt;
 &lt;a href="#multiple-outputs" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A single &lt;code&gt;sql&lt;/code&gt; block can have several &lt;code&gt;codegen&lt;/code&gt; entries, each writing to its own
 &lt;code&gt;out&lt;/code&gt;. This is handy to generate more than one flavor from the same schema and
@@ -118,7 +118,7 @@ turso drivers require
 &lt;li&gt;&lt;strong&gt;Forgetting &lt;code&gt;emit_init_file&lt;/code&gt;.&lt;/strong&gt; It has no default and generation fails if it
 is omitted. Set it to &lt;code&gt;true&lt;/code&gt; unless the package already has an &lt;code&gt;__init__.py&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;A stale &lt;code&gt;sha256&lt;/code&gt;.&lt;/strong&gt; When you bump the plugin version, update the hash too.&lt;/li&gt;
-&lt;/ul&gt;</description></item><item><title>Drivers</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/drivers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/drivers/</guid><description>
+&lt;/ul&gt;</description></item><item><title>Drivers</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/drivers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/drivers/</guid><description>
 &lt;p&gt;The &lt;code&gt;sql_driver&lt;/code&gt; option picks which database library the generated code targets.
 It must match your &lt;code&gt;engine&lt;/code&gt;. Seven drivers are supported:&lt;/p&gt;
 &lt;table&gt;
@@ -249,7 +249,7 @@ through &lt;code&gt;cursor.copy()&lt;/code&gt;.&lt;/p&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Modules returning &lt;code&gt;json&lt;/code&gt;/&lt;code&gt;jsonb&lt;/code&gt; columns register a raw-text loader on
 psycopg&amp;rsquo;s process-global adapters map at import time, so those columns stay
 &lt;code&gt;str&lt;/code&gt; exactly like on asyncpg - including for
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;converters&lt;/a&gt;. On Windows, psycopg&amp;rsquo;s async support
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;converters&lt;/a&gt;. On Windows, psycopg&amp;rsquo;s async support
 requires the &lt;code&gt;SelectorEventLoop&lt;/code&gt;; the default &lt;code&gt;ProactorEventLoop&lt;/code&gt; is
 rejected.&lt;/div&gt;
 &lt;/div&gt;
@@ -335,7 +335,7 @@ data-copied-label="Copied!"
 only run if the connection was opened with
 &lt;code&gt;detect_types=sqlite3.PARSE_DECLTYPES&lt;/code&gt;. Adapters, which send those types as
 parameters, work without it. See
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/div&gt;
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;turso_sync / turso_async (Turso)&lt;span class="hx:absolute hx:-mt-20" id="turso_sync--turso_async-turso"&gt;&lt;/span&gt;
@@ -410,10 +410,10 @@ strings, or bytes).&lt;/li&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;Command support&lt;span class="hx:absolute hx:-mt-20" id="command-support"&gt;&lt;/span&gt;
-&lt;a href="#command-support" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Not every &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/writing-queries/"&gt;query command&lt;/a&gt; works on every driver -
+&lt;a href="#command-support" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Not every &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/writing-queries/"&gt;query command&lt;/a&gt; works on every driver -
 for example &lt;code&gt;:copyfrom&lt;/code&gt; is PostgreSQL-only and &lt;code&gt;:execlastid&lt;/code&gt; is limited to the
 SQLite-engine drivers. The full matrix is in the
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/feature-support/"&gt;feature support reference&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Model types</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/model-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/model-types/</guid><description>
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/feature-support/"&gt;feature support reference&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Model types</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/model-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/model-types/</guid><description>
 &lt;p&gt;The &lt;code&gt;model_type&lt;/code&gt; option controls what kind of class the plugin generates for each
 table. All four produce the same fields with the same annotations - they differ
 only in the class machinery and dependencies.&lt;/p&gt;
@@ -502,7 +502,7 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;Requires &lt;code&gt;msgspec&lt;/code&gt;. Very fast serialization/validation; pairs well with
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/working-with-json/"&gt;working with JSON&lt;/a&gt;.&lt;/p&gt;&lt;/div&gt;&lt;div class="hextra-tabs-panel hx:rounded-sm hx:pt-6 hx:hidden hx:data-[state=selected]:block" id="tabs-panel-tabs-00-3" role="tabpanel" aria-labelledby="tabs-tab-tabs-00-3" aria-hidden="true"&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/working-with-json/"&gt;working with JSON&lt;/a&gt;.&lt;/p&gt;&lt;/div&gt;&lt;div class="hextra-tabs-panel hx:rounded-sm hx:pt-6 hx:hidden hx:data-[state=selected]:block" id="tabs-panel-tabs-00-3" role="tabpanel" aria-labelledby="tabs-tab-tabs-00-3" aria-hidden="true"&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;TestFieldNaming&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pydantic&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;BaseModel&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;model_config&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pydantic&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ConfigDict&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;arbitrary_types_allowed&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -527,7 +527,7 @@ JSON, &lt;code&gt;pydantic&lt;/code&gt; for runtime validation, &lt;code&gt;attr
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;arbitrary_types_allowed=True&lt;/code&gt;&lt;/strong&gt; is set on every model. It is required for
 field types pydantic has no core schema for (&lt;code&gt;memoryview&lt;/code&gt; for &lt;code&gt;bytea&lt;/code&gt;/&lt;code&gt;blob&lt;/code&gt;,
-and custom &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/"&gt;override&lt;/a&gt; types). Those fields are still
+and custom &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/"&gt;override&lt;/a&gt; types). Those fields are still
 validated with an &lt;code&gt;isinstance&lt;/code&gt; check; all other fields get full validation.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Runtime annotations.&lt;/strong&gt; Unlike the other model types, pydantic resolves field
 annotations at runtime, so generated files import referenced modules at module
@@ -540,7 +540,7 @@ level instead of inside &lt;code&gt;if typing.TYPE_CHECKING:&lt;/code&gt;.&lt;/l
 &lt;code&gt;lint.flake8-type-checking.runtime-evaluated-base-classes = [&amp;quot;pydantic.BaseModel&amp;quot;]&lt;/code&gt;
 so it does not try to move those runtime imports into a &lt;code&gt;TYPE_CHECKING&lt;/code&gt; block.&lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title>Writing queries</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/writing-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/writing-queries/</guid><description>
+&lt;/div&gt;</description></item><item><title>Writing queries</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/writing-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/writing-queries/</guid><description>
 &lt;p&gt;Each query &lt;code&gt;.sql&lt;/code&gt; file becomes one Python module, and each annotated query in it
 becomes one typed function. This page shows how the &lt;code&gt;-- name:&lt;/code&gt; annotation maps to
 a function and what each query command generates.&lt;/p&gt;
@@ -685,7 +685,7 @@ status tag on asyncpg, a &lt;code&gt;psycopg.AsyncCursor&lt;/code&gt; / &lt;code
 psycopg drivers, a &lt;code&gt;sqlite3.Cursor&lt;/code&gt; / &lt;code&gt;aiosqlite.Cursor&lt;/code&gt; on the SQLite
 drivers, and a &lt;code&gt;turso.Cursor&lt;/code&gt; / &lt;code&gt;turso.aio.Cursor&lt;/code&gt; on the turso drivers.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;See the &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/feature-support/"&gt;feature support matrix&lt;/a&gt; for which
+&lt;p&gt;See the &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/feature-support/"&gt;feature support matrix&lt;/a&gt; for which
 driver supports which.&lt;/p&gt;
 &lt;h3&gt;&lt;code&gt;:copyfrom&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="copyfrom"&gt;&lt;/span&gt;
 &lt;a href="#copyfrom" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;PostgreSQL drivers only. Bulk-inserts rows, taking a sequence of generated
@@ -729,7 +729,7 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;p&gt;Looking for prepared queries? Every supported driver prepares statements
 automatically - see
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/feature-support/#prepared-queries"&gt;prepared queries&lt;/a&gt; in the
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/feature-support/#prepared-queries"&gt;prepared queries&lt;/a&gt; in the
 feature support reference for the per-driver details.&lt;/p&gt;
 &lt;h2&gt;Parameters&lt;span class="hx:absolute hx:-mt-20" id="parameters"&gt;&lt;/span&gt;
 &lt;a href="#parameters" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;By default every parameter is &lt;strong&gt;keyword-only&lt;/strong&gt; (note the &lt;code&gt;*,&lt;/code&gt; in the signatures
@@ -780,7 +780,7 @@ data-copied-label="Copied!"
 &lt;p&gt;so the call becomes
 &lt;code&gt;user = await QueriesFieldNamings(conn).get_field_naming(id_=1)&lt;/code&gt; - without the
 &lt;code&gt;await&lt;/code&gt; on the synchronous &lt;code&gt;sqlite3&lt;/code&gt; driver, where the method is a plain
-function.&lt;/p&gt;</description></item><item><title>Enums</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/enums/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/enums/</guid><description>
+function.&lt;/p&gt;</description></item><item><title>Enums</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/enums/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/enums/</guid><description>
 &lt;p&gt;PostgreSQL enum types become &lt;code&gt;enum.StrEnum&lt;/code&gt; classes in a generated &lt;code&gt;enums.py&lt;/code&gt;
 module. Columns of that type are annotated with the class, and values read from
 the database are coerced into it.&lt;/p&gt;
@@ -821,7 +821,7 @@ data-copied-label="Copied!"
 identifiers are sanitized: the digit-leading &lt;code&gt;24h&lt;/code&gt; becomes &lt;code&gt;VALUE_24H&lt;/code&gt; and the
 underscore-leading &lt;code&gt;_hidden&lt;/code&gt; becomes &lt;code&gt;VALUE__HIDDEN&lt;/code&gt;. The string &lt;em&gt;values&lt;/em&gt; are
 untouched, so round-tripping to the database is exact. See
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/naming/"&gt;Naming and identifiers&lt;/a&gt; for the full sanitization rules.&lt;/p&gt;
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/naming/"&gt;Naming and identifiers&lt;/a&gt; for the full sanitization rules.&lt;/p&gt;
 &lt;h2&gt;Using enums&lt;span class="hx:absolute hx:-mt-20" id="using-enums"&gt;&lt;/span&gt;
 &lt;a href="#using-enums" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A column of an enum type is annotated with the generated class, and nullable
 columns get &lt;code&gt;| None&lt;/code&gt;:&lt;/p&gt;
@@ -871,7 +871,7 @@ from a &lt;code&gt;public.mood&lt;/code&gt; that would become &lt;code&gt;Mood&l
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Enum classes are a PostgreSQL feature - SQLite has no native enum type, so this
 applies to the PostgreSQL drivers (&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, and &lt;code&gt;psycopg_sync&lt;/code&gt;).&lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title>Type overrides</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/</guid><description>
+&lt;/div&gt;</description></item><item><title>Type overrides</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/</guid><description>
 &lt;p&gt;An override replaces the Python type the plugin would pick for a column with one
 of your own. You can target a specific column or every column of a given SQL
 type.&lt;/p&gt;
@@ -885,7 +885,7 @@ allowed).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;and supplies a &lt;code&gt;py_type&lt;/code&gt; describing the replacement type and how to import it
 (&lt;code&gt;import&lt;/code&gt;, &lt;code&gt;package&lt;/code&gt;, &lt;code&gt;type&lt;/code&gt;). Full schema in the
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/configuration-options/#override"&gt;reference&lt;/a&gt;.&lt;/p&gt;
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/configuration-options/#override"&gt;reference&lt;/a&gt;.&lt;/p&gt;
 &lt;h2&gt;Example&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
 &lt;a href="#example" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Override one &lt;code&gt;text&lt;/code&gt; column with &lt;code&gt;collections.UserString&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -949,7 +949,7 @@ stays &lt;code&gt;None&lt;/code&gt; and the type is never called with &lt;code&g
 &lt;p&gt;This is why an override works for anything constructible from its wire value
 (&lt;code&gt;UserString(str)&lt;/code&gt;, &lt;code&gt;PurePosixPath(str)&lt;/code&gt;, &amp;hellip;) but &lt;em&gt;not&lt;/em&gt; for things like JSON,
 where &lt;code&gt;MyModel(json_string)&lt;/code&gt; is meaningless. For those, use a
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt;, which names your own encode/decode functions
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt;, which names your own encode/decode functions
 instead.&lt;/p&gt;
 &lt;h2&gt;Matching by SQL type&lt;span class="hx:absolute hx:-mt-20" id="matching-by-sql-type"&gt;&lt;/span&gt;
 &lt;a href="#matching-by-sql-type" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Use &lt;code&gt;db_type&lt;/code&gt; to override every column of a type at once:&lt;/p&gt;
@@ -980,8 +980,8 @@ override wins.&lt;/p&gt;
 not link a column override to those. Only &lt;code&gt;db_type&lt;/code&gt; overrides (and converters
 matched by &lt;code&gt;db_type&lt;/code&gt;) reach them.&lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title>Converters</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/</guid><description>
-&lt;p&gt;A &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; replaces a column&amp;rsquo;s Python type,
+&lt;/div&gt;</description></item><item><title>Converters</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/</guid><description>
+&lt;p&gt;A &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; replaces a column&amp;rsquo;s Python type,
 but it converts by &lt;em&gt;calling that type&lt;/em&gt; (&lt;code&gt;Preferences(value)&lt;/code&gt;), which cannot
 express JSON or model (de)serialization. A &lt;strong&gt;converter&lt;/strong&gt; names two of your own
 functions instead, used whenever the column is read from or written to the
@@ -1098,7 +1098,7 @@ module-level functions; the module is imported and the function called fully
 qualified, so the names can never collide with generated code.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Wire type.&lt;/strong&gt; &lt;code&gt;to_db&lt;/code&gt; must return the type the column would have had &lt;em&gt;without&lt;/em&gt;
 the override (&lt;code&gt;jsonb&lt;/code&gt; is a &lt;code&gt;str&lt;/code&gt;, &lt;code&gt;bytea&lt;/code&gt; a &lt;code&gt;memoryview&lt;/code&gt; - see
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/reference/type-mappings/"&gt;type mappings&lt;/a&gt;), and &lt;code&gt;from_db&lt;/code&gt; receives that
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/reference/type-mappings/"&gt;type mappings&lt;/a&gt;), and &lt;code&gt;from_db&lt;/code&gt; receives that
 same type. For an unrecognised SQL type there is no such type, so &lt;code&gt;to_db&lt;/code&gt; must
 return a type the driver accepts.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Your functions never see &lt;code&gt;None&lt;/code&gt;.&lt;/strong&gt; A SQL &lt;code&gt;NULL&lt;/code&gt; stays &lt;code&gt;None&lt;/code&gt; without calling
@@ -1115,14 +1115,14 @@ parameters.&lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;Next&lt;span class="hx:absolute hx:-mt-20" id="next"&gt;&lt;/span&gt;
 &lt;a href="#next" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Converters are most often reached for with JSON columns. See
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/working-with-json/"&gt;Working with JSON&lt;/a&gt; for a complete walkthrough
-using &lt;code&gt;msgspec&lt;/code&gt; structs.&lt;/p&gt;</description></item><item><title>Working with JSON</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/working-with-json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/working-with-json/</guid><description>
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/working-with-json/"&gt;Working with JSON&lt;/a&gt; for a complete walkthrough
+using &lt;code&gt;msgspec&lt;/code&gt; structs.&lt;/p&gt;</description></item><item><title>Working with JSON</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/working-with-json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/working-with-json/</guid><description>
 &lt;p&gt;A &lt;code&gt;json&lt;/code&gt;/&lt;code&gt;jsonb&lt;/code&gt; column maps to &lt;code&gt;str&lt;/code&gt; by default - correct, but untyped: you get
-a string and parse it yourself everywhere. With a &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt;
+a string and parse it yourself everywhere. With a &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt;
 and a &lt;code&gt;msgspec.Struct&lt;/code&gt; you get a fully typed, validated Python object instead,
 and the plugin inserts the encode/decode calls for you.&lt;/p&gt;
 &lt;h2&gt;Why JSON needs a converter&lt;span class="hx:absolute hx:-mt-20" id="why-json-needs-a-converter"&gt;&lt;/span&gt;
-&lt;a href="#why-json-needs-a-converter" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; converts by &lt;em&gt;calling the type&lt;/em&gt;, so
+&lt;a href="#why-json-needs-a-converter" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; converts by &lt;em&gt;calling the type&lt;/em&gt;, so
 it would generate &lt;code&gt;Preferences(row[2])&lt;/code&gt; - handing a JSON string to a struct
 constructor, which is meaningless. JSON needs a real parse step, which is exactly
 what a converter&amp;rsquo;s &lt;code&gt;from_db&lt;/code&gt;/&lt;code&gt;to_db&lt;/code&gt; pair provides.&lt;/p&gt;
@@ -1427,7 +1427,7 @@ data-copied-label="Copied!"
 straight from the string.&lt;/p&gt;
 &lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;The same approach works for the SQLite drivers: a &lt;code&gt;json&lt;/code&gt; column is &lt;code&gt;str&lt;/code&gt; there
-too, so the identical converter applies.&lt;/p&gt;</description></item><item><title>Docstrings</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/docstrings/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/docstrings/</guid><description>
+too, so the identical converter applies.&lt;/p&gt;</description></item><item><title>Docstrings</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/docstrings/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/docstrings/</guid><description>
 &lt;p&gt;The plugin can document everything it generates - models, enums, and query
 functions - in the docstring convention of your choice.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -1598,7 +1598,7 @@ data-copied-label="Copied!"
 &lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
 &lt;/button&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title>SQLite type conversion</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/sqlite-type-conversion/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/sqlite-type-conversion/</guid><description>
+&lt;/div&gt;</description></item><item><title>SQLite type conversion</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/sqlite-type-conversion/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/sqlite-type-conversion/</guid><description>
 &lt;p&gt;SQLite only stores a handful of native types, so dates, decimals, booleans and
 blobs have to be translated in both directions. For the &lt;code&gt;sqlite3&lt;/code&gt; and &lt;code&gt;aiosqlite&lt;/code&gt;
 drivers the generated code registers &lt;strong&gt;adapters&lt;/strong&gt; (Python value -&amp;gt; SQLite) and
@@ -1714,8 +1714,8 @@ registering the same declared type will share that conversion.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;Interaction with overrides&lt;span class="hx:absolute hx:-mt-20" id="interaction-with-overrides"&gt;&lt;/span&gt;
-&lt;a href="#interaction-with-overrides" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A column with a &lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; or
-&lt;a href="https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt; is converted inline by the generated code, so
+&lt;a href="#interaction-with-overrides" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A column with a &lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; or
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/converters/"&gt;converter&lt;/a&gt; is converted inline by the generated code, so
 &lt;strong&gt;no&lt;/strong&gt; SQLite converter is registered for it - registering one would convert the
 value twice. Overridden values used as &lt;em&gt;parameters&lt;/em&gt; still need the adapter, so
 that half is still registered.&lt;/p&gt;
@@ -1748,7 +1748,7 @@ resulting Python types.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;speedups&lt;/code&gt; works the same way as on the SQLite drivers: it swaps the inline
 &lt;code&gt;date&lt;/code&gt; and &lt;code&gt;datetime&lt;/code&gt;/&lt;code&gt;timestamp&lt;/code&gt; decodes for &lt;code&gt;ciso8601&lt;/code&gt; calls (&lt;code&gt;decimal&lt;/code&gt;,
 &lt;code&gt;bool&lt;/code&gt;, and &lt;code&gt;blob&lt;/code&gt; are unchanged) and adds &lt;code&gt;ciso8601&lt;/code&gt; as a runtime dependency
-of the generated code.&lt;/p&gt;</description></item><item><title>Naming and identifiers</title><link>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/naming/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://rayakame.github.io/sqlc-gen-better-python/pr-preview/pr-233/docs/guide/naming/</guid><description>
+of the generated code.&lt;/p&gt;</description></item><item><title>Naming and identifiers</title><link>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/naming/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-233/docs/guide/naming/</guid><description>
 &lt;p&gt;SQL identifiers are not always valid Python names, and SQL naming conventions are
 not Python&amp;rsquo;s. This page covers how table, column, and enum names are turned into
 Python names, and how invalid ones are sanitized.&lt;/p&gt;
