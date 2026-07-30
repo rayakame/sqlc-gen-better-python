@@ -39,21 +39,30 @@ concurrency:
 
 jobs:
   # Production: build the site and publish it to the gh-pages branch root.
-  # Runs only for a release (the release workflow dispatches it at the tag)
-  # or a manual dispatch, so the root site always matches the latest release.
+  # Runs for a release (the release workflow dispatches it at the tag), a
+  # manual dispatch, or the merge of the release workflow's pin-update PR -
+  # the release tag predates that PR, so without this last deploy the root
+  # site would keep the previous release's wasm url/sha in its examples.
   deploy:
     name: "Deploy docs"
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    if: |
+      github.event_name == 'release' || github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       startsWith(github.event.pull_request.head.ref, 'release/update-readme-'))
     runs-on: ubuntu-latest
     # contents: write lets the deploy action push the built site to gh-pages.
     permissions:
       contents: write
     steps:
+      # For the pin-update merge, build main (the released tag plus the pin
+      # commit) instead of the event's own ref; an empty ref is the default.
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && 'main' || '' }}
 
       - name: Install Hugo (extended)
         uses: ./.github/actions/install-hugo
