@@ -153,9 +153,14 @@ user = queries.get_field_naming(conn, id_=1)
 [Turso](https://github.com/tursodatabase/turso) is an SQLite-compatible
 database engine; its [pyturso](https://pypi.org/project/pyturso/) package
 (`pip install pyturso`) mirrors the `sqlite3` module's API and adds a native
-asyncio variant. `turso_sync` targets the `turso` module, `turso_async` the
-`turso.aio` module - both use `engine: "sqlite"` and the same `?`
-placeholders and queries as the SQLite drivers.
+asyncio variant.
+
+- `turso_sync` targets the `turso` module, `turso_async` the `turso.aio` module.
+- Both use `engine: "sqlite"` and the same `?` placeholders and queries as the
+  SQLite drivers.
+- Unlike the `sqlite3` module, no connection flags are needed - the generated
+  code converts values inline, and the observable Python types match the
+  SQLite drivers exactly.
 
 ```python
 import turso
@@ -182,19 +187,16 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-Unlike the `sqlite3` module, no connection flags are needed - the generated
-code converts values inline, and the observable Python types match the
-SQLite drivers exactly.
-
 {{< callout type="warning" >}}
-  The turso drivers are **experimental**: the Turso database has not reached
-  1.0 and pyturso is pre-1.0, so its API may still change. Known behavior
-  differences from the `sqlite3` module: `:execlastid` returns `None` when
-  the statement is an `UPDATE`/`DELETE` (turso's `lastrowid` only reflects
-  the cursor's own `INSERT`), `:execrows` reports `0` instead of `-1` for
-  statements like `CREATE TABLE`, and type overrides whose values rely on a
-  user-registered sqlite3 adapter have no turso equivalent - the override
-  type must bind natively (None, numbers, strings, or bytes).
+  The turso drivers are **experimental** - Turso and pyturso are pre-1.0, so
+  the API may still change. Known differences from the `sqlite3` module:
+
+  - `:execlastid` returns `None` for `UPDATE`/`DELETE` statements - turso's
+    `lastrowid` only reflects the cursor's own `INSERT`.
+  - `:execrows` reports `0` instead of `-1` for statements like `CREATE TABLE`.
+  - Overrides relying on a user-registered sqlite3 adapter have no turso
+    equivalent - the override type must bind natively (None, numbers,
+    strings, or bytes).
 {{< /callout >}}
 
 ## Command support

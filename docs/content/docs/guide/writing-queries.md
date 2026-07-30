@@ -108,9 +108,8 @@ Variants of `:exec` that return something about the write:
   `0` while psycopg and the SQLite drivers report `-1`.
 - **`:execlastid`** - the cursor's `lastrowid`, typed `int | None` - it is `None`
   when no row was affected. SQLite-engine drivers only, and note it is the last
-  *affected* row, not strictly the last inserted one. On the turso drivers it
-  is `None` for `UPDATE`/`DELETE` statements, since turso's `lastrowid` only
-  reflects the cursor's own `INSERT`.
+  *affected* row, not strictly the last inserted one. On turso it is `None` for
+  `UPDATE`/`DELETE`.
 - **`:execresult`** - the driver's raw result, which differs per driver: a `str`
   status tag on asyncpg, a `psycopg.AsyncCursor` / `psycopg.Cursor` on the
   psycopg drivers, a `sqlite3.Cursor` / `aiosqlite.Cursor` on the SQLite
