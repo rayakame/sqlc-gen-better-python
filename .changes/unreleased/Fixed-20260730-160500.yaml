@@ -1,6 +1,0 @@
-kind: Fixed
-body: 'Docs: the published site emitted empty `og:description` and `og:type` tags because `hugo --minify` truncates the theme''s multi-line attribute values. Every page now also carries a proper meta description and a social preview image, the site serves `llms.txt`, and the install instructions default to uv with sqlc-bin as the recommended way to install sqlc.'
-time: 2026-07-30T16:05:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "233"
