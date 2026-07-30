@@ -402,8 +402,7 @@ async def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
     return models.User(id_=row[0], name=row[1])
 
 
-def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
-    ...
+def list_users(conn: ConnectionLike) -> QueryResults[models.User]: ...
 ```
 
   {{< /tab >}}
@@ -426,8 +425,7 @@ async def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
     return models.User(id_=row[0], name=row[1])
 
 
-def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
-    ...
+def list_users(conn: ConnectionLike) -> QueryResults[models.User]: ...
 ```
 
   {{< /tab >}}
@@ -450,8 +448,7 @@ def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
     return models.User(id_=row[0], name=row[1])
 
 
-def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
-    ...
+def list_users(conn: ConnectionLike) -> QueryResults[models.User]: ...
 ```
 
   {{< /tab >}}
@@ -474,8 +471,7 @@ async def get_user(conn: aiosqlite.Connection, *, id_: int) -> models.User | Non
     return models.User(id_=row[0], name=row[1])
 
 
-def list_users(conn: aiosqlite.Connection) -> QueryResults[models.User]:
-    ...
+def list_users(conn: aiosqlite.Connection) -> QueryResults[models.User]: ...
 ```
 
   {{< /tab >}}
@@ -498,8 +494,7 @@ def get_user(conn: sqlite3.Connection, *, id_: int) -> models.User | None:
     return models.User(id_=row[0], name=row[1])
 
 
-def list_users(conn: sqlite3.Connection) -> QueryResults[models.User]:
-    ...
+def list_users(conn: sqlite3.Connection) -> QueryResults[models.User]: ...
 ```
 
   {{< /tab >}}
