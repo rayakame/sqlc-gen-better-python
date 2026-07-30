@@ -19,7 +19,11 @@ go build -o sqlc-gen-better-python.wasm plugin/main.go
 REM ------------------------------
 REM 3) CALCULATE SHA-256
 REM ------------------------------
-for /f %%i in ('certutil -hashfile sqlc-gen-better-python.wasm SHA256 ^| findstr /v "hash"') do set "SHA256_HASH=%%i"
+REM Capture the digest line whole (delims=), then strip the spaces older
+REM CertUtil versions print between the hex pairs - first-token capture
+REM would truncate such a digest to its first byte.
+for /f "delims=" %%i in ('certutil -hashfile sqlc-gen-better-python.wasm SHA256 ^| findstr /v "hash"') do set "SHA256_HASH=%%i"
+set "SHA256_HASH=%SHA256_HASH: =%"
 echo SHA-256: %SHA256_HASH%
 
 REM ------------------------------
