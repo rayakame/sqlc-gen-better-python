@@ -1,5 +1,7 @@
 ---
 title: Type mappings
+description: >-
+  The built-in SQL-to-Python type mappings for PostgreSQL and SQLite, and what nullable columns and arrays map to.
 weight: 20
 prev: /docs/reference/configuration-options
 next: /docs/reference/feature-support

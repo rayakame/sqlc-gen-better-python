@@ -1,5 +1,7 @@
 ---
 title: Documentation
+description: >-
+  Documentation for sqlc-gen-better-python, the sqlc plugin that turns your SQL schema and queries into modern, fully typed Python database code.
 weight: 1
 prev: /
 next: getting-started

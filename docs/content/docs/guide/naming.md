@@ -1,5 +1,7 @@
 ---
 title: Naming and identifiers
+description: >-
+  How SQL identifiers become Python names: singularized model classes, field naming, initialisms, and reserved-word escaping.
 weight: 100
 prev: /docs/guide/sqlite-type-conversion
 ---

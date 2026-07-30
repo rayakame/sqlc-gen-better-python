@@ -1,5 +1,7 @@
 ---
 title: Configuration
+description: >-
+  How the plugin is wired into sqlc.yaml and how its options are structured, with a full annotated example configuration.
 weight: 10
 prev: /docs/guide
 next: /docs/guide/drivers

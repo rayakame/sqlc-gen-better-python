@@ -1,8 +1,28 @@
-baseURL: "https://rayakame.github.io/sqlc-gen-better-python/"
+baseURL: "https://sqlc-gen-better-python.rayakame.dev/"
 title: sqlc-gen-better-python
 enableRobotsTXT: true
 enableGitInfo: true
 hasCJKLanguage: false
+
+# The docs use no tags/categories; without this Hugo publishes empty
+# /tags/ and /categories/ pages that end up in the sitemap as thin content.
+disableKinds:
+  - taxonomy
+  - term
+
+# llms.txt at the site root plus a raw-Markdown render of every page
+# (index.md next to each index.html) for AI tooling; both ship with hextra.
+outputs:
+  home:
+    - html
+    - llms
+  page:
+    - html
+    - markdown
+  section:
+    - html
+    - rss
+    - markdown
 
 module:
   imports:
@@ -31,7 +51,12 @@ menu:
         icon: github
 
 params:
+  # params.title feeds og:site_name (the root-level title does not).
+  title: sqlc-gen-better-python
   description: A sqlc plugin that generates modern, type-safe Python database code from SQL.
+  # Social preview card (og:image / twitter:card); source: assets/og-image.svg.
+  images:
+    - images/og-image.png
   navbar:
     displayTitle: true
     displayLogo: false

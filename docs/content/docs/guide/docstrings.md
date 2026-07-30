@@ -1,5 +1,7 @@
 ---
 title: Docstrings
+description: >-
+  Emit google, numpy, or pep257 docstrings on every generated model, enum, and query function.
 weight: 80
 prev: /docs/guide/working-with-json
 next: /docs/guide/sqlite-type-conversion

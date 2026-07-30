@@ -1,5 +1,7 @@
 ---
 title: Model types
+description: >-
+  Generate dataclass, attrs, msgspec, or pydantic models from your SQL schema - what each model type looks like and how to choose one.
 weight: 30
 prev: /docs/guide/drivers
 next: /docs/guide/writing-queries

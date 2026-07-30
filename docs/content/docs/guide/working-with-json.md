@@ -1,5 +1,7 @@
 ---
 title: Working with JSON
+description: >-
+  Turn untyped json/jsonb string columns into fully typed, validated Python objects with converters and msgspec structs.
 weight: 75
 prev: /docs/guide/converters
 next: /docs/guide/docstrings

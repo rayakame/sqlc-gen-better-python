@@ -1,5 +1,7 @@
 ---
 title: Getting Started
+description: >-
+  Install sqlc and a database driver, configure sqlc.yaml, and generate your first typed Python queries - step-by-step setup for every supported driver.
 weight: 1
 prev: /docs
 next: /docs/guide
@@ -12,26 +14,47 @@ below and the whole page follows your choice.
 
 ## Prerequisites
 
-You need [`sqlc`](https://docs.sqlc.dev/en/latest/overview/install.html) on your
-`PATH` and **Python 3.12 or newer** (the generated code uses PEP 695 type aliases
-and generics, and `enum.StrEnum`).
+You need **Python 3.12 or newer** (the generated code uses PEP 695 type aliases
+and generics, and `enum.StrEnum`) and the `sqlc` CLI on your `PATH` - pick
+either way to install it:
 
-{{< callout type="info" >}}
-  Besides the official installation methods, sqlc is also pip-installable via
-  [sqlc-bin](https://pypi.org/project/sqlc-bin/), which ships the unmodified
-  official binaries - no Go toolchain required. `uv add --dev sqlc-bin` (or
-  `pip install sqlc-bin`) puts `sqlc` on your PATH, and the package version
-  tracks the sqlc version, so you can pin it like any other dependency.
-{{< /callout >}}
+{{< tabs >}}
 
-Then install the database driver you want to use:
+  {{< tab name="sqlc-bin (recommended)" >}}
+
+[sqlc-bin](https://pypi.org/project/sqlc-bin/) ships the unmodified official
+`sqlc` binaries as a Python package - no Go toolchain needed, pinnable like
+any other dependency:
+
+```bash
+uv add --dev sqlc-bin
+```
+
+  {{< /tab >}}
+
+  {{< tab name="official installation" >}}
+
+Any of the [official methods](https://docs.sqlc.dev/en/latest/overview/install.html)
+works just as well:
+
+```bash
+brew install sqlc
+# or
+go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+```
+
+  {{< /tab >}}
+
+{{< /tabs >}}
+
+Then add the database driver you want to use:
 
 {{< tabs >}}
 
   {{< tab name="asyncpg" >}}
 
 ```bash
-pip install asyncpg asyncpg-stubs
+uv add asyncpg asyncpg-stubs
 ```
 
 asyncpg has no strict typing of its own; [asyncpg-stubs](https://pypi.org/project/asyncpg-stubs/)
@@ -42,7 +65,7 @@ makes the generated annotations work under pyright and mypy.
   {{< tab name="psycopg_async" >}}
 
 ```bash
-pip install "psycopg[binary]>=3.2"
+uv add "psycopg[binary]>=3.2"
 ```
 
   {{< /tab >}}
@@ -50,7 +73,7 @@ pip install "psycopg[binary]>=3.2"
   {{< tab name="psycopg_sync" >}}
 
 ```bash
-pip install "psycopg[binary]>=3.2"
+uv add "psycopg[binary]>=3.2"
 ```
 
   {{< /tab >}}
@@ -58,7 +81,7 @@ pip install "psycopg[binary]>=3.2"
   {{< tab name="aiosqlite" >}}
 
 ```bash
-pip install aiosqlite
+uv add aiosqlite
 ```
 
   {{< /tab >}}
@@ -72,6 +95,8 @@ Nothing to install - sqlite3 is in the standard library.
   {{< /tab >}}
 
 {{< /tabs >}}
+
+Using pip instead of uv? Swap `uv add` for `pip install` in any command above.
 
 ## 1. Configure the plugin
 

@@ -1,5 +1,7 @@
 ---
 title: sqlc-gen-better-python
+description: >-
+  A sqlc plugin that generates type-safe Python from SQL: dataclass, attrs, msgspec, or pydantic models plus fully typed query functions for asyncpg, psycopg, sqlite3, aiosqlite, and turso.
 layout: hextra-home
 ---
 
@@ -183,32 +185,11 @@ Generated code is held to the same standard as hand-written code:
   Set up in three steps
 {{< /hextra/hero-section >}}
 
-Point `sqlc` at the plugin, pick a driver and a model type, and generate:
-
-```yaml
-# sqlc.yaml
-version: "2"
-plugins:
-  - name: python
-    wasm:
-      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.7.0/sqlc-gen-better-python.wasm
-      sha256: 64ac923cf5f14ebc05bdeb2d1827f14d89a6f3b7180ac08964ef44ff065af5f9
-sql:
-  - engine: "postgresql"
-    queries: "query.sql"
-    schema: "schema.sql"
-    codegen:
-      - out: "app/db"
-        plugin: python
-        options:
-          package: "db"
-          emit_init_file: true
-          sql_driver: "asyncpg"
-```
-
-```bash
-sqlc generate
-```
+1. **Install** the `sqlc` CLI (`uv add --dev sqlc-bin`) and your database driver.
+2. **Configure** a `sqlc.yaml` pointing at the plugin's release wasm, your
+   schema, and your queries.
+3. **Generate** - `sqlc generate` writes typed models and one query module per
+   query file.
 
 <div class="hx:mt-6"></div>
 
