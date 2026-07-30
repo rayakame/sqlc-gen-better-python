@@ -173,3 +173,5 @@ jobs:
           source-dir: docs/public
           preview-branch: gh-pages
           umbrella-dir: pr-preview
+          # The PR comment's link defaults to <owner>.github.io/<repo>.
+          pages-base-url: sqlc-gen-better-python.rayakame.dev
