@@ -190,7 +190,6 @@ asyncio.run(main())
 {{< callout type="warning" >}}
   The turso drivers are **experimental** - Turso and pyturso are pre-1.0, so
   the API may still change. Known differences from the `sqlite3` module:
-
   - `:execlastid` returns `None` for `UPDATE`/`DELETE` statements - turso's
     `lastrowid` only reflects the cursor's own `INSERT`.
   - `:execrows` reports `0` instead of `-1` for statements like `CREATE TABLE`.
