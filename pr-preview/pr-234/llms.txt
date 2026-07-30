@@ -27,5 +27,5 @@ Macros Every sqlc macro is supported …
 
 
 ---
-Generated on 2026-07-30 23:26:27 UTC
+Generated on 2026-07-30 23:30:42 UTC
 Site: https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-234/
