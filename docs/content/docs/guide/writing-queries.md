@@ -104,15 +104,16 @@ async def set_field_naming_outputs(conn: ConnectionLike, *, id_: int, outputs: s
 Variants of `:exec` that return something about the write:
 
 - **`:execrows`** - the number of affected rows (`int`). For statements that
-  affect no rows, such as `CREATE TABLE`, asyncpg reports `0` while psycopg and
-  the SQLite drivers report `-1`.
+  affect no rows, such as `CREATE TABLE`, asyncpg and the turso drivers report
+  `0` while psycopg and the SQLite drivers report `-1`.
 - **`:execlastid`** - the cursor's `lastrowid`, typed `int | None` - it is `None`
-  when no row was affected. SQLite drivers only, and note it is the last
-  *affected* row, not strictly the last inserted one.
+  when no row was affected. SQLite-engine drivers only, and note it is the last
+  *affected* row, not strictly the last inserted one. On turso it is `None` for
+  `UPDATE`/`DELETE`.
 - **`:execresult`** - the driver's raw result, which differs per driver: a `str`
   status tag on asyncpg, a `psycopg.AsyncCursor` / `psycopg.Cursor` on the
-  psycopg drivers, and a `sqlite3.Cursor` / `aiosqlite.Cursor` on the SQLite
-  drivers.
+  psycopg drivers, a `sqlite3.Cursor` / `aiosqlite.Cursor` on the SQLite
+  drivers, and a `turso.Cursor` / `turso.aio.Cursor` on the turso drivers.
 
 See the [feature support matrix](/docs/reference/feature-support) for which
 driver supports which.

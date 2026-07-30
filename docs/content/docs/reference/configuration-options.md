@@ -17,7 +17,7 @@ optional.
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `package` | string | *required* | Name of the generated package. |
-| `sql_driver` | string | *required* | One of `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`. Must match the engine (the postgres drivers -> `postgresql`; the sqlite drivers -> `sqlite`). |
+| `sql_driver` | string | *required* | One of `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`, `turso_async`, `turso_sync`. Must match the engine (the postgres drivers -> `postgresql`; the sqlite and turso drivers -> `sqlite`). |
 | `emit_init_file` | bool | *required* | Whether to emit an `__init__.py` in the package. Must be set explicitly. Set `false` only if the package already has one. |
 | `model_type` | string | `dataclass` | One of `dataclass`, `attrs`, `msgspec`, `pydantic`. See [Model types](/docs/guide/model-types). |
 | `initialisms` | list[string] | `["id"]` | Identifier segments to upper-case, e.g. `app_id` -> `AppID`. |
@@ -30,7 +30,7 @@ optional.
 | `docstrings_emit_sql` | bool | `true` | Include each query's SQL in its docstring. Ignored when `docstrings` is `none`. |
 | `query_parameter_limit` | int | *unset* | When set to a non-negative value, queries with more parameters than the limit bundle them into a single `params` argument. Unset or negative never bundles (except `:copyfrom`, which always uses a params class). |
 | `omit_kwargs_limit` | int | `0` | Queries with this many parameters or fewer do not require keyword arguments. `0` makes every parameter keyword-only. Must not be negative. |
-| `speedups` | bool | `false` | Use faster third-party libraries for type conversion. Currently affects `sqlite3`/`aiosqlite` only (uses `ciso8601`). See [SQLite type conversion](/docs/guide/sqlite-type-conversion). |
+| `speedups` | bool | `false` | Use faster third-party libraries for type conversion. Affects the sqlite and turso drivers (uses `ciso8601`). See [SQLite type conversion](/docs/guide/sqlite-type-conversion). |
 | `overrides` | list[Override] | `[]` | Replace the Python type of matching columns. See [Type overrides](/docs/guide/type-overrides). |
 | `converters` | list[Converter] | `[]` | Named encode/decode function pairs referenced by an override. See [Converters](/docs/guide/converters). |
 | `indent_char` | string | `" "` (space) | Character used for one indent step. |

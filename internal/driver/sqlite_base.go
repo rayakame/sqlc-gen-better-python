@@ -133,9 +133,9 @@ func (sb *sqliteBase) WriteConversionSetup(body *writer.CodeWriter, config *conf
 // in its sync (sqlite3) or async (aiosqlite) variant.
 func (sb *sqliteBase) WriteQueryResultsClass(body *writer.CodeWriter) string {
 	cursorType := sb.moduleName + ".Cursor"
-	awaitKw, iteratorType, nextDef, iterDunder, nextDunder, stopExc, article := "", "Iterator", "def __next__", "__iter__", "__next__", "StopIteration", "a "
+	awaitKw, iteratorType, nextDef, iterDunder, nextDunder, stopExc, article := "", "Iterator", defNextSync, "__iter__", "__next__", stopIteration, "a "
 	if sb.async {
-		awaitKw, iteratorType, nextDef, iterDunder, nextDunder, stopExc, article = "await ", "AsyncIterator", "async def __anext__", "__aiter__", "__anext__", "StopAsyncIteration", "an "
+		awaitKw, iteratorType, nextDef, iterDunder, nextDunder, stopExc, article = "await ", "AsyncIterator", defNextAsync, "__aiter__", "__anext__", stopAsyncIteration, "an "
 	}
 
 	body.QueryResults.WriteQueryResultsClassHeader(sb.ConnType(), []string{
@@ -218,19 +218,19 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	switch query.Cmd {
 	case metadata.CmdExec:
 		head, tail := stmt("", "")
-		writeSqliteCall(body, indent, query, head, tail)
+		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdExecResult:
 		head, tail := stmt("return ", "")
-		writeSqliteCall(body, indent, query, head, tail)
+		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdExecRows:
 		head, tail := stmt("return ", ".rowcount")
-		writeSqliteCall(body, indent, query, head, tail)
+		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdExecLastId:
 		head, tail := stmt("return ", ".lastrowid")
-		writeSqliteCall(body, indent, query, head, tail)
+		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdOne:
 		prefix := "row = "
@@ -239,7 +239,7 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 			prefix = "row = await "
 		}
 		head, tail := stmt(prefix, ".fetchone()")
-		writeSqliteCall(body, indent, query, head, tail)
+		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 		body.WriteIndentedLine(indent, "if row is None:")
 		body.WriteIndentedLine(indent+1, "return None")
 
@@ -289,9 +289,9 @@ func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query)
 
 // writeSqliteCall writes stmtHead+argsSegment+stmtTail on one line, hoisting a
 // too-long parameter tuple into a local _args variable first so the statement
-// stays within the line limit.
-func writeSqliteCall(body *writer.CodeWriter, indent int, query model.Query, stmtHead, stmtTail string) {
-	parts := expandParamsFlattenSlices(query)
+// stays within the line limit. parts are the already-expanded (and, for wire-
+// converting drivers, already-converted) argument expressions.
+func writeSqliteCall(body *writer.CodeWriter, indent int, parts []string, stmtHead, stmtTail string) {
 	segment := ""
 	switch {
 	case len(parts) == 1:

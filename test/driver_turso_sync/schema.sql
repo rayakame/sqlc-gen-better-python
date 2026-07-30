@@ -1,0 +1,131 @@
+CREATE TABLE IF NOT EXISTS test_sqlite_types
+(
+    /* ------------- Integer family ------------- */
+    id                    integer PRIMARY KEY NOT NULL,
+    int_test              int                 NOT NULL, -- covers integer / mediumint ...
+    bigint_test           bigint              NOT NULL, -- covers unsignedbigint ...
+    smallint_test         smallint            NOT NULL,
+    tinyint_test          tinyint             NOT NULL,
+    int2_test             int2                NOT NULL,
+    int8_test             int8                NOT NULL,
+    bigserial_test        bigserial           NOT NULL,
+    /* ------------- Binary (blob) ------------- */
+    blob_test             blob                NOT NULL,
+    /* ------------- Floating-point / numeric ------------- */
+    real_test             real                NOT NULL,
+    double_test double NOT NULL,
+    double_precision_test double precision  NOT NULL,
+    float_test            float               NOT NULL,
+    numeric_test          numeric             NOT NULL,
+    /* ------------- Exact numeric (decimal) ------------- */
+    decimal_test          decimal     NOT NULL,
+    /* ------------- Boolean ------------- */
+    boolean_test          boolean             NOT NULL,
+    bool_test             bool                NOT NULL,
+    /* ------------- Date & time ------------- */
+    date_test             date                NOT NULL,
+    datetime_test         datetime            NOT NULL,
+    timestamp_test        timestamp           NOT NULL,
+    /* ------------- Character / text ------------- */
+    character_test        character(10)       NOT NULL,
+    varchar_test          varchar(255)        NOT NULL,
+    varyingcharacter_test varyingcharacter (255) NOT NULL,
+    nchar_test            nchar(10)           NOT NULL,
+    nativecharacter_test  nativecharacter (10) NOT NULL,
+    nvarchar_test         nvarchar(255) NOT NULL,
+    text_test             text                NOT NULL,
+    clob_test             clob                NOT NULL,
+    json_test             json                NOT NULL
+);
+-- split
+CREATE TABLE IF NOT EXISTS test_inner_sqlite_types
+(
+    /* ------------- Integer family ------------- */
+    table_id                    integer PRIMARY KEY NOT NULL,
+    int_test              int                 , -- covers integer / mediumint ...
+    bigint_test           bigint              , -- covers unsignedbigint ...
+    smallint_test         smallint            ,
+    tinyint_test          tinyint             ,
+    int2_test             int2                ,
+    int8_test             int8                ,
+    bigserial_test        bigserial           ,
+    /* ------------- Binary (blob) ------------- */
+    blob_test             blob                ,
+    /* ------------- Floating-point / numeric ------------- */
+    real_test             real                ,
+    double_test double ,
+    double_precision_test double precision  ,
+    float_test            float               ,
+    numeric_test          numeric             ,
+    /* ------------- Exact numeric (decimal) ------------- */
+    decimal_test          decimal     ,
+    /* ------------- Boolean ------------- */
+    boolean_test          boolean             ,
+    bool_test             bool                ,
+    /* ------------- Date & time ------------- */
+    date_test             date                ,
+    datetime_test         datetime            ,
+    timestamp_test        timestamp           ,
+    /* ------------- Character / text ------------- */
+    character_test        character(10)       ,
+    varchar_test          varchar(255)        ,
+    varyingcharacter_test varyingcharacter (255) ,
+    nchar_test            nchar(10)           ,
+    nativecharacter_test  nativecharacter (10) ,
+    nvarchar_test         nvarchar(255) ,
+    text_test             text                ,
+    clob_test             clob                ,
+    json_test             json
+);
+
+CREATE TABLE IF NOT EXISTS test_type_override
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    text_test             text
+);
+
+CREATE TABLE IF NOT EXISTS test_override_conversion
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    price                 decimal             NOT NULL,
+    happened_at           datetime            NOT NULL
+);
+
+-- Uppercase type names and precision variants exercise the SQL-type
+-- normalization: annotation and conversion registration must agree.
+CREATE TABLE IF NOT EXISTS test_case_sensitivity
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    upper_dt              DATETIME            NOT NULL,
+    prec_dec              decimal(10,2)       NOT NULL
+);
+
+-- A column named like the implicit first argument of generated functions.
+CREATE TABLE IF NOT EXISTS test_reserved_args
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    conn                  text                NOT NULL
+);
+
+-- Unknown SQL type with an uppercase db_type override (issue 161): the
+-- override must match case-insensitively, and values must pass through
+-- unconverted (the unknown type's DefaultType is typing.Any).
+CREATE TABLE IF NOT EXISTS test_unknown_override
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    happened_at           JULIANDAY
+);
+CREATE TABLE IF NOT EXISTS test_any_param
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    tag                   TAGTYPE NOT NULL
+);
+
+-- Variable-length IN lists via sqlc.slice: the /*SLICE:name*/ placeholder in
+-- the SQL constant is expanded at call time, one "?" per element.
+CREATE TABLE IF NOT EXISTS test_slice
+(
+    id                    integer PRIMARY KEY NOT NULL,
+    name                  text                NOT NULL,
+    note                  text
+);

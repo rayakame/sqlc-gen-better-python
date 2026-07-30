@@ -67,8 +67,8 @@ sessions run with `uv run nox -s name1 name2`:
 
 | Session                                             | What it does                                                                           |
 |-----------------------------------------------------|----------------------------------------------------------------------------------------|
-| `asyncpg`, `sqlite3`, `aiosqlite`                   | Regenerate the driver's test fixtures via sqlc, then pyright + ruff                    |
-| `asyncpg_check`, `sqlite3_check`, `aiosqlite_check` | `sqlc diff` variant: verify the committed generated code is up to date (CI uses these) |
+| `asyncpg`, `psycopg_async`, `psycopg_sync`, `sqlite3`, `aiosqlite`, `turso_sync`, `turso_async` | Regenerate the driver's test fixtures via sqlc, then pyright + ruff |
+| the `_check` variants of the driver sessions | `sqlc diff` variant: verify the committed generated code is up to date (CI uses these) |
 | `pyright`                                           | Type-check the repository                                                              |
 | `ruff_check`                                        | Non-mutating format + lint check (the CI gate)                                         |
 | `ruff`, `ruff_format`                               | Format and auto-fix the repository - these sessions rewrite files                      |

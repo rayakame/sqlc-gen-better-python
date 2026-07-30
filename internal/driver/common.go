@@ -46,21 +46,33 @@ func writeFuncSignature(
 	return conn
 }
 
+// wireConvertFunc returns a driver's wire-conversion template (with one %s
+// verb for the element expression) for a SQL type - the inline equivalent of
+// a registered sqlite adapter - or false when the driver binds the Python
+// type natively.
+type wireConvertFunc func(sqlType string) (string, bool)
+
 // expandParams returns the Python argument expressions for a query's parameters.
 // Bundled Params classes (query_parameter_limit) are expanded into their fields
 // ("params.a, params.b") so drivers receive positional values. :copyfrom params
 // are never passed through here - writeCopyFromBody builds its own records list.
 func expandParams(query model.Query) []string {
-	return expandParamsImpl(query, false)
+	return expandParamsImpl(query, false, nil)
 }
 
 // expandParamsFlattenSlices additionally star-unpacks sqlc.slice parameters
 // ("*ids"), so after runtime placeholder expansion every "?" binds one element.
 func expandParamsFlattenSlices(query model.Query) []string {
-	return expandParamsImpl(query, true)
+	return expandParamsImpl(query, true, nil)
 }
 
-func expandParamsImpl(query model.Query, flattenSlices bool) []string {
+// expandParamsFlattenSlicesWire is expandParamsFlattenSlices for drivers that
+// additionally convert parameters to their wire type inline.
+func expandParamsFlattenSlicesWire(query model.Query, wire wireConvertFunc) []string {
+	return expandParamsImpl(query, true, wire)
+}
+
+func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFunc) []string {
 	type part struct {
 		expr string
 		// slice is the raw marker name for slice params, "" otherwise.
@@ -68,7 +80,7 @@ func expandParamsImpl(query model.Query, flattenSlices bool) []string {
 	}
 	parts := make([]part, 0, len(query.Params))
 	appendPart := func(expr string, typ model.PyType) {
-		converted := convertParamExpr(expr, typ)
+		converted := convertParamExprWire(expr, typ, wire)
 		slice := ""
 		if flattenSlices && typ.SqlcSliceName != "" {
 			converted = "*" + converted
@@ -289,9 +301,9 @@ func sliceParams(query model.Query) []sliceParam {
 // own variant inline): open the cursor lazily via cursorInit, forward one
 // record, and reset both fields on exhaustion so iteration can restart.
 func writeCursorNextMethod(body *writer.CodeWriter, async bool, cursorDesc, cursorInit string) {
-	nextDef, iterDunder, nextDunder, stopExc, awaitKw := "def __next__", "__iter__", "__next__", "StopIteration", ""
+	nextDef, iterDunder, nextDunder, stopExc, awaitKw := defNextSync, "__iter__", "__next__", stopIteration, ""
 	if async {
-		nextDef, iterDunder, nextDunder, stopExc, awaitKw = "async def __anext__", "__aiter__", "__anext__", "StopAsyncIteration", awaitPrefix
+		nextDef, iterDunder, nextDunder, stopExc, awaitKw = defNextAsync, "__aiter__", "__anext__", stopAsyncIteration, awaitPrefix
 	}
 	body.NewLine()
 	body.WriteIndentedLine(1, nextDef+"(self) -> T:")
@@ -337,18 +349,40 @@ func writeQueryDocstring(body *writer.CodeWriter, d Driver, cfg *config.Config, 
 // is not instantiable - those values pass through unconverted (there is no
 // registered adapter for unknown types either).
 func convertParamExpr(expr string, typ model.PyType) string {
-	if !typ.DoOverride() {
+	return convertParamExprWire(expr, typ, nil)
+}
+
+// convertParamExprWire is convertParamExpr with a driver wire conversion
+// composed on top: the override conversion (back to DefaultType, or through
+// the user's to_db function) runs first, then the wire template wraps the
+// result - mirroring how sqlite adapters receive already-override-converted
+// values. List and nullable wrapping applies once around the composed
+// element expression.
+func convertParamExprWire(expr string, typ model.PyType, wire wireConvertFunc) string {
+	elemFmt := "%s"
+	if typ.DoOverride() {
+		callable := typ.DefaultType
+		if typ.ConverterTo != "" {
+			callable = typ.ConverterTo
+		} else if typ.DefaultType == types.Any {
+			// A typing.Any default is not instantiable, so the value passes
+			// through unconverted and skips the wire conversion too - the
+			// wire templates assume the default Python type.
+			return expr
+		}
+		elemFmt = callable + "(%s)"
+	}
+	if wire != nil {
+		if wireFmt, ok := wire(typ.SQLType); ok {
+			elemFmt = fmt.Sprintf(wireFmt, elemFmt)
+		}
+	}
+	if elemFmt == "%s" {
 		return expr
 	}
-	callable := typ.DefaultType
-	if typ.ConverterTo != "" {
-		callable = typ.ConverterTo
-	} else if typ.DefaultType == types.Any {
-		return expr
-	}
-	converted := fmt.Sprintf("%s(%s)", callable, expr)
+	converted := fmt.Sprintf(elemFmt, expr)
 	if typ.IsList {
-		converted = fmt.Sprintf("[%s(v) for v in %s]", callable, expr)
+		converted = fmt.Sprintf("[%s for v in %s]", fmt.Sprintf(elemFmt, "v"), expr)
 	}
 	if typ.IsNullable {
 		return fmt.Sprintf("%s if %s is not None else None", converted, expr)

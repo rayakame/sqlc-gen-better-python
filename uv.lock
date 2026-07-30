@@ -592,6 +592,21 @@ wheels = [
 ]
 
 [[package]]
+name = "pyturso"
+version = "0.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/8a/c37b2c466243a6f4a665ede3e90da90132d7b6b5b43e48948dd794e42453/pyturso-0.7.1.tar.gz", hash = "sha256:4e5f9ca9091f6cf115fafe6202450c3317630e0236ae8aaa55a28b144a0c36bb", size = 2848509, upload-time = "2026-07-22T13:57:47.755Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6e/91/0742f2652a10c6ec50f3dd38a3a9d58925cfdd89f2d350ab5bee04f0b9b4/pyturso-0.7.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:f23fc570c16cd4396722ec9edd64bde3fffdffffe1e6ee8d4d8842dd5f6a78e0", size = 8760159, upload-time = "2026-07-22T13:57:37.416Z" },
+    { url = "https://files.pythonhosted.org/packages/49/04/91a72e69f4cd56df8587fe6b0d5cda41c564829185dd8efffb8a4ca8d56c/pyturso-0.7.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:612ae3aca789e0120eaaee84fce3c7ac10117ae12bb00552ba73723e1d3551b3", size = 7765885, upload-time = "2026-07-22T13:57:39.86Z" },
+    { url = "https://files.pythonhosted.org/packages/42/24/1817d500013150a154ff9bc6e316a89ca6780f035a61d2e616544f7862f9/pyturso-0.7.1-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:aec0da79cef596507278d2a869bd7b7a91edf8decaa8682c5d4bd3f35d3664f9", size = 25987486, upload-time = "2026-07-22T13:57:42.301Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/89/a9130ecca2b50f7baa999aba0a69fc8c7d08d1639f076c25d842224b881e/pyturso-0.7.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6ca287b59c0b973c1452b773cf20cead66f15a9f65cf0773b62f82bf12588679", size = 26482812, upload-time = "2026-07-22T13:57:45.481Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -637,6 +652,7 @@ dependencies = [
     { name = "msgspec" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
+    { name = "pyturso" },
 ]
 
 [package.dev-dependencies]
@@ -686,6 +702,7 @@ requires-dist = [
     { name = "msgspec", specifier = ">=0.19.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "pydantic", specifier = ">=2.9.0" },
+    { name = "pyturso", specifier = ">=0.7.0" },
 ]
 
 [package.metadata.requires-dev]

@@ -19,12 +19,14 @@ DRIVER_PATHS = {
     "psycopg_sync": PATH_TO_PROJECT / "test" / "driver_psycopg_sync",
     "aiosqlite": PATH_TO_PROJECT / "test" / "driver_aiosqlite",
     "sqlite3": PATH_TO_PROJECT / "test" / "driver_sqlite3",
+    "turso_sync": PATH_TO_PROJECT / "test" / "driver_turso_sync",
+    "turso_async": PATH_TO_PROJECT / "test" / "driver_turso_async",
 }
 
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["ruff_format", "asyncpg", "psycopg_async", "psycopg_sync", "sqlite3", "aiosqlite", "pyright", "ruff", "pytest"]
+options.sessions = ["ruff_format", "asyncpg", "psycopg_async", "psycopg_sync", "sqlite3", "aiosqlite", "turso_sync", "turso_async", "pyright", "ruff", "pytest"]
 
 DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
 
@@ -173,6 +175,42 @@ def psycopg_sync_check(session: nox.Session) -> None:
     sqlc_check(session, "psycopg_sync")
     session.run("pyright", DRIVER_PATHS["psycopg_sync"])
     session.run("ruff", "check", *session.posargs, DRIVER_PATHS["psycopg_sync"])
+
+
+@nox.session(reuse_venv=True)
+def turso_sync(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_generate(session, "turso_sync")
+    session.run("pyright", DRIVER_PATHS["turso_sync"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["turso_sync"])
+
+
+@nox.session(reuse_venv=True)
+def turso_sync_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_check(session, "turso_sync")
+    session.run("pyright", DRIVER_PATHS["turso_sync"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["turso_sync"])
+
+
+@nox.session(reuse_venv=True)
+def turso_async(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_generate(session, "turso_async")
+    session.run("pyright", DRIVER_PATHS["turso_async"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["turso_async"])
+
+
+@nox.session(reuse_venv=True)
+def turso_async_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_check(session, "turso_async")
+    session.run("pyright", DRIVER_PATHS["turso_async"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["turso_async"])
 
 
 @nox.session(reuse_venv=True)

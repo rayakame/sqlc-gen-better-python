@@ -30,6 +30,8 @@ import asyncpg
 import psycopg
 import psycopg.rows
 import pytest
+import turso
+import turso.aio
 
 if typing.TYPE_CHECKING:
     import collections.abc
@@ -40,6 +42,8 @@ PSYCOPG_ASYNC_PATH = pathlib.Path(__file__).parent / "driver_psycopg_async"
 PSYCOPG_SYNC_PATH = pathlib.Path(__file__).parent / "driver_psycopg_sync"
 AIOSQLITE_PATH = pathlib.Path(__file__).parent / "driver_aiosqlite"
 SQLITE3_PATH = pathlib.Path(__file__).parent / "driver_sqlite3"
+TURSO_SYNC_PATH = pathlib.Path(__file__).parent / "driver_turso_sync"
+TURSO_ASYNC_PATH = pathlib.Path(__file__).parent / "driver_turso_async"
 
 # All postgres suites share the same tables, so their session teardowns must
 # clean the same list; a single constant keeps them from diverging.
@@ -171,6 +175,27 @@ async def aiosqlite_conn(
 
     await conn.executescript("""DELETE FROM test_sqlite_types;DELETE FROM test_inner_sqlite_types;DELETE FROM test_type_override;DELETE FROM test_slice;""")
     await conn.commit()
+    await conn.close()
+
+
+@pytest.fixture(scope="class")
+def turso_sync_conn() -> collections.abc.Generator[turso.Connection, typing.Any]:
+    # A fresh in-memory database per test class: turso needs no shared file,
+    # so no state can leak between classes, drivers, or aborted runs, and no
+    # cleanup scripts are needed.
+    conn = turso.connect(":memory:")
+    conn.executescript((TURSO_SYNC_PATH / "schema.sql").read_text())
+    conn.commit()
+    yield conn
+    conn.close()
+
+
+@pytest_asyncio.fixture(scope="class", loop_scope="session")
+async def turso_async_conn() -> collections.abc.AsyncGenerator[turso.aio.Connection, typing.Any]:
+    conn = await turso.aio.connect(":memory:")
+    await conn.executescript((TURSO_ASYNC_PATH / "schema.sql").read_text())
+    await conn.commit()
+    yield conn
     await conn.close()
 
 

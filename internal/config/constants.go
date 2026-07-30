@@ -20,6 +20,8 @@ const (
 	SQLDriverAsyncpg      SQLDriver = "asyncpg"
 	SQLDriverPsycopgAsync SQLDriver = "psycopg_async"
 	SQLDriverPsycopgSync  SQLDriver = "psycopg_sync"
+	SQLDriverTursoSync    SQLDriver = "turso_sync"
+	SQLDriverTursoAsync   SQLDriver = "turso_async"
 )
 
 // IsPsycopg reports whether the driver is one of the two psycopg flavors,
@@ -27,6 +29,14 @@ const (
 // LiteralString query-text contract.
 func (dr SQLDriver) IsPsycopg() bool {
 	return dr == SQLDriverPsycopgAsync || dr == SQLDriverPsycopgSync
+}
+
+// IsTurso reports whether the driver is one of the two pyturso flavors,
+// which share inline type conversion in both directions - pyturso has no
+// adapter/converter registry and binds only None, numbers, strings, and
+// bytes.
+func (dr SQLDriver) IsTurso() bool {
+	return dr == SQLDriverTursoSync || dr == SQLDriverTursoAsync
 }
 
 const (
@@ -47,6 +57,8 @@ var driversEngine = map[SQLDriver]string{
 	SQLDriverAsyncpg:      enginePostgreSQL,
 	SQLDriverPsycopgAsync: enginePostgreSQL,
 	SQLDriverPsycopgSync:  enginePostgreSQL,
+	SQLDriverTursoSync:    engineSQLite,
+	SQLDriverTursoAsync:   engineSQLite,
 }
 
 const (

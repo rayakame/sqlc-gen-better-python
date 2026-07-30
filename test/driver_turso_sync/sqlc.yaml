@@ -1,0 +1,258 @@
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: file://sqlc-gen-better-python.wasm
+      sha256: eb001e364c1b8088e47bb43d4c9addf51ed7249f97db2fd1052cc14893989bed
+sql:
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+    engine: sqlite
+    codegen:
+      - out: /attrs/classes
+        plugin: python
+        options:
+          package: test.driver_turso_sync.attrs.classes
+          sql_driver: turso_sync
+          model_type: attrs
+          emit_classes: true
+          omit_unused_models: false
+          emit_init_file: true
+          docstrings: numpy
+          speedups: true
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+    engine: sqlite
+    codegen:
+      - out: /attrs/functions
+        plugin: python
+        options:
+          package: test.driver_turso_sync.attrs.functions
+          sql_driver: turso_sync
+          model_type: attrs
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: numpy
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+    engine: sqlite
+    codegen:
+      - out: /dataclass/classes
+        plugin: python
+        options:
+          package: test.driver_turso_sync.dataclass.classes
+          sql_driver: turso_sync
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+      - queries_slice.sql
+    engine: sqlite
+    codegen:
+      - out: /dataclass/functions
+        plugin: python
+        options:
+          package: test.driver_turso_sync.dataclass.functions
+          sql_driver: turso_sync
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+    engine: sqlite
+    codegen:
+      - out: /msgspec/classes
+        plugin: python
+        options:
+          package: test.driver_turso_sync.msgspec.classes
+          sql_driver: turso_sync
+          model_type: msgspec
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+    engine: sqlite
+    codegen:
+      - out: /msgspec/functions
+        plugin: python
+        options:
+          package: test.driver_turso_sync.msgspec.functions
+          sql_driver: turso_sync
+          model_type: msgspec
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str
+
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+    engine: sqlite
+    codegen:
+      - out: /pydantic/classes
+        plugin: python
+        options:
+          package: test.driver_turso_sync.pydantic.classes
+          sql_driver: turso_sync
+          model_type: pydantic
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_override_adapter.sql
+      - queries_override_converter.sql
+      - queries_case.sql
+      - queries_unknown_override.sql
+    engine: sqlite
+    codegen:
+      - out: /pydantic/functions
+        plugin: python
+        options:
+          package: test.driver_turso_sync.pydantic.functions
+          sql_driver: turso_sync
+          model_type: pydantic
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_override_conversion.price
+              py_type:
+                type: float
+            - db_type: JULIANDAY
+              py_type:
+                type: str

@@ -554,6 +554,62 @@ func TestQueryImports(t *testing.T) {
 			},
 		},
 		{
+			name: "turso inline date return forces runtime datetime",
+			conf: newImportsConfig(config.SQLDriverTursoSync),
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "date", Type: "datetime.date"})},
+			},
+			want: ImportResult{
+				Std:          []string{"import datetime", "import typing"},
+				TypeChecking: []string{"import collections.abc", "import turso"},
+			},
+		},
+		{
+			name: "turso speedups demotes datetime and imports ciso8601",
+			conf: newImportsConfig(config.SQLDriverTursoSync, func(c *config.Config) { c.Speedups = true }),
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "date", Type: typeDate})},
+			},
+			want: ImportResult{
+				Std:          []string{"import ciso8601", "import typing"},
+				TypeChecking: []string{"import collections.abc", "import datetime", "import turso"},
+			},
+		},
+		{
+			name: "turso speedups keeps datetime runtime for an overridden param",
+			conf: newImportsConfig(config.SQLDriverTursoSync, func(c *config.Config) { c.Speedups = true }),
+			queries: []model.Query{
+				{
+					Cmd:     metadata.CmdOne,
+					Returns: impScalar(model.PyType{SQLType: "date", Type: typeDate}),
+					Params: []model.QueryValue{
+						{Name: "day", Type: model.PyType{
+							Type: "str", SQLType: "date", IsOverride: true, DefaultType: typeDate,
+						}},
+					},
+				},
+			},
+			want: ImportResult{
+				Std:          []string{"import ciso8601", "import datetime", "import typing"},
+				TypeChecking: []string{"import collections.abc", "import turso"},
+			},
+		},
+		{
+			name: "turso_async many simple return imports operator and adds the bytes member",
+			conf: newImportsConfig(config.SQLDriverTursoAsync),
+			queries: []model.Query{
+				{Cmd: metadata.CmdMany, Returns: impScalar(model.PyType{SQLType: "integer", Type: "int"})},
+			},
+			want: ImportResult{
+				Std: []string{"import operator", "import typing"},
+				TypeChecking: []string{
+					"import collections.abc",
+					"import turso.aio\n",
+					"type QueryResultsArgsType = int | float | str | memoryview | bytes | collections.abc.Sequence[QueryResultsArgsType] | None",
+				},
+			},
+		},
+		{
 			name: "psycopg without json returns keeps the module lazy",
 			conf: newImportsConfig(config.SQLDriverPsycopgAsync),
 			queries: []model.Query{

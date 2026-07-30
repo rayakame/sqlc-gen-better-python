@@ -25,32 +25,35 @@ supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 The supported [query annotations](https://docs.sqlc.dev/en/latest/reference/query-annotations.html)
 depend on the driver:
 
-| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async | psycopg_sync |
-|---|---|---|---|---|---|
-| `:one` | yes | yes | yes | yes | yes |
-| `:many` | yes | yes | yes | yes | yes |
-| `:exec` | yes | yes | yes | yes | yes |
-| `:execresult` | yes | yes | yes | yes | yes |
-| `:execrows` | yes | yes | yes | yes | yes |
-| `:execlastid` | yes | yes | no | no | no |
-| `:copyfrom` | no | no | yes | yes | yes |
+| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async | psycopg_sync | turso_async | turso_sync |
+|---|---|---|---|---|---|---|---|
+| `:one` | yes | yes | yes | yes | yes | yes | yes |
+| `:many` | yes | yes | yes | yes | yes | yes | yes |
+| `:exec` | yes | yes | yes | yes | yes | yes | yes |
+| `:execresult` | yes | yes | yes | yes | yes | yes | yes |
+| `:execrows` | yes | yes | yes | yes | yes | yes | yes |
+| `:execlastid` | yes | yes | no | no | no | yes | yes |
+| `:copyfrom` | no | no | yes | yes | yes | no | no |
 
 See [Writing queries](/docs/guide/writing-queries) for what each command
 generates.
 
 {{< callout type="info" >}}
-  `:execlastid` relies on a last-inserted-row id, which PostgreSQL does not
-  provide; use a `RETURNING` clause with `:one` instead. `:copyfrom` maps to
-  PostgreSQL's bulk `COPY` protocol (`copy_records_to_table` on asyncpg,
-  `cursor.copy()` on psycopg), which the SQLite drivers have no equivalent for.
+  - `:execlastid` relies on a last-inserted-row id, which PostgreSQL does not
+    provide - use a `RETURNING` clause with `:one` instead.
+  - On the turso drivers `:execlastid` returns `None` for `UPDATE`/`DELETE`
+    statements - turso's `lastrowid` only reflects the cursor's own `INSERT`.
+  - `:copyfrom` maps to PostgreSQL's bulk `COPY` protocol
+    (`copy_records_to_table` on asyncpg, `cursor.copy()` on psycopg), which
+    the SQLite-engine drivers have no equivalent for.
 {{< /callout >}}
 
 ### Prepared queries
 
 Coming from sqlc's Go workflow you might look for an
 [`emit_prepared_queries`](https://docs.sqlc.dev/en/latest/howto/prepared_query.html)
-equivalent. There is none, on purpose: every supported Python driver already
-prepares statements automatically, so the generated code gets prepared-query
+equivalent. There is none, on purpose: every stable driver already prepares
+statements automatically, so the generated code gets prepared-query
 performance without any extra codegen. What differs per driver is *when* a
 query gets prepared and which knob controls it:
 
@@ -79,6 +82,10 @@ query gets prepared and which knob controls it:
   per-connection cache (128 entries by default). Raise it with the
   `cached_statements` argument of `connect()` if you have more distinct
   queries than that.
+
+- **turso_sync / turso_async** (experimental) are the exception: pyturso
+  currently has no statement cache and no tuning knob, so every execution
+  prepares the statement anew.
 
 {{< callout type="warning" >}}
   Behind PgBouncer in transaction-pooling mode, server-side prepared
