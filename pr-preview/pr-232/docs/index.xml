@@ -1249,9 +1249,8 @@ data-copied-label="Copied!"
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;asyncpg itself ships without strict type annotations - install
 &lt;a href="https://pypi.org/project/asyncpg-stubs/"target="_blank" rel="noopener"&gt;asyncpg-stubs&lt;/a&gt; so that pyright or
 mypy understand generated annotations like
-&lt;code&gt;asyncpg.Connection[asyncpg.Record]&lt;/code&gt;. This only affects type checking:
-the generated &lt;code&gt;ConnectionLike&lt;/code&gt; alias is a lazy PEP 695 &lt;code&gt;type&lt;/code&gt; statement
-inside the &lt;code&gt;TYPE_CHECKING&lt;/code&gt; block, so it is never evaluated at runtime.&lt;/div&gt;
+&lt;code&gt;asyncpg.Connection[asyncpg.Record]&lt;/code&gt;. This only affects type checking and
+is never evaluated at runtime.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;psycopg_async (PostgreSQL)&lt;span class="hx:absolute hx:-mt-20" id="psycopg_async-postgresql"&gt;&lt;/span&gt;
