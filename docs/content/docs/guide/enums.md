@@ -1,5 +1,7 @@
 ---
 title: Enums
+description: >-
+  PostgreSQL enum types become Python enum.StrEnum classes, wired through the generated models and query parameters.
 weight: 50
 prev: /docs/guide/writing-queries
 next: /docs/guide/type-overrides

@@ -1,5 +1,7 @@
 ---
 title: Drivers
+description: >-
+  Pick between asyncpg, psycopg_async, psycopg_sync, aiosqlite, sqlite3, and the experimental turso drivers - connection examples and per-driver behavior.
 weight: 20
 prev: /docs/guide/configuration
 next: /docs/guide/model-types
@@ -152,7 +154,7 @@ user = queries.get_field_naming(conn, id_=1)
 
 [Turso](https://github.com/tursodatabase/turso) is an SQLite-compatible
 database engine; its [pyturso](https://pypi.org/project/pyturso/) package
-(`pip install pyturso`) mirrors the `sqlite3` module's API and adds a native
+(`uv add pyturso`) mirrors the `sqlite3` module's API and adds a native
 asyncio variant.
 
 - `turso_sync` targets the `turso` module, `turso_async` the `turso.aio` module.

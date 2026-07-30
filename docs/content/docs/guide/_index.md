@@ -1,5 +1,7 @@
 ---
 title: Guide
+description: >-
+  Feature guides for sqlc-gen-better-python: drivers, model types, writing queries, enums, type overrides, converters, JSON, docstrings, and naming.
 weight: 2
 prev: /docs/getting-started
 next: /docs/guide/configuration

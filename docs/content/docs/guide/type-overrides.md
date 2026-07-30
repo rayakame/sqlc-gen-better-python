@@ -1,5 +1,7 @@
 ---
 title: Type overrides
+description: >-
+  Replace the Python type of a specific column or of every column of a SQL type, including nullable handling and custom imports.
 weight: 60
 prev: /docs/guide/enums
 next: /docs/guide/converters

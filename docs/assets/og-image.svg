@@ -1,0 +1,20 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1120"/>
+      <stop offset="1" stop-color="#111a2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#38bdf8"/>
+
+  <text x="90" y="150" font-family="Noto Sans Mono" font-size="30" fill="#64748b">-- name: GetUser :one</text>
+  <text x="90" y="196" font-family="Noto Sans Mono" font-size="30" fill="#64748b">SELECT * FROM users WHERE id = $1;</text>
+
+  <text x="90" y="330" font-family="Noto Sans" font-weight="bold" font-size="76" fill="#f8fafc">Type-safe Python</text>
+  <text x="90" y="422" font-family="Noto Sans" font-weight="bold" font-size="76" fill="#f8fafc">from your SQL</text>
+
+  <text x="90" y="510" font-family="Noto Sans Mono" font-size="34" fill="#38bdf8">sqlc-gen-better-python</text>
+
+  <text x="90" y="572" font-family="Noto Sans" font-size="27" fill="#94a3b8">A sqlc plugin - typed models and query functions for PostgreSQL and SQLite</text>
+</svg>

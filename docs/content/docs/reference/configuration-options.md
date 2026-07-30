@@ -1,5 +1,7 @@
 ---
 title: Configuration options
+description: >-
+  Every plugin option in one place: its type, default, and meaning, from sql_driver and model_type to overrides and speedups.
 weight: 10
 prev: /docs/reference
 next: /docs/reference/type-mappings

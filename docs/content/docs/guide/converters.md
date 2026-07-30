@@ -1,5 +1,7 @@
 ---
 title: Converters
+description: >-
+  Plug your own encode/decode functions into the generated code to map columns onto custom Python types that a plain override cannot express.
 weight: 70
 prev: /docs/guide/type-overrides
 next: /docs/guide/working-with-json

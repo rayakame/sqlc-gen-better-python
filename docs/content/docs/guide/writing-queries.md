@@ -1,5 +1,7 @@
 ---
 title: Writing queries
+description: >-
+  How sqlc query annotations become typed Python functions: :one, :many, :exec, :execrows, :execlastid, :execresult, and :copyfrom, shown with generated code.
 weight: 40
 prev: /docs/guide/model-types
 next: /docs/guide/enums

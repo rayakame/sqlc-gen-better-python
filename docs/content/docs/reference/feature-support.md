@@ -1,5 +1,7 @@
 ---
 title: Feature support
+description: >-
+  Which sqlc macros, query commands, and features each driver supports - the full compatibility matrix.
 weight: 30
 prev: /docs/reference/type-mappings
 ---

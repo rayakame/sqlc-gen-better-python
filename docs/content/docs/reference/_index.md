@@ -1,5 +1,7 @@
 ---
 title: Reference
+description: >-
+  Canonical reference for sqlc-gen-better-python: every configuration option, SQL-to-Python type mappings, and per-driver feature support.
 weight: 3
 prev: /docs/guide
 sidebar:
