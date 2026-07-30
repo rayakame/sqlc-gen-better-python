@@ -1,4 +1,4 @@
-baseURL: "https://rayakame.github.io/sqlc-gen-better-python/"
+baseURL: "https://sqlc-gen-better-python.rayakame.dev/"
 title: sqlc-gen-better-python
 enableRobotsTXT: true
 enableGitInfo: true

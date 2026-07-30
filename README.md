@@ -22,11 +22,11 @@ aliases and generics, and `enum.StrEnum`).
 
 ## Documentation
 
-**https://rayakame.github.io/sqlc-gen-better-python/**
+**https://sqlc-gen-better-python.rayakame.dev/**
 
-- [Getting Started](https://rayakame.github.io/sqlc-gen-better-python/docs/getting-started/) - install the plugin and generate your first models.
-- [Guide](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/) - configuration, drivers, model types, writing queries, and every feature, each with real generated output.
-- [Reference](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/) - all configuration options, SQL-to-Python type mappings, and per-driver feature support.
+- [Getting Started](https://sqlc-gen-better-python.rayakame.dev/docs/getting-started/) - install the plugin and generate your first models.
+- [Guide](https://sqlc-gen-better-python.rayakame.dev/docs/guide/) - configuration, drivers, model types, writing queries, and every feature, each with real generated output.
+- [Reference](https://sqlc-gen-better-python.rayakame.dev/docs/reference/) - all configuration options, SQL-to-Python type mappings, and per-driver feature support.
 
 Questions or feedback? Join the [Discord](https://discord.gg/hikari).
 
@@ -75,33 +75,33 @@ sql:
 
 More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/reference/config.html),
 and the full plugin option list in the
-[configuration reference](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/configuration-options/).
+[configuration reference](https://sqlc-gen-better-python.rayakame.dev/docs/reference/configuration-options/).
 
 ## Features
 
 - **Four model types** - `dataclass`, `attrs`, `msgspec`, or `pydantic`
-  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/model-types/)).
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/model-types/)).
 - **Seven drivers** - `asyncpg`, `psycopg_async`, and `psycopg_sync` for
   PostgreSQL, `aiosqlite` and `sqlite3` for SQLite, plus experimental
   `turso_async` and `turso_sync` for [Turso](https://github.com/tursodatabase/turso)
-  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/drivers/)).
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/drivers/)).
 - **Typed query functions** - one module per query file, one function per query
-  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/writing-queries/)).
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/writing-queries/)).
 - **PostgreSQL enums** as `enum.StrEnum` classes
-  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/enums/)).
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/enums/)).
 - **Type overrides and converters** - swap a column's Python type, or plug in your
   own encode/decode functions
-  ([overrides](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/type-overrides/),
-  [converters](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/converters/)).
+  ([overrides](https://sqlc-gen-better-python.rayakame.dev/docs/guide/type-overrides/),
+  [converters](https://sqlc-gen-better-python.rayakame.dev/docs/guide/converters/)).
 - **Typed JSON columns** via msgspec structs
-  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/working-with-json/)).
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/working-with-json/)).
 - **Optional docstrings** in `google`, `numpy`, or `pep257` convention
-  ([docs](https://rayakame.github.io/sqlc-gen-better-python/docs/guide/docstrings/)).
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/docstrings/)).
 - Generated code passes **pyright strict** and **ruff**.
 
 Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
 supported. Which query commands are available depends on the driver - see the
-[feature support matrix](https://rayakame.github.io/sqlc-gen-better-python/docs/reference/feature-support/).
+[feature support matrix](https://sqlc-gen-better-python.rayakame.dev/docs/reference/feature-support/).
 
 ## Development
 
