@@ -31,8 +31,11 @@ Then install the database driver you want to use:
   {{< tab name="asyncpg" >}}
 
 ```bash
-pip install asyncpg
+pip install asyncpg asyncpg-stubs
 ```
+
+asyncpg has no strict typing of its own; [asyncpg-stubs](https://pypi.org/project/asyncpg-stubs/)
+makes the generated annotations work under pyright and mypy.
 
   {{< /tab >}}
 
