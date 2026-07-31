@@ -16,9 +16,6 @@ You never call this plugin directly. You write a SQL schema and queries, and
    per table), one query module per query `.sql` file (typed functions), and an
    `enums.py` when your schema has enums.
 
-So everything in this guide is driven by two inputs - your SQL and your
-`sqlc.yaml` options - and observed through one output: the generated Python.
-
 {{< callout type="info" >}}
   New here? Start with [Getting Started](/docs/getting-started) for install and
   a first `sqlc generate`, then come back to this guide.

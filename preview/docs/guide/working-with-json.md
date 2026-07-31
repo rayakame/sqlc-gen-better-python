@@ -14,8 +14,6 @@ what a converter's `from_db`/`to_db` pair provides.
 
 ## The wire type contract
 
-This is the one rule to internalize:
-
 {{< callout type="info" >}}
   A `jsonb` (or `json`) column's wire type is **`str`**. So `to_db` must *return*
   `str`, and `from_db` *receives* `str`.
