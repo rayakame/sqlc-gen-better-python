@@ -7,48 +7,67 @@
 ![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)
 [![CI](https://github.com/rayakame/sqlc-gen-better-python/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rayakame/sqlc-gen-better-python/actions/workflows/ci.yml)
 
-A WASM plugin for SQLC allowing the generation of Python code.
+`sqlc-gen-better-python` is a [sqlc](https://sqlc.dev) plugin that turns your
+SQL schema and queries into modern, fully typed Python database code: models,
+typed query functions, and enums. You keep writing SQL; the Python stays in
+sync with it.
 
-The generated code requires **Python 3.12 or newer** (it uses PEP 695 type
-aliases and generics, and `enum.StrEnum`).
+You write:
 
-> [!TIP]
-> Besides the [official installation methods](https://docs.sqlc.dev/en/latest/overview/install.html),
-> the `sqlc` CLI itself is also pip-installable via
-> [`sqlc-bin`](https://pypi.org/project/sqlc-bin/), which ships the unmodified
-> official binaries - no Go toolchain required: `uv add --dev sqlc-bin` (or
-> `pip install sqlc-bin`) puts `sqlc` on your PATH, pinnable like any other
-> Python dependency.
+```sql
+-- name: GetUser :one
+SELECT * FROM users WHERE id = $1;
+```
+
+and get back:
+
+```python
+async def get_user(conn: ConnectionLike, *, id_: int) -> models.User | None:
+    row = await conn.fetchrow(GET_USER, id_)
+    if row is None:
+        return None
+    return models.User(id_=row[0], name=row[1])
+```
+
+No ORM, no hand-written row unpacking. Generated code targets **Python 3.12 or
+newer** and passes pyright (strict) and ruff.
 
 ## Documentation
 
 **https://sqlc-gen-better-python.rayakame.dev/**
 
 - [Getting Started](https://sqlc-gen-better-python.rayakame.dev/docs/getting-started/) - install the plugin and generate your first models.
-- [Guide](https://sqlc-gen-better-python.rayakame.dev/docs/guide/) - configuration, drivers, model types, writing queries, and every feature, each with real generated output.
-- [Reference](https://sqlc-gen-better-python.rayakame.dev/docs/reference/) - all configuration options, SQL-to-Python type mappings, and per-driver feature support.
+- [Guide](https://sqlc-gen-better-python.rayakame.dev/docs/guide/) - every feature, each with real generated output.
+- [Reference](https://sqlc-gen-better-python.rayakame.dev/docs/reference/) - all options, type mappings, and per-driver feature support.
 
 Questions or feedback? Join the [Discord](https://discord.gg/hikari).
 
-## Used by
+## Features
 
-[<img src="docs/static/images/used-by/nmarkov.png" alt="nMarkov logo" height="72">](https://nmarkov.xyz/)
+- **Four model types** - `dataclass`, `attrs`, `msgspec`, or `pydantic`
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/model-types/)).
+- **Seven drivers** - `asyncpg`, `psycopg_async`, and `psycopg_sync` for
+  PostgreSQL, `aiosqlite` and `sqlite3` for SQLite, plus experimental
+  `turso_async` and `turso_sync` for [Turso](https://github.com/tursodatabase/turso)
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/drivers/)).
+- **Typed query functions** - one module per query file, one function per query
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/writing-queries/)).
+- **PostgreSQL enums** as `enum.StrEnum` classes
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/enums/)).
+- **Type overrides and converters** - swap a column's Python type, or plug in your
+  own encode/decode functions
+  ([overrides](https://sqlc-gen-better-python.rayakame.dev/docs/guide/type-overrides/),
+  [converters](https://sqlc-gen-better-python.rayakame.dev/docs/guide/converters/)).
+- **Typed JSON columns** via msgspec structs
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/working-with-json/)).
+- **Optional docstrings** in `google`, `numpy`, or `pep257` convention
+  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/docstrings/)).
 
-**[nMarkov](https://nmarkov.xyz/)** - a Discord chatbot that learns from your
-server's messages and generates its own.
+Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
+supported. Which query commands are available depends on the driver - see the
+[feature support matrix](https://sqlc-gen-better-python.rayakame.dev/docs/reference/feature-support/).
 
-Using `sqlc-gen-better-python` in your project? [Open an issue](https://github.com/rayakame/sqlc-gen-better-python/issues)
-to get listed here.
-
-> [!NOTE]  
-> Every Release before `v1.0.0`, including this one is an beta release. 
-> These versions are primarly released for interested people who want to test this plugin and help make it better.
->
-> Everything that is implemented works and is being used in production environments already.
-> Since `v0.5.0` this includes full support for PostgreSQL enums and a fourth model type, `pydantic`.
-> Feel free to lmk any wanted features and I'm going to do my best on implementing them with the time I have rn.
-
-## Example Config
+## Example config
 
 ```yaml
 # filename: sqlc.yaml
@@ -73,35 +92,25 @@ sql:
 
 ```
 
+> [!TIP]
+> No `sqlc` yet? Besides the [official installation methods](https://docs.sqlc.dev/en/latest/overview/install.html),
+> `uv add --dev sqlc-bin` (or `pip install sqlc-bin`) installs
+> [`sqlc-bin`](https://pypi.org/project/sqlc-bin/), the unmodified official
+> binaries as a pinnable Python package - no Go toolchain required.
+
 More options at the [`sqlc` config reference](https://docs.sqlc.dev/en/stable/reference/config.html),
 and the full plugin option list in the
 [configuration reference](https://sqlc-gen-better-python.rayakame.dev/docs/reference/configuration-options/).
 
-## Features
+## Used by
 
-- **Four model types** - `dataclass`, `attrs`, `msgspec`, or `pydantic`
-  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/model-types/)).
-- **Seven drivers** - `asyncpg`, `psycopg_async`, and `psycopg_sync` for
-  PostgreSQL, `aiosqlite` and `sqlite3` for SQLite, plus experimental
-  `turso_async` and `turso_sync` for [Turso](https://github.com/tursodatabase/turso)
-  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/drivers/)).
-- **Typed query functions** - one module per query file, one function per query
-  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/writing-queries/)).
-- **PostgreSQL enums** as `enum.StrEnum` classes
-  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/enums/)).
-- **Type overrides and converters** - swap a column's Python type, or plug in your
-  own encode/decode functions
-  ([overrides](https://sqlc-gen-better-python.rayakame.dev/docs/guide/type-overrides/),
-  [converters](https://sqlc-gen-better-python.rayakame.dev/docs/guide/converters/)).
-- **Typed JSON columns** via msgspec structs
-  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/working-with-json/)).
-- **Optional docstrings** in `google`, `numpy`, or `pep257` convention
-  ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/docstrings/)).
-- Generated code passes **pyright strict** and **ruff**.
+[<img src="docs/static/images/used-by/nmarkov.png" alt="nMarkov logo" height="72">](https://nmarkov.xyz/)
 
-Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
-supported. Which query commands are available depends on the driver - see the
-[feature support matrix](https://sqlc-gen-better-python.rayakame.dev/docs/reference/feature-support/).
+**[nMarkov](https://nmarkov.xyz/)** - a Discord chatbot that learns from your
+server's messages and generates its own.
+
+Using `sqlc-gen-better-python` in your project? [Open an issue](https://github.com/rayakame/sqlc-gen-better-python/issues)
+to get listed here.
 
 ## Development
 

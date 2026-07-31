@@ -14,6 +14,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   drawing. Non-ASCII in .sql files has corrupted sqlc's byte-offset parameter
   rewriting before.
 
+## Writing style (docs, comments, commit messages)
+
+- Lead with the fact. No preamble, no restating the question.
+- One idea per sentence. Short sentences. Cut every word that adds nothing.
+- Show an example instead of describing behavior in prose.
+- Comments explain only what the code cannot: constraints, whys, gotchas.
+  Never narrate what the next line does.
+- No marketing tone ("powerful", "simply", "clean"). No hedging
+  ("should", "generally") unless the uncertainty is real.
+- When in doubt, write half as much.
+
 ## What this is
 
 A sqlc WASM plugin written in Go that generates Python database code (models +

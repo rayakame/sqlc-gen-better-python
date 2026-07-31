@@ -23,12 +23,10 @@ It must match your `engine`. Seven drivers are supported:
 Every generated query function takes the connection as its first argument, so you
 open and manage the connection yourself and pass it in.
 
-All PostgreSQL drivers produce the same models and type contract, so choosing
-between them is about the driver itself: pick `asyncpg` when raw driver
-throughput is the priority, and one of the psycopg drivers to stay in the
-psycopg ecosystem (libpq, pipeline mode, PgBouncer friendliness) at comparable
-speed - `psycopg_async` for asyncio code, `psycopg_sync` for plain synchronous
-code.
+All PostgreSQL drivers produce the same models and type contract. Pick
+`asyncpg` for raw throughput, or a psycopg driver to stay in the psycopg
+ecosystem (libpq, pipeline mode, PgBouncer) - `psycopg_async` for asyncio,
+`psycopg_sync` for synchronous code.
 
 ## asyncpg (PostgreSQL)
 
@@ -51,11 +49,10 @@ asyncio.run(main())
 asyncpg supports `:copyfrom` (bulk insert via `copy_records_to_table`).
 
 {{< callout type="info" >}}
-  asyncpg itself ships without strict type annotations - install
-  [asyncpg-stubs](https://pypi.org/project/asyncpg-stubs/) so that pyright or
-  mypy understand generated annotations like
-  `asyncpg.Connection[asyncpg.Record]`. This only affects type checking and
-  is never evaluated at runtime.
+  asyncpg ships without strict type annotations - install
+  [asyncpg-stubs](https://pypi.org/project/asyncpg-stubs/) so pyright and
+  mypy understand annotations like `asyncpg.Connection[asyncpg.Record]`.
+  Type checking only; never evaluated at runtime.
 {{< /callout >}}
 
 ## psycopg_async (PostgreSQL)
@@ -102,14 +99,12 @@ with psycopg.connect("postgresql://user:pass@localhost/db") as conn:
     user = queries.get_field_naming(conn, id_=1)
 ```
 
-The synchronous flavor of the psycopg driver (Psycopg 3.2 or newer, like
-`psycopg_async`): identical models, placeholders, and type contract, emitted
-as plain functions with no `async`/`await`. The connection annotation is
-`psycopg.Connection[psycopg.rows.TupleRow]`, and `:many` queries return the
-same `QueryResults` helper - call it (`queries.list_x(conn)()`) to fetch every
-row at once, or iterate it directly with a plain `for` loop. The json/jsonb
-raw-text loader registration works exactly as on `psycopg_async`; the Windows
-event-loop caveat does not apply.
+Same contract as `psycopg_async`, emitted as plain functions without
+`async`/`await`. The connection annotation is
+`psycopg.Connection[psycopg.rows.TupleRow]`. `:many` returns the same
+`QueryResults` helper: call it (`queries.list_x(conn)()`) to fetch every row,
+or iterate it with a plain `for` loop. The json/jsonb loader registration is
+identical; the Windows event-loop caveat does not apply.
 
 ## aiosqlite (async SQLite)
 
