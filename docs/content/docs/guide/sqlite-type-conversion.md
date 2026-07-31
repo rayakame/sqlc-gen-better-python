@@ -103,13 +103,10 @@ generated code, so only enable it if you install that package.
 
 ## The turso drivers
 
-The registration model on this page does not apply to the experimental
-`turso_sync`/`turso_async` drivers: pyturso has no `detect_types` or
-adapter/converter registry, so the generated code converts the same declared
-types inline instead - no `PARSE_DECLTYPES`, no registration, identical
-resulting Python types.
+None of this applies to the experimental `turso_sync`/`turso_async` drivers:
+pyturso has no `detect_types` and no adapter/converter registry. The generated
+code converts the same declared types inline - no flags, no registration,
+identical Python types.
 
-`speedups` works the same way as on the SQLite drivers: it swaps the inline
-`date` and `datetime`/`timestamp` decodes for `ciso8601` calls (`decimal`,
-`bool`, and `blob` are unchanged) and adds `ciso8601` as a runtime dependency
-of the generated code.
+`speedups` works the same: the inline `date` and `datetime`/`timestamp`
+decodes become `ciso8601` calls.

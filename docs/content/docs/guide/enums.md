@@ -28,11 +28,10 @@ class TestMood(enum.StrEnum):
     VALUE__HIDDEN = "_hidden"
 ```
 
-Notice the member names are uppercased, and values that are not valid Python
-identifiers are sanitized: the digit-leading `24h` becomes `VALUE_24H` and the
-underscore-leading `_hidden` becomes `VALUE__HIDDEN`. The string *values* are
-untouched, so round-tripping to the database is exact. See
-[Naming and identifiers](/docs/guide/naming) for the full sanitization rules.
+Member names are uppercased and invalid identifiers sanitized: `24h` becomes
+`VALUE_24H`, `_hidden` becomes `VALUE__HIDDEN`. The string *values* are
+untouched, so round-tripping to the database is exact. Full rules in
+[Naming and identifiers](/docs/guide/naming).
 
 ## Using enums
 
