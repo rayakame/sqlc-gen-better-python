@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.8.0 - 2026-07-31
+### Added
+* [#230](https://github.com/rayakame/sqlc-gen-better-python/pull/230) Experimental Turso support: the new `sql_driver` values `turso_async` and `turso_sync` generate code for the `turso.aio` and `turso` modules of [pyturso](https://pypi.org/project/pyturso/), using `engine: "sqlite"` and the same queries as the SQLite drivers. pyturso has no adapter/converter registry, so all type conversion happens inline with observable types identical to the SQLite drivers (the `speedups` option applies to the date/datetime decodes like on the SQLite drivers); `:execlastid` returns `None` for UPDATE/DELETE and `:execrows` reports `0` for DDL. Marked experimental while Turso itself is pre-1.0. ([Rayakame](https://github.com/Rayakame))
+
 ## v0.7.0 - 2026-07-24
 ### Added
 * [#217](https://github.com/rayakame/sqlc-gen-better-python/pull/217) Psycopg 3 support: the new `sql_driver` value `psycopg_async` generates asyncio code for `psycopg` with the same commands as asyncpg, including `:copyfrom` via `cursor.copy()`. Queries are rewritten to psycopg's named pyformat placeholders at generation time and bind their parameters as a dict, the type contract matches asyncpg exactly (returned `json`/`jsonb` columns stay `str` via a registered raw-text loader, so converters behave identically), and the generated code passes pyright strict against psycopg's `LiteralString` query typing. Requires `psycopg >= 3.2`. ([Rayakame](https://github.com/Rayakame))
