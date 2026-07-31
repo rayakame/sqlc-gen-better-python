@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: https://sqlc-gen-better-python.rayakame.dev/pr-preview/pr-235/sitemap.xml
