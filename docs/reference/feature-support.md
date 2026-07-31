@@ -46,12 +46,11 @@ generates.
 
 ### Prepared queries
 
-Coming from sqlc's Go workflow you might look for an
-[`emit_prepared_queries`](https://docs.sqlc.dev/en/latest/howto/prepared_query.html)
-equivalent. There is none, on purpose: every stable driver already prepares
-statements automatically, so the generated code gets prepared-query
-performance without any extra codegen. What differs per driver is *when* a
-query gets prepared and which knob controls it:
+Looking for sqlc's
+[`emit_prepared_queries`](https://docs.sqlc.dev/en/latest/howto/prepared_query.html)?
+There is none, on purpose: every stable driver already prepares statements
+automatically. What differs is *when* a query is prepared and which knob
+controls it:
 
 - **asyncpg** prepares every query it runs and keeps it in a per-connection
   LRU statement cache (100 entries by default). Tune it at connect time:

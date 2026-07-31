@@ -513,12 +513,11 @@ the SQLite-engine drivers have no equivalent for.&lt;/li&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h3&gt;Prepared queries&lt;span class="hx:absolute hx:-mt-20" id="prepared-queries"&gt;&lt;/span&gt;
-&lt;a href="#prepared-queries" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Coming from sqlc&amp;rsquo;s Go workflow you might look for an
-&lt;a href="https://docs.sqlc.dev/en/latest/howto/prepared_query.html"target="_blank" rel="noopener"&gt;&lt;code&gt;emit_prepared_queries&lt;/code&gt;&lt;/a&gt;
-equivalent. There is none, on purpose: every stable driver already prepares
-statements automatically, so the generated code gets prepared-query
-performance without any extra codegen. What differs per driver is &lt;em&gt;when&lt;/em&gt; a
-query gets prepared and which knob controls it:&lt;/p&gt;
+&lt;a href="#prepared-queries" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Looking for sqlc&amp;rsquo;s
+&lt;a href="https://docs.sqlc.dev/en/latest/howto/prepared_query.html"target="_blank" rel="noopener"&gt;&lt;code&gt;emit_prepared_queries&lt;/code&gt;&lt;/a&gt;?
+There is none, on purpose: every stable driver already prepares statements
+automatically. What differs is &lt;em&gt;when&lt;/em&gt; a query is prepared and which knob
+controls it:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;asyncpg&lt;/strong&gt; prepares every query it runs and keeps it in a per-connection

@@ -1247,12 +1247,10 @@ It must match your &lt;code&gt;engine&lt;/code&gt;. Seven drivers are supported:
 &lt;/table&gt;
 &lt;p&gt;Every generated query function takes the connection as its first argument, so you
 open and manage the connection yourself and pass it in.&lt;/p&gt;
-&lt;p&gt;All PostgreSQL drivers produce the same models and type contract, so choosing
-between them is about the driver itself: pick &lt;code&gt;asyncpg&lt;/code&gt; when raw driver
-throughput is the priority, and one of the psycopg drivers to stay in the
-psycopg ecosystem (libpq, pipeline mode, PgBouncer friendliness) at comparable
-speed - &lt;code&gt;psycopg_async&lt;/code&gt; for asyncio code, &lt;code&gt;psycopg_sync&lt;/code&gt; for plain synchronous
-code.&lt;/p&gt;
+&lt;p&gt;All PostgreSQL drivers produce the same models and type contract. Pick
+&lt;code&gt;asyncpg&lt;/code&gt; for raw throughput, or a psycopg driver to stay in the psycopg
+ecosystem (libpq, pipeline mode, PgBouncer) - &lt;code&gt;psycopg_async&lt;/code&gt; for asyncio,
+&lt;code&gt;psycopg_sync&lt;/code&gt; for synchronous code.&lt;/p&gt;
 &lt;h2&gt;asyncpg (PostgreSQL)&lt;span class="hx:absolute hx:-mt-20" id="asyncpg-postgresql"&gt;&lt;/span&gt;
 &lt;a href="#asyncpg-postgresql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncio&lt;/span&gt;
@@ -1283,11 +1281,10 @@ data-copied-label="Copied!"
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;asyncpg itself ships without strict type annotations - install
-&lt;a href="https://pypi.org/project/asyncpg-stubs/"target="_blank" rel="noopener"&gt;asyncpg-stubs&lt;/a&gt; so that pyright or
-mypy understand generated annotations like
-&lt;code&gt;asyncpg.Connection[asyncpg.Record]&lt;/code&gt;. This only affects type checking and
-is never evaluated at runtime.&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;asyncpg ships without strict type annotations - install
+&lt;a href="https://pypi.org/project/asyncpg-stubs/"target="_blank" rel="noopener"&gt;asyncpg-stubs&lt;/a&gt; so pyright and
+mypy understand annotations like &lt;code&gt;asyncpg.Connection[asyncpg.Record]&lt;/code&gt;.
+Type checking only; never evaluated at runtime.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;psycopg_async (PostgreSQL)&lt;span class="hx:absolute hx:-mt-20" id="psycopg_async-postgresql"&gt;&lt;/span&gt;
@@ -1351,14 +1348,12 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;The synchronous flavor of the psycopg driver (Psycopg 3.2 or newer, like
-&lt;code&gt;psycopg_async&lt;/code&gt;): identical models, placeholders, and type contract, emitted
-as plain functions with no &lt;code&gt;async&lt;/code&gt;/&lt;code&gt;await&lt;/code&gt;. The connection annotation is
-&lt;code&gt;psycopg.Connection[psycopg.rows.TupleRow]&lt;/code&gt;, and &lt;code&gt;:many&lt;/code&gt; queries return the
-same &lt;code&gt;QueryResults&lt;/code&gt; helper - call it (&lt;code&gt;queries.list_x(conn)()&lt;/code&gt;) to fetch every
-row at once, or iterate it directly with a plain &lt;code&gt;for&lt;/code&gt; loop. The json/jsonb
-raw-text loader registration works exactly as on &lt;code&gt;psycopg_async&lt;/code&gt;; the Windows
-event-loop caveat does not apply.&lt;/p&gt;
+&lt;p&gt;Same contract as &lt;code&gt;psycopg_async&lt;/code&gt;, emitted as plain functions without
+&lt;code&gt;async&lt;/code&gt;/&lt;code&gt;await&lt;/code&gt;. The connection annotation is
+&lt;code&gt;psycopg.Connection[psycopg.rows.TupleRow]&lt;/code&gt;. &lt;code&gt;:many&lt;/code&gt; returns the same
+&lt;code&gt;QueryResults&lt;/code&gt; helper: call it (&lt;code&gt;queries.list_x(conn)()&lt;/code&gt;) to fetch every row,
+or iterate it with a plain &lt;code&gt;for&lt;/code&gt; loop. The json/jsonb loader registration is
+identical; the Windows event-loop caveat does not apply.&lt;/p&gt;
 &lt;h2&gt;aiosqlite (async SQLite)&lt;span class="hx:absolute hx:-mt-20" id="aiosqlite-async-sqlite"&gt;&lt;/span&gt;
 &lt;a href="#aiosqlite-async-sqlite" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncio&lt;/span&gt;
@@ -1769,12 +1764,11 @@ the SQLite-engine drivers have no equivalent for.&lt;/li&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h3&gt;Prepared queries&lt;span class="hx:absolute hx:-mt-20" id="prepared-queries"&gt;&lt;/span&gt;
-&lt;a href="#prepared-queries" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Coming from sqlc&amp;rsquo;s Go workflow you might look for an
-&lt;a href="https://docs.sqlc.dev/en/latest/howto/prepared_query.html"target="_blank" rel="noopener"&gt;&lt;code&gt;emit_prepared_queries&lt;/code&gt;&lt;/a&gt;
-equivalent. There is none, on purpose: every stable driver already prepares
-statements automatically, so the generated code gets prepared-query
-performance without any extra codegen. What differs per driver is &lt;em&gt;when&lt;/em&gt; a
-query gets prepared and which knob controls it:&lt;/p&gt;
+&lt;a href="#prepared-queries" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Looking for sqlc&amp;rsquo;s
+&lt;a href="https://docs.sqlc.dev/en/latest/howto/prepared_query.html"target="_blank" rel="noopener"&gt;&lt;code&gt;emit_prepared_queries&lt;/code&gt;&lt;/a&gt;?
+There is none, on purpose: every stable driver already prepares statements
+automatically. What differs is &lt;em&gt;when&lt;/em&gt; a query is prepared and which knob
+controls it:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;asyncpg&lt;/strong&gt; prepares every query it runs and keeps it in a per-connection
@@ -2028,12 +2022,11 @@ data-copied-label="Copied!"
 &lt;/ul&gt;
 &lt;h2&gt;Query commands&lt;span class="hx:absolute hx:-mt-20" id="query-commands"&gt;&lt;/span&gt;
 &lt;a href="#query-commands" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;code&gt;:one&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="one"&gt;&lt;/span&gt;
-&lt;a href="#one" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Returns the row or &lt;code&gt;None&lt;/code&gt;. The row is a &lt;code&gt;models.*&lt;/code&gt; class when the query&amp;rsquo;s columns
-match a table, a generated &lt;code&gt;&amp;lt;Name&amp;gt;Row&lt;/code&gt; class when they do not, or a bare scalar
-when the query selects a single column. Shown above.&lt;/p&gt;
-&lt;p&gt;When a query&amp;rsquo;s columns do not match one table exactly (a join, a partial select,
-an aggregate), the plugin generates a dedicated &lt;code&gt;&amp;lt;Name&amp;gt;Row&lt;/code&gt; class instead of
-reusing a table model:&lt;/p&gt;
+&lt;a href="#one" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Returns the row or &lt;code&gt;None&lt;/code&gt; - a &lt;code&gt;models.*&lt;/code&gt; class when the columns match a table,
+a &lt;code&gt;&amp;lt;Name&amp;gt;Row&lt;/code&gt; class when they do not, or a bare scalar for single-column
+selects. Shown above.&lt;/p&gt;
+&lt;p&gt;A join, partial select, or aggregate gets a dedicated &lt;code&gt;&amp;lt;Name&amp;gt;Row&lt;/code&gt; class
+instead of a table model:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;GetJoinedFieldNamingsRow&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msgspec&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Struct&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;outputs&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;str&lt;/span&gt;
@@ -2057,9 +2050,8 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h3&gt;&lt;code&gt;:many&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="many"&gt;&lt;/span&gt;
-&lt;a href="#many" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Returns a &lt;code&gt;QueryResults[T]&lt;/code&gt; - a helper that supports both async iteration and
-one-shot fetching, so you do not pay for materializing the whole result set
-unless you want it:&lt;/p&gt;
+&lt;a href="#many" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Returns &lt;code&gt;QueryResults[T]&lt;/code&gt;, which supports both async iteration and one-shot
+fetching - the result set is only materialized if you ask for it:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;get_many_test_timestamp_postgres_type&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;ConnectionLike&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;QueryResults&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;datetime&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;datetime&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;QueryResults&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;GET_MANY_TEST_TIMESTAMP_POSTGRES_TYPE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;operator&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;itemgetter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -2176,13 +2168,11 @@ or negative, parameters are never bundled. &lt;code&gt;:copyfrom&lt;/code&gt; al
 class regardless.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2&gt;Grouping into a class&lt;span class="hx:absolute hx:-mt-20" id="grouping-into-a-class"&gt;&lt;/span&gt;
-&lt;a href="#grouping-into-a-class" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;With &lt;code&gt;emit_classes: true&lt;/code&gt;, the standalone functions of each query file become
-methods on a class named after that file - &lt;code&gt;queries_field_namings.sql&lt;/code&gt; yields
-&lt;code&gt;QueriesFieldNamings&lt;/code&gt; - so you get one class per query module rather than one
-class overall.&lt;/p&gt;
-&lt;p&gt;The connection is passed once to the constructor and is also exposed as a
-read-only &lt;code&gt;conn&lt;/code&gt; property. The bodies are otherwise unchanged, except that &lt;code&gt;conn&lt;/code&gt;
-becomes &lt;code&gt;self._conn&lt;/code&gt;:&lt;/p&gt;
+&lt;a href="#grouping-into-a-class" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;With &lt;code&gt;emit_classes: true&lt;/code&gt;, each query file&amp;rsquo;s functions become methods on a
+class named after the file: &lt;code&gt;queries_field_namings.sql&lt;/code&gt; yields
+&lt;code&gt;QueriesFieldNamings&lt;/code&gt;, one class per query module.&lt;/p&gt;
+&lt;p&gt;The connection is passed once to the constructor and exposed as a read-only
+&lt;code&gt;conn&lt;/code&gt; property. The bodies only change &lt;code&gt;conn&lt;/code&gt; to &lt;code&gt;self._conn&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;QueriesFieldNamings&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="vm"&gt;__slots__&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;_conn&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,)&lt;/span&gt;
@@ -2248,11 +2238,10 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Notice the member names are uppercased, and values that are not valid Python
-identifiers are sanitized: the digit-leading &lt;code&gt;24h&lt;/code&gt; becomes &lt;code&gt;VALUE_24H&lt;/code&gt; and the
-underscore-leading &lt;code&gt;_hidden&lt;/code&gt; becomes &lt;code&gt;VALUE__HIDDEN&lt;/code&gt;. The string &lt;em&gt;values&lt;/em&gt; are
-untouched, so round-tripping to the database is exact. See
-&lt;a href="https://sqlc-gen-better-python.rayakame.dev/docs/guide/naming/"&gt;Naming and identifiers&lt;/a&gt; for the full sanitization rules.&lt;/p&gt;
+&lt;p&gt;Member names are uppercased and invalid identifiers sanitized: &lt;code&gt;24h&lt;/code&gt; becomes
+&lt;code&gt;VALUE_24H&lt;/code&gt;, &lt;code&gt;_hidden&lt;/code&gt; becomes &lt;code&gt;VALUE__HIDDEN&lt;/code&gt;. The string &lt;em&gt;values&lt;/em&gt; are
+untouched, so round-tripping to the database is exact. Full rules in
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/docs/guide/naming/"&gt;Naming and identifiers&lt;/a&gt;.&lt;/p&gt;
 &lt;h2&gt;Using enums&lt;span class="hx:absolute hx:-mt-20" id="using-enums"&gt;&lt;/span&gt;
 &lt;a href="#using-enums" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A column of an enum type is annotated with the generated class, and nullable
 columns get &lt;code&gt;| None&lt;/code&gt;:&lt;/p&gt;
@@ -2558,8 +2547,7 @@ it would generate &lt;code&gt;Preferences(row[2])&lt;/code&gt; - handing a JSON 
 constructor, which is meaningless. JSON needs a real parse step, which is exactly
 what a converter&amp;rsquo;s &lt;code&gt;from_db&lt;/code&gt;/&lt;code&gt;to_db&lt;/code&gt; pair provides.&lt;/p&gt;
 &lt;h2&gt;The wire type contract&lt;span class="hx:absolute hx:-mt-20" id="the-wire-type-contract"&gt;&lt;/span&gt;
-&lt;a href="#the-wire-type-contract" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;This is the one rule to internalize:&lt;/p&gt;
-&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;a href="#the-wire-type-contract" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;A &lt;code&gt;jsonb&lt;/code&gt; (or &lt;code&gt;json&lt;/code&gt;) column&amp;rsquo;s wire type is &lt;strong&gt;&lt;code&gt;str&lt;/code&gt;&lt;/strong&gt;. So &lt;code&gt;to_db&lt;/code&gt; must &lt;em&gt;return&lt;/em&gt;
@@ -3171,15 +3159,12 @@ data-copied-label="Copied!"
 &lt;code&gt;bool&lt;/code&gt; and &lt;code&gt;blob&lt;/code&gt; are unchanged. It adds &lt;code&gt;ciso8601&lt;/code&gt; as a runtime dependency of the
 generated code, so only enable it if you install that package.&lt;/p&gt;
 &lt;h2&gt;The turso drivers&lt;span class="hx:absolute hx:-mt-20" id="the-turso-drivers"&gt;&lt;/span&gt;
-&lt;a href="#the-turso-drivers" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The registration model on this page does not apply to the experimental
-&lt;code&gt;turso_sync&lt;/code&gt;/&lt;code&gt;turso_async&lt;/code&gt; drivers: pyturso has no &lt;code&gt;detect_types&lt;/code&gt; or
-adapter/converter registry, so the generated code converts the same declared
-types inline instead - no &lt;code&gt;PARSE_DECLTYPES&lt;/code&gt;, no registration, identical
-resulting Python types.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;speedups&lt;/code&gt; works the same way as on the SQLite drivers: it swaps the inline
-&lt;code&gt;date&lt;/code&gt; and &lt;code&gt;datetime&lt;/code&gt;/&lt;code&gt;timestamp&lt;/code&gt; decodes for &lt;code&gt;ciso8601&lt;/code&gt; calls (&lt;code&gt;decimal&lt;/code&gt;,
-&lt;code&gt;bool&lt;/code&gt;, and &lt;code&gt;blob&lt;/code&gt; are unchanged) and adds &lt;code&gt;ciso8601&lt;/code&gt; as a runtime dependency
-of the generated code.&lt;/p&gt;</description></item><item><title>Naming and identifiers</title><link>https://sqlc-gen-better-python.rayakame.dev/docs/guide/naming/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/docs/guide/naming/</guid><description>
+&lt;a href="#the-turso-drivers" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;None of this applies to the experimental &lt;code&gt;turso_sync&lt;/code&gt;/&lt;code&gt;turso_async&lt;/code&gt; drivers:
+pyturso has no &lt;code&gt;detect_types&lt;/code&gt; and no adapter/converter registry. The generated
+code converts the same declared types inline - no flags, no registration,
+identical Python types.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;speedups&lt;/code&gt; works the same: the inline &lt;code&gt;date&lt;/code&gt; and &lt;code&gt;datetime&lt;/code&gt;/&lt;code&gt;timestamp&lt;/code&gt;
+decodes become &lt;code&gt;ciso8601&lt;/code&gt; calls.&lt;/p&gt;</description></item><item><title>Naming and identifiers</title><link>https://sqlc-gen-better-python.rayakame.dev/docs/guide/naming/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/docs/guide/naming/</guid><description>
 &lt;p&gt;SQL identifiers are not always valid Python names, and SQL naming conventions are
 not Python&amp;rsquo;s. This page covers how table, column, and enum names are turned into
 Python names, and how invalid ones are sanitized.&lt;/p&gt;

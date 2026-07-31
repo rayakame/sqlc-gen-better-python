@@ -43,13 +43,12 @@ async def get_field_naming(conn: ConnectionLike, *, id_: int) -> models.TestFiel
 
 ### `:one`
 
-Returns the row or `None`. The row is a `models.*` class when the query's columns
-match a table, a generated `<Name>Row` class when they do not, or a bare scalar
-when the query selects a single column. Shown above.
+Returns the row or `None` - a `models.*` class when the columns match a table,
+a `<Name>Row` class when they do not, or a bare scalar for single-column
+selects. Shown above.
 
-When a query's columns do not match one table exactly (a join, a partial select,
-an aggregate), the plugin generates a dedicated `<Name>Row` class instead of
-reusing a table model:
+A join, partial select, or aggregate gets a dedicated `<Name>Row` class
+instead of a table model:
 
 ```python
 class GetJoinedFieldNamingsRow(msgspec.Struct):
@@ -66,9 +65,8 @@ async def get_joined_field_namings(conn: ConnectionLike, *, id_: int) -> GetJoin
 
 ### `:many`
 
-Returns a `QueryResults[T]` - a helper that supports both async iteration and
-one-shot fetching, so you do not pay for materializing the whole result set
-unless you want it:
+Returns `QueryResults[T]`, which supports both async iteration and one-shot
+fetching - the result set is only materialized if you ask for it:
 
 ```python
 def get_many_test_timestamp_postgres_type(conn: ConnectionLike, *, id_: int) -> QueryResults[datetime.datetime]:
@@ -159,14 +157,12 @@ this:
 
 ## Grouping into a class
 
-With `emit_classes: true`, the standalone functions of each query file become
-methods on a class named after that file - `queries_field_namings.sql` yields
-`QueriesFieldNamings` - so you get one class per query module rather than one
-class overall.
+With `emit_classes: true`, each query file's functions become methods on a
+class named after the file: `queries_field_namings.sql` yields
+`QueriesFieldNamings`, one class per query module.
 
-The connection is passed once to the constructor and is also exposed as a
-read-only `conn` property. The bodies are otherwise unchanged, except that `conn`
-becomes `self._conn`:
+The connection is passed once to the constructor and exposed as a read-only
+`conn` property. The bodies only change `conn` to `self._conn`:
 
 ```python
 class QueriesFieldNamings:
