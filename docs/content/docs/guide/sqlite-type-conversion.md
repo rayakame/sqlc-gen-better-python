@@ -4,7 +4,7 @@ description: >-
   How the SQLite drivers convert dates, decimals, booleans, and blobs: adapters, converters, PARSE_DECLTYPES, speedups, and how turso differs.
 weight: 90
 prev: /docs/guide/docstrings
-next: /docs/guide/naming
+next: /docs/guide/turso-extras
 ---
 
 SQLite only stores a handful of native types, so dates, decimals, booleans and

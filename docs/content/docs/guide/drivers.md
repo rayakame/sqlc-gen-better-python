@@ -158,6 +158,8 @@ asyncio variant.
 - Unlike the `sqlite3` module, no connection flags are needed - the generated
   code converts values inline, and the observable Python types match the
   SQLite drivers exactly.
+- Turso-only features (materialized views, CDC, concurrent writes, domains)
+  work with generated code too - see [Turso extras](/docs/guide/turso-extras).
 
 ```python
 import turso

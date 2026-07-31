@@ -42,6 +42,6 @@ Start with the essentials, then dip into feature pages as you need them:
 {{< /cards >}}
 
 The remaining pages - enums, type overrides, converters, working with JSON,
-docstrings, SQLite type conversion, and naming - cover specific features and can
-be read in any order. The [Reference](/docs/reference) section holds the
+docstrings, SQLite type conversion, Turso extras, and naming - cover specific
+features and can be read in any order. The [Reference](/docs/reference) section holds the
 canonical option, type-mapping, and driver-support tables.
