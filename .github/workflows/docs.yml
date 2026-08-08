@@ -83,7 +83,7 @@ jobs:
       # deletes main's preview or previews of still-open PRs; force: false
       # rebases instead of force-pushing, tolerating concurrent preview pushes.
       - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445 # v4.9.0
         with:
           branch: gh-pages
           folder: docs/public
@@ -128,7 +128,7 @@ jobs:
       # target-folder scopes both the deploy and its cleaning to preview/,
       # so the root site and the pr-preview umbrella are never touched.
       - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445 # v4.9.0
         with:
           branch: gh-pages
           folder: docs/public
