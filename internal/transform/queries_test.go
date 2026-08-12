@@ -232,6 +232,51 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 			column: "row",
 			want:   "row_2",
 		},
+		// MySQL bodies open a cursor named "cur" for every command except
+		// :many, :one also fetches into "row", and :many may define a nested
+		// "_decode_hook".
+		{
+			name:   "cur collides in a pymysql exec query",
+			driver: config.SQLDriverPymysql,
+			column: "cur",
+			want:   "cur_2",
+		},
+		{
+			name:   "cur collides in a pymysql one query",
+			driver: config.SQLDriverPymysql,
+			cmd:    ":one",
+			column: "cur",
+			want:   "cur_2",
+		},
+		{
+			name:   "row collides in a pymysql one query",
+			driver: config.SQLDriverPymysql,
+			cmd:    ":one",
+			column: "row",
+			want:   "row_2",
+		},
+		{
+			name:   "decode hook collides in a pymysql many query",
+			driver: config.SQLDriverPymysql,
+			cmd:    ":many",
+			column: "_decode_hook",
+			want:   "_decode_hook_2",
+		},
+		{name: "cur is free in a pymysql many query", driver: config.SQLDriverPymysql, cmd: ":many", column: "cur", want: "cur"},
+		// The async flavor shares every MySQL reservation.
+		{
+			name:   "cur collides in an asyncmy exec query",
+			driver: config.SQLDriverAsyncmy,
+			column: "cur",
+			want:   "cur_2",
+		},
+		{
+			name:   "row collides in an asyncmy one query",
+			driver: config.SQLDriverAsyncmy,
+			cmd:    ":one",
+			column: "row",
+			want:   "row_2",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -641,6 +686,140 @@ func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
 				Columns: []*plugin.Column{queryCol("name", "text", nil)},
 			},
 			wantSQL: "SELECT name FROM test_authors WHERE id = $1",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			query := buildSingleQuery(t, &config.Config{SqlDriver: tc.driver}, tc.query)
+			if query.SQL != tc.wantSQL {
+				t.Errorf("SQL = %q, want %q", query.SQL, tc.wantSQL)
+			}
+		})
+	}
+}
+
+func TestBuildQueriesMySQLSliceDedup(t *testing.T) {
+	t.Parallel()
+	sliceCol := func() *plugin.Column {
+		column := queryCol("ids", "int4", nil)
+		column.IsSqlcSlice = true
+
+		return column
+	}
+	pySlice := model.PyType{SQLType: "int4", Type: "int", DefaultType: "int", IsList: true, SqlcSliceName: "ids"}
+	// sqlc's MySQL engine emits one parameter per occurrence of a reused
+	// sqlc.slice, which the MySQL drivers collapse into a single argument;
+	// the sqlite drivers keep one parameter per occurrence.
+	cases := []struct {
+		name   string
+		driver config.SQLDriver
+		want   []model.QueryValue
+	}{
+		{
+			name:   "pymysql collapses repeated slice params",
+			driver: config.SQLDriverPymysql,
+			want:   []model.QueryValue{{Name: "ids", Type: pySlice, Number: 1}},
+		},
+		{
+			name:   "asyncmy collapses repeated slice params",
+			driver: config.SQLDriverAsyncmy,
+			want:   []model.QueryValue{{Name: "ids", Type: pySlice, Number: 1}},
+		},
+		{
+			name:   "sqlite3 keeps one param per occurrence",
+			driver: config.SQLDriverSQLite,
+			want: []model.QueryValue{
+				{Name: "ids", Type: pySlice, Number: 1},
+				{Name: "ids_2", Type: pySlice, Number: 2},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			query := buildSingleQuery(t, &config.Config{SqlDriver: tc.driver}, &plugin.Query{
+				Name: "DeleteAuthors",
+				Cmd:  ":exec",
+				Text: "DELETE FROM test_authors WHERE id IN (/*SLICE:ids*/?) OR id IN (/*SLICE:ids*/?)",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: sliceCol()},
+					{Number: 2, Column: sliceCol()},
+				},
+			})
+
+			if len(query.Params) != len(tc.want) {
+				t.Fatalf("Params = %+v, want %d params", query.Params, len(tc.want))
+			}
+			for i, want := range tc.want {
+				if query.Params[i] != want {
+					t.Errorf("Params[%d] = %+v, want %+v", i, query.Params[i], want)
+				}
+			}
+		})
+	}
+}
+
+func TestBuildQueriesMySQLSQLRewrite(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		driver  config.SQLDriver
+		query   *plugin.Query
+		wantSQL string
+	}{
+		{
+			name:   "parameterized query is rewritten for pymysql",
+			driver: config.SQLDriverPymysql,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = ? AND name LIKE 'a%'",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = %s AND name LIKE 'a%%'",
+		},
+		{
+			name:   "parameterized query is rewritten for asyncmy",
+			driver: config.SQLDriverAsyncmy,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = ?",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = %s",
+		},
+		{
+			name:   "parameterless query stays untouched",
+			driver: config.SQLDriverPymysql,
+			query: &plugin.Query{
+				Name:    "CountAuthors",
+				Cmd:     ":one",
+				Text:    "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+				Columns: []*plugin.Column{queryCol("count", "int8", nil)},
+			},
+			wantSQL: "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+		},
+		{
+			name:   "asyncpg keeps native placeholders",
+			driver: config.SQLDriverAsyncpg,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = $1 AND name LIKE 'a%'",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = $1 AND name LIKE 'a%'",
 		},
 	}
 	for _, tc := range cases {

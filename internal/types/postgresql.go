@@ -39,8 +39,8 @@ func parseIdentifierString(name string) (*plugin.Identifier, error) {
 	}
 }
 
-func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pluginType *plugin.Identifier) string {
-	columnType := sdk.DataType(pluginType)
+func PostgresTypeToPython(req *plugin.GenerateRequest, config *config.Config, pluginColumn *plugin.Column) string {
+	columnType := sdk.DataType(pluginColumn.Type)
 	switch columnType {
 	case "serial",
 		"serial4",

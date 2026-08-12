@@ -197,7 +197,7 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	// line keeps the assignment from touching the nested def (ruff E306).
 	sqlRef := query.ConstantName
 	if query.Cmd != metadata.CmdMany {
-		sqlRef = writeSliceExpansion(body, indent, query)
+		sqlRef = writeSliceExpansion(body, indent, query, questionPlaceholders)
 	}
 
 	// stmt builds the execute-statement head/tail with the correct await
@@ -251,7 +251,7 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 
 	case metadata.CmdMany:
 		decodeHook := sb.rows.WriteDecodeHook(body, indent, query, sqliteResultType)
-		sqlRef = writeSliceExpansion(body, indent, query)
+		sqlRef = writeSliceExpansion(body, indent, query, questionPlaceholders)
 		manyArgs := append([]string{conn, sqlRef, decodeHook}, expandParamsFlattenSlices(query)...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call
@@ -261,10 +261,11 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 }
 
 // writeSliceExpansion writes the runtime replacement of every sqlc.slice
-// placeholder - one "?" per element, or "NULL" for an empty sequence so that
-// "IN (NULL)" matches no rows - and returns the expression holding the final
-// SQL: a local "sql" variable, or the untouched constant without slices.
-func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query) string {
+// placeholder - one placeholder per element, or "NULL" for an empty sequence
+// so that "IN (NULL)" matches no rows - and returns the expression holding
+// the final SQL: a local "sql" variable, or the untouched constant without
+// slices.
+func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query, ph placeholderStyle) string {
 	params := sliceParams(query)
 	if len(params) == 0 {
 		return query.ConstantName
@@ -272,12 +273,12 @@ func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query)
 	src := query.ConstantName
 	for _, param := range params {
 		args := []string{
-			writer.PyQuote(sliceMarker(param.marker)),
-			fmt.Sprintf(`",".join("?" * len(%s)) or "NULL"`, param.expr),
+			writer.PyQuote(sliceMarker(param.marker, ph)),
+			fmt.Sprintf(ph.joinExpr, param.expr),
 		}
 		// A reused slice has one marker per use site: replace them all, with
-		// expandParamsFlattenSlices supplying a copy of the args for each.
-		if sliceMarkerCount(query, param.marker) == 1 {
+		// the flattening param expansion supplying a copy of the args for each.
+		if sliceMarkerCount(query, param.marker, ph) == 1 {
 			args = append(args, "1")
 		}
 		body.WriteWrappedCall(indent, "sql = "+src+".replace(", args, ")")

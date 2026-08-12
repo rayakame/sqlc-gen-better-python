@@ -775,6 +775,46 @@ func TestWriteQueryFunctionDocstring(t *testing.T) {
 			),
 		},
 		{
+			name:    "execrows pymysql documents the OK packet's 0",
+			conv:    config.DocstringConventionGoogle,
+			driver:  config.SQLDriverPymysql,
+			omitSQL: true,
+			write: func(w *writer.CodeWriter) {
+				w.WriteQueryFunctionDocstring(1, execRowsQuery, "pymysql.Connection", nil, "int")
+			},
+			want: lines(
+				"    \"\"\"Execute SQL query with `name: TouchAuthors :execrows` and return the number of affected rows.",
+				``,
+				`    Args:`,
+				`        conn:`,
+				"            Connection object of type `pymysql.Connection` used to execute the query.",
+				``,
+				`    Returns:`,
+				"        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.",
+				`    """`,
+			),
+		},
+		{
+			name:    "execrows asyncmy documents the OK packet's 0",
+			conv:    config.DocstringConventionGoogle,
+			driver:  config.SQLDriverAsyncmy,
+			omitSQL: true,
+			write: func(w *writer.CodeWriter) {
+				w.WriteQueryFunctionDocstring(1, execRowsQuery, "asyncmy.Connection", nil, "int")
+			},
+			want: lines(
+				"    \"\"\"Execute SQL query with `name: TouchAuthors :execrows` and return the number of affected rows.",
+				``,
+				`    Args:`,
+				`        conn:`,
+				"            Connection object of type `asyncmy.Connection` used to execute the query.",
+				``,
+				`    Returns:`,
+				"        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.",
+				`    """`,
+			),
+		},
+		{
 			name:   "execrows sqlite3 pep257 normalizes sql lines",
 			conv:   config.DocstringConventionPEP257,
 			driver: config.SQLDriverSQLite,

@@ -73,6 +73,10 @@ func New(conf *config.Config) (Driver, error) {
 		return newTursoDriver(true, conf.Speedups), nil
 	case config.SQLDriverTursoSync:
 		return newTursoDriver(false, conf.Speedups), nil
+	case config.SQLDriverPymysql:
+		return newMysqlDriver("pymysql", false), nil
+	case config.SQLDriverAsyncmy:
+		return newMysqlDriver("asyncmy", true), nil
 	default:
 		return nil, fmt.Errorf("unsupported driver: %s", conf.SqlDriver)
 	}

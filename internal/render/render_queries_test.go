@@ -493,6 +493,75 @@ async def get_created(conn: turso.aio.Connection) -> datetime.date | None:
     return datetime.date.fromisoformat(row[0])
 `,
 		},
+		{
+			// No pyright suppression line for pymysql: only asyncmy's stubs
+			// need it.
+			name:    "pymysql exec rewrites placeholders without a pyright directive",
+			engine:  "mysql",
+			options: `{"package":"testpkg","sql_driver":"pymysql","emit_init_file":false}`,
+			queries: []*plugin.Query{{
+				Name:     "InsertItem",
+				Cmd:      metadata.CmdExec,
+				Text:     "INSERT INTO test_items (id) VALUES (?)",
+				Filename: "queries.sql",
+				Params:   []*plugin.Parameter{pgParam(pgColumn("id", "bigint", true))},
+			}},
+			want: sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("insert_item",)
+
+import typing
+
+if typing.TYPE_CHECKING:
+    import collections.abc
+    import pymysql
+
+
+INSERT_ITEM: typing.Final[str] = """-- name: InsertItem :exec
+INSERT INTO test_items (id) VALUES (%s)
+"""
+
+
+def insert_item(conn: pymysql.Connection, *, id_: int) -> None:
+    with conn.cursor() as cur:
+        cur.execute(INSERT_ITEM, (id_,))
+`,
+		},
+		{
+			// The suppression comment must sit between the sqlc header and
+			// the first statement or pyright ignores it.
+			name:    "asyncmy emits the pyright directive before the module body",
+			engine:  "mysql",
+			options: `{"package":"testpkg","sql_driver":"asyncmy","emit_init_file":false}`,
+			queries: []*plugin.Query{{
+				Name:     "InsertItem",
+				Cmd:      metadata.CmdExec,
+				Text:     "INSERT INTO test_items (id) VALUES (?)",
+				Filename: "queries.sql",
+				Params:   []*plugin.Parameter{pgParam(pgColumn("id", "bigint", true))},
+			}},
+			want: sqlcFileHeader("queries.sql") + `# pyright: reportUnknownMemberType=false
+from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("insert_item",)
+
+import typing
+
+if typing.TYPE_CHECKING:
+    import asyncmy
+    import collections.abc
+
+
+INSERT_ITEM: typing.Final[str] = """-- name: InsertItem :exec
+INSERT INTO test_items (id) VALUES (%s)
+"""
+
+
+async def insert_item(conn: asyncmy.Connection, *, id_: int) -> None:
+    async with conn.cursor() as cur:
+        await cur.execute(INSERT_ITEM, (id_,))
+`,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

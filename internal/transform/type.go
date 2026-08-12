@@ -10,8 +10,8 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
-func (t *Transformer) convertType(columnType *plugin.Identifier) string {
-	return t.typeConversionFunc(t.req, t.config, columnType)
+func (t *Transformer) convertType(pluginColumn *plugin.Column) string {
+	return t.typeConversionFunc(t.req, t.config, pluginColumn)
 }
 
 func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
@@ -19,7 +19,7 @@ func (t *Transformer) buildPyType(pluginColumn *plugin.Column) model.PyType {
 	// (conversion registration, docstrings): sqlite DDL keeps the author's
 	// casing ("DATETIME"), so normalize once here instead of in every consumer.
 	columnType := strings.ToLower(sdk.DataType(pluginColumn.Type))
-	strType := t.convertType(pluginColumn.Type)
+	strType := t.convertType(pluginColumn)
 
 	// A sqlc.slice parameter is never optional, even on a nullable column:
 	// the generated expansion calls len() on it, and "no values" is an empty

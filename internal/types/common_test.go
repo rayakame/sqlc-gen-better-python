@@ -17,7 +17,8 @@ func TestGetTypeConversionFunc(t *testing.T) {
 	}{
 		{name: "postgresql", engine: "postgresql", want: types.PostgresTypeToPython},
 		{name: "sqlite", engine: "sqlite", want: types.SqliteTypeToPython},
-		{name: "unsupported engine", engine: "mysql", wantErr: `engine "mysql" is not supported`},
+		{name: "mysql", engine: "mysql", want: types.MysqlTypeToPython},
+		{name: "unsupported engine", engine: "clickhouse", wantErr: `engine "clickhouse" is not supported`},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

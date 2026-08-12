@@ -393,8 +393,9 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 	case metadata.CmdExecRows:
 		summaryFmt = "Execute SQL query with `name: %s %s` and return the number of affected rows."
 		// The sqlite drivers and psycopg return cursor.rowcount, which is -1
-		// for statements without a row count; only asyncpg's status-string
-		// parse falls back to 0.
+		// for statements without a row count; asyncpg's status-string parse
+		// and the MySQL drivers' affected-row count (0 in the OK packet for
+		// DDL) fall back to 0.
 		noRows := "0"
 		if w.docstringDriver == config.SQLDriverAioSQLite || w.docstringDriver == config.SQLDriverSQLite ||
 			w.docstringDriver.IsPsycopg() {

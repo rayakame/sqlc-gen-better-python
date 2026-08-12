@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
@@ -14,6 +15,14 @@ import (
 func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query) *plugin.File {
 	fileBody := r.getCodeWriter()
 	fileBody.WriteSqlcHeader(utils.ToPtr(queries[0]))
+	// asyncmy's shipped cursor stubs leave execute()'s parameters
+	// unannotated, so pyright strict flags every cursor.execute access as
+	// partially unknown. File-level suppression (queries modules only; the
+	// directive must precede the module docstring) until upstream annotates:
+	// https://github.com/long2ice/asyncmy
+	if r.config.SqlDriver == config.SQLDriverAsyncmy {
+		fileBody.WriteLine("# pyright: reportUnknownMemberType=false")
+	}
 	fileBody.WriteQueryFileModuleDocstring(queries[0].FileName)
 	fileBody.WriteFutureImport()
 

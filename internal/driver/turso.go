@@ -62,7 +62,7 @@ var tursoConversions = []tursoConversion{
 	// needs the wrap back from the stored integer.
 	{sqlTypes: []string{types.Bool, types.Boolean}, decodeFmt: tursoDecodeBool, wireFmt: "", speedupsFmt: ""},
 	// pyturso rejects memoryview parameters, so blobs bind as bytes.
-	{sqlTypes: []string{sqlTypeBlob}, decodeFmt: tursoDecodeMemview, wireFmt: "bytes(%s)", speedupsFmt: ""},
+	{sqlTypes: []string{sqlTypeBlob}, decodeFmt: tursoDecodeMemview, wireFmt: wireBytes, speedupsFmt: ""},
 }
 
 // findTursoConversion returns the conversion spec for a SQL type, or nil.
@@ -310,7 +310,7 @@ func (tb *tursoBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 	// line keeps the assignment from touching the nested def (ruff E306).
 	sqlRef := query.ConstantName
 	if query.Cmd != metadata.CmdMany {
-		sqlRef = writeSliceExpansion(body, indent, query)
+		sqlRef = writeSliceExpansion(body, indent, query, questionPlaceholders)
 	}
 
 	// stmt builds the execute-statement head/tail with the correct await
@@ -365,7 +365,7 @@ func (tb *tursoBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 
 	case metadata.CmdMany:
 		decodeHook := tb.rows.WriteDecodeHook(body, indent, query, tursoResultType)
-		sqlRef = writeSliceExpansion(body, indent, query)
+		sqlRef = writeSliceExpansion(body, indent, query, questionPlaceholders)
 		manyArgs := append([]string{conn, sqlRef, decodeHook}, parts...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call

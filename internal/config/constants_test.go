@@ -43,6 +43,20 @@ func TestSQLDriverValidate(t *testing.T) {
 		{name: "psycopg_sync with postgresql", driver: config.SQLDriverPsycopgSync, engine: "postgresql"},
 		{name: "turso_sync with sqlite", driver: config.SQLDriverTursoSync, engine: "sqlite"},
 		{name: "turso_async with sqlite", driver: config.SQLDriverTursoAsync, engine: "sqlite"},
+		{name: "pymysql with mysql", driver: config.SQLDriverPymysql, engine: "mysql"},
+		{name: "asyncmy with mysql", driver: config.SQLDriverAsyncmy, engine: "mysql"},
+		{
+			name:    "pymysql with postgresql",
+			driver:  config.SQLDriverPymysql,
+			engine:  "postgresql",
+			wantErr: "SQL driver pymysql does not support postgresql",
+		},
+		{
+			name:    "asyncmy with sqlite",
+			driver:  config.SQLDriverAsyncmy,
+			engine:  "sqlite",
+			wantErr: "SQL driver asyncmy does not support sqlite",
+		},
 		{
 			name:    "turso_async with postgresql",
 			driver:  config.SQLDriverTursoAsync,
@@ -160,6 +174,8 @@ func TestSQLDriverIsPsycopg(t *testing.T) {
 		config.SQLDriverAsyncpg:      false,
 		config.SQLDriverAioSQLite:    false,
 		config.SQLDriverSQLite:       false,
+		config.SQLDriverPymysql:      false,
+		config.SQLDriverAsyncmy:      false,
 	} {
 		if got := driver.IsPsycopg(); got != want {
 			t.Errorf("IsPsycopg(%q) = %v, want %v", driver, got, want)
@@ -177,9 +193,30 @@ func TestSQLDriverIsTurso(t *testing.T) {
 		config.SQLDriverAsyncpg:      false,
 		config.SQLDriverPsycopgSync:  false,
 		config.SQLDriverPsycopgAsync: false,
+		config.SQLDriverPymysql:      false,
+		config.SQLDriverAsyncmy:      false,
 	} {
 		if got := driver.IsTurso(); got != want {
 			t.Errorf("IsTurso(%q) = %v, want %v", driver, got, want)
+		}
+	}
+}
+
+func TestSQLDriverIsMysql(t *testing.T) {
+	t.Parallel()
+	for driver, want := range map[config.SQLDriver]bool{
+		config.SQLDriverPymysql:      true,
+		config.SQLDriverAsyncmy:      true,
+		config.SQLDriverSQLite:       false,
+		config.SQLDriverAioSQLite:    false,
+		config.SQLDriverAsyncpg:      false,
+		config.SQLDriverPsycopgSync:  false,
+		config.SQLDriverPsycopgAsync: false,
+		config.SQLDriverTursoSync:    false,
+		config.SQLDriverTursoAsync:   false,
+	} {
+		if got := driver.IsMysql(); got != want {
+			t.Errorf("IsMysql(%q) = %v, want %v", driver, got, want)
 		}
 	}
 }
