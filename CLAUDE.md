@@ -29,8 +29,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A sqlc WASM plugin written in Go that generates Python database code (models +
 query functions + enums) from SQL. The plugin is compiled to `wasip1/wasm` and
-executed by `sqlc generate`. Supported Python drivers: `asyncpg`, `aiosqlite`,
-`sqlite3`; model types: `dataclass`, `attrs`, `msgspec`, `pydantic`.
+executed by `sqlc generate`. Supported Python drivers: `asyncpg`,
+`psycopg_async`, `psycopg_sync` (PostgreSQL engine); `aiosqlite`, `sqlite3`,
+`turso_async`, `turso_sync` (SQLite engine; turso is pyturso, experimental).
+Model types: `dataclass`, `attrs`, `msgspec`, `pydantic`. Command support
+differs by family: `:copyfrom` is postgres-only, `:execlastid` is
+sqlite/turso-only, `:batch*` is unsupported everywhere.
 
 Generated code targets Python 3.12+ (PEP 695 type aliases and generics,
 `enum.StrEnum`). Generated output must be deterministic and byte-identical
@@ -65,7 +69,9 @@ scripts\build\build.bat   # Windows (scripts/build/build.sh on Unix)
 This builds with `GOOS=wasip1 GOARCH=wasm`, computes the new SHA-256, patches
 the `sha256:` field in the root `sqlc.yaml` and every `test/driver_*/sqlc.yaml`
 (sqlc refuses to run the plugin on a hash mismatch), and copies the `.wasm`
-into each test driver directory.
+into each test driver directory. The driver dir list is hardcoded in both
+build scripts; a new driver dir must also be added there, in noxfile.py
+(`DRIVER_PATHS`), and in ci.yml (job + the ci-done needs list).
 
 ### Python (verification of generated code)
 
@@ -75,9 +81,10 @@ Python tooling is uv + nox. One-time setup: `uv sync --group dev`. Requires
 ```text
 uv run nox                    # all default sessions
 uv run nox -s asyncpg         # regenerate test/driver_asyncpg via sqlc, then pyright + ruff on it
-uv run nox -s aiosqlite       # same for aiosqlite
-uv run nox -s sqlite3         # same for sqlite3
-uv run nox -s asyncpg_check   # `sqlc diff` variant: verifies committed generated code is up to date (CI uses these)
+                              # (one session per driver: asyncpg, psycopg_async, psycopg_sync,
+                              #  aiosqlite, sqlite3, turso_sync, turso_async)
+uv run nox -s asyncpg_check   # `sqlc diff` variant: verifies committed generated code is up to date
+                              # (CI uses these; every driver has a *_check session)
 uv run nox -s pyright ruff    # type-check / lint the test suite itself
 uv run nox -s pytest          # runtime tests (needs postgres, see below)
 ```
@@ -90,9 +97,8 @@ pytest needs a local PostgreSQL, configured via the `POSTGRES_URI` env var
 a `docker run` one-liner for it.
 
 The full verification loop after a generator change: `go build ./...` ->
-rebuild wasm -> `uv run nox` -> `uv run nox -s asyncpg_check sqlite3_check
-aiosqlite_check` -> commit the regenerated fixtures together with the Go
-change (when told to commit).
+rebuild wasm -> `uv run nox` -> the seven `*_check` sessions -> commit the
+regenerated fixtures together with the Go change (when told to commit).
 
 ### Changelog
 
@@ -105,31 +111,44 @@ Entry point: `plugin/main.go` -> `codegen.Run(internal.Handler)`. The whole
 generation pipeline lives in `internal/handler.go`:
 
 1. **`internal/config`** - parses and validates plugin options from the
-   `GenerateRequest` (driver, model type, docstrings, overrides, ...).
-   Enum-like constants in `constants.go`, override matching in `overrides.go`.
+   `GenerateRequest` (driver, model type, docstrings, overrides, converters,
+   speedups, ...). Enum-like constants in `constants.go`, override matching in
+   `overrides.go`. Converters are named `to_db`/`from_db` function pairs
+   referenced by overrides; they resolve before override parsing (the override
+   inherits the converter's py_type).
 2. **`internal/types`** - engine-specific SQL-type -> Python-type mapping
    (`postgresql.go`, `sqlite.go`), selected by `GetTypeConversionFunc(engine)`.
 3. **`internal/transform`** - turns the sqlc catalog/queries into the IR:
    `BuildEnums()`, `BuildTables()`, `BuildQueries(tables)`,
    `FilterUnusedModels()`. `type.go` builds `PyType` and normalizes
    `SQLType` (lowercased once here; every downstream consumer relies on it).
+   `psycopg_sql.go` rewrites `$N` placeholders to psycopg's `%(pN)s` at IR
+   build time (a small PostgreSQL lexer: skips strings, dollar quotes, quoted
+   identifiers, nested comments; doubles literal `%`). `plainParams`
+   pre-reserves every local the driver bodies emit (`conn`/`self`, `sql` for
+   slice queries, psycopg's `sql_params`/`cur`/`row`/`_decode_hook`); a new
+   local in a driver body needs a matching seed or a param can shadow it.
 4. **`internal/model`** - the IR structs (`Enum`, `Table`, `Query`, `PyType`,
    ...) plus naming logic: initialisms, table-name singularization
    (jinzhu/inflection; exclusions match bare AND schema-qualified names),
    Python reserved-word escaping (`reserved.go`), and `DedupName`.
-5. **`internal/driver`** - the `Driver` interface (`driver.go`) with
-   `asyncpg.go` for PostgreSQL and `sqlite_base.go` as the single
-   implementation for BOTH sqlite drivers (parameterized by module name +
-   async flag; there are no separate aiosqlite/sqlite3 files). A driver knows
-   which query commands it supports and emits query function bodies and the
-   `QueryResults` class. `conversion.go` holds the ordered sqlite
-   adapter/converter spec table; adapters are registered for parameter types,
-   converters for non-overridden return types, and the import resolver
-   mirrors exactly what `WriteConversionSetup` emits. `rowbuilder.go` builds
-   row-decoding expressions (overrides/enums convert inline; lists convert
-   element-wise). `common.go` has the shared signature/param expansion;
-   `convertParamExpr` converts overridden params back to their DefaultType
-   (element-wise for lists) and is also used by the copyfrom emitter.
+5. **`internal/driver`** - the `Driver` interface (`driver.go`) with four
+   implementations: `asyncpg.go`; `psycopg.go` for BOTH psycopg flavors
+   (parameterized by an async flag); `sqlite_base.go` for BOTH sqlite drivers
+   (module name + async flag); `turso.go` for BOTH turso flavors. A driver
+   knows which query commands it supports and emits query function bodies and
+   the `QueryResults` class. `conversion.go` holds the asyncpg conversion set
+   and the ordered sqlite adapter/converter spec table; adapters are
+   registered for parameter types, converters for non-overridden return
+   types, and the import resolver mirrors exactly what `WriteConversionSetup`
+   emits. psycopg registers a raw-text loader instead so returned json/jsonb
+   stay `str`, and binds params as a dict keyed `pN`; turso converts inline
+   in BOTH directions (pyturso has no adapter/converter registry and binds
+   only None/numbers/str/bytes). `rowbuilder.go` builds row-decoding
+   expressions (overrides/enums convert inline; lists convert element-wise).
+   `common.go` has the shared signature/param expansion; `convertParamExpr`
+   converts overridden params back to their DefaultType (element-wise for
+   lists) and is also used by the copyfrom emitters.
 6. **`internal/render`** - file-level orchestration: produces `models.py`
    (always, even when empty), `enums.py` (when enums exist), and one queries
    module per query file; resolves imports (`imports.go`, including the
@@ -159,7 +178,13 @@ buffer is emitted as an extra output file.
   evaluated eagerly.
 - sqlite `register_converter` is process-global; per-module registration
   emits only what that module needs (params -> adapters, non-overridden
-  returns -> converters).
+  returns -> converters). psycopg's loader registration follows the same
+  policy (returned json/jsonb types only).
+- `speedups: true` swaps date/datetime decoding to `ciso8601` (sqlite
+  converter bodies, turso inline decodes); the import resolver tracks which
+  variant is emitted.
+- Converter functions are never called with None (nullable columns stay
+  guarded) and convert list columns element-wise.
 - Column overrides do not attach to `ANY($1::type[])` parameters (sqlc does
   not link them to the column); only `db_type` overrides reach those.
 
