@@ -65,15 +65,17 @@ func (t *Transformer) plainParams(pluginQuery *plugin.Query, pluginParams []*plu
 	}
 	// sqlc's MySQL engine emits one parameter per occurrence of a reused
 	// named argument too (its dialect binds every use site separately).
-	// Same-named parameters are one logical argument - sqlc's own MySQL
-	// codegen merges them - so repeats keep their positional binding slot
-	// but drop out of the signature. A use site that rejects NULL makes
-	// the merged parameter non-optional.
+	// Same-named NAMED parameters are one logical argument - sqlc's own
+	// MySQL codegen merges them - so repeats keep their positional binding
+	// slot but drop out of the signature. A use site that rejects NULL
+	// makes the merged parameter non-optional. Bare "?" parameters that
+	// merely inherit the same column name stay distinct (IsNamedParam is
+	// false for them; sqlc generates name/name_2 arguments).
 	firstIdx := make(map[string]int, len(pluginParams))
 	for _, param := range pluginParams {
 		typ := t.buildPyType(param.Column)
 		rawName := model.ParamName(param)
-		if t.config.SqlDriver.IsMysql() && typ.SqlcSliceName == "" {
+		if t.config.SqlDriver.IsMysql() && typ.SqlcSliceName == "" && param.GetColumn().GetIsNamedParam() {
 			if idx, found := firstIdx[rawName]; found {
 				if !typ.IsNullable {
 					params[idx].Type.IsNullable = false
@@ -111,17 +113,29 @@ func (t *Transformer) plainParams(pluginQuery *plugin.Query, pluginParams []*plu
 }
 
 // logicalParamCount counts parameters as the generated signature will show
-// them: MySQL's per-occurrence duplicates of one reused argument count once.
+// them: MySQL's per-occurrence duplicates of one reused NAMED argument count
+// once; bare "?" parameters count per occurrence even when they share a name.
 func (t *Transformer) logicalParamCount(params []*plugin.Parameter) int {
 	if !t.config.SqlDriver.IsMysql() {
 		return len(params)
 	}
+	count := 0
 	names := make(map[string]struct{}, len(params))
 	for _, param := range params {
-		names[model.ParamName(param)] = struct{}{}
+		if !param.GetColumn().GetIsNamedParam() {
+			count++
+
+			continue
+		}
+		name := model.ParamName(param)
+		if _, found := names[name]; found {
+			continue
+		}
+		names[name] = struct{}{}
+		count++
 	}
 
-	return len(names)
+	return count
 }
 
 // dedupSliceParams collapses the per-occurrence duplicates sqlc's MySQL

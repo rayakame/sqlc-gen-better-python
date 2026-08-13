@@ -76,6 +76,32 @@ func TestFilterUnusedModelsKeepsOverriddenEnumDefaults(t *testing.T) {
 	}
 }
 
+func TestFilterUnusedModelsDropsConverterOverrideDefaults(t *testing.T) {
+	t.Parallel()
+	// Converter-overridden params call the user's to_db function, never the
+	// DefaultType enum class; keeping it would generate a dead enums.py that
+	// nothing imports.
+	enums := []model.Enum{{Name: "TestEnumOverrideMoodTest"}}
+	queries := []model.Query{
+		{
+			Params: []model.QueryValue{{
+				Name: "mood_test",
+				Type: model.PyType{
+					Type:        "str",
+					IsOverride:  true,
+					DefaultType: "enums.TestEnumOverrideMoodTest",
+					ConverterTo: "converters.mood_to_db",
+				},
+			}},
+		},
+	}
+
+	keptEnums, _ := transform.FilterUnusedModels(enums, nil, queries)
+	if len(keptEnums) != 0 {
+		t.Errorf("FilterUnusedModels() enums = %v, want none", keptEnums)
+	}
+}
+
 func TestFilterUnusedModelsDropsReturnOnlyOverrideDefaults(t *testing.T) {
 	t.Parallel()
 	// Overridden RETURNS convert through the override type only; their

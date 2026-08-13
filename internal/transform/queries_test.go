@@ -702,19 +702,22 @@ func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
 func TestBuildQueriesMySQLReusedNamedArgMerge(t *testing.T) {
 	t.Parallel()
 	// sqlc's MySQL engine emits one parameter per occurrence of a reused
-	// named argument; the merged signature shows it once, repeats keep
-	// their positional binding slot, and a non-null use site tightens the
-	// merged nullability on every occurrence.
+	// named argument (IsNamedParam); the merged signature shows it once,
+	// repeats keep their positional binding slot, and a non-null use site
+	// tightens the merged nullability on every occurrence.
 	nullableCol := queryCol("n", "text", nil)
 	nullableCol.NotNull = false
+	nullableCol.IsNamedParam = true
+	namedCol := queryCol("n", "text", nil)
+	namedCol.IsNamedParam = true
 	for _, driver := range []config.SQLDriver{config.SQLDriverPymysql, config.SQLDriverAsyncmy} {
 		query := buildSingleQuery(t, &config.Config{SqlDriver: driver}, &plugin.Query{
 			Name: "ReusedNamedArg",
 			Cmd:  ":exec",
-			Text: "UPDATE test_authors SET name = ? WHERE name = ?",
+			Text: "UPDATE test_authors SET name = sqlc.arg(n) WHERE name = sqlc.arg(n)",
 			Params: []*plugin.Parameter{
 				{Number: 1, Column: nullableCol},
-				{Number: 2, Column: queryCol("n", "text", nil)},
+				{Number: 2, Column: namedCol},
 			},
 		})
 		want := []model.QueryValue{
@@ -724,6 +727,29 @@ func TestBuildQueriesMySQLReusedNamedArgMerge(t *testing.T) {
 		if !reflect.DeepEqual(query.Params, want) {
 			t.Errorf("BuildQueries(%s) params = %+v, want %+v", driver, query.Params, want)
 		}
+	}
+}
+
+func TestBuildQueriesMySQLKeepsPositionalSameNamedParams(t *testing.T) {
+	t.Parallel()
+	// Bare "?" parameters carry IsNamedParam false. Two of them on columns
+	// that share a name are distinct arguments (sqlc's own MySQL codegen
+	// generates Name and Name_2): merging would make a rename such as
+	// "SET name = ? WHERE name = ?" bind one value to both slots.
+	query := buildSingleQuery(t, &config.Config{SqlDriver: config.SQLDriverPymysql}, &plugin.Query{
+		Name: "RenameAuthor",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ? WHERE name = ?",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+			{Number: 2, Column: queryCol("n", "text", nil)},
+		},
+	})
+	if len(query.Params) != 2 || query.Params[0].Name != "n" || query.Params[1].Name != "n_2" {
+		t.Fatalf("params = %+v, want distinct n and n_2", query.Params)
+	}
+	if query.Params[0].Repeated || query.Params[1].Repeated {
+		t.Fatal("positional params must not be marked Repeated")
 	}
 }
 

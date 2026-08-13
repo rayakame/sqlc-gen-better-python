@@ -4,8 +4,6 @@ import (
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
-	"github.com/rayakame/sqlc-gen-better-python/internal/log"
-	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
@@ -81,35 +79,6 @@ func MysqlTypeToPython(req *plugin.GenerateRequest, config *config.Config, plugi
 		// sqlc's dolphin engine materializes each MySQL enum column as a
 		// catalog enum named "{table}_{column}" in the default schema
 		// ("public"), so the same catalog scan as PostgreSQL resolves them.
-		columnRelation, err := parseIdentifierString(columnType)
-		if err != nil {
-			log.L().LogErr("error trying to parse identifier string", err)
-
-			return Any
-		}
-		if columnRelation.Schema == "" {
-			columnRelation.Schema = req.Catalog.DefaultSchema
-		}
-		for _, schema := range req.Catalog.Schemas {
-			if schema.Name == PgCatalog || schema.Name == InformationSchema {
-				continue
-			}
-			if schema.Name != columnRelation.Schema {
-				continue
-			}
-			for _, enum := range schema.Enums {
-				if columnRelation.Name != enum.Name {
-					continue
-				}
-				if schema.Name == req.Catalog.DefaultSchema {
-					return enumsPrefix + model.EnumName(config, enum.Name, "")
-				}
-
-				return enumsPrefix + model.EnumName(config, enum.Name, schema.Name)
-			}
-		}
-		log.L().Log("unknown MySQL type: " + columnType)
-
-		return Any
+		return resolveCatalogEnum(req, config, "MySQL", columnType)
 	}
 }

@@ -31,10 +31,11 @@ A sqlc WASM plugin written in Go that generates Python database code (models +
 query functions + enums) from SQL. The plugin is compiled to `wasip1/wasm` and
 executed by `sqlc generate`. Supported Python drivers: `asyncpg`,
 `psycopg_async`, `psycopg_sync` (PostgreSQL engine); `aiosqlite`, `sqlite3`,
-`turso_async`, `turso_sync` (SQLite engine; turso is pyturso, experimental).
+`turso_async`, `turso_sync` (SQLite engine; turso is pyturso, experimental);
+`pymysql`, `asyncmy` (MySQL engine).
 Model types: `dataclass`, `attrs`, `msgspec`, `pydantic`. Command support
 differs by family: `:copyfrom` is postgres-only, `:execlastid` is
-sqlite/turso-only, `:batch*` is unsupported everywhere.
+sqlite/turso/mysql-only, `:batch*` is unsupported everywhere.
 
 Generated code targets Python 3.12+ (PEP 695 type aliases and generics,
 `enum.StrEnum`). Generated output must be deterministic and byte-identical
@@ -82,7 +83,7 @@ Python tooling is uv + nox. One-time setup: `uv sync --group dev`. Requires
 uv run nox                    # all default sessions
 uv run nox -s asyncpg         # regenerate test/driver_asyncpg via sqlc, then pyright + ruff on it
                               # (one session per driver: asyncpg, psycopg_async, psycopg_sync,
-                              #  aiosqlite, sqlite3, turso_sync, turso_async)
+                              #  aiosqlite, sqlite3, turso_sync, turso_async, pymysql, asyncmy)
 uv run nox -s asyncpg_check   # `sqlc diff` variant: verifies committed generated code is up to date
                               # (CI uses these; every driver has a *_check session)
 uv run nox -s pyright ruff    # type-check / lint the test suite itself
@@ -99,7 +100,7 @@ session-end cleanup connects to both unconditionally. CONTRIBUTING.md has
 `docker run` one-liners for both.
 
 The full verification loop after a generator change: `go build ./...` ->
-rebuild wasm -> `uv run nox` -> the seven `*_check` sessions -> commit the
+rebuild wasm -> `uv run nox` -> the nine `*_check` sessions -> commit the
 regenerated fixtures together with the Go change (when told to commit).
 
 ### Changelog
@@ -119,30 +120,30 @@ generation pipeline lives in `internal/handler.go`:
    referenced by overrides; they resolve before override parsing (the override
    inherits the converter's py_type).
 2. **`internal/types`** - engine-specific SQL-type -> Python-type mapping
-   (`postgresql.go`, `sqlite.go`), selected by `GetTypeConversionFunc(engine)`.
+   (`postgresql.go`, `sqlite.go`, `mysql.go`), selected by
+   `GetTypeConversionFunc(engine)`.
 3. **`internal/transform`** - turns the sqlc catalog/queries into the IR:
    `BuildEnums()`, `BuildTables()`, `BuildQueries(tables)`,
    `FilterUnusedModels()`. `type.go` builds `PyType` and normalizes
    `SQLType` (lowercased once here; every downstream consumer relies on it).
    `psycopg_sql.go` and `mysql_sql.go` rewrite placeholders at IR build time
    (psycopg: `$N` -> `%(pN)s`; MySQL: `?` -> `%s` with `%` doubled - small
-   SQL lexers matching each engine's rules). `plainParams` pre-reserves the
-   locals driver bodies emit and merges MySQL's per-occurrence duplicates of
-   reused parameters (`Repeated` flag keeps their binding slots).
-   `psycopg_sql.go` rewrites `$N` placeholders to psycopg's `%(pN)s` at IR
-   build time (a small PostgreSQL lexer: skips strings, dollar quotes, quoted
-   identifiers, nested comments; doubles literal `%`). `plainParams`
-   pre-reserves every local the driver bodies emit (`conn`/`self`, `sql` for
-   slice queries, psycopg's `sql_params`/`cur`/`row`/`_decode_hook`); a new
-   local in a driver body needs a matching seed or a param can shadow it.
+   SQL lexers matching each engine's rules). `plainParams` pre-reserves
+   every local the driver bodies emit (`conn`/`self`, `sql` for slice
+   queries, psycopg's and MySQL's `sql_params`/`cur`/`row`/`_decode_hook`);
+   a new local in a driver body needs a matching seed or a param can shadow
+   it. It also merges MySQL's per-occurrence duplicates of reused NAMED
+   parameters (`IsNamedParam`; the `Repeated` flag keeps their binding
+   slots) - bare `?` params that share a column name stay distinct.
 4. **`internal/model`** - the IR structs (`Enum`, `Table`, `Query`, `PyType`,
    ...) plus naming logic: initialisms, table-name singularization
    (jinzhu/inflection; exclusions match bare AND schema-qualified names),
    Python reserved-word escaping (`reserved.go`), and `DedupName`.
-5. **`internal/driver`** - the `Driver` interface (`driver.go`) with four
+5. **`internal/driver`** - the `Driver` interface (`driver.go`) with five
    implementations: `asyncpg.go`; `psycopg.go` for BOTH psycopg flavors
    (parameterized by an async flag); `sqlite_base.go` for BOTH sqlite drivers
-   (module name + async flag); `turso.go` for BOTH turso flavors. A driver
+   (module name + async flag); `turso.go` for BOTH turso flavors;
+   `mysql_base.go` for BOTH MySQL drivers (module name + async flag). A driver
    knows which query commands it supports and emits query function bodies and
    the `QueryResults` class. `conversion.go` holds the asyncpg conversion set
    and the ordered sqlite adapter/converter spec table; adapters are
@@ -190,8 +191,7 @@ buffer is emitted as an extra output file.
 - The MySQL drivers interpolate pyformat placeholders client-side: rewritten
   SQL constants carry `%s`/`%%`, and the slice-expansion/placeholder-scanner
   machinery in `internal/driver/common.go` must lex them exactly like the
-  rewriter emitted them. psycopg's loader registration follows the same
-  policy (returned json/jsonb types only).
+  rewriter emitted them.
 - `speedups: true` swaps date/datetime decoding to `ciso8601` (sqlite
   converter bodies, turso inline decodes); the import resolver tracks which
   variant is emitted.

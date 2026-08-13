@@ -14,6 +14,10 @@ dependencies = [
     "pyturso>=0.7.0",
     "pymysql>=1.2.0",
     "asyncmy>=0.2.14",
+    # caching_sha2_password full auth (the mysql:9 default) over plaintext
+    # TCP needs cryptography in both MySQL drivers; without it the first
+    # connection against a fresh server raises RuntimeError.
+    "cryptography>=45.0.0",
 ]
 
 [dependency-groups]

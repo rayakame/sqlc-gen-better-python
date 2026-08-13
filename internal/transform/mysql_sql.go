@@ -29,7 +29,7 @@ func rewriteMySQLSQL(sql string) string {
 			out.WriteString("%%")
 			i++
 		case c == '\'' || c == '"':
-			end := scanMySQLString(sql, i, c)
+			end := scanEscapedString(sql, i, c)
 			writeDoubled(&out, sql[i:end])
 			i = end
 		case c == '`':
@@ -90,11 +90,11 @@ func scanLineEnd(sql string, i int) int {
 	return i + end
 }
 
-// scanMySQLString returns the index after a string literal starting at i,
-// honoring backslash escapes and quote doubling. Both '...' and "..." are
-// strings in default MySQL and share these rules. An unterminated literal
-// swallows the rest of the input.
-func scanMySQLString(sql string, i int, quote byte) int {
+// scanEscapedString returns the index after a string literal starting at i,
+// honoring backslash escapes and quote doubling. MySQL applies these rules
+// to both '...' and "..."; PostgreSQL to E'...' (via scanStringLiteral). An
+// unterminated literal swallows the rest of the input.
+func scanEscapedString(sql string, i int, quote byte) int {
 	j := i + 1
 	for j < len(sql) {
 		switch {

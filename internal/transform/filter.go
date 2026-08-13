@@ -20,9 +20,11 @@ func FilterUnusedModels(enums []model.Enum, tables []model.Table, queries []mode
 		addType(typ.Type)
 		// An overridden enum PARAM still calls the enum class at runtime -
 		// it converts back through its DefaultType. Overridden returns
-		// convert through the override type only, so their DefaultType
-		// would be a dead retention.
-		if isParam && typ.DoOverride() {
+		// convert through the override type only, and converter overrides
+		// call the user's to_db function instead, so their DefaultType
+		// would be a dead retention (mirrors render.overrideDefaultTypeUses
+		// and driver.convertParamExprWire).
+		if isParam && typ.DoOverride() && !typ.HasConverter() {
 			addType(typ.DefaultType)
 		}
 	}

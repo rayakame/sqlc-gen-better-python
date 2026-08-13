@@ -199,18 +199,18 @@ func (mb *mysqlBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 	}
 	withStmt += conn + ".cursor() as cur:"
 	parts := expandParamsPyformat(query, mysqlWire)
-	writeExec := func(indent int) {
-		writeCursorCall(body, indent, parts, execKw+"cur.execute("+sqlRef, ")")
+	writeExec := func(indent int, prefix string) {
+		writeCursorCall(body, indent, parts, prefix+execKw+"cur.execute("+sqlRef, ")")
 	}
 
 	switch query.Cmd {
 	case metadata.CmdExec:
 		body.WriteIndentedLine(indent, withStmt)
-		writeExec(indent + 1)
+		writeExec(indent+1, "")
 
 	case metadata.CmdExecResult:
 		body.WriteIndentedLine(indent, "cur = "+conn+".cursor()")
-		writeExec(indent)
+		writeExec(indent, "")
 		body.WriteIndentedLine(indent, "return cur")
 
 	case metadata.CmdExecRows:
@@ -218,18 +218,18 @@ func (mb *mysqlBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 		// modules' stubs; asyncmy's cursor stub types rowcount as object,
 		// which pyright strict rejects as a return value.
 		body.WriteIndentedLine(indent, withStmt)
-		writeCursorCall(body, indent+1, parts, "return "+execKw+"cur.execute("+sqlRef, ")")
+		writeExec(indent+1, "return ")
 
 	case metadata.CmdExecLastId:
 		// lastrowid is 0 (never None) when the statement inserted nothing;
 		// AUTO_INCREMENT ids start at 1, so 0 maps to the documented None.
 		body.WriteIndentedLine(indent, withStmt)
-		writeExec(indent + 1)
+		writeExec(indent+1, "")
 		body.WriteIndentedLine(indent+1, "return cur.lastrowid or None")
 
 	case metadata.CmdOne:
 		body.WriteIndentedLine(indent, withStmt)
-		writeExec(indent + 1)
+		writeExec(indent+1, "")
 		body.WriteIndentedLine(indent+1, fmt.Sprintf("row = %scur.fetchone()", execKw))
 		body.WriteIndentedLine(indent, "if row is None:")
 		body.WriteIndentedLine(indent+1, "return None")
