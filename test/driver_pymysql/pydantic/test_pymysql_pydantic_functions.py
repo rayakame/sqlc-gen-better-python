@@ -499,8 +499,8 @@ class TestPymysqlPydanticFunctions:
         assert isinstance(cursor, pymysql.cursors.Cursor)
         rows = cursor.fetchall()
         cursor.close()
-        assert len(rows) == 1
-        assert rows[0][0] == TYPE_ID
+        # The shared table may carry other files' rows; assert on our own.
+        assert TYPE_ID in {row[0] for row in rows}
 
     @pytest.mark.dependency(name="PymysqlPydanticFunctions::delete", depends=["PymysqlPydanticFunctions::all_cursor"])
     def test_delete(self, pymysql_conn: pymysql.Connection) -> None:

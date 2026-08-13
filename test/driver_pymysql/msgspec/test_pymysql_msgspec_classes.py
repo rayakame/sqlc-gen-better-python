@@ -521,8 +521,8 @@ class TestPymysqlMsgspecClasses:
         assert isinstance(cursor, pymysql.cursors.Cursor)
         rows = cursor.fetchall()
         cursor.close()
-        assert len(rows) == 1
-        assert rows[0][0] == TYPE_ID
+        # The shared table may carry other files' rows; assert on our own.
+        assert TYPE_ID in {row[0] for row in rows}
 
     @pytest.mark.dependency(name="PymysqlMsgspecClasses::delete", depends=["PymysqlMsgspecClasses::all_cursor"])
     def test_delete(self, queries_obj: queries.Queries, pymysql_conn: pymysql.Connection) -> None:

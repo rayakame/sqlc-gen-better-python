@@ -876,8 +876,8 @@ class TestAsyncmyAttrsFunctions:
 
         rows = await cursor.fetchall()
         await cursor.close()
-        assert len(rows) == 1
-        assert rows[0][0] == model.id_
+        # The shared table may carry other files' rows; assert on our own.
+        assert model.id_ in {row[0] for row in rows}
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="AsyncmyTestAttrsFunctions::insert_exec_last_id", depends=["AsyncmyTestAttrsFunctions::all_types_cursor"])

@@ -787,8 +787,8 @@ class TestPymysqlAttrsClasses:
 
         assert isinstance(cur, pymysql.cursors.Cursor)
         rows = cur.fetchall()
-        assert len(rows) == 1
-        assert rows[0][0] == model.id_
+        # The shared table may carry other files' rows; assert on our own.
+        assert model.id_ in {row[0] for row in rows}
         cur.close()
 
     @pytest.mark.dependency(name="PymysqlTestAttrsClasses::update_rows", depends=["PymysqlTestAttrsClasses::all_cursor"])
