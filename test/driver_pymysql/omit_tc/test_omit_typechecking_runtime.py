@@ -108,6 +108,7 @@ class TestOmitTcClasses:
         stub = typing.cast("pymysql.Connection", no_row_conn.NoRowConn())
         assert classes_queries.QueriesEnumOverride(conn=stub).count_enum_override_by_moods(moods=[]) is None
 
+    @pytest.mark.dependency(depends=["TestOmitTcClasses::insert_enum_override"])
     def test_delete_enum_override(self, pymysql_conn: pymysql.Connection) -> None:
         # Remove the rows so later suites against the shared database start
         # clean.

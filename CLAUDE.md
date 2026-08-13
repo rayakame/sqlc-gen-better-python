@@ -71,8 +71,6 @@ the `sha256:` field in the root `sqlc.yaml` and every `test/driver_*/sqlc.yaml`
 (sqlc refuses to run the plugin on a hash mismatch), and copies the `.wasm`
 into each test driver directory. The driver dir list is hardcoded in both
 build scripts; a new driver dir must also be added there, in noxfile.py
-(`DRIVER_PATHS`), and in ci.yml (job + the ci-done needs list). The driver dir list is hardcoded in both
-build scripts; a new driver dir must also be added there, in noxfile.py
 (`DRIVER_PATHS`), and in ci.yml (job + the ci-done needs list).
 
 ### Python (verification of generated code)

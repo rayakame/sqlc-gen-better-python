@@ -285,7 +285,7 @@ async def asyncmy_conn(
     async with conn.cursor() as cur:
         for stmt in _MYSQL_CLEANUP:
             await cur.execute(stmt)  # pyright: ignore[reportUnknownMemberType]
-    conn.close()
+    await conn.ensure_closed()
 
 
 def pymysql_delete_all(config: pytest.Config) -> None:

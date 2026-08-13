@@ -200,7 +200,7 @@ func (mb *mysqlBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 	withStmt += conn + ".cursor() as cur:"
 	parts := expandParamsPyformat(query, mysqlWire)
 	writeExec := func(indent int) {
-		writeSqliteCall(body, indent, parts, execKw+"cur.execute("+sqlRef, ")")
+		writeCursorCall(body, indent, parts, execKw+"cur.execute("+sqlRef, ")")
 	}
 
 	switch query.Cmd {
@@ -218,7 +218,7 @@ func (mb *mysqlBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 		// modules' stubs; asyncmy's cursor stub types rowcount as object,
 		// which pyright strict rejects as a return value.
 		body.WriteIndentedLine(indent, withStmt)
-		writeSqliteCall(body, indent+1, parts, "return "+execKw+"cur.execute("+sqlRef, ")")
+		writeCursorCall(body, indent+1, parts, "return "+execKw+"cur.execute("+sqlRef, ")")
 
 	case metadata.CmdExecLastId:
 		// lastrowid is 0 (never None) when the statement inserted nothing;

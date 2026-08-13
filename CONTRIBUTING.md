@@ -14,7 +14,7 @@ that you should follow to ensure that your contribution is at its best.
   The easiest way to get exactly that version without a Go toolchain is
   [sqlc-bin](https://pypi.org/project/sqlc-bin/), whose package version tracks the
   sqlc version: `uv tool install "sqlc-bin==1.31.1"`.
-- **Docker** (or a local PostgreSQL) - only needed for the runtime tests.
+- **Docker** (or a local PostgreSQL plus a local MySQL) - only needed for the runtime tests.
 
 One-time setup for the Python tooling:
 
@@ -116,7 +116,7 @@ Extra pytest arguments pass through after `--`, e.g.
 1. Change the Go code and run `make tests` / `make lint`.
 2. Rebuild the WASM plugin (see above).
 3. `uv run nox` - regenerates the fixtures and runs every check on them. The default
-   sessions include `pytest`, so have the PostgreSQL from the section above running.
+   sessions include `pytest`, so have the PostgreSQL and MySQL from the section above running.
    The `_check` sessions are not needed locally: they verify committed fixtures
    against a fresh regeneration, which is what CI does with the files you commit.
 4. If your change affects generated output, add coverage: a query/schema case in the test matrix

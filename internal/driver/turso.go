@@ -332,19 +332,19 @@ func (tb *tursoBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 	switch query.Cmd {
 	case metadata.CmdExec:
 		head, tail := stmt("", "")
-		writeSqliteCall(body, indent, parts, head, tail)
+		writeCursorCall(body, indent, parts, head, tail)
 
 	case metadata.CmdExecResult:
 		head, tail := stmt("return ", "")
-		writeSqliteCall(body, indent, parts, head, tail)
+		writeCursorCall(body, indent, parts, head, tail)
 
 	case metadata.CmdExecRows:
 		head, tail := stmt("return ", ".rowcount")
-		writeSqliteCall(body, indent, parts, head, tail)
+		writeCursorCall(body, indent, parts, head, tail)
 
 	case metadata.CmdExecLastId:
 		head, tail := stmt("return ", ".lastrowid")
-		writeSqliteCall(body, indent, parts, head, tail)
+		writeCursorCall(body, indent, parts, head, tail)
 
 	case metadata.CmdOne:
 		prefix := "row = "
@@ -353,7 +353,7 @@ func (tb *tursoBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 			prefix = "row = await "
 		}
 		head, tail := stmt(prefix, ".fetchone()")
-		writeSqliteCall(body, indent, parts, head, tail)
+		writeCursorCall(body, indent, parts, head, tail)
 		body.WriteIndentedLine(indent, "if row is None:")
 		body.WriteIndentedLine(indent+1, "return None")
 

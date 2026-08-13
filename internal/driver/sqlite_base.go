@@ -2,7 +2,6 @@ package driver
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
@@ -218,19 +217,19 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	switch query.Cmd {
 	case metadata.CmdExec:
 		head, tail := stmt("", "")
-		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
+		writeCursorCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdExecResult:
 		head, tail := stmt("return ", "")
-		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
+		writeCursorCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdExecRows:
 		head, tail := stmt("return ", ".rowcount")
-		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
+		writeCursorCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdExecLastId:
 		head, tail := stmt("return ", ".lastrowid")
-		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
+		writeCursorCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 
 	case metadata.CmdOne:
 		prefix := "row = "
@@ -239,7 +238,7 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 			prefix = "row = await "
 		}
 		head, tail := stmt(prefix, ".fetchone()")
-		writeSqliteCall(body, indent, expandParamsFlattenSlices(query), head, tail)
+		writeCursorCall(body, indent, expandParamsFlattenSlices(query), head, tail)
 		body.WriteIndentedLine(indent, "if row is None:")
 		body.WriteIndentedLine(indent+1, "return None")
 
@@ -258,60 +257,4 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 		// overhead) for zero benefit - the return annotation carries the type.
 		body.WriteWrappedCall(indent, "return QueryResults(", manyArgs, ")")
 	}
-}
-
-// writeSliceExpansion writes the runtime replacement of every sqlc.slice
-// placeholder - one placeholder per element, or "NULL" for an empty sequence
-// so that "IN (NULL)" matches no rows - and returns the expression holding
-// the final SQL: a local "sql" variable, or the untouched constant without
-// slices.
-func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query, ph placeholderStyle) string {
-	params := sliceParams(query)
-	if len(params) == 0 {
-		return query.ConstantName
-	}
-	src := query.ConstantName
-	for _, param := range params {
-		args := []string{
-			writer.PyQuote(sliceMarker(param.marker, ph)),
-			fmt.Sprintf(ph.joinExpr, param.expr),
-		}
-		// A reused slice has one marker per use site: replace them all, with
-		// the flattening param expansion supplying a copy of the args for each.
-		if sliceMarkerCount(query, param.marker, ph) == 1 {
-			args = append(args, "1")
-		}
-		body.WriteWrappedCall(indent, "sql = "+src+".replace(", args, ")")
-		src = "sql"
-	}
-
-	return "sql"
-}
-
-// writeSqliteCall writes stmtHead+argsSegment+stmtTail on one line, hoisting a
-// too-long parameter tuple into a local _args variable first so the statement
-// stays within the line limit. parts are the already-expanded (and, for wire-
-// converting drivers, already-converted) argument expressions.
-func writeSqliteCall(body *writer.CodeWriter, indent int, parts []string, stmtHead, stmtTail string) {
-	segment := ""
-	switch {
-	case len(parts) == 1:
-		segment = fmt.Sprintf(", (%s,)", parts[0])
-	case len(parts) > 1:
-		segment = fmt.Sprintf(", (%s)", strings.Join(parts, ", "))
-	}
-
-	stmt := stmtHead + segment + stmtTail
-	if body.FitsLine(indent, stmt) {
-		body.WriteIndentedLine(indent, stmt)
-
-		return
-	}
-
-	body.WriteIndentedLine(indent, "sql_args = (")
-	for _, part := range parts {
-		body.WriteIndentedLine(indent+1, part+",")
-	}
-	body.WriteIndentedLine(indent, ")")
-	body.WriteIndentedLine(indent, stmtHead+", sql_args"+stmtTail)
 }

@@ -777,7 +777,9 @@ class TestPymysqlDataclassClasses:
     def test_count_mysql_types(self, queries_obj: queries.Queries) -> None:
         result = queries_obj.count_mysql_types()
 
-        assert result == 1
+        # The shared table may carry other files' rows; only a lower bound is safe.
+        assert result is not None
+        assert result >= 1
 
     @pytest.mark.dependency(name="PymysqlTestDataclassClasses::all_cursor", depends=["PymysqlTestDataclassClasses::count"])
     def test_all_mysql_types_cursor(self, queries_obj: queries.Queries, model: models.TestMysqlType) -> None:
@@ -1115,3 +1117,9 @@ class TestPymysqlDataclassClasses:
         assert queries.Queries(conn=stub).count_mysql_types() is None
         assert queries_case.QueriesCase(conn=stub).count_case_rows(id_=0) is None
         assert queries_enum_override.QueriesEnumOverride(conn=stub).count_enum_override_by_moods(moods=[]) is None
+
+    @pytest.mark.dependency(depends=["PymysqlTestDataclassClasses::insert_enum_override"])
+    def test_enum_override_cleanup(self, pymysql_conn: pymysql.Connection) -> None:
+        with pymysql_conn.cursor() as cur:
+            cur.execute("DELETE FROM test_enum_override WHERE id IN (%s, %s)", (ENUM_OVERRIDE_ID, ENUM_OVERRIDE_ID_2))
+        assert queries_enum_override.QueriesEnumOverride(conn=pymysql_conn).get_enum_override_mood(id_=ENUM_OVERRIDE_ID) is None

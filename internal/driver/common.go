@@ -504,3 +504,60 @@ func writeExecRowsReturn(body *writer.CodeWriter, config *config.Config, indent 
 		body.WriteIndentedLine(indent, "return int(n) if (p := r.split()) and (n := p[-1]).isdigit() else 0")
 	}
 }
+
+// writeSliceExpansion writes the runtime replacement of every sqlc.slice
+// placeholder - one placeholder per element, or "NULL" for an empty sequence
+// so that "IN (NULL)" matches no rows - and returns the expression holding
+// the final SQL: a local "sql" variable, or the untouched constant without
+// slices.
+func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query, ph placeholderStyle) string {
+	params := sliceParams(query)
+	if len(params) == 0 {
+		return query.ConstantName
+	}
+	src := query.ConstantName
+	for _, param := range params {
+		args := []string{
+			writer.PyQuote(sliceMarker(param.marker, ph)),
+			fmt.Sprintf(ph.joinExpr, param.expr),
+		}
+		// A reused slice has one marker per use site: replace them all, with
+		// the flattening param expansion supplying a copy of the args for each.
+		if sliceMarkerCount(query, param.marker, ph) == 1 {
+			args = append(args, "1")
+		}
+		body.WriteWrappedCall(indent, "sql = "+src+".replace(", args, ")")
+		src = "sql"
+	}
+
+	return "sql"
+}
+
+// writeCursorCall writes stmtHead+argsSegment+stmtTail on one line, hoisting a
+// too-long parameter tuple into a local _args variable first so the statement
+// stays within the line limit. parts are the already-expanded (and, for wire-
+// converting drivers, already-converted) argument expressions. Shared by the
+// sqlite, turso, and MySQL drivers.
+func writeCursorCall(body *writer.CodeWriter, indent int, parts []string, stmtHead, stmtTail string) {
+	segment := ""
+	switch {
+	case len(parts) == 1:
+		segment = fmt.Sprintf(", (%s,)", parts[0])
+	case len(parts) > 1:
+		segment = fmt.Sprintf(", (%s)", strings.Join(parts, ", "))
+	}
+
+	stmt := stmtHead + segment + stmtTail
+	if body.FitsLine(indent, stmt) {
+		body.WriteIndentedLine(indent, stmt)
+
+		return
+	}
+
+	body.WriteIndentedLine(indent, "sql_args = (")
+	for _, part := range parts {
+		body.WriteIndentedLine(indent+1, part+",")
+	}
+	body.WriteIndentedLine(indent, ")")
+	body.WriteIndentedLine(indent, stmtHead+", sql_args"+stmtTail)
+}
