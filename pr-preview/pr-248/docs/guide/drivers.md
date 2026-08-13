@@ -261,6 +261,6 @@ asyncio.run(main())
 
 Not every [query command](/docs/guide/writing-queries) works on every driver -
 for example `:copyfrom` is PostgreSQL-only and `:execlastid` is limited to the
-SQLite-engine drivers. The full matrix is in the
+SQLite-engine and MySQL drivers. The full matrix is in the
 [feature support reference](/docs/reference/feature-support).
 
