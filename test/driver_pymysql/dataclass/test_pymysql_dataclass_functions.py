@@ -823,6 +823,10 @@ class TestPymysqlDataclassFunctions:
         assert new_id > 0
         assert queries.get_exec_last_id_name(conn=pymysql_conn, id_=new_id) == EXEC_LAST_ID_NAME
 
+        # A statement that inserts nothing has no last row id: the OK
+        # packet's 0 maps to the documented None.
+        assert queries.touch_exec_last_id(conn=pymysql_conn, name="untouched", id_=new_id + 1000000) is None
+
     @pytest.mark.dependency(name="PymysqlTestDataclassFunctions::delete", depends=["PymysqlTestDataclassFunctions::insert_last_id"])
     def test_delete_mysql_type(self, pymysql_conn: pymysql.Connection, model: models.TestMysqlType) -> None:
         queries.delete_one_mysql_type(conn=pymysql_conn, id_=model.id_)

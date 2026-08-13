@@ -37,6 +37,10 @@ LIST_ENUM_OVERRIDE_BY_IDS: typing.Final[str] = """-- name: ListEnumOverrideByIds
 SELECT id, mood_test FROM test_enum_override WHERE id IN (/*SLICE:ids*/%s) ORDER BY id
 """
 
+COUNT_ENUM_OVERRIDE_BY_MOODS: typing.Final[str] = """-- name: CountEnumOverrideByMoods :one
+SELECT count(*) FROM test_enum_override WHERE mood_test IN (/*SLICE:moods*/%s)
+"""
+
 
 class QueryResults[T]:
     """Helper class that allows both iteration and normal fetching of data from the db.
@@ -209,3 +213,28 @@ class QueriesEnumOverride:
 
         sql = LIST_ENUM_OVERRIDE_BY_IDS.replace("/*SLICE:ids*/%s", ",".join(("%s",) * len(ids)) or "NULL", 1)
         return QueryResults(self._conn, sql, _decode_hook, *ids)
+
+    def count_enum_override_by_moods(self, *, moods: collections.abc.Sequence[str]) -> int | None:
+        """Fetch one from the db using the SQL query with `name: CountEnumOverrideByMoods :one`.
+
+        ```sql
+        SELECT count(*) FROM test_enum_override WHERE mood_test IN (/*SLICE:moods*/%s)
+        ```
+
+        Parameters
+        ----------
+        moods : collections.abc.Sequence[str]
+
+        Returns
+        -------
+        int
+            Result fetched from the db. Will be `None` if not found.
+
+        """
+        sql = COUNT_ENUM_OVERRIDE_BY_MOODS.replace("/*SLICE:moods*/%s", ",".join(("%s",) * len(moods)) or "NULL", 1)
+        with self._conn.cursor() as cur:
+            cur.execute(sql, (*[enums.TestEnumOverrideMoodTest(v) for v in moods],))
+            row = cur.fetchone()
+        if row is None:
+            return None
+        return row[0]

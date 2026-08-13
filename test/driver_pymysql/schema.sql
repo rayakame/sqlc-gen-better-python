@@ -178,3 +178,12 @@ CREATE TABLE IF NOT EXISTS test_converters
     maybe_prefs           json,
     tags                  text               NOT NULL
 );
+
+-- db_type override target: DATETIME must match the normalized type name
+-- case-insensitively, through a converter (postgres parity). Isolated in
+-- its own module so the main matrix's datetime columns stay untouched.
+CREATE TABLE IF NOT EXISTS test_dbtype_override
+(
+    id                    bigint PRIMARY KEY NOT NULL,
+    happened_at           datetime           NOT NULL
+);

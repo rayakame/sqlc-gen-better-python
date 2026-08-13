@@ -699,6 +699,55 @@ func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
 	}
 }
 
+func TestBuildQueriesMySQLReusedNamedArgMerge(t *testing.T) {
+	t.Parallel()
+	// sqlc's MySQL engine emits one parameter per occurrence of a reused
+	// named argument; the merged signature shows it once, repeats keep
+	// their positional binding slot, and a non-null use site tightens the
+	// merged nullability on every occurrence.
+	nullableCol := queryCol("n", "text", nil)
+	nullableCol.NotNull = false
+	for _, driver := range []config.SQLDriver{config.SQLDriverPymysql, config.SQLDriverAsyncmy} {
+		query := buildSingleQuery(t, &config.Config{SqlDriver: driver}, &plugin.Query{
+			Name: "ReusedNamedArg",
+			Cmd:  ":exec",
+			Text: "UPDATE test_authors SET name = ? WHERE name = ?",
+			Params: []*plugin.Parameter{
+				{Number: 1, Column: nullableCol},
+				{Number: 2, Column: queryCol("n", "text", nil)},
+			},
+		})
+		want := []model.QueryValue{
+			{Name: "n", Type: model.PyType{SQLType: "text", Type: "str", DefaultType: "str"}, Number: 1},
+			{Name: "n", Type: model.PyType{SQLType: "text", Type: "str", DefaultType: "str"}, Number: 2, Repeated: true},
+		}
+		if !reflect.DeepEqual(query.Params, want) {
+			t.Errorf("BuildQueries(%s) params = %+v, want %+v", driver, query.Params, want)
+		}
+	}
+}
+
+func TestBuildQueriesSqliteKeepsSameNamedParams(t *testing.T) {
+	t.Parallel()
+	// sqlite numbers its placeholders, so same-named parameters are
+	// distinct arguments and must stay separate.
+	query := buildSingleQuery(t, &config.Config{SqlDriver: config.SQLDriverSQLite}, &plugin.Query{
+		Name: "SameNames",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ?1 WHERE name != ?2",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+			{Number: 2, Column: queryCol("n", "text", nil)},
+		},
+	})
+	if len(query.Params) != 2 || query.Params[0].Name != "n" || query.Params[1].Name != "n_2" {
+		t.Fatalf("params = %+v, want distinct n and n_2", query.Params)
+	}
+	if query.Params[0].Repeated || query.Params[1].Repeated {
+		t.Fatal("sqlite params must not be marked Repeated")
+	}
+}
+
 func TestBuildQueriesMySQLSliceDedup(t *testing.T) {
 	t.Parallel()
 	sliceCol := func() *plugin.Column {

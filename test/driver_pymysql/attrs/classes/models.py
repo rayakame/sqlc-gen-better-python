@@ -10,6 +10,7 @@ __all__: collections.abc.Sequence[str] = (
     "Model3RdPartyStat",
     "TestCaseSensitivity",
     "TestConverter",
+    "TestDbtypeOverride",
     "TestEnumOverride",
     "TestExeclastid",
     "TestFieldNaming",
@@ -81,6 +82,21 @@ class TestConverter:
     prefs: str
     maybe_prefs: str | None
     tags: str
+
+
+@attrs.define()
+class TestDbtypeOverride:
+    """Model representing TestDbtypeOverride.
+
+    Attributes
+    ----------
+    id_ : int
+    happened_at : datetime.datetime
+
+    """
+
+    id_: int
+    happened_at: datetime.datetime
 
 
 @attrs.define()

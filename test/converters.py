@@ -22,6 +22,7 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import json
 import pathlib
 import typing
@@ -101,3 +102,27 @@ def decode_label(value: str) -> pathlib.PurePosixPath:
         The parsed label.
     """
     return pathlib.PurePosixPath(value)
+
+
+def encode_stamp(value: str) -> datetime.datetime:
+    """Deserialize an ISO string back into the datetime the column expects.
+
+    Used by the DATETIME db_type override of the MySQL fixtures.
+
+    Returns
+    -------
+    datetime.datetime
+        The parsed datetime to store.
+    """
+    return datetime.datetime.fromisoformat(value)
+
+
+def decode_stamp(value: datetime.datetime) -> str:
+    """Serialize a datetime column value into its ISO string form.
+
+    Returns
+    -------
+    str
+        The ISO 8601 string form of the stored datetime.
+    """
+    return value.isoformat()

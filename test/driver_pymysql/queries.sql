@@ -141,3 +141,6 @@ SELECT * FROM test_reserved_args WHERE conn = ?;
 
 -- name: InsertReservedArg :exec
 INSERT INTO test_reserved_args (id, conn) VALUES (?, ?);
+
+-- name: TouchExecLastId :execlastid
+UPDATE test_execlastid SET name = ? WHERE id = ?;

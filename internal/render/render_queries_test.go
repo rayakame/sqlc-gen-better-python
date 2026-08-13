@@ -562,6 +562,39 @@ async def insert_item(conn: asyncmy.Connection, *, id_: int) -> None:
         await cur.execute(INSERT_ITEM, (id_,))
 `,
 		},
+		{
+			// The suppression line and the hoisted module-level imports must
+			// coexist: the directive still precedes the first statement.
+			name:    "asyncmy with omit_typechecking_block keeps the directive first",
+			engine:  "mysql",
+			options: `{"package":"testpkg","sql_driver":"asyncmy","emit_init_file":false,"omit_typechecking_block":true}`,
+			queries: []*plugin.Query{{
+				Name:     "InsertItem",
+				Cmd:      metadata.CmdExec,
+				Text:     "INSERT INTO test_items (id) VALUES (?)",
+				Filename: "queries.sql",
+				Params:   []*plugin.Parameter{pgParam(pgColumn("id", "bigint", true))},
+			}},
+			want: sqlcFileHeader("queries.sql") + `# pyright: reportUnknownMemberType=false
+from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("insert_item",)
+
+import typing
+import asyncmy
+import collections.abc
+
+
+INSERT_ITEM: typing.Final[str] = """-- name: InsertItem :exec
+INSERT INTO test_items (id) VALUES (%s)
+"""
+
+
+async def insert_item(conn: asyncmy.Connection, *, id_: int) -> None:
+    async with conn.cursor() as cur:
+        await cur.execute(INSERT_ITEM, (id_,))
+`,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

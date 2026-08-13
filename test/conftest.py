@@ -82,6 +82,7 @@ _MYSQL_CLEANUP: typing.Final = (
     "DELETE FROM `3rd_party_stats`",
     "DELETE FROM test_slice",
     "DELETE FROM test_converters",
+    "DELETE FROM test_dbtype_override",
 )
 
 
@@ -119,14 +120,15 @@ def get_mysql_kwargs(config: pytest.Config) -> dict[str, typing.Any]:
     if dsn is None or not isinstance(dsn, str):
         msg = "--mysql-db option is missing"
         raise ValueError(msg)
-    # PyMySQL and asyncmy take keyword arguments, not a URI.
+    # PyMySQL and asyncmy take keyword arguments, not a URI. Credentials
+    # may be percent-encoded in the URI form.
     parsed = urllib.parse.urlsplit(dsn)
     return {
         "host": parsed.hostname or "localhost",
         "port": parsed.port or 3306,
-        "user": parsed.username or "root",
-        "password": parsed.password or "",
-        "database": parsed.path.lstrip("/"),
+        "user": urllib.parse.unquote(parsed.username or "root"),
+        "password": urllib.parse.unquote(parsed.password or ""),
+        "database": urllib.parse.unquote(parsed.path.lstrip("/")),
     }
 
 

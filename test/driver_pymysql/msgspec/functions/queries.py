@@ -42,6 +42,7 @@ __all__: collections.abc.Sequence[str] = (
     "insert_reserved_arg",
     "insert_type_override",
     "list_months",
+    "touch_exec_last_id",
     "update_varchar_test",
 )
 
@@ -236,6 +237,10 @@ SELECT id, conn FROM test_reserved_args WHERE conn = %s
 
 INSERT_RESERVED_ARG: typing.Final[str] = """-- name: InsertReservedArg :exec
 INSERT INTO test_reserved_args (id, conn) VALUES (%s, %s)
+"""
+
+TOUCH_EXEC_LAST_ID: typing.Final[str] = """-- name: TouchExecLastId :execlastid
+UPDATE test_execlastid SET name = %s WHERE id = %s
 """
 
 
@@ -1388,7 +1393,7 @@ def insert_exec_last_id(conn: pymysql.Connection, *, name: str) -> int | None:
     """
     with conn.cursor() as cur:
         cur.execute(INSERT_EXEC_LAST_ID, (name,))
-        return cur.lastrowid
+        return cur.lastrowid or None
 
 
 def get_exec_last_id_name(conn: pymysql.Connection, *, id_: int) -> str | None:
@@ -1487,3 +1492,23 @@ def insert_reserved_arg(conn: pymysql.Connection, *, id_: int, conn_2: str) -> N
     """
     with conn.cursor() as cur:
         cur.execute(INSERT_RESERVED_ARG, (id_, conn_2))
+
+
+def touch_exec_last_id(conn: pymysql.Connection, *, name: str, id_: int) -> int | None:
+    """Execute SQL query with `name: TouchExecLastId :execlastid` and return the id of the last affected row.
+
+    ```sql
+    UPDATE test_execlastid SET name = %s WHERE id = %s
+    ```
+
+    Arguments:
+    conn -- Connection object of type `pymysql.Connection` used to execute the query.
+    name -- str.
+    id_ -- int.
+
+    Returns:
+    int -- The id of the last affected row. Will be `None` if no rows are affected.
+    """
+    with conn.cursor() as cur:
+        cur.execute(TOUCH_EXEC_LAST_ID, (name, id_))
+        return cur.lastrowid or None

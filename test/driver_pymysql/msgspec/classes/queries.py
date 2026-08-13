@@ -205,6 +205,10 @@ INSERT_RESERVED_ARG: typing.Final[str] = """-- name: InsertReservedArg :exec
 INSERT INTO test_reserved_args (id, conn) VALUES (%s, %s)
 """
 
+TOUCH_EXEC_LAST_ID: typing.Final[str] = """-- name: TouchExecLastId :execlastid
+UPDATE test_execlastid SET name = %s WHERE id = %s
+"""
+
 
 class QueryResults[T]:
     """Helper class that allows both iteration and normal fetching of data from the db."""
@@ -1314,7 +1318,7 @@ class Queries:
         """
         with self._conn.cursor() as cur:
             cur.execute(INSERT_EXEC_LAST_ID, (name,))
-            return cur.lastrowid
+            return cur.lastrowid or None
 
     def get_exec_last_id_name(self, *, id_: int) -> str | None:
         """Fetch one from the db using the SQL query with `name: GetExecLastIdName :one`.
@@ -1403,3 +1407,21 @@ class Queries:
         """
         with self._conn.cursor() as cur:
             cur.execute(INSERT_RESERVED_ARG, (id_, conn))
+
+    def touch_exec_last_id(self, *, name: str, id_: int) -> int | None:
+        """Execute SQL query with `name: TouchExecLastId :execlastid` and return the id of the last affected row.
+
+        ```sql
+        UPDATE test_execlastid SET name = %s WHERE id = %s
+        ```
+
+        Arguments:
+        name -- str.
+        id_ -- int.
+
+        Returns:
+        int -- The id of the last affected row. Will be `None` if no rows are affected.
+        """
+        with self._conn.cursor() as cur:
+            cur.execute(TOUCH_EXEC_LAST_ID, (name, id_))
+            return cur.lastrowid or None

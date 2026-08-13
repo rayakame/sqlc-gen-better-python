@@ -85,13 +85,13 @@ MySQL type names are matched case-insensitively.
 | `tinyint`, `smallint`, `mediumint`, `int`, `integer`, `bigint`, `year`, `serial` (signed or `unsigned`) | `int` |
 | `float`, `double`, `double precision`, `real` | `float` |
 | `decimal`, `dec`, `fixed`, `numeric` | `decimal.Decimal` |
-| `char`, `varchar`, `tinytext`, `text`, `mediumtext`, `longtext`, `set` | `str` |
+| `char`, `varchar`, `tinytext`, `text`, `mediumtext`, `longtext` | `str` |
 | `binary`, `varbinary`, `tinyblob`, `blob`, `mediumblob`, `longblob`, `bit` | `memoryview` |
 | `date` | `datetime.date` |
 | `datetime`, `timestamp` | `datetime.datetime` |
 | `time` | `datetime.timedelta` |
 | `json` | `str` |
-| an inline `ENUM(...)` column | the generated [enum class](/docs/guide/enums#mysql) |
+| an inline `ENUM(...)` or `SET(...)` column | the generated [enum class](/docs/guide/enums#mysql) - only single-valued sets round-trip |
 | anything else | `typing.Any` |
 
 {{< callout type="info" >}}

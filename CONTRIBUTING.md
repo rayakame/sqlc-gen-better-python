@@ -67,14 +67,15 @@ sessions run with `uv run nox -s name1 name2`:
 
 | Session                                             | What it does                                                                           |
 |-----------------------------------------------------|----------------------------------------------------------------------------------------|
-| `asyncpg`, `psycopg_async`, `psycopg_sync`, `sqlite3`, `aiosqlite`, `turso_sync`, `turso_async` | Regenerate the driver's test fixtures via sqlc, then pyright + ruff |
+| `asyncpg`, `psycopg_async`, `psycopg_sync`, `sqlite3`, `aiosqlite`, `pymysql`, `asyncmy`, `turso_sync`, `turso_async` | Regenerate the driver's test fixtures via sqlc, then pyright + ruff |
 | the `_check` variants of the driver sessions | `sqlc diff` variant: verify the committed generated code is up to date (CI uses these) |
 | `pyright`                                           | Type-check the repository                                                              |
 | `ruff_check`                                        | Non-mutating format + lint check (the CI gate)                                         |
 | `ruff`, `ruff_format`                               | Format and auto-fix the repository - these sessions rewrite files                      |
 | `pytest`                                            | Runtime tests against real databases                                                   |
 
-The `pytest` session needs a local PostgreSQL. The connection URI is read from the
+The `pytest` session needs BOTH a local PostgreSQL and a local MySQL - the
+session-end cleanup connects to each unconditionally. The connection URI is read from the
 `POSTGRES_URI` environment variable and defaults to
 `postgresql://root:187187@localhost:5432/root`; set the variable only if your instance
 differs from that. To start a matching instance with docker, run

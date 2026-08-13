@@ -47,8 +47,9 @@ generates.
     statements - turso's `lastrowid` only reflects the cursor's own `INSERT`.
   - `:copyfrom` maps to PostgreSQL's bulk `COPY` protocol
     (`copy_records_to_table` on asyncpg, `cursor.copy()` on psycopg), which
-    the SQLite-engine and MySQL drivers have no equivalent for (MySQL's
-    `LOAD DATA INFILE` is not expressible through the Python drivers).
+    the SQLite-engine and MySQL drivers have no equivalent for. MySQL's
+    `LOAD DATA LOCAL INFILE` exposes no row-streaming driver API to
+    generate against; if you need it, run it as a plain `:exec` statement.
 {{< /callout >}}
 
 ### Prepared queries

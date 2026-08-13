@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS test_reserved_args
     conn                  varchar(64)        NOT NULL
 );
 
--- :execlastid reads cursor.lastrowid from the AUTO_INCREMENT key. Serial
+-- :execlastid reads cursor.lastrowid from the AUTO_INCREMENT key. serial
 -- is the bigint unsigned AUTO_INCREMENT alias.
 CREATE TABLE IF NOT EXISTS test_execlastid
 (
@@ -177,4 +177,13 @@ CREATE TABLE IF NOT EXISTS test_converters
     prefs                 json               NOT NULL,
     maybe_prefs           json,
     tags                  text               NOT NULL
+);
+
+-- db_type override target: DATETIME must match the normalized type name
+-- case-insensitively, through a converter (postgres parity). Isolated in
+-- its own module so the main matrix's datetime columns stay untouched.
+CREATE TABLE IF NOT EXISTS test_dbtype_override
+(
+    id                    bigint PRIMARY KEY NOT NULL,
+    happened_at           datetime           NOT NULL
 );

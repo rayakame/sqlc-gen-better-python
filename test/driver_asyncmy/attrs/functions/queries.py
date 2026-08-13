@@ -43,6 +43,7 @@ __all__: collections.abc.Sequence[str] = (
     "insert_reserved_arg",
     "insert_type_override",
     "list_months",
+    "touch_exec_last_id",
     "update_varchar_test",
 )
 
@@ -237,6 +238,10 @@ SELECT id, conn FROM test_reserved_args WHERE conn = %s
 
 INSERT_RESERVED_ARG: typing.Final[str] = """-- name: InsertReservedArg :exec
 INSERT INTO test_reserved_args (id, conn) VALUES (%s, %s)
+"""
+
+TOUCH_EXEC_LAST_ID: typing.Final[str] = """-- name: TouchExecLastId :execlastid
+UPDATE test_execlastid SET name = %s WHERE id = %s
 """
 
 
@@ -1546,7 +1551,7 @@ async def insert_exec_last_id(conn: asyncmy.Connection, *, name: str) -> int | N
     """
     async with conn.cursor() as cur:
         await cur.execute(INSERT_EXEC_LAST_ID, (name,))
-        return cur.lastrowid
+        return cur.lastrowid or None
 
 
 async def get_exec_last_id_name(conn: asyncmy.Connection, *, id_: int) -> str | None:
@@ -1666,3 +1671,28 @@ async def insert_reserved_arg(conn: asyncmy.Connection, *, id_: int, conn_2: str
     """
     async with conn.cursor() as cur:
         await cur.execute(INSERT_RESERVED_ARG, (id_, conn_2))
+
+
+async def touch_exec_last_id(conn: asyncmy.Connection, *, name: str, id_: int) -> int | None:
+    """Execute SQL query with `name: TouchExecLastId :execlastid` and return the id of the last affected row.
+
+    ```sql
+    UPDATE test_execlastid SET name = %s WHERE id = %s
+    ```
+
+    Parameters
+    ----------
+    conn : asyncmy.Connection
+        Connection object of type `asyncmy.Connection` used to execute the query.
+    name : str
+    id_ : int
+
+    Returns
+    -------
+    int
+        The id of the last affected row. Will be `None` if no rows are affected.
+
+    """
+    async with conn.cursor() as cur:
+        await cur.execute(TOUCH_EXEC_LAST_ID, (name, id_))
+        return cur.lastrowid or None

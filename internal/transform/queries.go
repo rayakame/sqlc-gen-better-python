@@ -63,15 +63,65 @@ func (t *Transformer) plainParams(pluginQuery *plugin.Query, pluginParams []*plu
 			seen["cur"]++
 		}
 	}
+	// sqlc's MySQL engine emits one parameter per occurrence of a reused
+	// named argument too (its dialect binds every use site separately).
+	// Same-named parameters are one logical argument - sqlc's own MySQL
+	// codegen merges them - so repeats keep their positional binding slot
+	// but drop out of the signature. A use site that rejects NULL makes
+	// the merged parameter non-optional.
+	firstIdx := make(map[string]int, len(pluginParams))
 	for _, param := range pluginParams {
+		typ := t.buildPyType(param.Column)
+		rawName := model.ParamName(param)
+		if t.config.SqlDriver.IsMysql() && typ.SqlcSliceName == "" {
+			if idx, found := firstIdx[rawName]; found {
+				if !typ.IsNullable {
+					params[idx].Type.IsNullable = false
+				}
+				params = append(params, model.QueryValue{
+					Name:     params[idx].Name,
+					Type:     params[idx].Type,
+					Number:   param.Number,
+					Repeated: true,
+				})
+
+				continue
+			}
+			firstIdx[rawName] = len(params)
+		}
 		params = append(params, model.QueryValue{
-			Name:   model.DedupName(model.ParamName(param), seen),
-			Type:   t.buildPyType(param.Column),
+			Name:   model.DedupName(rawName, seen),
+			Type:   typ,
 			Number: param.Number,
 		})
 	}
+	// A later occurrence can have tightened the first one's nullability
+	// after repeats were copied; conversions must use one type everywhere.
+	firstByName := make(map[string]model.PyType, len(firstIdx))
+	for _, idx := range firstIdx {
+		firstByName[params[idx].Name] = params[idx].Type
+	}
+	for i := range params {
+		if params[i].Repeated {
+			params[i].Type = firstByName[params[i].Name]
+		}
+	}
 
 	return params
+}
+
+// logicalParamCount counts parameters as the generated signature will show
+// them: MySQL's per-occurrence duplicates of one reused argument count once.
+func (t *Transformer) logicalParamCount(params []*plugin.Parameter) int {
+	if !t.config.SqlDriver.IsMysql() {
+		return len(params)
+	}
+	names := make(map[string]struct{}, len(params))
+	for _, param := range params {
+		names[model.ParamName(param)] = struct{}{}
+	}
+
+	return len(names)
 }
 
 // dedupSliceParams collapses the per-occurrence duplicates sqlc's MySQL
@@ -174,10 +224,11 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			query.SQL = rewriteMySQLSQL(pluginQuery.Text)
 		}
 
-		// Dedup before the limit check: a reused sqlc.slice is one logical
-		// parameter and must not push a query into bundled mode by itself.
+		// Dedup before the limit check: a reused sqlc.slice or named
+		// argument is one logical parameter and must not push a query into
+		// bundled mode by itself.
 		pluginParams := t.dedupSliceParams(pluginQuery.Params)
-		if query.Cmd == metadata.CmdCopyFrom || t.config.IsOverQueryParameterLimit(len(pluginParams)) {
+		if query.Cmd == metadata.CmdCopyFrom || t.config.IsOverQueryParameterLimit(t.logicalParamCount(pluginParams)) {
 			query.Params = t.bundledParams(pluginParams, query.QueryName, query.Cmd == metadata.CmdCopyFrom)
 		} else {
 			query.Params = t.plainParams(pluginQuery, pluginParams)

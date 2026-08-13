@@ -915,6 +915,27 @@ class TestPymysqlDataclassClasses:
         enum_override_obj.insert_enum_override(id_=ENUM_OVERRIDE_ID_2, mood_test="sad")
 
     @pytest.mark.dependency(
+        name="PymysqlTestDataclassClasses::count_enum_override_by_moods",
+        depends=["PymysqlTestDataclassClasses::insert_enum_override"],
+    )
+    def test_count_enum_override_by_moods(self, enum_override_obj: queries_enum_override.QueriesEnumOverride) -> None:
+        # Each slice element converts back through the enum class before
+        # binding; an invalid member raises before any SQL runs. Counts are
+        # relative: the shared table carries other files' rows too.
+        both = enum_override_obj.count_enum_override_by_moods(moods=("happy", "sad"))
+        happy = enum_override_obj.count_enum_override_by_moods(moods=["happy"])
+        sad = enum_override_obj.count_enum_override_by_moods(moods=["sad"])
+        assert both is not None
+        assert happy is not None
+        assert sad is not None
+        assert happy >= 1
+        assert sad >= 1
+        assert both == happy + sad
+        assert enum_override_obj.count_enum_override_by_moods(moods=[]) == 0
+        with pytest.raises(ValueError, match="not-a-mood"):
+            enum_override_obj.count_enum_override_by_moods(moods=["not-a-mood"])
+
+    @pytest.mark.dependency(
         name="PymysqlTestDataclassClasses::get_enum_override_mood",
         depends=["PymysqlTestDataclassClasses::insert_enum_override"],
     )

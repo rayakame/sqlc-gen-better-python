@@ -71,6 +71,8 @@ the `sha256:` field in the root `sqlc.yaml` and every `test/driver_*/sqlc.yaml`
 (sqlc refuses to run the plugin on a hash mismatch), and copies the `.wasm`
 into each test driver directory. The driver dir list is hardcoded in both
 build scripts; a new driver dir must also be added there, in noxfile.py
+(`DRIVER_PATHS`), and in ci.yml (job + the ci-done needs list). The driver dir list is hardcoded in both
+build scripts; a new driver dir must also be added there, in noxfile.py
 (`DRIVER_PATHS`), and in ci.yml (job + the ci-done needs list).
 
 ### Python (verification of generated code)
@@ -92,9 +94,11 @@ uv run nox -s pytest          # runtime tests (needs postgres, see below)
 Extra pytest args pass through after `--`, e.g.
 `uv run nox -s pytest -- test/driver_asyncpg/msgspec/test_msgspec_classes.py -k test_name`.
 
-pytest needs a local PostgreSQL, configured via the `POSTGRES_URI` env var
-(default `postgresql://root:187187@localhost:5432/root`). CONTRIBUTING.md has
-a `docker run` one-liner for it.
+pytest needs a local PostgreSQL (`POSTGRES_URI`, default
+`postgresql://root:187187@localhost:5432/root`) AND a local MySQL
+(`MYSQL_URI`, default `mysql://root:187187@localhost:3306/root`); the
+session-end cleanup connects to both unconditionally. CONTRIBUTING.md has
+`docker run` one-liners for both.
 
 The full verification loop after a generator change: `go build ./...` ->
 rebuild wasm -> `uv run nox` -> the seven `*_check` sessions -> commit the
@@ -122,6 +126,11 @@ generation pipeline lives in `internal/handler.go`:
    `BuildEnums()`, `BuildTables()`, `BuildQueries(tables)`,
    `FilterUnusedModels()`. `type.go` builds `PyType` and normalizes
    `SQLType` (lowercased once here; every downstream consumer relies on it).
+   `psycopg_sql.go` and `mysql_sql.go` rewrite placeholders at IR build time
+   (psycopg: `$N` -> `%(pN)s`; MySQL: `?` -> `%s` with `%` doubled - small
+   SQL lexers matching each engine's rules). `plainParams` pre-reserves the
+   locals driver bodies emit and merges MySQL's per-occurrence duplicates of
+   reused parameters (`Repeated` flag keeps their binding slots).
    `psycopg_sql.go` rewrites `$N` placeholders to psycopg's `%(pN)s` at IR
    build time (a small PostgreSQL lexer: skips strings, dollar quotes, quoted
    identifiers, nested comments; doubles literal `%`). `plainParams`
@@ -179,6 +188,11 @@ buffer is emitted as an extra output file.
 - sqlite `register_converter` is process-global; per-module registration
   emits only what that module needs (params -> adapters, non-overridden
   returns -> converters). psycopg's loader registration follows the same
+  policy (returned json/jsonb types only).
+- The MySQL drivers interpolate pyformat placeholders client-side: rewritten
+  SQL constants carry `%s`/`%%`, and the slice-expansion/placeholder-scanner
+  machinery in `internal/driver/common.go` must lex them exactly like the
+  rewriter emitted them. psycopg's loader registration follows the same
   policy (returned json/jsonb types only).
 - `speedups: true` swaps date/datetime decoding to `ciso8601` (sqlite
   converter bodies, turso inline decodes); the import resolver tracks which

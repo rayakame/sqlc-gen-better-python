@@ -891,6 +891,10 @@ class TestAsyncmyDataclassFunctions:
         name = await queries.get_exec_last_id_name(conn=asyncmy_conn, id_=first_id)
         assert name == "dataclass-functions-first"
 
+        # A statement that inserts nothing has no last row id: the OK
+        # packet's 0 maps to the documented None.
+        assert await queries.touch_exec_last_id(conn=asyncmy_conn, name="untouched", id_=first_id + 1000000) is None
+
         second_id = await queries.insert_exec_last_id(conn=asyncmy_conn, name="dataclass-functions-second")
         assert second_id is not None
         assert second_id > first_id

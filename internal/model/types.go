@@ -127,6 +127,11 @@ type QueryValue struct {
 	// Number is the 1-based sqlc parameter number, used by drivers that
 	// bind by name (psycopg's %(pN)s); 0 for return values.
 	Number int32
+
+	// Repeated marks a later occurrence of a reused MySQL parameter: it
+	// keeps its positional binding slot (same Name as the first occurrence)
+	// but is skipped in signatures and docstrings.
+	Repeated bool
 }
 
 type Embed struct {

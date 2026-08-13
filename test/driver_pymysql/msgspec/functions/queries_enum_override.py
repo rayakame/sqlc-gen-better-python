@@ -9,6 +9,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
+    "count_enum_override_by_moods",
     "get_enum_override_mood",
     "insert_enum_override",
     "list_enum_override_by_ids",
@@ -37,6 +38,10 @@ SELECT mood_test FROM test_enum_override WHERE id = %s
 
 LIST_ENUM_OVERRIDE_BY_IDS: typing.Final[str] = """-- name: ListEnumOverrideByIds :many
 SELECT id, mood_test FROM test_enum_override WHERE id IN (/*SLICE:ids*/%s) ORDER BY id
+"""
+
+COUNT_ENUM_OVERRIDE_BY_MOODS: typing.Final[str] = """-- name: CountEnumOverrideByMoods :one
+SELECT count(*) FROM test_enum_override WHERE mood_test IN (/*SLICE:moods*/%s)
 """
 
 
@@ -165,3 +170,26 @@ def list_enum_override_by_ids(conn: pymysql.Connection, *, ids: collections.abc.
 
     sql = LIST_ENUM_OVERRIDE_BY_IDS.replace("/*SLICE:ids*/%s", ",".join(("%s",) * len(ids)) or "NULL", 1)
     return QueryResults(conn, sql, _decode_hook, *ids)
+
+
+def count_enum_override_by_moods(conn: pymysql.Connection, *, moods: collections.abc.Sequence[str]) -> int | None:
+    """Fetch one from the db using the SQL query with `name: CountEnumOverrideByMoods :one`.
+
+    ```sql
+    SELECT count(*) FROM test_enum_override WHERE mood_test IN (/*SLICE:moods*/%s)
+    ```
+
+    Arguments:
+    conn -- Connection object of type `pymysql.Connection` used to execute the query.
+    moods -- collections.abc.Sequence[str].
+
+    Returns:
+    int -- Result fetched from the db. Will be `None` if not found.
+    """
+    sql = COUNT_ENUM_OVERRIDE_BY_MOODS.replace("/*SLICE:moods*/%s", ",".join(("%s",) * len(moods)) or "NULL", 1)
+    with conn.cursor() as cur:
+        cur.execute(sql, (*[enums.TestEnumOverrideMoodTest(v) for v in moods],))
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return row[0]

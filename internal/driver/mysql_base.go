@@ -221,9 +221,11 @@ func (mb *mysqlBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 		writeSqliteCall(body, indent+1, parts, "return "+execKw+"cur.execute("+sqlRef, ")")
 
 	case metadata.CmdExecLastId:
+		// lastrowid is 0 (never None) when the statement inserted nothing;
+		// AUTO_INCREMENT ids start at 1, so 0 maps to the documented None.
 		body.WriteIndentedLine(indent, withStmt)
 		writeExec(indent + 1)
-		body.WriteIndentedLine(indent+1, "return cur.lastrowid")
+		body.WriteIndentedLine(indent+1, "return cur.lastrowid or None")
 
 	case metadata.CmdOne:
 		body.WriteIndentedLine(indent, withStmt)

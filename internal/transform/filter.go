@@ -16,19 +16,21 @@ func FilterUnusedModels(enums []model.Enum, tables []model.Table, queries []mode
 		typeName = strings.TrimPrefix(typeName, "enums.")
 		keep[typeName] = struct{}{}
 	}
-	addPyType := func(typ model.PyType) {
+	addPyType := func(typ model.PyType, isParam bool) {
 		addType(typ.Type)
-		// An overridden enum column still calls the enum class at runtime:
-		// parameters convert back through their DefaultType.
-		if typ.DoOverride() {
+		// An overridden enum PARAM still calls the enum class at runtime -
+		// it converts back through its DefaultType. Overridden returns
+		// convert through the override type only, so their DefaultType
+		// would be a dead retention.
+		if isParam && typ.DoOverride() {
 			addType(typ.DefaultType)
 		}
 	}
-	collect := func(qv model.QueryValue) {
+	collect := func(qv model.QueryValue, isParam bool) {
 		if qv.IsEmpty() {
 			return
 		}
-		addPyType(qv.Type)
+		addPyType(qv.Type, isParam)
 		if qv.Table == nil {
 			return
 		}
@@ -36,18 +38,18 @@ func FilterUnusedModels(enums []model.Enum, tables []model.Table, queries []mode
 			if col.Embed != nil {
 				addType(col.Embed.ModelName)
 				for _, embedCol := range col.Embed.Columns {
-					addPyType(embedCol.Type)
+					addPyType(embedCol.Type, isParam)
 				}
 
 				continue
 			}
-			addPyType(col.Type)
+			addPyType(col.Type, isParam)
 		}
 	}
 	for _, query := range queries {
-		collect(query.Returns)
+		collect(query.Returns, false)
 		for _, param := range query.Params {
-			collect(param)
+			collect(param, true)
 		}
 	}
 

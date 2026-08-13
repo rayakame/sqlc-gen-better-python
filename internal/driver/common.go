@@ -30,11 +30,21 @@ func writeFuncSignature(
 		asyncPrefix = "async "
 	}
 
+	signatureParams := 0
+	for _, param := range query.Params {
+		if !param.Repeated {
+			signatureParams++
+		}
+	}
 	args := []string{first}
-	if len(query.Params) > config.OmitKwargsLimit {
+	if signatureParams > config.OmitKwargsLimit {
 		args = append(args, "*")
 	}
 	for _, param := range query.Params {
+		// A repeated MySQL parameter binds again but is one argument.
+		if param.Repeated {
+			continue
+		}
 		args = append(args, fmt.Sprintf("%s: %s", param.Name, param.Type.Print()))
 	}
 	body.WriteWrappedCall(indent,
@@ -426,7 +436,7 @@ func writeQueryDocstring(body *writer.CodeWriter, d Driver, cfg *config.Config, 
 	}
 	args := make([]writer.DocArg, 0, len(query.Params))
 	for _, param := range query.Params {
-		if param.IsEmpty() {
+		if param.IsEmpty() || param.Repeated {
 			continue
 		}
 		extra := ""

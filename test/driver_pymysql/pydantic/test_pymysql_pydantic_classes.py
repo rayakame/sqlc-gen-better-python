@@ -587,14 +587,26 @@ class TestPymysqlPydanticClasses:
     def test_case_count(self, case_obj: queries_case.QueriesCase) -> None:
         # The WHERE clause lives inside an executable /*! version comment; if
         # MySQL ignored it both counts would be 2.
-        assert case_obj.count_case_rows(id_=CASE_IDS[1]) == 1
-        assert case_obj.count_case_rows(id_=CASE_IDS[0]) == len(CASE_IDS)
+        # Range-scoped asserts: the shared table may carry other files' rows,
+        # so counts outside [CASE_IDS[0], CASE_IDS[1]] must cancel out.
+        beyond = case_obj.count_case_rows(id_=CASE_IDS[1] + 1)
+        high = case_obj.count_case_rows(id_=CASE_IDS[1])
+        low = case_obj.count_case_rows(id_=CASE_IDS[0])
+        assert beyond is not None
+        assert high is not None
+        assert low is not None
+        assert high - beyond == 1
+        assert low - beyond == len(CASE_IDS)
 
     @pytest.mark.dependency(depends=["PymysqlPydanticClasses::case_count"])
     def test_case_delete(self, case_obj: queries_case.QueriesCase, pymysql_conn: pymysql.Connection) -> None:
         with pymysql_conn.cursor() as cur:
             cur.execute("DELETE FROM test_case_sensitivity WHERE id IN (%s, %s)", CASE_IDS)
-        assert case_obj.count_case_rows(id_=CASE_IDS[0]) == 0
+        beyond = case_obj.count_case_rows(id_=CASE_IDS[1] + 1)
+        low = case_obj.count_case_rows(id_=CASE_IDS[0])
+        assert beyond is not None
+        assert low is not None
+        assert low - beyond == 0
 
     @pytest.mark.dependency(name="PymysqlPydanticClasses::enum_insert")
     def test_enum_override_insert(self, enum_obj: queries_enum_override.QueriesEnumOverride) -> None:
