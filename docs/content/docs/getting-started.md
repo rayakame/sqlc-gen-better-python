@@ -94,6 +94,25 @@ Nothing to install - sqlite3 is in the standard library.
 
   {{< /tab >}}
 
+  {{< tab name="asyncmy" >}}
+
+```bash
+uv add asyncmy
+```
+
+  {{< /tab >}}
+
+  {{< tab name="pymysql" >}}
+
+```bash
+uv add pymysql types-PyMySQL
+```
+
+PyMySQL has no strict typing of its own; [types-PyMySQL](https://pypi.org/project/types-PyMySQL/)
+makes the generated annotations work under pyright and mypy.
+
+  {{< /tab >}}
+
 {{< /tabs >}}
 
 Using pip instead of uv? Swap `uv add` for `pip install` in any command above.
@@ -235,6 +254,58 @@ sql:
 
   {{< /tab >}}
 
+  {{< tab name="asyncmy" >}}
+
+```yaml
+# filename: sqlc.yaml
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.8.0/sqlc-gen-better-python.wasm
+      sha256: c98cffe9024c3c8e802426a4babec460c2d17adc440181324e3d707b1e723c48
+sql:
+  - engine: "mysql"
+    queries: "query.sql"
+    schema: "schema.sql"
+    codegen:
+      - out: "app/db"
+        plugin: python
+        options:
+          package: "db"
+          emit_init_file: true
+          sql_driver: "asyncmy"
+          model_type: "dataclass"
+```
+
+  {{< /tab >}}
+
+  {{< tab name="pymysql" >}}
+
+```yaml
+# filename: sqlc.yaml
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.8.0/sqlc-gen-better-python.wasm
+      sha256: c98cffe9024c3c8e802426a4babec460c2d17adc440181324e3d707b1e723c48
+sql:
+  - engine: "mysql"
+    queries: "query.sql"
+    schema: "schema.sql"
+    codegen:
+      - out: "app/db"
+        plugin: python
+        options:
+          package: "db"
+          emit_init_file: true
+          sql_driver: "pymysql"
+          model_type: "dataclass"
+```
+
+  {{< /tab >}}
+
 {{< /tabs >}}
 
 {{< callout type="warning" >}}
@@ -302,6 +373,32 @@ CREATE TABLE users
   {{< /tab >}}
 
   {{< tab name="sqlite3" >}}
+
+```sql
+-- filename: schema.sql
+CREATE TABLE users
+(
+    id   INTEGER PRIMARY KEY NOT NULL,
+    name TEXT                NOT NULL
+);
+```
+
+  {{< /tab >}}
+
+  {{< tab name="asyncmy" >}}
+
+```sql
+-- filename: schema.sql
+CREATE TABLE users
+(
+    id   INTEGER PRIMARY KEY NOT NULL,
+    name TEXT                NOT NULL
+);
+```
+
+  {{< /tab >}}
+
+  {{< tab name="pymysql" >}}
 
 ```sql
 -- filename: schema.sql
@@ -389,11 +486,37 @@ SELECT * FROM users ORDER BY name;
 
   {{< /tab >}}
 
+  {{< tab name="asyncmy" >}}
+
+```sql
+-- filename: query.sql
+-- name: GetUser :one
+SELECT * FROM users WHERE id = ?;
+
+-- name: ListUsers :many
+SELECT * FROM users ORDER BY name;
+```
+
+  {{< /tab >}}
+
+  {{< tab name="pymysql" >}}
+
+```sql
+-- filename: query.sql
+-- name: GetUser :one
+SELECT * FROM users WHERE id = ?;
+
+-- name: ListUsers :many
+SELECT * FROM users ORDER BY name;
+```
+
+  {{< /tab >}}
+
 {{< /tabs >}}
 
-PostgreSQL uses `$1` placeholders, SQLite uses `?`. Everything else is the same.
-(You write `$1` for psycopg too - the plugin rewrites the placeholders to
-psycopg's format at generation time.)
+PostgreSQL uses `$1` placeholders, SQLite and MySQL use `?`. Everything else is
+the same. (You write `$1` for psycopg and `?` for the MySQL drivers - the plugin
+rewrites the placeholders to each driver's format at generation time.)
 
 ## 4. Generate
 
@@ -523,6 +646,56 @@ def get_user(conn: sqlite3.Connection, *, id_: int) -> models.User | None:
 
 
 def list_users(conn: sqlite3.Connection) -> QueryResults[models.User]: ...
+```
+
+  {{< /tab >}}
+
+  {{< tab name="asyncmy" >}}
+
+```python
+# models.py
+@dataclasses.dataclass()
+class User:
+    id_: int
+    name: str
+
+
+# query.py
+async def get_user(conn: asyncmy.Connection, *, id_: int) -> models.User | None:
+    async with conn.cursor() as cur:
+        await cur.execute(GET_USER, (id_,))
+        row = await cur.fetchone()
+    if row is None:
+        return None
+    return models.User(id_=row[0], name=row[1])
+
+
+def list_users(conn: asyncmy.Connection) -> QueryResults[models.User]: ...
+```
+
+  {{< /tab >}}
+
+  {{< tab name="pymysql" >}}
+
+```python
+# models.py
+@dataclasses.dataclass()
+class User:
+    id_: int
+    name: str
+
+
+# query.py
+def get_user(conn: pymysql.Connection, *, id_: int) -> models.User | None:
+    with conn.cursor() as cur:
+        cur.execute(GET_USER, (id_,))
+        row = cur.fetchone()
+    if row is None:
+        return None
+    return models.User(id_=row[0], name=row[1])
+
+
+def list_users(conn: pymysql.Connection) -> QueryResults[models.User]: ...
 ```
 
   {{< /tab >}}
@@ -687,6 +860,59 @@ for user in query.list_users(conn):
   decimals, booleans, or blobs. See
   [SQLite type conversion](/docs/guide/sqlite-type-conversion).
 {{< /callout >}}
+
+  {{< /tab >}}
+
+  {{< tab name="asyncmy" >}}
+
+```python
+import asyncio
+
+import asyncmy
+
+from app.db import query
+
+
+async def main() -> None:
+    conn = await asyncmy.connect(host="localhost", user="user", password="pass", database="mydb")
+
+    user = await query.get_user(conn, id_=1)
+    if user is not None:
+        print(user.name)
+
+    # every row at once
+    users = await query.list_users(conn)
+
+    # or stream them
+    async for user in query.list_users(conn):
+        print(user.name)
+
+
+asyncio.run(main())
+```
+
+  {{< /tab >}}
+
+  {{< tab name="pymysql" >}}
+
+```python
+import pymysql
+
+from app.db import query
+
+conn = pymysql.connect(host="localhost", user="user", password="pass", database="mydb")
+
+user = query.get_user(conn, id_=1)
+if user is not None:
+    print(user.name)
+
+# every row at once - call the result
+users = query.list_users(conn)()
+
+# or iterate
+for user in query.list_users(conn):
+    print(user.name)
+```
 
   {{< /tab >}}
 

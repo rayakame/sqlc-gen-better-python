@@ -1,14 +1,14 @@
 ---
 title: Drivers
 description: >-
-  Pick between asyncpg, psycopg_async, psycopg_sync, aiosqlite, sqlite3, and the experimental turso drivers - connection examples and per-driver behavior.
+  Pick between asyncpg, psycopg, aiosqlite, sqlite3, asyncmy, pymysql, and the experimental turso drivers - connection examples and per-driver behavior.
 weight: 20
 prev: /docs/guide/configuration
 next: /docs/guide/model-types
 ---
 
 The `sql_driver` option picks which database library the generated code targets.
-It must match your `engine`. Seven drivers are supported:
+It must match your `engine`. Nine drivers are supported:
 
 | Driver | Engine | Style |
 |---|---|---|
@@ -17,6 +17,8 @@ It must match your `engine`. Seven drivers are supported:
 | `psycopg_sync` | `postgresql` | sync |
 | `aiosqlite` | `sqlite` | async |
 | `sqlite3` | `sqlite` | sync |
+| `asyncmy` | `mysql` | async |
+| `pymysql` | `mysql` | sync |
 | `turso_async` | `sqlite` | async (experimental) |
 | `turso_sync` | `sqlite` | sync (experimental) |
 
@@ -144,6 +146,73 @@ user = queries.get_field_naming(conn, id_=1)
   parameters, work without it. See
   [SQLite type conversion](/docs/guide/sqlite-type-conversion).
 {{< /callout >}}
+
+## asyncmy (async MySQL)
+
+```python
+import asyncio
+
+import asyncmy
+
+from app.db import queries
+
+
+async def main() -> None:
+    conn = await asyncmy.connect(host="localhost", user="user", password="pass", database="db")
+    user = await queries.get_field_naming(conn, id_=1)
+
+
+asyncio.run(main())
+```
+
+The generated code targets [asyncmy](https://github.com/long2ice/asyncmy)
+with its default tuple cursors; the connection annotation is
+`asyncmy.Connection`. No connection flags are needed - values convert
+inline, so `date`/`datetime`/`decimal` columns round-trip out of the box.
+
+{{< callout type="info" >}}
+  asyncmy's shipped stubs leave the cursor methods unannotated, so every
+  generated queries module starts with
+  `# pyright: reportUnknownMemberType=false`. The rest of the module is
+  checked under pyright strict as usual; the line disappears once asyncmy
+  annotates its stubs.
+{{< /callout >}}
+
+## pymysql (sync MySQL)
+
+```python
+import pymysql
+
+from app.db import queries
+
+conn = pymysql.connect(host="localhost", user="user", password="pass", database="db")
+user = queries.get_field_naming(conn, id_=1)
+```
+
+Same contract as `asyncmy`, emitted as plain functions without
+`async`/`await`. The connection annotation is `pymysql.Connection`.
+
+{{< callout type="info" >}}
+  PyMySQL ships without type annotations - install
+  [types-PyMySQL](https://pypi.org/project/types-PyMySQL/) so pyright and
+  mypy understand the generated code. Type checking only; never evaluated
+  at runtime.
+{{< /callout >}}
+
+Behavior shared by both MySQL drivers:
+
+- Queries are written with `?` placeholders like on SQLite; the generated SQL
+  constants hold the pyformat `%s` form the drivers expect, with literal `%`
+  doubled. The rewrite happens at generation time - your `.sql` files stay
+  plain MySQL.
+- `time` columns map to `datetime.timedelta` and `tinyint(1)` to `bool`,
+  matching what the drivers return. The full table is in the
+  [type mappings reference](/docs/reference/type-mappings).
+- `memoryview` parameters bind as `bytes` automatically - the PyMySQL family
+  cannot encode a raw memoryview.
+- Inline `ENUM` (and `SET`) columns generate
+  [enum classes](/docs/guide/enums#mysql).
+- `:execlastid` returns `cursor.lastrowid`; `:copyfrom` is not supported.
 
 ## turso_sync / turso_async (Turso)
 
