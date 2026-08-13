@@ -84,6 +84,21 @@ func TestWriteFuncSignature(t *testing.T) {
 			wantConn:   commonConnExpr,
 		},
 		{
+			name: "repeated mysql param appears once in the signature",
+			drv:  newMysqlDriver("pymysql", false),
+			query: model.Query{
+				Cmd:      metadata.CmdExec,
+				FuncName: "rename_author",
+				Params: []model.QueryValue{
+					{Name: "n", Type: model.PyType{Type: "str", SQLType: "text"}},
+					{Name: "n", Type: model.PyType{Type: "str", SQLType: "text"}, Repeated: true},
+				},
+			},
+			annotation: "None",
+			want:       "def rename_author(conn: pymysql.Connection, *, n: str) -> None:\n",
+			wantConn:   commonConnExpr,
+		},
+		{
 			name: "sync driver has no async prefix",
 			drv:  newSqliteDriver("sqlite3", false),
 			query: model.Query{
@@ -459,6 +474,11 @@ func TestPlaceholderSequencePyformat(t *testing.T) {
 			want: []string{""},
 		},
 		{
+			name: "unterminated hash comment swallows the rest",
+			sql:  "WHERE a = %s # tail %s",
+			want: []string{""},
+		},
+		{
 			name: "version comment body is live",
 			sql:  "SELECT id /*! WHERE a = %s */ AND b = %s",
 			want: []string{"", ""},
@@ -584,6 +604,33 @@ func TestWriteQueryDocstring(t *testing.T) {
 			},
 			retType: "models.Author",
 			want:    "",
+		},
+		{
+			name:       "repeated mysql param is documented once",
+			convention: config.DocstringConventionGoogle,
+			query: model.Query{
+				Cmd:       metadata.CmdExec,
+				QueryName: "RenameAuthor",
+				SQL:       "UPDATE authors SET name = %s WHERE name = %s",
+				Params: []model.QueryValue{
+					{Name: "n", Type: model.PyType{Type: "str", SQLType: "text"}},
+					{Name: "n", Type: model.PyType{Type: "str", SQLType: "text"}, Repeated: true},
+				},
+			},
+			want: strings.Join([]string{
+				"    \"\"\"Execute SQL query with `name: RenameAuthor :exec`.",
+				"",
+				"    ```sql",
+				"    UPDATE authors SET name = %s WHERE name = %s",
+				"    ```",
+				"",
+				"    Args:",
+				"        conn:",
+				"            Connection object of type `ConnectionLike` used to execute the query.",
+				"        n: str.",
+				"    \"\"\"",
+				"",
+			}, "\n"),
 		},
 		{
 			name:       "google one with conn and sql",
