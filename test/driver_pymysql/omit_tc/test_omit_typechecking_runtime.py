@@ -31,6 +31,7 @@ import typing
 
 import pytest
 
+from test.driver_pymysql import no_row_conn
 from test.driver_pymysql.omit_tc.classes import models as classes_models
 from test.driver_pymysql.omit_tc.classes import queries_enum_override as classes_queries
 from test.driver_pymysql.omit_tc.functions import models as functions_models
@@ -101,6 +102,12 @@ class TestOmitTcClasses:
         assert list(queries_obj.list_enum_override_by_ids(ids=[])) == []
 
     @pytest.mark.dependency(depends=["TestOmitTcClasses::insert_enum_override"])
+    def test_count_enum_override_by_moods(self, queries_obj: classes_queries.QueriesEnumOverride) -> None:
+        # An empty slice expands to IN (NULL); count(*) still returns a row.
+        assert queries_obj.count_enum_override_by_moods(moods=[]) == 0
+        stub = typing.cast("pymysql.Connection", no_row_conn.NoRowConn())
+        assert classes_queries.QueriesEnumOverride(conn=stub).count_enum_override_by_moods(moods=[]) is None
+
     def test_delete_enum_override(self, pymysql_conn: pymysql.Connection) -> None:
         # Remove the rows so later suites against the shared database start
         # clean.
@@ -131,6 +138,12 @@ class TestOmitTcFunctions:
         assert functions_queries.get_enum_override_mood(conn=pymysql_conn, id_=MISSING_ID) is None
 
     @pytest.mark.dependency(name="TestOmitTcFunctions::list_enum_override", depends=["TestOmitTcFunctions::insert_enum_override"])
+    def test_count_enum_override_by_moods(self, pymysql_conn: pymysql.Connection) -> None:
+        # An empty slice expands to IN (NULL); count(*) still returns a row.
+        assert functions_queries.count_enum_override_by_moods(conn=pymysql_conn, moods=[]) == 0
+        stub = typing.cast("pymysql.Connection", no_row_conn.NoRowConn())
+        assert functions_queries.count_enum_override_by_moods(conn=stub, moods=[]) is None
+
     def test_list_enum_override_by_ids(self, pymysql_conn: pymysql.Connection) -> None:
         # Calling the QueryResults object fetches all rows in one go.
         rows = functions_queries.list_enum_override_by_ids(conn=pymysql_conn, ids=list(FUNCTIONS_IDS))()

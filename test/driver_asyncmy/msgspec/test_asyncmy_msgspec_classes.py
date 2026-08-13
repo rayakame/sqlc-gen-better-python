@@ -24,6 +24,7 @@ import datetime
 import decimal
 import json
 import math
+import typing
 from collections import UserString
 
 import asyncmy
@@ -32,6 +33,7 @@ import msgspec.structs
 import pytest
 import pytest_asyncio
 
+from test.driver_asyncmy import no_row_conn
 from test.driver_asyncmy.msgspec.classes import enums
 from test.driver_asyncmy.msgspec.classes import models
 from test.driver_asyncmy.msgspec.classes import queries
@@ -853,3 +855,29 @@ class TestAsyncmyMsgspecClasses:
             await cur.execute("DELETE FROM test_type_override WHERE id IN (%s, %s)", (OVERRIDE_ID, OVERRIDE_NONE_ID))  # pyright: ignore[reportUnknownMemberType]
             await cur.execute("DELETE FROM test_reserved_args WHERE id = %s", (RESERVED_ID,))  # pyright: ignore[reportUnknownMemberType]
             await cur.execute("DELETE FROM test_execlastid WHERE name = %s", (SUITE_TAG,))  # pyright: ignore[reportUnknownMemberType]
+
+    @pytest.mark.asyncio(loop_scope="session")
+    async def test_one_missing_rows_return_none(self, asyncmy_conn: asyncmy.Connection) -> None:
+        # Every :one not-found branch, plus the no-insert :execlastid.
+        obj = queries.Queries(conn=asyncmy_conn)
+        assert await obj.get_one_mysql_type(id_=-1) is None
+        assert await obj.get_one_inner_mysql_type(table_id=-1) is None
+        assert await obj.get_one_date(id_=-1, date_test=datetime.date(1970, 1, 1)) is None
+        assert await obj.get_one_datetime(id_=-1, datetime_test=datetime.datetime(1970, 1, 1)) is None
+        assert await obj.get_one_time(id_=-1, time_test=datetime.timedelta()) is None
+        assert await obj.get_one_bool(id_=-1, tinyint1_test=False) is None
+        assert await obj.get_one_decimal(id_=-1, decimal_test=decimal.Decimal(0)) is None
+        assert await obj.get_one_blob(id_=-1, blob_test=memoryview(b"")) is None
+        assert await obj.get_one_bit(id_=-1) is None
+        assert await obj.get_one_year(id_=-1) is None
+        assert await obj.get_one_json(id_=-1) is None
+        assert await obj.get_one_mood(id_=-1, mood=enums.TestMysqlTypesMood.SAD) is None
+        assert await obj.get_one_tag(id_=-1) is None
+        assert await obj.get_exec_last_id_name(id_=-1) is None
+        assert await obj.get_type_override(id_=-1) is None
+        assert await obj.get_reserved_arg(conn="missing") is None
+        assert await obj.touch_exec_last_id(name="untouched", id_=-1) is None
+
+        # count(*) always returns a row; its miss branch needs the stub.
+        stub = typing.cast("asyncmy.Connection", no_row_conn.NoRowConn())
+        assert await queries.Queries(conn=stub).count_mysql_types() is None

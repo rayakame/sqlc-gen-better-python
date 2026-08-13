@@ -29,6 +29,7 @@ from collections import UserString
 import pymysql
 import pytest
 
+from test.driver_pymysql import no_row_conn
 from test.driver_pymysql.pydantic.classes import enums
 from test.driver_pymysql.pydantic.classes import models
 from test.driver_pymysql.pydantic.classes import queries
@@ -717,3 +718,46 @@ class TestPymysqlPydanticClasses:
             cur.execute("DELETE FROM `3rd_party_stats` WHERE id = %s", (THIRD_PARTY_ID,))
         assert invalid_obj.get_invalid_identifiers(id_=INVALID_ID) is None
         assert invalid_obj.get_third_party_stat(id_=THIRD_PARTY_ID) is None
+
+    def test_one_missing_rows_return_none(self, pymysql_conn: pymysql.Connection) -> None:
+        # Every :one not-found branch, plus the no-insert :execlastid. The
+        # count queries always return a row, so their miss branch needs the
+        # no-row stub; the sub-module Querier conn properties ride along.
+        obj = queries.Queries(conn=pymysql_conn)
+        assert obj.get_one_mysql_type(id_=-1) is None
+        assert obj.get_one_inner_mysql_type(table_id=-1) is None
+        assert obj.get_one_date(id_=-1, date_test=datetime.date(1970, 1, 1)) is None
+        assert obj.get_one_datetime(id_=-1, datetime_test=datetime.datetime(1970, 1, 1)) is None
+        assert obj.get_one_time(id_=-1, time_test=datetime.timedelta()) is None
+        assert obj.get_one_bool(id_=-1, tinyint1_test=False) is None
+        assert obj.get_one_decimal(id_=-1, decimal_test=decimal.Decimal(0)) is None
+        assert obj.get_one_blob(id_=-1, blob_test=memoryview(b"")) is None
+        assert obj.get_one_bit(id_=-1) is None
+        assert obj.get_one_year(id_=-1) is None
+        assert obj.get_one_json(id_=-1) is None
+        assert obj.get_one_mood(id_=-1, mood=enums.TestMysqlTypesMood.SAD) is None
+        assert obj.get_one_tag(id_=-1) is None
+        assert obj.get_exec_last_id_name(id_=-1) is None
+        assert obj.get_type_override(id_=-1) is None
+        assert obj.get_reserved_arg(conn="missing") is None
+        assert obj.touch_exec_last_id(name="untouched", id_=-1) is None
+
+        case_obj = queries_case.QueriesCase(conn=pymysql_conn)
+        naming_obj = queries_field_namings.QueriesFieldNamings(conn=pymysql_conn)
+        invalid_obj = queries_invalid_identifiers.QueriesInvalidIdentifiers(conn=pymysql_conn)
+        enum_obj = queries_enum_override.QueriesEnumOverride(conn=pymysql_conn)
+        assert case_obj.conn is pymysql_conn
+        assert naming_obj.conn is pymysql_conn
+        assert invalid_obj.conn is pymysql_conn
+        assert enum_obj.conn is pymysql_conn
+        assert case_obj.get_case_row(id_=-1) is None
+        assert naming_obj.get_field_naming(id_=-1) is None
+        assert naming_obj.get_joined_field_namings(id_=-1) is None
+        assert invalid_obj.get_invalid_identifiers(id_=-1) is None
+        assert enum_obj.get_enum_override_mood(id_=-1) is None
+        assert enum_obj.count_enum_override_by_moods(moods=[]) == 0
+
+        stub = typing.cast("pymysql.Connection", no_row_conn.NoRowConn())
+        assert queries.Queries(conn=stub).count_mysql_types() is None
+        assert queries_case.QueriesCase(conn=stub).count_case_rows(id_=0) is None
+        assert queries_enum_override.QueriesEnumOverride(conn=stub).count_enum_override_by_moods(moods=[]) is None

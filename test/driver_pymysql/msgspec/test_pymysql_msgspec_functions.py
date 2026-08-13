@@ -30,6 +30,7 @@ import msgspec
 import pymysql
 import pytest
 
+from test.driver_pymysql import no_row_conn
 from test.driver_pymysql.msgspec.functions import enums
 from test.driver_pymysql.msgspec.functions import models
 from test.driver_pymysql.msgspec.functions import queries
@@ -698,3 +699,36 @@ class TestPymysqlMsgspecFunctions:
             cur.execute("DELETE FROM `3rd_party_stats` WHERE id = %s", (THIRD_PARTY_ID,))
         assert queries_invalid_identifiers.get_invalid_identifiers(conn=pymysql_conn, id_=INVALID_ID) is None
         assert queries_invalid_identifiers.get_third_party_stat(conn=pymysql_conn, id_=THIRD_PARTY_ID) is None
+
+    def test_one_missing_rows_return_none(self, pymysql_conn: pymysql.Connection) -> None:
+        # Every :one not-found branch, plus the no-insert :execlastid. The
+        # count queries always return a row, so their miss branch needs the
+        # no-row stub.
+        assert queries.get_one_mysql_type(conn=pymysql_conn, id_=-1) is None
+        assert queries.get_one_inner_mysql_type(conn=pymysql_conn, table_id=-1) is None
+        assert queries.get_one_date(conn=pymysql_conn, id_=-1, date_test=datetime.date(1970, 1, 1)) is None
+        assert queries.get_one_datetime(conn=pymysql_conn, id_=-1, datetime_test=datetime.datetime(1970, 1, 1)) is None
+        assert queries.get_one_time(conn=pymysql_conn, id_=-1, time_test=datetime.timedelta()) is None
+        assert queries.get_one_bool(conn=pymysql_conn, id_=-1, tinyint1_test=False) is None
+        assert queries.get_one_decimal(conn=pymysql_conn, id_=-1, decimal_test=decimal.Decimal(0)) is None
+        assert queries.get_one_blob(conn=pymysql_conn, id_=-1, blob_test=memoryview(b"")) is None
+        assert queries.get_one_bit(conn=pymysql_conn, id_=-1) is None
+        assert queries.get_one_year(conn=pymysql_conn, id_=-1) is None
+        assert queries.get_one_json(conn=pymysql_conn, id_=-1) is None
+        assert queries.get_one_mood(conn=pymysql_conn, id_=-1, mood=enums.TestMysqlTypesMood.SAD) is None
+        assert queries.get_one_tag(conn=pymysql_conn, id_=-1) is None
+        assert queries.get_exec_last_id_name(conn=pymysql_conn, id_=-1) is None
+        assert queries.get_type_override(conn=pymysql_conn, id_=-1) is None
+        assert queries.get_reserved_arg(conn=pymysql_conn, conn_2="missing") is None
+        assert queries.touch_exec_last_id(conn=pymysql_conn, name="untouched", id_=-1) is None
+        assert queries_case.get_case_row(conn=pymysql_conn, id_=-1) is None
+        assert queries_field_namings.get_field_naming(conn=pymysql_conn, id_=-1) is None
+        assert queries_field_namings.get_joined_field_namings(conn=pymysql_conn, id_=-1) is None
+        assert queries_invalid_identifiers.get_invalid_identifiers(conn=pymysql_conn, id_=-1) is None
+        assert queries_enum_override.get_enum_override_mood(conn=pymysql_conn, id_=-1) is None
+        assert queries_enum_override.count_enum_override_by_moods(conn=pymysql_conn, moods=[]) == 0
+
+        stub = typing.cast("pymysql.Connection", no_row_conn.NoRowConn())
+        assert queries.count_mysql_types(conn=stub) is None
+        assert queries_case.count_case_rows(conn=stub, id_=0) is None
+        assert queries_enum_override.count_enum_override_by_moods(conn=stub, moods=[]) is None
