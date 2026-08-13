@@ -24,11 +24,14 @@ import pathlib
 import sqlite3
 import sys
 import typing
+import urllib.parse
 
 import aiosqlite
+import asyncmy
 import asyncpg
 import psycopg
 import psycopg.rows
+import pymysql
 import pytest
 import turso
 import turso.aio
@@ -44,6 +47,8 @@ AIOSQLITE_PATH = pathlib.Path(__file__).parent / "driver_aiosqlite"
 SQLITE3_PATH = pathlib.Path(__file__).parent / "driver_sqlite3"
 TURSO_SYNC_PATH = pathlib.Path(__file__).parent / "driver_turso_sync"
 TURSO_ASYNC_PATH = pathlib.Path(__file__).parent / "driver_turso_async"
+PYMYSQL_PATH = pathlib.Path(__file__).parent / "driver_pymysql"
+ASYNCMY_PATH = pathlib.Path(__file__).parent / "driver_asyncmy"
 
 # All postgres suites share the same tables, so their session teardowns must
 # clean the same list; a single constant keeps them from diverging.
@@ -61,6 +66,25 @@ _POSTGRES_CLEANUP: typing.Final = """
 """
 
 
+# Both MySQL suites share the same tables, so their session teardowns must
+# clean the same list; DELETE keeps the AUTO_INCREMENT counters, which the
+# suites therefore never assert on.
+_MYSQL_CLEANUP: typing.Final = (
+    "DELETE FROM test_mysql_types",
+    "DELETE FROM test_inner_mysql_types",
+    "DELETE FROM test_type_override",
+    "DELETE FROM test_enum_override",
+    "DELETE FROM test_case_sensitivity",
+    "DELETE FROM test_reserved_args",
+    "DELETE FROM test_execlastid",
+    "DELETE FROM test_field_namings",
+    "DELETE FROM test_invalid_identifiers",
+    "DELETE FROM `3rd_party_stats`",
+    "DELETE FROM test_slice",
+    "DELETE FROM test_converters",
+)
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--db",
@@ -74,6 +98,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default="sqlite.db",
         help="the sqlite db uri needed to connect to the db",
     )
+    parser.addoption(
+        "--mysql-db",
+        action="store",
+        default="mysql://root:187187@localhost:3306/root",
+        help="the mysql db uri needed to connect to the db",
+    )
 
 
 def get_dsn(config: pytest.Config) -> str:
@@ -82,6 +112,28 @@ def get_dsn(config: pytest.Config) -> str:
         msg = "--db option is missing"
         raise ValueError(msg)
     return dsn
+
+
+def get_mysql_kwargs(config: pytest.Config) -> dict[str, typing.Any]:
+    dsn = config.getoption("--mysql-db")
+    if dsn is None or not isinstance(dsn, str):
+        msg = "--mysql-db option is missing"
+        raise ValueError(msg)
+    # PyMySQL and asyncmy take keyword arguments, not a URI.
+    parsed = urllib.parse.urlsplit(dsn)
+    return {
+        "host": parsed.hostname or "localhost",
+        "port": parsed.port or 3306,
+        "user": parsed.username or "root",
+        "password": parsed.password or "",
+        "database": parsed.path.lstrip("/"),
+    }
+
+
+def _mysql_statements(schema: str) -> list[str]:
+    # Neither MySQL driver has executescript, and execute runs a single
+    # statement; the schema files contain no semicolons inside literals.
+    return [stmt for stmt in schema.split(";") if stmt.strip()]
 
 
 def get_sqlite_dsn(config: pytest.Config) -> str:
@@ -199,6 +251,53 @@ async def turso_async_conn() -> collections.abc.AsyncGenerator[turso.aio.Connect
     await conn.close()
 
 
+@pytest.fixture(scope="session")
+def pymysql_conn(
+    request: pytest.FixtureRequest,
+) -> collections.abc.Generator[pymysql.Connection, typing.Any]:
+    # autocommit matches the psycopg fixtures' per-statement semantics and
+    # keeps one failing test from poisoning the shared connection.
+    conn = pymysql.connect(autocommit=True, **get_mysql_kwargs(request.config))
+    with conn.cursor() as cur:
+        for stmt in _mysql_statements((PYMYSQL_PATH / "schema.sql").read_text()):
+            cur.execute(stmt)
+    yield conn
+    with conn.cursor() as cur:
+        for stmt in _MYSQL_CLEANUP:
+            cur.execute(stmt)
+    conn.close()
+
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session")
+async def asyncmy_conn(
+    request: pytest.FixtureRequest,
+) -> collections.abc.AsyncGenerator[asyncmy.Connection, typing.Any]:
+    # asyncmy's stubs leave connect/execute parameters unannotated, which
+    # pyright strict reports; the generated asyncmy modules carry the same
+    # suppression.
+    conn = await asyncmy.connect(autocommit=True, **get_mysql_kwargs(request.config))  # pyright: ignore[reportUnknownMemberType]
+    async with conn.cursor() as cur:
+        for stmt in _mysql_statements((ASYNCMY_PATH / "schema.sql").read_text()):
+            await cur.execute(stmt)  # pyright: ignore[reportUnknownMemberType]
+    yield conn
+    async with conn.cursor() as cur:
+        for stmt in _MYSQL_CLEANUP:
+            await cur.execute(stmt)  # pyright: ignore[reportUnknownMemberType]
+    conn.close()
+
+
+def pymysql_delete_all(config: pytest.Config) -> None:
+    # An aborted run leaves the fixed-id rows behind and the next run fails
+    # with an IntegrityError; the schemas recreate everything (IF NOT EXISTS).
+    conn = pymysql.connect(autocommit=True, **get_mysql_kwargs(config))
+    with conn.cursor() as cur:
+        for stmt in _mysql_statements((PYMYSQL_PATH / "schema.sql").read_text()):
+            cur.execute(stmt)
+        for stmt in _MYSQL_CLEANUP:
+            cur.execute(stmt)
+    conn.close()
+
+
 async def asyncpg_delete_all(dsn: str) -> None:
     conn = await asyncpg.connect(dsn)
 
@@ -244,3 +343,4 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
         await aiosqlite_delete_all(aiosqlite_dsn)
 
     asyncio.run(_delete_all(session.config))
+    pymysql_delete_all(session.config)

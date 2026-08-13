@@ -4,7 +4,7 @@ set -euo pipefail
 # ------------------------------
 # 1) CONFIGURATION
 # ------------------------------
-TARGET_DIRS=("test/driver_asyncpg" "test/driver_psycopg_async" "test/driver_psycopg_sync" "test/driver_aiosqlite" "test/driver_sqlite3" "test/driver_turso_sync" "test/driver_turso_async")
+TARGET_DIRS=("test/driver_asyncpg" "test/driver_psycopg_async" "test/driver_psycopg_sync" "test/driver_aiosqlite" "test/driver_sqlite3" "test/driver_turso_sync" "test/driver_turso_async" "test/driver_pymysql" "test/driver_asyncmy")
 SQLC_CONFIG_NAMES=("sqlc.yaml")
 
 # ------------------------------

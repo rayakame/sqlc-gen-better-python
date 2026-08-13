@@ -16,11 +16,19 @@ func FilterUnusedModels(enums []model.Enum, tables []model.Table, queries []mode
 		typeName = strings.TrimPrefix(typeName, "enums.")
 		keep[typeName] = struct{}{}
 	}
+	addPyType := func(typ model.PyType) {
+		addType(typ.Type)
+		// An overridden enum column still calls the enum class at runtime:
+		// parameters convert back through their DefaultType.
+		if typ.DoOverride() {
+			addType(typ.DefaultType)
+		}
+	}
 	collect := func(qv model.QueryValue) {
 		if qv.IsEmpty() {
 			return
 		}
-		addType(qv.Type.Type)
+		addPyType(qv.Type)
 		if qv.Table == nil {
 			return
 		}
@@ -28,12 +36,12 @@ func FilterUnusedModels(enums []model.Enum, tables []model.Table, queries []mode
 			if col.Embed != nil {
 				addType(col.Embed.ModelName)
 				for _, embedCol := range col.Embed.Columns {
-					addType(embedCol.Type.Type)
+					addPyType(embedCol.Type)
 				}
 
 				continue
 			}
-			addType(col.Type.Type)
+			addPyType(col.Type)
 		}
 	}
 	for _, query := range queries {

@@ -21,14 +21,17 @@ DRIVER_PATHS = {
     "sqlite3": PATH_TO_PROJECT / "test" / "driver_sqlite3",
     "turso_sync": PATH_TO_PROJECT / "test" / "driver_turso_sync",
     "turso_async": PATH_TO_PROJECT / "test" / "driver_turso_async",
+    "pymysql": PATH_TO_PROJECT / "test" / "driver_pymysql",
+    "asyncmy": PATH_TO_PROJECT / "test" / "driver_asyncmy",
 }
 
 SQLC_CONFIGS = ["sqlc.yaml"]
 
 options.default_venv_backend = "uv"
-options.sessions = ["ruff_format", "asyncpg", "psycopg_async", "psycopg_sync", "sqlite3", "aiosqlite", "turso_sync", "turso_async", "pyright", "ruff", "pytest"]
+options.sessions = ["ruff_format", "asyncpg", "psycopg_async", "psycopg_sync", "sqlite3", "aiosqlite", "turso_sync", "turso_async", "pymysql", "asyncmy", "pyright", "ruff", "pytest"]
 
 DEFAULT_POSTGRES_URI = os.getenv("POSTGRES_URI", "postgresql://root:187187@localhost:5432/root")
+DEFAULT_MYSQL_URI = os.getenv("MYSQL_URI", "mysql://root:187187@localhost:3306/root")
 
 
 # uv_sync taken from: https://github.com/hikari-py/hikari/blob/master/pipelines/nox.py#L48
@@ -244,11 +247,48 @@ def ruff_check(session: nox.Session) -> None:
     session.run("ruff", "check", *session.posargs)
 
 
+@nox.session(reuse_venv=True)
+def pymysql(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_generate(session, "pymysql")
+    session.run("pyright", DRIVER_PATHS["pymysql"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["pymysql"])
+
+
+@nox.session(reuse_venv=True)
+def pymysql_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_check(session, "pymysql")
+    session.run("pyright", DRIVER_PATHS["pymysql"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["pymysql"])
+
+
+@nox.session(reuse_venv=True)
+def asyncmy(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_generate(session, "asyncmy")
+    session.run("pyright", DRIVER_PATHS["asyncmy"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["asyncmy"])
+
+
+@nox.session(reuse_venv=True)
+def asyncmy_check(session: nox.Session) -> None:
+    uv_sync(session, include_self=True, groups=["pyright", "ruff"])
+
+    sqlc_check(session, "asyncmy")
+    session.run("pyright", DRIVER_PATHS["asyncmy"])
+    session.run("ruff", "check", *session.posargs, DRIVER_PATHS["asyncmy"])
+
+
 PYTEST_RUN_FLAGS = [
     "--showlocals",
     "--show-capture",
     "all",
     f"--db={DEFAULT_POSTGRES_URI}",
+    f"--mysql-db={DEFAULT_MYSQL_URI}",
 ]
 PYTESTCOVERAGE_FLAGS = [
     "--cov",

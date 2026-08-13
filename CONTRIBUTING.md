@@ -88,11 +88,23 @@ docker run --rm --name sqlc-gen-better-python-postgres \
   -d postgres
 ```
 
-and stop it (after running the tests) with the command below; `--rm` removes the container
-on stop, so the `docker run` command above can be reused as is next time.
+It also needs a local MySQL for the `pymysql` and `asyncmy` suites, read from
+`MYSQL_URI` with the default `mysql://root:187187@localhost:3306/root`:
+
+```bash
+docker run --rm --name sqlc-gen-better-python-mysql \
+  -e MYSQL_ROOT_PASSWORD=187187 \
+  -e MYSQL_DATABASE=root \
+  -p 3306:3306 \
+  -d mysql:9
+```
+
+Stop the containers (after running the tests) with the commands below; `--rm` removes a
+container on stop, so the `docker run` commands above can be reused as is next time.
 
 ```bash
 docker stop sqlc-gen-better-python-postgres
+docker stop sqlc-gen-better-python-mysql
 ```
 
 Extra pytest arguments pass through after `--`, e.g.

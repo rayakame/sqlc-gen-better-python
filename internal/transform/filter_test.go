@@ -48,6 +48,34 @@ func TestFilterUnusedModelsKeepsReferencedModels(t *testing.T) {
 	}
 }
 
+func TestFilterUnusedModelsKeepsOverriddenEnumDefaults(t *testing.T) {
+	t.Parallel()
+	// An overridden enum column references the enum class only through its
+	// DefaultType: parameters convert back via enums.X(...) at runtime, so
+	// the enum must survive the filter.
+	enums := []model.Enum{{Name: "TestEnumOverrideMoodTest"}, {Name: "UnusedEnum"}}
+	queries := []model.Query{
+		{
+			Params: []model.QueryValue{{
+				Name: "mood_test",
+				Type: model.PyType{
+					Type:        "str",
+					IsOverride:  true,
+					DefaultType: "enums.TestEnumOverrideMoodTest",
+				},
+			}},
+		},
+	}
+
+	keptEnums, keptTables := transform.FilterUnusedModels(enums, nil, queries)
+	if want := []model.Enum{{Name: "TestEnumOverrideMoodTest"}}; !reflect.DeepEqual(keptEnums, want) {
+		t.Errorf("FilterUnusedModels() enums = %v, want %v", keptEnums, want)
+	}
+	if len(keptTables) != 0 {
+		t.Errorf("FilterUnusedModels() tables = %v, want none", keptTables)
+	}
+}
+
 func TestFilterUnusedModelsDropsEverything(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
