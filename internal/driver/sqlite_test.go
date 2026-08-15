@@ -550,6 +550,7 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdMany,
 				ConstantName: "GET_ROWS",
+				Placeholders: []model.Placeholder{{SliceName: "ids", Marker: "/*SLICE:ids*/?"}},
 				FuncName:     "get_rows",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
@@ -572,6 +573,7 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdOne,
 				ConstantName: "GET_ROW",
+				Placeholders: []model.Placeholder{{}, {SliceName: "ids", Marker: "/*SLICE:ids*/?"}, {}},
 				FuncName:     "get_row",
 				Params: []model.QueryValue{
 					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
@@ -596,7 +598,11 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdExec,
 				ConstantName: "DELETE_ROWS",
-				FuncName:     "delete_rows",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{SliceName: "names", Marker: "/*SLICE:names*/?"},
+				},
+				FuncName: "delete_rows",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 					{Name: "names", Type: model.PyType{Type: "str", SQLType: "text", IsList: true, SqlcSliceName: "names"}},
@@ -621,7 +627,11 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 				Cmd:          metadata.CmdExec,
 				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) OR ref_id IN (/*SLICE:ids*/?)",
 				ConstantName: "DELETE_LINKED",
-				FuncName:     "delete_linked",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+				},
+				FuncName: "delete_linked",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 				},
@@ -643,7 +653,12 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 				Cmd:          metadata.CmdExec,
 				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
 				ConstantName: "DELETE_BETWEEN",
-				FuncName:     "delete_between",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+				},
+				FuncName: "delete_between",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},

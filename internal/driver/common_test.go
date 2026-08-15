@@ -243,6 +243,10 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			name: "reused slice repeats the starred copy per marker occurrence",
 			query: model.Query{
 				SQL: "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) OR ref_id IN (/*SLICE:ids*/?)",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+				},
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 				},
@@ -255,6 +259,11 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			name: "reused slice interleaves plain params in SQL text order",
 			query: model.Query{
 				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+				},
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
@@ -266,6 +275,11 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			name: "reused slice with unaccounted plain placeholder falls back to consecutive copies",
 			query: model.Query{
 				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+				},
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 				},
@@ -276,6 +290,11 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			name: "reused slice with unknown marker falls back to consecutive copies",
 			query: model.Query{
 				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) OR a IN (/*SLICE:ids*/?) OR b IN (/*SLICE:other*/?)",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{SliceName: "other", Marker: "/*SLICE:other*/?"},
+				},
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 				},
@@ -286,6 +305,10 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			name: "reused slice with leftover plain param falls back to consecutive copies",
 			query: model.Query{
 				SQL: "SELECT id FROM t WHERE id IN (/*SLICE:ids*/?) OR ref_id IN (/*SLICE:ids*/?)",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+				},
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 					{Name: "ghost", Type: model.PyType{Type: "str", SQLType: "text"}},
@@ -323,182 +346,6 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 			t.Parallel()
 			if got := expandParamsFlattenSlices(tc.query); !slices.Equal(got, tc.want) {
 				t.Errorf("expandParamsFlattenSlices() = %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestPlaceholderSequence(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		name string
-		sql  string
-		want []string
-	}{
-		{
-			name: "markers and plain placeholders in text order",
-			sql:  "WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
-			want: []string{"ids", "", "ids"},
-		},
-		{
-			name: "question marks inside string literals do not count",
-			sql:  "WHERE note LIKE 'what?%' AND s = 'it''s?' AND id IN (/*SLICE:ids*/?)",
-			want: []string{"ids"},
-		},
-		{
-			name: "quoted identifiers and comments are skipped",
-			sql:  "SELECT \"weird?col\" FROM t /* really? */ WHERE a = ? -- trailing?\nAND b = ?2",
-			want: []string{"", ""},
-		},
-		{
-			name: "unterminated marker stops the scan",
-			sql:  "WHERE a = ? AND id IN (/*SLICE:ids",
-			want: []string{""},
-		},
-		{
-			name: "unterminated comment stops the scan",
-			sql:  "WHERE a = ? /* dangling",
-			want: []string{""},
-		},
-		{
-			name: "unterminated line comment stops the scan",
-			sql:  "WHERE a = ? -- dangling",
-			want: []string{""},
-		},
-		{
-			name: "unterminated string swallows the rest",
-			sql:  "WHERE a = ? AND s = 'open?",
-			want: []string{""},
-		},
-		// The question style must keep sqlite's lexing rules where they
-		// differ from the pyformat flags: -- comments need no gap, "#",
-		// backticks, and backslashes are ordinary text.
-		{
-			name: "dash dash glued to text is still a comment",
-			sql:  "SELECT a--1 dead ?\nFROM t WHERE b = ?",
-			want: []string{""},
-		},
-		{
-			name: "hash is not a comment",
-			sql:  "WHERE x = ? # not a comment ?",
-			want: []string{"", ""},
-		},
-		{
-			name: "backtick is ordinary text",
-			sql:  "SELECT `weird?col` FROM t WHERE a = ?",
-			want: []string{"", ""},
-		},
-		{
-			name: "backslash does not escape a quote",
-			sql:  `WHERE s = 'a\' AND b = ?`,
-			want: []string{""},
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			if got := placeholderSequence(tc.sql, questionPlaceholders); !slices.Equal(got, tc.want) {
-				t.Errorf("placeholderSequence() = %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestPlaceholderSequencePyformat(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		name string
-		sql  string
-		want []string
-	}{
-		{
-			name: "percent-s slots in text order",
-			sql:  "WHERE a = %s AND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "doubled percent is a literal, not a slot",
-			sql:  "WHERE a %% 2 = 0 AND b = %s",
-			want: []string{""},
-		},
-		{
-			name: "lone percent is not a slot",
-			sql:  "WHERE a % 2 = 0 AND b = %s",
-			want: []string{""},
-		},
-		{
-			name: "slice marker yields the name",
-			sql:  "WHERE id IN (/*SLICE:ids*/%s)",
-			want: []string{"ids"},
-		},
-		{
-			name: "slots inside string literals do not count despite backslash escapes",
-			sql:  "WHERE s = 'It\\'s %s' AND t = \"quote \\\" %s\" AND a = %s",
-			want: []string{""},
-		},
-		{
-			name: "backticked identifier swallows its slot",
-			sql:  "SELECT `weird %s col` FROM t WHERE a = %s",
-			want: []string{""},
-		},
-		{
-			// If backslash escaped the closing backtick, the identifier would
-			// swallow the rest of the input and the slot with it.
-			name: "backslash is not an escape inside backticks",
-			sql:  "SELECT `dir\\` FROM t WHERE a = %s",
-			want: []string{""},
-		},
-		{
-			name: "hash comment is dead to the newline",
-			sql:  "WHERE a = %s # dead %s\nAND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "dash dash with whitespace starts a comment",
-			sql:  "WHERE a = %s -- x %s\nAND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "dash dash without whitespace is arithmetic, slot stays live",
-			sql:  "WHERE a = b--1 + %s",
-			want: []string{""},
-		},
-		{
-			name: "block comment hides its slot",
-			sql:  "WHERE a = %s /* %s */ AND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "unterminated string swallows the rest",
-			sql:  "WHERE a = %s AND s = 'open %s",
-			want: []string{""},
-		},
-		{
-			name: "unterminated hash comment swallows the rest",
-			sql:  "WHERE a = %s # tail %s",
-			want: []string{""},
-		},
-		{
-			name: "version comment body is live",
-			sql:  "SELECT id /*! WHERE a = %s */ AND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "odd dash run still starts a comment",
-			sql:  "WHERE a = %s --------- don't edit\nAND id IN (/*SLICE:ids*/%s)",
-			want: []string{"", "ids"},
-		},
-		{
-			name: "numbered question placeholder is not a slot",
-			sql:  "WHERE a = ?1 AND b = %s",
-			want: []string{""},
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			if got := placeholderSequence(tc.sql, pyformatPlaceholders); !slices.Equal(got, tc.want) {
-				t.Errorf("placeholderSequence() = %q, want %q", got, tc.want)
 			}
 		})
 	}
@@ -966,46 +813,71 @@ func TestExpandParamsFlattenSlicesWire(t *testing.T) {
 	}
 }
 
-func TestSliceMarkerStyles(t *testing.T) {
+func TestSliceMarkerHelpers(t *testing.T) {
 	t.Parallel()
-	markers := []struct {
-		name string
-		ph   placeholderStyle
-		want string
+	cases := []struct {
+		name      string
+		sliceName string
+		query     model.Query
+		wantCount int
+		wantText  string
 	}{
-		{name: "question marker keeps sqlc's raw form", ph: questionPlaceholders, want: "/*SLICE:ids*/?"},
-		{name: "pyformat marker uses the rewritten token", ph: pyformatPlaceholders, want: "/*SLICE:ids*/%s"},
+		{
+			name:      "question marker keeps sqlc's raw form",
+			sliceName: "ids",
+			query: model.Query{Placeholders: []model.Placeholder{
+				{SliceName: "ids", Marker: "/*SLICE:ids*/?"},
+			}},
+			wantCount: 1,
+			wantText:  "/*SLICE:ids*/?",
+		},
+		{
+			name:      "pyformat marker keeps the rewritten token",
+			sliceName: "ids",
+			query: model.Query{Placeholders: []model.Placeholder{
+				{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+			}},
+			wantCount: 1,
+			wantText:  "/*SLICE:ids*/%s",
+		},
+		{
+			// A percent in the name is doubled in the SQL, so the carried
+			// marker must be doubled too or the generated replace misses.
+			name:      "percent in a slice name keeps its doubled marker",
+			sliceName: "a%b",
+			query: model.Query{Placeholders: []model.Placeholder{
+				{SliceName: "a%b", Marker: "/*SLICE:a%%b*/%s"},
+			}},
+			wantCount: 1,
+			wantText:  "/*SLICE:a%%b*/%s",
+		},
+		{
+			name:      "two markers count both",
+			sliceName: "ids",
+			query: model.Query{Placeholders: []model.Placeholder{
+				{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+				{},
+				{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+			}},
+			wantCount: 2,
+			wantText:  "/*SLICE:ids*/%s",
+		},
+		{
+			name:      "missing marker clamps to one and has no text",
+			sliceName: "ids",
+			query:     model.Query{Placeholders: []model.Placeholder{{}}},
+			wantCount: 1,
+			wantText:  "",
+		},
 	}
-	for _, tc := range markers {
+	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := sliceMarker("ids", tc.ph); got != tc.want {
-				t.Errorf("sliceMarker(%q) = %q, want %q", "ids", got, tc.want)
+			if got := sliceMarkerCount(tc.query, tc.sliceName); got != tc.wantCount {
+				t.Errorf("sliceMarkerCount(%q) = %d, want %d", tc.sliceName, got, tc.wantCount)
 			}
-		})
-	}
-	counts := []struct {
-		name string
-		sql  string
-		want int
-	}{
-		{
-			name: "two pyformat markers count both",
-			sql:  "WHERE id IN (/*SLICE:ids*/%s) OR ref_id IN (/*SLICE:ids*/%s)",
-			want: 2,
-		},
-		{
-			name: "missing marker clamps to one",
-			sql:  "WHERE id = %s",
-			want: 1,
-		},
-	}
-	for _, tc := range counts {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			query := model.Query{SQL: tc.sql}
-			if got := sliceMarkerCount(query, "ids", pyformatPlaceholders); got != tc.want {
-				t.Errorf("sliceMarkerCount(%q) = %d, want %d", tc.sql, got, tc.want)
+			if got := sliceMarkerText(tc.query, tc.sliceName); got != tc.wantText {
+				t.Errorf("sliceMarkerText(%q) = %q, want %q", tc.sliceName, got, tc.wantText)
 			}
 		})
 	}
@@ -1052,6 +924,12 @@ func TestExpandParamsPyformat(t *testing.T) {
 			name: "reused slice binds a copy per marker between plain params",
 			query: model.Query{
 				SQL: "SELECT id FROM t WHERE a = %s AND id IN (/*SLICE:ids*/%s) OR id IN (/*SLICE:ids*/%s) AND b = %s",
+				Placeholders: []model.Placeholder{
+					{},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+					{},
+				},
 				Params: []model.QueryValue{
 					{Name: "a", Type: model.PyType{Type: "int", SQLType: "integer"}},
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
@@ -1066,6 +944,11 @@ func TestExpandParamsPyformat(t *testing.T) {
 			name: "reused slice interleaves plain params in SQL text order",
 			query: model.Query{
 				SQL: "SELECT id FROM t WHERE a = %s AND id IN (/*SLICE:ids*/%s) OR ref_id IN (/*SLICE:ids*/%s)",
+				Placeholders: []model.Placeholder{
+					{},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+				},
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
 					{Name: "a", Type: model.PyType{Type: "int", SQLType: "integer"}},
@@ -1077,8 +960,8 @@ func TestExpandParamsPyformat(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := expandParamsPyformat(tc.query, mysqlTestWire); !slices.Equal(got, tc.want) {
-				t.Errorf("expandParamsPyformat() = %q, want %q", got, tc.want)
+			if got := expandParamsFlattenSlicesWire(tc.query, mysqlTestWire); !slices.Equal(got, tc.want) {
+				t.Errorf("expandParamsFlattenSlicesWire() = %q, want %q", got, tc.want)
 			}
 		})
 	}

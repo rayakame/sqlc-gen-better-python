@@ -1,6 +1,11 @@
 package transform
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+
+	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+)
 
 func TestRewriteMySQLSQL(t *testing.T) {
 	t.Parallel()
@@ -203,8 +208,101 @@ func TestRewriteMySQLSQL(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := rewriteMySQLSQL(tc.sql); got != tc.want {
+			if got, _ := rewriteMySQLSQL(tc.sql); got != tc.want {
 				t.Errorf("rewriteMySQLSQL() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// plainSlot is a bind slot that is not a sqlc.slice marker.
+var plainSlot = model.Placeholder{SliceName: "", Marker: ""} //nolint:gochecknoglobals
+
+func TestRewriteMySQLSQLPlaceholders(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		sql  string
+		want []model.Placeholder
+	}{
+		{name: "no placeholders", sql: "SELECT 1"},
+		{
+			name: "plain placeholders in text order",
+			sql:  "SELECT a FROM t WHERE b = ? AND c = ?",
+			want: []model.Placeholder{plainSlot, plainSlot},
+		},
+		{
+			name: "slice marker carries its rewritten text",
+			sql:  "SELECT a FROM t WHERE id IN (/*SLICE:ids*/?)",
+			want: []model.Placeholder{{SliceName: "ids", Marker: "/*SLICE:ids*/%s"}},
+		},
+		{
+			// The ordering case the drivers depend on: a plain slot between
+			// two occurrences of one marker.
+			name: "reused marker interleaved with a plain slot",
+			sql:  "SELECT a FROM t WHERE x IN (/*SLICE:ids*/?) AND y = ? OR z IN (/*SLICE:ids*/?)",
+			want: []model.Placeholder{
+				{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+				plainSlot,
+				{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+			},
+		},
+		{
+			// A percent in the name is doubled in the SQL, so the carried
+			// marker has to be doubled too or the generated replace misses.
+			name: "percent in a slice name stays doubled in the marker",
+			sql:  "SELECT a FROM t WHERE id IN (/*SLICE:a%b*/?)",
+			want: []model.Placeholder{{SliceName: "a%b", Marker: "/*SLICE:a%%b*/%s"}},
+		},
+		{
+			name: "question marks inside strings are not slots",
+			sql:  "SELECT '?', \"?\", `we?rd` FROM t WHERE a = ?",
+			want: []model.Placeholder{plainSlot},
+		},
+		{
+			name: "question mark inside a backslash escape is not a slot",
+			sql:  "SELECT 'a\\'?b' FROM t WHERE a = ?",
+			want: []model.Placeholder{plainSlot},
+		},
+		{
+			name: "question marks inside comments are not slots",
+			sql:  "SELECT a -- ?\n# ?\n/* ? */ FROM t WHERE b = ?",
+			want: []model.Placeholder{plainSlot},
+		},
+		{
+			// "--x" is arithmetic, so the rest of the line stays live SQL.
+			name: "dash run without a gap keeps its slot",
+			sql:  "SELECT a FROM t WHERE b = 5--? AND c = ?",
+			want: []model.Placeholder{plainSlot, plainSlot},
+		},
+		{
+			name: "version comment body is live SQL",
+			sql:  "SELECT a FROM t /*! WHERE b = ? */ AND c = ?",
+			want: []model.Placeholder{plainSlot, plainSlot},
+		},
+		{
+			// MySQL has no ?N: the digits are text and the slot is plain.
+			name: "digits after a question mark are text",
+			sql:  "SELECT a FROM t WHERE b = ?1",
+			want: []model.Placeholder{plainSlot},
+		},
+		{
+			name: "block comment that is not a marker hides its slot",
+			sql:  "SELECT a FROM t /*SLICE ids*/ WHERE b = ?",
+			want: []model.Placeholder{plainSlot},
+		},
+		{
+			// Only an immediately following token binds to the marker.
+			name: "detached marker binds nothing",
+			sql:  "SELECT a FROM t WHERE id IN (/*SLICE:ids*/ ?)",
+			want: []model.Placeholder{plainSlot},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if _, got := rewriteMySQLSQL(tc.sql); !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("rewriteMySQLSQL() placeholders = %+v, want %+v", got, tc.want)
 			}
 		})
 	}

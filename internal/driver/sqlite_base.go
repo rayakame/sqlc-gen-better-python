@@ -196,7 +196,7 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 	// line keeps the assignment from touching the nested def (ruff E306).
 	sqlRef := query.ConstantName
 	if query.Cmd != metadata.CmdMany {
-		sqlRef = writeSliceExpansion(body, indent, query, questionPlaceholders)
+		sqlRef = writeSliceExpansion(body, indent, query, questionSliceJoin)
 	}
 
 	// stmt builds the execute-statement head/tail with the correct await
@@ -250,7 +250,7 @@ func (sb *sqliteBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Con
 
 	case metadata.CmdMany:
 		decodeHook := sb.rows.WriteDecodeHook(body, indent, query, sqliteResultType)
-		sqlRef = writeSliceExpansion(body, indent, query, questionPlaceholders)
+		sqlRef = writeSliceExpansion(body, indent, query, questionSliceJoin)
 		manyArgs := append([]string{conn, sqlRef, decodeHook}, expandParamsFlattenSlices(query)...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call

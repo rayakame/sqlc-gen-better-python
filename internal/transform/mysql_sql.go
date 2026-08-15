@@ -2,9 +2,19 @@ package transform
 
 import (
 	"strings"
+
+	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 )
 
-// rewriteMySQLSQL converts sqlc's MySQL placeholders into pyformat style:
+// mysqlToken is the pyformat placeholder the rewriter emits for every "?".
+const mysqlToken = "%s"
+
+// sliceMarkerPrefix opens the marker sqlc leaves for a sqlc.slice parameter.
+// The token binding the sequence always follows the marker immediately.
+const sliceMarkerPrefix = "/*SLICE:"
+
+// rewriteMySQLSQL converts sqlc's MySQL placeholders into pyformat style and
+// reports the bind order of the text it produced:
 // every ? becomes %s, and every literal % is doubled, since PyMySQL and
 // asyncmy interpolate the whole query text with Python %-formatting once
 // parameters are passed - including string literals and comments. String
@@ -13,18 +23,22 @@ import (
 // dolphin (TiDB) parser lexes with backslash escapes on and treats "..."
 // as a string, so any query that reached the plugin already parsed under
 // those rules; NO_BACKSLASH_ESCAPES and ANSI_QUOTES are deliberately
-// unsupported.
-func rewriteMySQLSQL(sql string) string {
+// unsupported. Returning the placeholders here is what keeps the drivers out
+// of the lexing business: they bind against this order instead of scanning
+// the rewritten text a second time.
+func rewriteMySQLSQL(sql string) (string, []model.Placeholder) {
 	var out strings.Builder
 	out.Grow(len(sql) + len(sql)/8)
+	var slots []model.Placeholder
 	for i := 0; i < len(sql); {
 		c := sql[i]
 		switch {
 		case c == '?':
 			// MySQL has no ?N syntax (that is sqlite-only), so digits after
 			// ? are ordinary text.
-			out.WriteString("%s")
+			out.WriteString(mysqlToken)
 			i++
+			slots = append(slots, model.Placeholder{SliceName: "", Marker: ""})
 		case c == '%':
 			out.WriteString("%%")
 			i++
@@ -51,6 +65,23 @@ func rewriteMySQLSQL(sql string) string {
 			// closing */ falls through the default case as ordinary text.
 			out.WriteString("/*!")
 			i += len("/*!")
+		case c == '/' && strings.HasPrefix(sql[i:], sliceMarkerPrefix):
+			// The marker and the token it binds are one slot: the doubled
+			// marker text is what the generated code has to replace, so it
+			// is carried instead of rebuilt from the raw sqlc name.
+			end := scanMySQLBlockComment(sql, i)
+			raw := sql[i:end]
+			marker := strings.ReplaceAll(raw, "%", "%%")
+			out.WriteString(marker)
+			i = end
+			if i < len(sql) && sql[i] == '?' {
+				out.WriteString(mysqlToken)
+				i++
+				slots = append(slots, model.Placeholder{
+					SliceName: sliceMarkerName(raw, len(sliceMarkerPrefix)),
+					Marker:    marker + mysqlToken,
+				})
+			}
 		case c == '/' && strings.HasPrefix(sql[i:], "/*"):
 			end := scanMySQLBlockComment(sql, i)
 			writeDoubled(&out, sql[i:end])
@@ -61,7 +92,13 @@ func rewriteMySQLSQL(sql string) string {
 		}
 	}
 
-	return out.String()
+	return out.String(), slots
+}
+
+// sliceMarkerName returns the sqlc.slice name of a marker whose body starts
+// at nameStart and whose closing */ ends the given text.
+func sliceMarkerName(markerText string, nameStart int) string {
+	return strings.TrimSuffix(markerText[nameStart:], "*/")
 }
 
 // isMySQLLineComment reports whether the -- at i starts a comment. MySQL

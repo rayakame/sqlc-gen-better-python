@@ -128,7 +128,10 @@ generation pipeline lives in `internal/handler.go`:
    `SQLType` (lowercased once here; every downstream consumer relies on it).
    `psycopg_sql.go` and `mysql_sql.go` rewrite placeholders at IR build time
    (psycopg: `$N` -> `%(pN)s`; MySQL: `?` -> `%s` with `%` doubled - small
-   SQL lexers matching each engine's rules). `plainParams` pre-reserves
+   SQL lexers matching each engine's rules). `mysql_sql.go` and
+   `sqlite_sql.go` also report the query's bind order, so a sqlc.slice
+   reused across use sites binds its arguments in SQL text order without any
+   driver re-scanning the text. `plainParams` pre-reserves
    every local the driver bodies emit (`conn`/`self`, `sql` for slice
    queries, psycopg's and MySQL's `sql_params`/`cur`/`row`/`_decode_hook`);
    a new local in a driver body needs a matching seed or a param can shadow
@@ -189,9 +192,9 @@ buffer is emitted as an extra output file.
   returns -> converters). psycopg's loader registration follows the same
   policy (returned json/jsonb types only).
 - The MySQL drivers interpolate pyformat placeholders client-side: rewritten
-  SQL constants carry `%s`/`%%`, and the slice-expansion/placeholder-scanner
-  machinery in `internal/driver/common.go` must lex them exactly like the
-  rewriter emitted them.
+  SQL constants carry `%s`/`%%`. Only `internal/transform` lexes SQL: the
+  rewriters there also report each query's bind order (`Query.Placeholders`),
+  which the drivers consume instead of re-scanning the emitted text.
 - `speedups: true` swaps date/datetime decoding to `ciso8601` (sqlite
   converter bodies, turso inline decodes); the import resolver tracks which
   variant is emitted.

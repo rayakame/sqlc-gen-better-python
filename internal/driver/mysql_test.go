@@ -446,6 +446,7 @@ func TestMysqlWriteQueryFuncSync(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdMany,
 				ConstantName: "LIST_BY_IDS",
+				Placeholders: []model.Placeholder{{SliceName: "ids", Marker: "/*SLICE:ids*/%s"}},
 				FuncName:     "list_by_ids",
 				SQL:          "SELECT id FROM users WHERE id IN (/*SLICE:ids*/%s)",
 				Params: []model.QueryValue{
@@ -468,6 +469,7 @@ func TestMysqlWriteQueryFuncSync(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdOne,
 				ConstantName: "GET_BY_IDS",
+				Placeholders: []model.Placeholder{{SliceName: "ids", Marker: "/*SLICE:ids*/%s"}},
 				FuncName:     "get_by_ids",
 				SQL:          "SELECT count(*) FROM t WHERE id IN (/*SLICE:ids*/%s)",
 				Params: []model.QueryValue{
@@ -495,8 +497,12 @@ func TestMysqlWriteQueryFuncSync(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdExec,
 				ConstantName: "DELETE_LINKED",
-				FuncName:     "delete_linked",
-				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/%s) OR ref_id IN (/*SLICE:ids*/%s)",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+				},
+				FuncName: "delete_linked",
+				SQL:      "DELETE FROM t WHERE id IN (/*SLICE:ids*/%s) OR ref_id IN (/*SLICE:ids*/%s)",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "int", IsList: true, SqlcSliceName: "ids"}},
 				},
@@ -517,8 +523,13 @@ func TestMysqlWriteQueryFuncSync(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdExec,
 				ConstantName: "DELETE_BETWEEN",
-				FuncName:     "delete_between",
-				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/%s) AND name = %s AND ref_id IN (/*SLICE:ids*/%s)",
+				Placeholders: []model.Placeholder{
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+					{},
+					{SliceName: "ids", Marker: "/*SLICE:ids*/%s"},
+				},
+				FuncName: "delete_between",
+				SQL:      "DELETE FROM t WHERE id IN (/*SLICE:ids*/%s) AND name = %s AND ref_id IN (/*SLICE:ids*/%s)",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "int", IsList: true, SqlcSliceName: "ids"}},
 					{Name: "name", Type: model.PyType{Type: "str", SQLType: "varchar"}},

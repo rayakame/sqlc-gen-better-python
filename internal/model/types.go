@@ -96,6 +96,15 @@ type Column struct {
 	Embed *Embed
 }
 
+// Placeholder is one bindable slot of a query's SQL, in text order.
+// SliceName is the raw sqlc.slice name for a /*SLICE:name*/ marker and
+// empty for a plain placeholder; Marker is the marker's exact text in
+// SQL, which the drivers replace at call time.
+type Placeholder struct {
+	SliceName string
+	Marker    string
+}
+
 type Query struct {
 	Cmd          string // The command of the query: https://docs.sqlc.dev/en/latest/reference/query-annotations.html
 	SQL          string // The raw SQL of the query
@@ -109,6 +118,11 @@ type Query struct {
 	Returns QueryValue
 
 	Table *plugin.Identifier // The name of the table this query inserts into. Only used for :copyfrom
+
+	// Placeholders is the bind order of SQL, produced by the same pass that
+	// produced SQL so the two can never disagree. Only queries with a
+	// sqlc.slice parameter carry it - nothing else reads it.
+	Placeholders []Placeholder
 }
 
 func (q Query) EmitsTable() bool {
