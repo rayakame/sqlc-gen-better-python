@@ -1,8 +1,9 @@
 # Enums
 
-PostgreSQL enum types become `enum.StrEnum` classes in a generated `enums.py`
-module. Columns of that type are annotated with the class, and values read from
-the database are coerced into it.
+PostgreSQL enum types and MySQL inline `ENUM(...)` columns become
+`enum.StrEnum` classes in a generated `enums.py` module. Columns of that type
+are annotated with the class, and values read from the database are coerced
+into it.
 
 ## Example
 
@@ -56,8 +57,32 @@ Enums in a non-default schema get schema-qualified class names so same-named
 enums never collide - for example `custom.mood` becomes `CustomMood`, distinct
 from a `public.mood` that would become `Mood`.
 
+## MySQL
+
+MySQL has no named enum types - `ENUM` is declared inline on the column, so
+the class is named after the table and column:
+
+```sql
+CREATE TABLE test_enum_override
+(
+    id        bigint PRIMARY KEY NOT NULL,
+    mood_test enum('sad','ok','happy') NOT NULL
+);
+```
+
+generates `TestEnumOverrideMoodTest`, used exactly like a PostgreSQL enum
+class. `SET(...)` columns generate a class the same way.
+
+{{< callout type="warning" >}}
+  A `SET` column can hold several members at once, but the database returns
+  them as one comma-joined string - coercing `"alpha,beta"` into the enum
+  class raises `ValueError`. Only single-valued sets round-trip; for
+  multi-valued sets add a [type override](/docs/guide/type-overrides) to
+  `str`.
+{{< /callout >}}
+
 {{< callout type="info" >}}
-  Enum classes are a PostgreSQL feature - SQLite has no native enum type, so this
-  applies to the PostgreSQL drivers (`asyncpg`, `psycopg_async`, and `psycopg_sync`).
+  SQLite has no native enum type, so `enums.py` is generated for the
+  PostgreSQL and MySQL drivers only.
 {{< /callout >}}
 

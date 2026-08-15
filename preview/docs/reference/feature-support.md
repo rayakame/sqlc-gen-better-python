@@ -8,12 +8,12 @@ Every [sqlc macro](https://docs.sqlc.dev/en/latest/reference/macros.html) is
 supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 
 {{< callout type="info" >}}
-  `sqlc.slice` is for the SQLite drivers, where a list cannot be passed to the
-  `IN` operator: the generated function expands the placeholder at call time,
-  one `?` per element, and an empty sequence matches no rows. Because the SQL
-  is built per call, it cannot be used with prepared statements. On PostgreSQL
-  the macro is not needed - use `= ANY($1::type[])`, which accepts the sequence
-  directly.
+  `sqlc.slice` is for the SQLite and MySQL drivers, where a list cannot be
+  passed to the `IN` operator: the generated function expands the placeholder
+  at call time, one placeholder per element, and an empty sequence matches no
+  rows. Because the SQL is built per call, it cannot be used with prepared
+  statements. On PostgreSQL the macro is not needed - use `= ANY($1::type[])`,
+  which accepts the sequence directly.
 {{< /callout >}}
 
 ## Query commands
@@ -21,15 +21,15 @@ supported (`sqlc.arg`, `sqlc.narg`, `sqlc.embed`, `sqlc.slice`).
 The supported [query annotations](https://docs.sqlc.dev/en/latest/reference/query-annotations.html)
 depend on the driver:
 
-| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async | psycopg_sync | turso_async | turso_sync |
-|---|---|---|---|---|---|---|---|
-| `:one` | yes | yes | yes | yes | yes | yes | yes |
-| `:many` | yes | yes | yes | yes | yes | yes | yes |
-| `:exec` | yes | yes | yes | yes | yes | yes | yes |
-| `:execresult` | yes | yes | yes | yes | yes | yes | yes |
-| `:execrows` | yes | yes | yes | yes | yes | yes | yes |
-| `:execlastid` | yes | yes | no | no | no | yes | yes |
-| `:copyfrom` | no | no | yes | yes | yes | no | no |
+| Command | aiosqlite | sqlite3 | asyncpg | psycopg_async | psycopg_sync | asyncmy | pymysql | turso_async | turso_sync |
+|---|---|---|---|---|---|---|---|---|---|
+| `:one` | yes | yes | yes | yes | yes | yes | yes | yes | yes |
+| `:many` | yes | yes | yes | yes | yes | yes | yes | yes | yes |
+| `:exec` | yes | yes | yes | yes | yes | yes | yes | yes | yes |
+| `:execresult` | yes | yes | yes | yes | yes | yes | yes | yes | yes |
+| `:execrows` | yes | yes | yes | yes | yes | yes | yes | yes | yes |
+| `:execlastid` | yes | yes | no | no | no | yes | yes | yes | yes |
+| `:copyfrom` | no | no | yes | yes | yes | no | no | no | no |
 
 See [Writing queries](/docs/guide/writing-queries) for what each command
 generates.
@@ -41,7 +41,9 @@ generates.
     statements - turso's `lastrowid` only reflects the cursor's own `INSERT`.
   - `:copyfrom` maps to PostgreSQL's bulk `COPY` protocol
     (`copy_records_to_table` on asyncpg, `cursor.copy()` on psycopg), which
-    the SQLite-engine drivers have no equivalent for.
+    the SQLite-engine and MySQL drivers have no equivalent for. MySQL's
+    `LOAD DATA LOCAL INFILE` exposes no row-streaming driver API to
+    generate against; if you need it, run it as a plain `:exec` statement.
 {{< /callout >}}
 
 ### Prepared queries
@@ -78,9 +80,13 @@ controls it:
   `cached_statements` argument of `connect()` if you have more distinct
   queries than that.
 
-- **turso_sync / turso_async** (experimental) are the exception: pyturso
-  currently has no statement cache and no tuning knob, so every execution
-  prepares the statement anew.
+- **asyncmy / pymysql** use MySQL's text protocol: parameters are
+  interpolated client-side and nothing is prepared server-side, so there is
+  no knob and nothing to disable behind a pooler.
+
+- **turso_sync / turso_async** (experimental) are the exception among the
+  prepared-statement drivers: pyturso currently has no statement cache and no
+  tuning knob, so every execution prepares the statement anew.
 
 {{< callout type="warning" >}}
   Behind PgBouncer in transaction-pooling mode, server-side prepared
@@ -92,7 +98,9 @@ controls it:
 
 - **`:batch*` commands** (`:batchexec`, `:batchmany`, `:batchone`) are not
   supported and likely never will be.
-- **`psycopg2` and `mysql`** drivers are not currently supported; Psycopg 3
-  is, via the `psycopg_async` (asyncio) and `psycopg_sync` (synchronous)
-  drivers.
+- **`psycopg2`** is not supported; Psycopg 3 is, via the `psycopg_async`
+  (asyncio) and `psycopg_sync` (synchronous) drivers. For MySQL, use
+  `asyncmy` or `pymysql` - `mysqlclient` and `mysql-connector-python` are
+  not codegen targets (PyMySQL-targeted code is source-compatible with
+  `mysqlclient` except that `json` columns arrive as `bytes` there).
 

@@ -66,7 +66,7 @@ whose hash does not match. Each release lists its hash.&lt;/div&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;sql_driver&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;psycopg_sync&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, &lt;code&gt;sqlite3&lt;/code&gt;, &lt;code&gt;turso_async&lt;/code&gt;, or &lt;code&gt;turso_sync&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;psycopg_sync&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, &lt;code&gt;sqlite3&lt;/code&gt;, &lt;code&gt;asyncmy&lt;/code&gt;, &lt;code&gt;pymysql&lt;/code&gt;, &lt;code&gt;turso_async&lt;/code&gt;, or &lt;code&gt;turso_sync&lt;/code&gt; - must match the &lt;code&gt;engine&lt;/code&gt;. See &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/drivers/"&gt;Drivers&lt;/a&gt;.&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;emit_init_file&lt;/code&gt;&lt;/td&gt;
@@ -113,14 +113,14 @@ data-copied-label="Copied!"
 &lt;a href="#common-pitfalls" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;Driver/engine mismatch.&lt;/strong&gt; &lt;code&gt;sql_driver: asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, and
 &lt;code&gt;psycopg_sync&lt;/code&gt; require &lt;code&gt;engine: &amp;quot;postgresql&amp;quot;&lt;/code&gt;; &lt;code&gt;aiosqlite&lt;/code&gt;/&lt;code&gt;sqlite3&lt;/code&gt; and the
-turso drivers require
-&lt;code&gt;engine: &amp;quot;sqlite&amp;quot;&lt;/code&gt;. A mismatch is an error.&lt;/li&gt;
+turso drivers require &lt;code&gt;engine: &amp;quot;sqlite&amp;quot;&lt;/code&gt;; &lt;code&gt;asyncmy&lt;/code&gt;/&lt;code&gt;pymysql&lt;/code&gt; require
+&lt;code&gt;engine: &amp;quot;mysql&amp;quot;&lt;/code&gt;. A mismatch is an error.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Forgetting &lt;code&gt;emit_init_file&lt;/code&gt;.&lt;/strong&gt; It has no default and generation fails if it
 is omitted. Set it to &lt;code&gt;true&lt;/code&gt; unless the package already has an &lt;code&gt;__init__.py&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;A stale &lt;code&gt;sha256&lt;/code&gt;.&lt;/strong&gt; When you bump the plugin version, update the hash too.&lt;/li&gt;
 &lt;/ul&gt;</description></item><item><title>Drivers</title><link>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/drivers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/drivers/</guid><description>
 &lt;p&gt;The &lt;code&gt;sql_driver&lt;/code&gt; option picks which database library the generated code targets.
-It must match your &lt;code&gt;engine&lt;/code&gt;. Seven drivers are supported:&lt;/p&gt;
+It must match your &lt;code&gt;engine&lt;/code&gt;. Nine drivers are supported:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -153,6 +153,16 @@ It must match your &lt;code&gt;engine&lt;/code&gt;. Seven drivers are supported:
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;sqlite3&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;sqlite&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;sync&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;asyncmy&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;mysql&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;async&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;pymysql&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;mysql&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;sync&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -333,6 +343,93 @@ parameters, work without it. See
 &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;h2&gt;asyncmy (async MySQL)&lt;span class="hx:absolute hx:-mt-20" id="asyncmy-async-mysql"&gt;&lt;/span&gt;
+&lt;a href="#asyncmy-async-mysql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncio&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;asyncmy&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;app.db&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;queries&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;conn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;asyncmy&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;localhost&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;user&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;pass&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;database&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;db&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="k"&gt;await&lt;/span&gt; &lt;span class="n"&gt;queries&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_field_naming&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;asyncio&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The generated code targets &lt;a href="https://github.com/long2ice/asyncmy"target="_blank" rel="noopener"&gt;asyncmy&lt;/a&gt;
+with its default tuple cursors; the connection annotation is
+&lt;code&gt;asyncmy.Connection&lt;/code&gt;. No connection flags are needed - values convert
+inline, so &lt;code&gt;date&lt;/code&gt;/&lt;code&gt;datetime&lt;/code&gt;/&lt;code&gt;decimal&lt;/code&gt; columns round-trip out of the box.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;asyncmy&amp;rsquo;s shipped stubs leave the cursor methods unannotated, so every
+generated queries module starts with
+&lt;code&gt;# pyright: reportUnknownMemberType=false&lt;/code&gt;. The rest of the module is
+checked under pyright strict as usual; the line disappears once asyncmy
+annotates its stubs.&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2&gt;pymysql (sync MySQL)&lt;span class="hx:absolute hx:-mt-20" id="pymysql-sync-mysql"&gt;&lt;/span&gt;
+&lt;a href="#pymysql-sync-mysql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pymysql&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;app.db&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;queries&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;conn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pymysql&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;localhost&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;user&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;user&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;password&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;pass&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;database&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;db&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;queries&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_field_naming&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;id_&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Same contract as &lt;code&gt;asyncmy&lt;/code&gt;, emitted as plain functions without
+&lt;code&gt;async&lt;/code&gt;/&lt;code&gt;await&lt;/code&gt;. The connection annotation is &lt;code&gt;pymysql.Connection&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;PyMySQL ships without type annotations - install
+&lt;a href="https://pypi.org/project/types-PyMySQL/"target="_blank" rel="noopener"&gt;types-PyMySQL&lt;/a&gt; so pyright and
+mypy understand the generated code. Type checking only; never evaluated
+at runtime.&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Behavior shared by both MySQL drivers:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Queries are written with &lt;code&gt;?&lt;/code&gt; placeholders like on SQLite; the generated SQL
+constants hold the pyformat &lt;code&gt;%s&lt;/code&gt; form the drivers expect, with literal &lt;code&gt;%&lt;/code&gt;
+doubled. The rewrite happens at generation time - your &lt;code&gt;.sql&lt;/code&gt; files stay
+plain MySQL.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;time&lt;/code&gt; columns map to &lt;code&gt;datetime.timedelta&lt;/code&gt; and &lt;code&gt;tinyint(1)&lt;/code&gt; to &lt;code&gt;bool&lt;/code&gt;,
+matching what the drivers return. The full table is in the
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/reference/type-mappings/"&gt;type mappings reference&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;memoryview&lt;/code&gt; parameters bind as &lt;code&gt;bytes&lt;/code&gt; automatically - the PyMySQL family
+cannot encode a raw memoryview.&lt;/li&gt;
+&lt;li&gt;Inline &lt;code&gt;ENUM&lt;/code&gt; (and &lt;code&gt;SET&lt;/code&gt;) columns generate
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/enums/#mysql"&gt;enum classes&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:execlastid&lt;/code&gt; returns &lt;code&gt;cursor.lastrowid&lt;/code&gt;, or &lt;code&gt;None&lt;/code&gt; when the statement
+inserted no row (the drivers report &lt;code&gt;0&lt;/code&gt; there); &lt;code&gt;:copyfrom&lt;/code&gt; is not
+supported.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2&gt;turso_sync / turso_async (Turso)&lt;span class="hx:absolute hx:-mt-20" id="turso_sync--turso_async-turso"&gt;&lt;/span&gt;
 &lt;a href="#turso_sync--turso_async-turso" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/tursodatabase/turso"target="_blank" rel="noopener"&gt;Turso&lt;/a&gt; is an SQLite-compatible
 database engine; its &lt;a href="https://pypi.org/project/pyturso/"target="_blank" rel="noopener"&gt;pyturso&lt;/a&gt; package
@@ -407,7 +504,7 @@ strings, or bytes).&lt;/li&gt;
 &lt;h2&gt;Command support&lt;span class="hx:absolute hx:-mt-20" id="command-support"&gt;&lt;/span&gt;
 &lt;a href="#command-support" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Not every &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/writing-queries/"&gt;query command&lt;/a&gt; works on every driver -
 for example &lt;code&gt;:copyfrom&lt;/code&gt; is PostgreSQL-only and &lt;code&gt;:execlastid&lt;/code&gt; is limited to the
-SQLite-engine drivers. The full matrix is in the
+SQLite-engine and MySQL drivers. The full matrix is in the
 &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/reference/feature-support/"&gt;feature support reference&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Model types</title><link>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/model-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/model-types/</guid><description>
 &lt;p&gt;The &lt;code&gt;model_type&lt;/code&gt; option controls what kind of class the plugin generates for each
 table. All four produce the same fields with the same annotations - they differ
@@ -667,16 +764,19 @@ data-copied-label="Copied!"
 &lt;a href="#execresult-execrows-execlastid" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Variants of &lt;code&gt;:exec&lt;/code&gt; that return something about the write:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execrows&lt;/code&gt;&lt;/strong&gt; - the number of affected rows (&lt;code&gt;int&lt;/code&gt;). For statements that
-affect no rows, such as &lt;code&gt;CREATE TABLE&lt;/code&gt;, asyncpg and the turso drivers report
-&lt;code&gt;0&lt;/code&gt; while psycopg and the SQLite drivers report &lt;code&gt;-1&lt;/code&gt;.&lt;/li&gt;
+affect no rows, such as &lt;code&gt;CREATE TABLE&lt;/code&gt;, asyncpg, the MySQL drivers, and the
+turso drivers report &lt;code&gt;0&lt;/code&gt; while psycopg and the SQLite drivers report &lt;code&gt;-1&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execlastid&lt;/code&gt;&lt;/strong&gt; - the cursor&amp;rsquo;s &lt;code&gt;lastrowid&lt;/code&gt;, typed &lt;code&gt;int | None&lt;/code&gt; - it is &lt;code&gt;None&lt;/code&gt;
-when no row was affected. SQLite-engine drivers only, and note it is the last
-&lt;em&gt;affected&lt;/em&gt; row, not strictly the last inserted one. On turso it is &lt;code&gt;None&lt;/code&gt; for
-&lt;code&gt;UPDATE&lt;/code&gt;/&lt;code&gt;DELETE&lt;/code&gt;.&lt;/li&gt;
+when no row was affected. SQLite-engine and MySQL drivers only, and note it
+is the last &lt;em&gt;affected&lt;/em&gt; row, not strictly the last inserted one (on MySQL it
+is the &lt;code&gt;AUTO_INCREMENT&lt;/code&gt; id of the cursor&amp;rsquo;s own &lt;code&gt;INSERT&lt;/code&gt;). On turso it is
+&lt;code&gt;None&lt;/code&gt; for &lt;code&gt;UPDATE&lt;/code&gt;/&lt;code&gt;DELETE&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:execresult&lt;/code&gt;&lt;/strong&gt; - the driver&amp;rsquo;s raw result, which differs per driver: a &lt;code&gt;str&lt;/code&gt;
 status tag on asyncpg, a &lt;code&gt;psycopg.AsyncCursor&lt;/code&gt; / &lt;code&gt;psycopg.Cursor&lt;/code&gt; on the
 psycopg drivers, a &lt;code&gt;sqlite3.Cursor&lt;/code&gt; / &lt;code&gt;aiosqlite.Cursor&lt;/code&gt; on the SQLite
-drivers, and a &lt;code&gt;turso.Cursor&lt;/code&gt; / &lt;code&gt;turso.aio.Cursor&lt;/code&gt; on the turso drivers.&lt;/li&gt;
+drivers, an open &lt;code&gt;asyncmy.cursors.Cursor&lt;/code&gt; / &lt;code&gt;pymysql.cursors.Cursor&lt;/code&gt; on the
+MySQL drivers (close it when done), and a &lt;code&gt;turso.Cursor&lt;/code&gt; /
+&lt;code&gt;turso.aio.Cursor&lt;/code&gt; on the turso drivers.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;See the &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/reference/feature-support/"&gt;feature support matrix&lt;/a&gt; for which
 driver supports which.&lt;/p&gt;
@@ -772,9 +872,10 @@ data-copied-label="Copied!"
 &lt;code&gt;user = await QueriesFieldNamings(conn).get_field_naming(id_=1)&lt;/code&gt; - without the
 &lt;code&gt;await&lt;/code&gt; on the synchronous &lt;code&gt;sqlite3&lt;/code&gt; driver, where the method is a plain
 function.&lt;/p&gt;</description></item><item><title>Enums</title><link>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/enums/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/enums/</guid><description>
-&lt;p&gt;PostgreSQL enum types become &lt;code&gt;enum.StrEnum&lt;/code&gt; classes in a generated &lt;code&gt;enums.py&lt;/code&gt;
-module. Columns of that type are annotated with the class, and values read from
-the database are coerced into it.&lt;/p&gt;
+&lt;p&gt;PostgreSQL enum types and MySQL inline &lt;code&gt;ENUM(...)&lt;/code&gt; columns become
+&lt;code&gt;enum.StrEnum&lt;/code&gt; classes in a generated &lt;code&gt;enums.py&lt;/code&gt; module. Columns of that type
+are annotated with the class, and values read from the database are coerced
+into it.&lt;/p&gt;
 &lt;h2&gt;Example&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
 &lt;a href="#example" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;CREATE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;TYPE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;test_mood&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ENUM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sad&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ok&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;happy&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;24h&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;_hidden&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -855,11 +956,43 @@ get real &lt;code&gt;TestMood&lt;/code&gt; members back, not bare strings.&lt;/p
 &lt;a href="#enums-in-other-schemas" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Enums in a non-default schema get schema-qualified class names so same-named
 enums never collide - for example &lt;code&gt;custom.mood&lt;/code&gt; becomes &lt;code&gt;CustomMood&lt;/code&gt;, distinct
 from a &lt;code&gt;public.mood&lt;/code&gt; that would become &lt;code&gt;Mood&lt;/code&gt;.&lt;/p&gt;
+&lt;h2&gt;MySQL&lt;span class="hx:absolute hx:-mt-20" id="mysql"&gt;&lt;/span&gt;
+&lt;a href="#mysql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;MySQL has no named enum types - &lt;code&gt;ENUM&lt;/code&gt; is declared inline on the column, so
+the class is named after the table and column:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;CREATE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;TABLE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;test_enum_override&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;bigint&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;PRIMARY&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;KEY&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;NOT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;mood_test&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;enum&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;sad&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ok&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;happy&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;NOT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;NULL&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;generates &lt;code&gt;TestEnumOverrideMoodTest&lt;/code&gt;, used exactly like a PostgreSQL enum
+class. &lt;code&gt;SET(...)&lt;/code&gt; columns generate a class the same way.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;A &lt;code&gt;SET&lt;/code&gt; column can hold several members at once, but the database returns
+them as one comma-joined string - coercing &lt;code&gt;&amp;quot;alpha,beta&amp;quot;&lt;/code&gt; into the enum
+class raises &lt;code&gt;ValueError&lt;/code&gt;. Only single-valued sets round-trip; for
+multi-valued sets add a &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/type-overrides/"&gt;type override&lt;/a&gt; to
+&lt;code&gt;str&lt;/code&gt;.&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Enum classes are a PostgreSQL feature - SQLite has no native enum type, so this
-applies to the PostgreSQL drivers (&lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, and &lt;code&gt;psycopg_sync&lt;/code&gt;).&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;SQLite has no native enum type, so &lt;code&gt;enums.py&lt;/code&gt; is generated for the
+PostgreSQL and MySQL drivers only.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;</description></item><item><title>Type overrides</title><link>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/type-overrides/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/type-overrides/</guid><description>
 &lt;p&gt;An override replaces the Python type the plugin would pick for a column with one

@@ -25,7 +25,7 @@ optional.&lt;/p&gt;
 &lt;td&gt;&lt;code&gt;sql_driver&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;string&lt;/td&gt;
 &lt;td&gt;&lt;em&gt;required&lt;/em&gt;&lt;/td&gt;
-&lt;td&gt;One of &lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;psycopg_sync&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, &lt;code&gt;sqlite3&lt;/code&gt;, &lt;code&gt;turso_async&lt;/code&gt;, &lt;code&gt;turso_sync&lt;/code&gt;. Must match the engine (the postgres drivers -&amp;gt; &lt;code&gt;postgresql&lt;/code&gt;; the sqlite and turso drivers -&amp;gt; &lt;code&gt;sqlite&lt;/code&gt;).&lt;/td&gt;
+&lt;td&gt;One of &lt;code&gt;asyncpg&lt;/code&gt;, &lt;code&gt;psycopg_async&lt;/code&gt;, &lt;code&gt;psycopg_sync&lt;/code&gt;, &lt;code&gt;aiosqlite&lt;/code&gt;, &lt;code&gt;sqlite3&lt;/code&gt;, &lt;code&gt;asyncmy&lt;/code&gt;, &lt;code&gt;pymysql&lt;/code&gt;, &lt;code&gt;turso_async&lt;/code&gt;, &lt;code&gt;turso_sync&lt;/code&gt;. Must match the engine (the postgres drivers -&amp;gt; &lt;code&gt;postgresql&lt;/code&gt;; the sqlite and turso drivers -&amp;gt; &lt;code&gt;sqlite&lt;/code&gt;; the mysql drivers -&amp;gt; &lt;code&gt;mysql&lt;/code&gt;).&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;emit_init_file&lt;/code&gt;&lt;/td&gt;
@@ -390,7 +390,76 @@ prefix (so &lt;code&gt;varchar(255)&lt;/code&gt; matches &lt;code&gt;varchar&lt;
 &lt;/table&gt;
 &lt;p&gt;For the two SQLite drivers, several of these types also need runtime adapters and
 converters (registered in the generated code) to round-trip correctly - see
-&lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>Feature support</title><link>https://sqlc-gen-better-python.rayakame.dev/preview/docs/reference/feature-support/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/preview/docs/reference/feature-support/</guid><description>
+&lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/sqlite-type-conversion/"&gt;SQLite type conversion&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;MySQL&lt;span class="hx:absolute hx:-mt-20" id="mysql"&gt;&lt;/span&gt;
+&lt;a href="#mysql" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;MySQL type names are matched case-insensitively.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;SQL type&lt;/th&gt;
+&lt;th&gt;Python type&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;tinyint(1)&lt;/code&gt;, &lt;code&gt;bool&lt;/code&gt;, &lt;code&gt;boolean&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;bool&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;tinyint&lt;/code&gt;, &lt;code&gt;smallint&lt;/code&gt;, &lt;code&gt;mediumint&lt;/code&gt;, &lt;code&gt;int&lt;/code&gt;, &lt;code&gt;integer&lt;/code&gt;, &lt;code&gt;bigint&lt;/code&gt;, &lt;code&gt;year&lt;/code&gt;, &lt;code&gt;serial&lt;/code&gt; (signed or &lt;code&gt;unsigned&lt;/code&gt;)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;int&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;float&lt;/code&gt;, &lt;code&gt;double&lt;/code&gt;, &lt;code&gt;double precision&lt;/code&gt;, &lt;code&gt;real&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;float&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;decimal&lt;/code&gt;, &lt;code&gt;dec&lt;/code&gt;, &lt;code&gt;fixed&lt;/code&gt;, &lt;code&gt;numeric&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;decimal.Decimal&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;char&lt;/code&gt;, &lt;code&gt;varchar&lt;/code&gt;, &lt;code&gt;tinytext&lt;/code&gt;, &lt;code&gt;text&lt;/code&gt;, &lt;code&gt;mediumtext&lt;/code&gt;, &lt;code&gt;longtext&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;str&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;binary&lt;/code&gt;, &lt;code&gt;varbinary&lt;/code&gt;, &lt;code&gt;tinyblob&lt;/code&gt;, &lt;code&gt;blob&lt;/code&gt;, &lt;code&gt;mediumblob&lt;/code&gt;, &lt;code&gt;longblob&lt;/code&gt;, &lt;code&gt;bit&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;memoryview&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;date&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;datetime.date&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;datetime&lt;/code&gt;, &lt;code&gt;timestamp&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;datetime.datetime&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;time&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;datetime.timedelta&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;json&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;str&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;an inline &lt;code&gt;ENUM(...)&lt;/code&gt; or &lt;code&gt;SET(...)&lt;/code&gt; column&lt;/td&gt;
+&lt;td&gt;the generated &lt;a href="https://sqlc-gen-better-python.rayakame.dev/preview/docs/guide/enums/#mysql"&gt;enum class&lt;/a&gt; - only single-valued sets round-trip&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;anything else&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;typing.Any&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;Two mappings follow what the PyMySQL-family drivers actually return rather
+than the SQL standard: &lt;code&gt;time&lt;/code&gt; is a &lt;code&gt;datetime.timedelta&lt;/code&gt; (MySQL &lt;code&gt;TIME&lt;/code&gt; values
+span more than 24 hours), and &lt;code&gt;tinyint(1)&lt;/code&gt; is &lt;code&gt;bool&lt;/code&gt; only when the display
+width is literally 1 in the DDL - a plain &lt;code&gt;tinyint&lt;/code&gt; stays &lt;code&gt;int&lt;/code&gt;.&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>Feature support</title><link>https://sqlc-gen-better-python.rayakame.dev/preview/docs/reference/feature-support/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://sqlc-gen-better-python.rayakame.dev/preview/docs/reference/feature-support/</guid><description>
 &lt;p&gt;Which sqlc features and query commands the plugin supports.&lt;/p&gt;
 &lt;h2&gt;Macros&lt;span class="hx:absolute hx:-mt-20" id="macros"&gt;&lt;/span&gt;
 &lt;a href="#macros" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every &lt;a href="https://docs.sqlc.dev/en/latest/reference/macros.html"target="_blank" rel="noopener"&gt;sqlc macro&lt;/a&gt; is
@@ -398,12 +467,12 @@ supported (&lt;code&gt;sqlc.arg&lt;/code&gt;, &lt;code&gt;sqlc.narg&lt;/code&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;code&gt;sqlc.slice&lt;/code&gt; is for the SQLite drivers, where a list cannot be passed to the
-&lt;code&gt;IN&lt;/code&gt; operator: the generated function expands the placeholder at call time,
-one &lt;code&gt;?&lt;/code&gt; per element, and an empty sequence matches no rows. Because the SQL
-is built per call, it cannot be used with prepared statements. On PostgreSQL
-the macro is not needed - use &lt;code&gt;= ANY($1::type[])&lt;/code&gt;, which accepts the sequence
-directly.&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;code&gt;sqlc.slice&lt;/code&gt; is for the SQLite and MySQL drivers, where a list cannot be
+passed to the &lt;code&gt;IN&lt;/code&gt; operator: the generated function expands the placeholder
+at call time, one placeholder per element, and an empty sequence matches no
+rows. Because the SQL is built per call, it cannot be used with prepared
+statements. On PostgreSQL the macro is not needed - use &lt;code&gt;= ANY($1::type[])&lt;/code&gt;,
+which accepts the sequence directly.&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h2&gt;Query commands&lt;span class="hx:absolute hx:-mt-20" id="query-commands"&gt;&lt;/span&gt;
@@ -418,6 +487,8 @@ depend on the driver:&lt;/p&gt;
 &lt;th&gt;asyncpg&lt;/th&gt;
 &lt;th&gt;psycopg_async&lt;/th&gt;
 &lt;th&gt;psycopg_sync&lt;/th&gt;
+&lt;th&gt;asyncmy&lt;/th&gt;
+&lt;th&gt;pymysql&lt;/th&gt;
 &lt;th&gt;turso_async&lt;/th&gt;
 &lt;th&gt;turso_sync&lt;/th&gt;
 &lt;/tr&gt;
@@ -425,6 +496,8 @@ depend on the driver:&lt;/p&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;:one&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
@@ -442,9 +515,13 @@ depend on the driver:&lt;/p&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;:exec&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
@@ -462,9 +539,13 @@ depend on the driver:&lt;/p&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;:execrows&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
@@ -482,6 +563,8 @@ depend on the driver:&lt;/p&gt;
 &lt;td&gt;no&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;:copyfrom&lt;/code&gt;&lt;/td&gt;
@@ -490,6 +573,8 @@ depend on the driver:&lt;/p&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
 &lt;td&gt;yes&lt;/td&gt;
+&lt;td&gt;no&lt;/td&gt;
+&lt;td&gt;no&lt;/td&gt;
 &lt;td&gt;no&lt;/td&gt;
 &lt;td&gt;no&lt;/td&gt;
 &lt;/tr&gt;
@@ -507,7 +592,9 @@ provide - use a &lt;code&gt;RETURNING&lt;/code&gt; clause with &lt;code&gt;:one&
 statements - turso&amp;rsquo;s &lt;code&gt;lastrowid&lt;/code&gt; only reflects the cursor&amp;rsquo;s own &lt;code&gt;INSERT&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;:copyfrom&lt;/code&gt; maps to PostgreSQL&amp;rsquo;s bulk &lt;code&gt;COPY&lt;/code&gt; protocol
 (&lt;code&gt;copy_records_to_table&lt;/code&gt; on asyncpg, &lt;code&gt;cursor.copy()&lt;/code&gt; on psycopg), which
-the SQLite-engine drivers have no equivalent for.&lt;/li&gt;
+the SQLite-engine and MySQL drivers have no equivalent for. MySQL&amp;rsquo;s
+&lt;code&gt;LOAD DATA LOCAL INFILE&lt;/code&gt; exposes no row-streaming driver API to
+generate against; if you need it, run it as a plain &lt;code&gt;:exec&lt;/code&gt; statement.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -567,9 +654,14 @@ per-connection cache (128 entries by default). Raise it with the
 queries than that.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;strong&gt;turso_sync / turso_async&lt;/strong&gt; (experimental) are the exception: pyturso
-currently has no statement cache and no tuning knob, so every execution
-prepares the statement anew.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;asyncmy / pymysql&lt;/strong&gt; use MySQL&amp;rsquo;s text protocol: parameters are
+interpolated client-side and nothing is prepared server-side, so there is
+no knob and nothing to disable behind a pooler.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;turso_sync / turso_async&lt;/strong&gt; (experimental) are the exception among the
+prepared-statement drivers: pyturso currently has no statement cache and no
+tuning knob, so every execution prepares the statement anew.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
@@ -584,7 +676,9 @@ statements belong to a connection you do not control. Disable them there:
 &lt;a href="#not-supported" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;:batch*&lt;/code&gt; commands&lt;/strong&gt; (&lt;code&gt;:batchexec&lt;/code&gt;, &lt;code&gt;:batchmany&lt;/code&gt;, &lt;code&gt;:batchone&lt;/code&gt;) are not
 supported and likely never will be.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;code&gt;psycopg2&lt;/code&gt; and &lt;code&gt;mysql&lt;/code&gt;&lt;/strong&gt; drivers are not currently supported; Psycopg 3
-is, via the &lt;code&gt;psycopg_async&lt;/code&gt; (asyncio) and &lt;code&gt;psycopg_sync&lt;/code&gt; (synchronous)
-drivers.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;psycopg2&lt;/code&gt;&lt;/strong&gt; is not supported; Psycopg 3 is, via the &lt;code&gt;psycopg_async&lt;/code&gt;
+(asyncio) and &lt;code&gt;psycopg_sync&lt;/code&gt; (synchronous) drivers. For MySQL, use
+&lt;code&gt;asyncmy&lt;/code&gt; or &lt;code&gt;pymysql&lt;/code&gt; - &lt;code&gt;mysqlclient&lt;/code&gt; and &lt;code&gt;mysql-connector-python&lt;/code&gt; are
+not codegen targets (PyMySQL-targeted code is source-compatible with
+&lt;code&gt;mysqlclient&lt;/code&gt; except that &lt;code&gt;json&lt;/code&gt; columns arrive as &lt;code&gt;bytes&lt;/code&gt; there).&lt;/li&gt;
 &lt;/ul&gt;</description></item></channel></rss>

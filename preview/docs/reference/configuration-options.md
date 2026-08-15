@@ -12,7 +12,7 @@ optional.
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `package` | string | *required* | Name of the generated package. |
-| `sql_driver` | string | *required* | One of `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`, `turso_async`, `turso_sync`. Must match the engine (the postgres drivers -> `postgresql`; the sqlite and turso drivers -> `sqlite`). |
+| `sql_driver` | string | *required* | One of `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`, `asyncmy`, `pymysql`, `turso_async`, `turso_sync`. Must match the engine (the postgres drivers -> `postgresql`; the sqlite and turso drivers -> `sqlite`; the mysql drivers -> `mysql`). |
 | `emit_init_file` | bool | *required* | Whether to emit an `__init__.py` in the package. Must be set explicitly. Set `false` only if the package already has one. |
 | `model_type` | string | `dataclass` | One of `dataclass`, `attrs`, `msgspec`, `pydantic`. See [Model types](/docs/guide/model-types). |
 | `initialisms` | list[string] | `["id"]` | Identifier segments to upper-case, e.g. `app_id` -> `AppID`. |
