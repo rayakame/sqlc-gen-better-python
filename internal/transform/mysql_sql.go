@@ -6,9 +6,6 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/sqllex"
 )
 
-// mysqlToken is the pyformat placeholder the rewriter emits for every "?".
-const mysqlToken = "%s"
-
 // rewriteMySQLSQL converts sqlc's MySQL placeholders into pyformat style:
 // every ? becomes %s, and every literal % is doubled, since PyMySQL and
 // asyncmy interpolate the whole query text with Python %-formatting once
@@ -21,12 +18,12 @@ func rewriteMySQLSQL(sql string) string {
 	for _, token := range sqllex.Scan(sql, sqllex.MySQLRaw) {
 		switch token.Kind {
 		case sqllex.KindPlaceholder:
-			out.WriteString(mysqlToken)
+			out.WriteString(sqllex.MySQLPyformat.Placeholder())
 		case sqllex.KindSliceMarker:
 			// The marker is comment text and doubles like any other; only
 			// the placeholder it binds is rewritten.
 			writeDoubled(&out, sql[token.Start:token.MarkerEnd])
-			out.WriteString(mysqlToken)
+			out.WriteString(sqllex.MySQLPyformat.Placeholder())
 		case sqllex.KindText, sqllex.KindSkipped:
 			writeDoubled(&out, sql[token.Start:token.End])
 		}

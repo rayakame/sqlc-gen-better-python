@@ -131,6 +131,21 @@ func Scan(sql string, d Dialect) []Token {
 	return tokens
 }
 
+// Placeholder returns one bindable placeholder as it appears in this
+// dialect's text. Emitters use it so the token they write and the token the
+// scanner looks for can never be two different literals.
+func (d Dialect) Placeholder() string {
+	return d.placeholder
+}
+
+// SliceMarker returns the marker sqlc leaves for a sqlc.slice parameter,
+// together with the placeholder it binds. Scanning reports the marker's
+// actual text; this rebuilds it for the one caller that has a name but no
+// scanned text to point at.
+func (d Dialect) SliceMarker(name string) string {
+	return sliceMarkerPrefix + name + "*/" + d.placeholder
+}
+
 // Slots reports the bindable positions of sql in text order.
 func Slots(sql string, d Dialect) []Slot {
 	var slots []Slot

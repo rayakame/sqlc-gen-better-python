@@ -2,6 +2,7 @@ package driver
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
@@ -146,7 +147,12 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 		appendPart(param.Name, param.Type)
 	}
 
-	slots := querySlots(query, ph)
+	// Only slice parameters consult the bind order, and the argument list of
+	// a query without one is already in text order.
+	var slots []sqllex.Slot
+	if slices.ContainsFunc(parts, func(p part) bool { return p.slice != "" }) {
+		slots = querySlots(query, ph)
+	}
 	reused := false
 	for _, p := range parts {
 		if p.slice != "" && slotMarkerCount(slots, p.slice) > 1 {
@@ -261,15 +267,17 @@ func slotMarkerCount(slots []sqllex.Slot, name string) int {
 // slotMarkerText returns a slice parameter's marker exactly as it appears in
 // the SQL. Taking the scanned text rather than rebuilding it from the raw
 // sqlc name is what keeps a name containing "%" - which the MySQL rewriter
-// doubles - replaceable at runtime.
-func slotMarkerText(slots []sqllex.Slot, name string) string {
+// doubles - replaceable at runtime. A marker the scan never saw falls back to
+// the reconstructed form: Python's str.replace("") PREPENDS its argument, so
+// an empty target would corrupt the statement rather than leave it alone.
+func slotMarkerText(slots []sqllex.Slot, name string, ph placeholderStyle) string {
 	for _, slot := range slots {
 		if slot.Name == name {
 			return slot.Marker
 		}
 	}
 
-	return ""
+	return ph.dialect.SliceMarker(name)
 }
 
 // sliceParams collects the sqlc.slice parameters of a query, including fields
@@ -417,7 +425,7 @@ func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query,
 	src := query.ConstantName
 	for _, param := range params {
 		args := []string{
-			writer.PyQuote(slotMarkerText(slots, param.marker)),
+			writer.PyQuote(slotMarkerText(slots, param.marker, ph)),
 			fmt.Sprintf(ph.joinExpr, param.expr),
 		}
 		// A reused slice has one marker per use site: replace them all, with

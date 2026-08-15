@@ -838,20 +838,23 @@ func TestSlotMarkerHelpers(t *testing.T) {
 		{
 			// A marker inside a string literal is not a bind slot, so it
 			// neither counts nor supplies text.
+			// A marker inside a string literal is not a bind slot, so the
+			// text falls back to the reconstructed marker rather than the
+			// empty string, which str.replace would prepend.
 			name:      "marker inside a string literal is invisible",
 			sliceName: "ids",
 			sql:       "WHERE note = '/*SLICE:ids*/?'",
 			style:     questionStyle,
 			wantCount: 1,
-			wantText:  "",
+			wantText:  "/*SLICE:ids*/?",
 		},
 		{
-			name:      "missing marker clamps to one and has no text",
+			name:      "missing marker clamps to one and rebuilds its text",
 			sliceName: "ids",
 			sql:       "WHERE id = ?",
 			style:     questionStyle,
 			wantCount: 1,
-			wantText:  "",
+			wantText:  "/*SLICE:ids*/?",
 		},
 	}
 	for _, tc := range cases {
@@ -861,7 +864,7 @@ func TestSlotMarkerHelpers(t *testing.T) {
 			if got := slotMarkerCount(slots, tc.sliceName); got != tc.wantCount {
 				t.Errorf("slotMarkerCount(%q) = %d, want %d", tc.sliceName, got, tc.wantCount)
 			}
-			if got := slotMarkerText(slots, tc.sliceName); got != tc.wantText {
+			if got := slotMarkerText(slots, tc.sliceName, tc.style); got != tc.wantText {
 				t.Errorf("slotMarkerText(%q) = %q, want %q", tc.sliceName, got, tc.wantText)
 			}
 		})

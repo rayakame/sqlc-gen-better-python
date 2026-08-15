@@ -243,10 +243,11 @@ func TestScanSpansCoverInput(t *testing.T) {
 				}
 				at = token.End
 			}
-			// A trailing /*! opener is consumed without a token, so the tail
-			// is only required to be covered when the input has no such gap.
-			if at > len(sql) {
-				t.Fatalf("tokens ran past the input: %d > %d", at, len(sql))
+			// The trailing flush covers whatever the loop left pending, so
+			// the spans must reach the end: bytes no token covers would be
+			// dropped from the rewritten SQL.
+			if at != len(sql) {
+				t.Fatalf("tokens cover %d bytes, want %d", at, len(sql))
 			}
 		})
 	}
@@ -264,6 +265,36 @@ func runSlotCases(t *testing.T, cases []struct {
 			t.Parallel()
 			if got := sqllex.Slots(tc.sql, dialect); !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("Slots() = %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestDialectEmitters(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name        string
+		dialect     sqllex.Dialect
+		placeholder string
+		marker      string
+	}{
+		{name: "mysql raw", dialect: sqllex.MySQLRaw, placeholder: "?", marker: "/*SLICE:ids*/?"},
+		{name: "mysql pyformat", dialect: sqllex.MySQLPyformat, placeholder: "%s", marker: "/*SLICE:ids*/%s"},
+		{name: "sqlite", dialect: sqllex.SQLite, placeholder: "?", marker: "/*SLICE:ids*/?"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tc.dialect.Placeholder(); got != tc.placeholder {
+				t.Errorf("Placeholder() = %q, want %q", got, tc.placeholder)
+			}
+			if got := tc.dialect.SliceMarker("ids"); got != tc.marker {
+				t.Errorf("SliceMarker() = %q, want %q", got, tc.marker)
+			}
+			// A rebuilt marker has to scan back to the slot it describes.
+			want := []sqllex.Slot{{Name: "ids", Marker: tc.marker}}
+			if got := sqllex.Slots(tc.dialect.SliceMarker("ids"), tc.dialect); !reflect.DeepEqual(got, want) {
+				t.Errorf("Slots(SliceMarker()) = %+v, want %+v", got, want)
 			}
 		})
 	}
