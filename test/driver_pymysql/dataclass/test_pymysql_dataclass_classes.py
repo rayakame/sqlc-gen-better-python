@@ -772,7 +772,8 @@ class TestPymysqlDataclassClasses:
     @pytest.mark.dependency(name="PymysqlTestDataclassClasses::list_months_iter", depends=["PymysqlTestDataclassClasses::list_months"])
     def test_list_months_iter(self, queries_obj: queries.Queries) -> None:
         months = list(queries_obj.list_months())
-        assert months == [EXPECTED_MONTH]
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert EXPECTED_MONTH in months
 
     @pytest.mark.dependency(name="PymysqlTestDataclassClasses::count", depends=["PymysqlTestDataclassClasses::list_months_iter"])
     def test_count_mysql_types(self, queries_obj: queries.Queries) -> None:

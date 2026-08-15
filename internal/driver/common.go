@@ -539,11 +539,16 @@ func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query,
 // for wire-converting drivers, already-converted) argument expressions. Shared
 // by the sqlite, turso, and MySQL drivers.
 func writeCursorCall(body *writer.CodeWriter, indent int, parts []string, stmtHead, stmtTail string) {
-	segment := ""
-	switch {
-	case len(parts) == 1:
-		segment = fmt.Sprintf(", (%s,)", parts[0])
-	case len(parts) > 1:
+	// A parameterless statement passes no args at all: an empty tuple would
+	// still make the MySQL drivers interpolate the (undoubled) SQL text.
+	if len(parts) == 0 {
+		body.WriteIndentedLine(indent, stmtHead+stmtTail)
+
+		return
+	}
+
+	segment := fmt.Sprintf(", (%s,)", parts[0])
+	if len(parts) > 1 {
 		segment = fmt.Sprintf(", (%s)", strings.Join(parts, ", "))
 	}
 

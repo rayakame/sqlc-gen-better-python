@@ -477,8 +477,10 @@ class TestPymysqlPydanticFunctions:
         # query contains literal % signs in DATE_FORMAT.
         result = queries.list_months(conn=pymysql_conn)
 
-        assert list(result()) == ["2026-01"]
-        assert list(queries.list_months(conn=pymysql_conn)) == ["2026-01"]
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in list(result())
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in list(queries.list_months(conn=pymysql_conn))
 
     @pytest.mark.dependency(name="PymysqlPydanticFunctions::count", depends=["PymysqlPydanticFunctions::list_months"])
     def test_count(self, pymysql_conn: pymysql.Connection) -> None:

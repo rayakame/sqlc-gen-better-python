@@ -836,13 +836,15 @@ class TestAsyncmyDataclassClasses:
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = await result
-        assert results == ["2026-01"]
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in results
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="AsyncmyTestDataclassClasses::list_months_iter", depends=["AsyncmyTestDataclassClasses::list_months"])
     async def test_list_months_iter(self, queries_obj: queries.Queries) -> None:
         months = [month async for month in queries_obj.list_months()]
-        assert months == ["2026-01"]
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in months
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="AsyncmyTestDataclassClasses::count", depends=["AsyncmyTestDataclassClasses::list_months_iter"])

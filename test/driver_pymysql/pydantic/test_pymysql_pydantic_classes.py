@@ -499,8 +499,10 @@ class TestPymysqlPydanticClasses:
         # query contains literal % signs in DATE_FORMAT.
         result = queries_obj.list_months()
 
-        assert list(result()) == ["2026-01"]
-        assert list(queries_obj.list_months()) == ["2026-01"]
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in list(result())
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in list(queries_obj.list_months())
 
     @pytest.mark.dependency(name="PymysqlPydanticClasses::count", depends=["PymysqlPydanticClasses::list_months"])
     def test_count(self, queries_obj: queries.Queries) -> None:

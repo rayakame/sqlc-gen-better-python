@@ -842,13 +842,15 @@ class TestAsyncmyAttrsFunctions:
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = await result
-        assert results == ["2026-01"]
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in results
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="AsyncmyTestAttrsFunctions::list_months_iter", depends=["AsyncmyTestAttrsFunctions::list_months"])
     async def test_list_months_iter(self, asyncmy_conn: asyncmy.Connection) -> None:
         months = [month async for month in queries.list_months(conn=asyncmy_conn)]
-        assert months == ["2026-01"]
+        # The table is shared; the doubled %% only has to survive for our row.
+        assert "2026-01" in months
 
     @pytest.mark.asyncio(loop_scope="session")
     @pytest.mark.dependency(name="AsyncmyTestAttrsFunctions::count", depends=["AsyncmyTestAttrsFunctions::list_months_iter"])

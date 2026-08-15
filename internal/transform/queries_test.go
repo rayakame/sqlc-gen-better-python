@@ -674,6 +674,19 @@ func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
 			wantSQL: "INSERT INTO test_authors (id) VALUES ($1)",
 		},
 		{
+			// QueryResults always passes its args tuple, so a parameterless
+			// :many still gets interpolated and needs its percents doubled.
+			name:   "parameterless many is rewritten",
+			driver: config.SQLDriverPymysql,
+			query: &plugin.Query{
+				Name:    "ListMonths",
+				Cmd:     ":many",
+				Text:    "SELECT DATE_FORMAT(created, '%Y-%m') FROM test_authors",
+				Columns: []*plugin.Column{queryCol("month", "text", nil)},
+			},
+			wantSQL: "SELECT DATE_FORMAT(created, '%%Y-%%m') FROM test_authors",
+		},
+		{
 			name:   "asyncpg keeps native placeholders",
 			driver: config.SQLDriverAsyncpg,
 			query: &plugin.Query{
