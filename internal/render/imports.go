@@ -185,6 +185,7 @@ func (r *ImportResolver) ModelImports(tables []model.Table) ImportResult {
 }
 
 func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
+	hasMany := isAnyQueryMany(queries)
 	// "uses" checks whether any query arg/return uses a given Python type.
 	// Returns (isUsed, goesInTypeChecking).
 	uses := func(name string) (bool, bool) {
@@ -202,11 +203,11 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 		}
 
 		for _, query := range queries {
-			if used, tc := r.queryValueUses(name, query.Returns, true); used {
+			if used, tc := r.queryValueUses(name, query.Returns, true, hasMany); used {
 				update(used, tc)
 			}
 			for _, arg := range query.Params {
-				if used, tc := r.queryValueUses(name, arg, false); used {
+				if used, tc := r.queryValueUses(name, arg, false, hasMany); used {
 					update(used, tc)
 				}
 				// Overridden params are converted back to their DefaultType at
@@ -595,7 +596,31 @@ func (r *ImportResolver) addDriverImports(
 		if r.conf.Speedups && driver.TursoSpeedupsUsed(queries) {
 			std["ciso8601"] = importSpec{Module: "ciso8601"}
 		}
+
+	case config.SQLDriverPymysql, config.SQLDriverAsyncmy:
+		// Nothing registers at import time and every MySQL conversion is a
+		// builtin constructor, so the module is annotation-only. The cursor
+		// class lives in the cursors submodule, referenced by QueryResults
+		// state and :execresult return annotations.
+		typeChecking[driverName] = importSpec{Module: driverName}
+		if hasMany || isAnyQueryExecResult(queries) {
+			typeChecking[driverName+".cursors"] = importSpec{Module: driverName + ".cursors"}
+		}
+		if hasMany && r.hasSimpleReturn(queries) {
+			std["operator"] = importSpec{Module: moduleOperator}
+		}
 	}
+}
+
+// isAnyQueryExecResult reports whether any query returns the raw cursor.
+func isAnyQueryExecResult(queries []model.Query) bool {
+	for _, query := range queries {
+		if query.Cmd == metadata.CmdExecResult {
+			return true
+		}
+	}
+
+	return false
 }
 
 // hasSimpleReturn checks if any query has a non-struct return that doesn't need
@@ -621,41 +646,16 @@ func (r *ImportResolver) hasSimpleReturn(queries []model.Query) bool {
 // reference is annotation-only. Only decoded return values construct the type
 // at runtime; parameters are annotated but passed through (an overridden one is
 // converted via its DefaultType, tracked by overrideDefaultTypeUses).
-func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue, isReturn bool) (bool, bool) {
+// hasMany marks modules with a :many query: only those spell struct column
+// types in the QueryResultsArgsType alias, so an annotation-only match from a
+// NON-emitted return struct (the class lives in models.py) counts only there.
+func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue, isReturn, hasMany bool) (bool, bool) {
 	if queryValue.IsEmpty() {
 		return false, false
 	}
 
 	if queryValue.IsStruct() {
-		// Scan ALL columns (including embed columns): any occurrence that
-		// needs runtime conversion must force a runtime import, even when an
-		// earlier annotation-only occurrence of the same type exists.
-		used := false
-		typeChecking := true
-		check := func(typ model.PyType) {
-			if typ.Type != name {
-				return
-			}
-			used = true
-			if isReturn && !typ.HasConverter() && (r.convertsInlineWithType(typ.SQLType) || typ.DoOverride()) {
-				typeChecking = false
-			}
-		}
-		for _, column := range queryValue.Table.Columns {
-			if column.Embed != nil {
-				for _, embedColumn := range column.Embed.Columns {
-					check(embedColumn.Type)
-				}
-
-				continue
-			}
-			check(column.Type)
-		}
-		if !used {
-			return false, false
-		}
-
-		return true, typeChecking
+		return r.structUses(name, queryValue, isReturn, hasMany)
 	}
 
 	if queryValue.Type.Type == name {
@@ -666,6 +666,44 @@ func (r *ImportResolver) queryValueUses(name string, queryValue model.QueryValue
 	}
 
 	return false, false
+}
+
+// structUses is queryValueUses for struct values. It scans ALL columns
+// (including embed columns): any occurrence that needs runtime conversion
+// must force a runtime import, even when an earlier annotation-only
+// occurrence of the same type exists.
+func (r *ImportResolver) structUses(name string, queryValue model.QueryValue, isReturn, hasMany bool) (bool, bool) {
+	used := false
+	typeChecking := true
+	check := func(typ model.PyType) {
+		if typ.Type != name {
+			return
+		}
+		used = true
+		if isReturn && !typ.HasConverter() && (r.convertsInlineWithType(typ.SQLType) || typ.DoOverride()) {
+			typeChecking = false
+		}
+	}
+	for _, column := range queryValue.Table.Columns {
+		if column.Embed != nil {
+			for _, embedColumn := range column.Embed.Columns {
+				check(embedColumn.Type)
+			}
+
+			continue
+		}
+		check(column.Type)
+	}
+	if !used {
+		return false, false
+	}
+	if typeChecking && isReturn && !queryValue.EmitTable && !hasMany {
+		// The module spells only "models.X"; without the :many alias the
+		// column types appear nowhere, and importing them trips F401.
+		return false, false
+	}
+
+	return true, typeChecking
 }
 
 // convertsInlineWithType reports whether an inline conversion references the
@@ -720,10 +758,11 @@ func (r *ImportResolver) buildQueryResult(std, typeChecking, local map[string]im
 // modules with :many queries.
 func (r *ImportResolver) queryResultsArgsType(std, typeChecking map[string]importSpec, queries []model.Query) string {
 	members := []string{types.Int, types.Float, types.Str, types.Memoryview}
-	if r.conf.SqlDriver.IsTurso() {
+	if r.conf.SqlDriver.IsTurso() || r.conf.SqlDriver.IsMysql() {
 		// Blob parameters reach QueryResults already wire-converted to
-		// bytes (pyturso rejects memoryview); the memoryview member stays
-		// for pass-through override values.
+		// bytes (pyturso rejects memoryview; the PyMySQL encoders silently
+		// stringify it); the memoryview member stays for pass-through
+		// override values.
 		members = append(members, "bytes")
 	}
 	allSpecs := mergeMaps(std, typeChecking)

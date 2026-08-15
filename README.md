@@ -46,9 +46,10 @@ Questions or feedback? Join the [Discord](https://discord.gg/hikari).
 
 - **Four model types** - `dataclass`, `attrs`, `msgspec`, or `pydantic`
   ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/model-types/)).
-- **Seven drivers** - `asyncpg`, `psycopg_async`, and `psycopg_sync` for
-  PostgreSQL, `aiosqlite` and `sqlite3` for SQLite, plus experimental
-  `turso_async` and `turso_sync` for [Turso](https://github.com/tursodatabase/turso)
+- **Nine drivers** - `asyncpg`, `psycopg_async`, and `psycopg_sync` for
+  PostgreSQL, `aiosqlite` and `sqlite3` for SQLite, `asyncmy` and `pymysql`
+  for MySQL, plus experimental `turso_async` and `turso_sync` for
+  [Turso](https://github.com/tursodatabase/turso)
   ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/drivers/)).
 - **Typed query functions** - one module per query file, one function per query
   ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/writing-queries/)).

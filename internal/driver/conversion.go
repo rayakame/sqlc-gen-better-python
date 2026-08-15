@@ -14,7 +14,11 @@ const (
 	sqlTypeTimestamp = "timestamp"
 	sqlTypeDecimal   = "decimal"
 	sqlTypeBlob      = "blob"
-	pyDatetimeDate   = "datetime.date"
+	// wireBytes converts a memoryview parameter to bytes for drivers that
+	// cannot bind memoryview (pyturso rejects it; the PyMySQL encoders
+	// silently stringify it).
+	wireBytes      = "bytes(%s)"
+	pyDatetimeDate = "datetime.date"
 )
 
 // asyncpgConversions lists SQL types that need explicit Python-side

@@ -1,0 +1,200 @@
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: file://sqlc-gen-better-python.wasm
+      sha256: 02ddf238b6c48ecfb79e5da90cbec179e420456c201e5977cca4ac34b697a993
+sql:
+  - schema: schema.sql
+    queries:
+      - queries.sql
+    engine: mysql
+    codegen:
+      - out: /attrs/classes
+        plugin: python
+        options:
+          package: test.driver_asyncmy.attrs.classes
+          sql_driver: asyncmy
+          model_type: attrs
+          emit_classes: true
+          omit_unused_models: false
+          emit_init_file: true
+          docstrings: numpy
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+    engine: mysql
+    codegen:
+      - out: /attrs/functions
+        plugin: python
+        options:
+          package: test.driver_asyncmy.attrs.functions
+          sql_driver: asyncmy
+          model_type: attrs
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: numpy
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+    engine: mysql
+    codegen:
+      - out: /dataclass/classes
+        plugin: python
+        options:
+          package: test.driver_asyncmy.dataclass.classes
+          sql_driver: asyncmy
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_slice.sql
+    engine: mysql
+    codegen:
+      - out: /dataclass/functions
+        plugin: python
+        options:
+          package: test.driver_asyncmy.dataclass.functions
+          sql_driver: asyncmy
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+    engine: mysql
+    codegen:
+      - out: /msgspec/classes
+        plugin: python
+        options:
+          package: test.driver_asyncmy.msgspec.classes
+          sql_driver: asyncmy
+          model_type: msgspec
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+    engine: mysql
+    codegen:
+      - out: /msgspec/functions
+        plugin: python
+        options:
+          package: test.driver_asyncmy.msgspec.functions
+          sql_driver: asyncmy
+          model_type: msgspec
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+    engine: mysql
+    codegen:
+      - out: /pydantic/classes
+        plugin: python
+        options:
+          package: test.driver_asyncmy.pydantic.classes
+          sql_driver: asyncmy
+          model_type: pydantic
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+    engine: mysql
+    codegen:
+      - out: /pydantic/functions
+        plugin: python
+        options:
+          package: test.driver_asyncmy.pydantic.functions
+          sql_driver: asyncmy
+          model_type: pydantic
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str

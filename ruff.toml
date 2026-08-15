@@ -47,6 +47,9 @@ ignore = [
 # emitted at runtime so annotations stay introspectable.
 "**/omit_tc/{classes,functions}/*.py" = [
     "typing-only-standard-library-import",
+    # Drivers without a module-level alias referencing their own module
+    # (turso, the MySQL drivers) have no runtime use ruff can see.
+    "typing-only-third-party-import",
 ]
 "**/{msgspec}/{classes,functions}/*.py" = [
     # Ruff doesn't understand that we actually documented the exceptions raised when using pep257

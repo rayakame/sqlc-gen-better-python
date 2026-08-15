@@ -116,7 +116,7 @@ func TestPostgresTypeToPython(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := types.PostgresTypeToPython(req, conf, tc.pluginType); got != tc.want {
+			if got := types.PostgresTypeToPython(req, conf, &plugin.Column{Type: tc.pluginType}); got != tc.want {
 				t.Errorf("PostgresTypeToPython(%+v) = %q, want %q", tc.pluginType, got, tc.want)
 			}
 		})

@@ -211,6 +211,31 @@ func TestWriteModelClassDocstring(t *testing.T) {
 	})
 }
 
+func TestWriteModelClassDocstringSkipsRepeated(t *testing.T) {
+	t.Parallel()
+	// A repeated MySQL parameter shares the first occurrence's field, so it
+	// must not be listed twice in the attribute section.
+	table := &model.Table{Name: "RenameParams", Columns: []model.Column{
+		{Name: "term", Type: model.PyType{Type: "str"}},
+		{Name: "term", Type: model.PyType{Type: "str"}, Repeated: true},
+	}}
+	runDocCases(t, []docCase{
+		{
+			name:  "google skips the repeated field",
+			conv:  config.DocstringConventionGoogle,
+			write: func(w *writer.CodeWriter) { w.WriteModelClassDocstring(table) },
+			want: lines(
+				`    """Model representing RenameParams.`,
+				``,
+				`    Attributes:`,
+				`        term: str`,
+				`    """`,
+				``,
+			),
+		},
+	})
+}
+
 func TestWriteEnumClassDocstring(t *testing.T) {
 	t.Parallel()
 	runDocCases(t, []docCase{
@@ -771,6 +796,46 @@ func TestWriteQueryFunctionDocstring(t *testing.T) {
 				``,
 				`    Returns:`,
 				"        The number (`int`) of affected rows. This will be -1 for queries like `CREATE TABLE`.",
+				`    """`,
+			),
+		},
+		{
+			name:    "execrows pymysql documents the OK packet's 0",
+			conv:    config.DocstringConventionGoogle,
+			driver:  config.SQLDriverPymysql,
+			omitSQL: true,
+			write: func(w *writer.CodeWriter) {
+				w.WriteQueryFunctionDocstring(1, execRowsQuery, "pymysql.Connection", nil, "int")
+			},
+			want: lines(
+				"    \"\"\"Execute SQL query with `name: TouchAuthors :execrows` and return the number of affected rows.",
+				``,
+				`    Args:`,
+				`        conn:`,
+				"            Connection object of type `pymysql.Connection` used to execute the query.",
+				``,
+				`    Returns:`,
+				"        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.",
+				`    """`,
+			),
+		},
+		{
+			name:    "execrows asyncmy documents the OK packet's 0",
+			conv:    config.DocstringConventionGoogle,
+			driver:  config.SQLDriverAsyncmy,
+			omitSQL: true,
+			write: func(w *writer.CodeWriter) {
+				w.WriteQueryFunctionDocstring(1, execRowsQuery, "asyncmy.Connection", nil, "int")
+			},
+			want: lines(
+				"    \"\"\"Execute SQL query with `name: TouchAuthors :execrows` and return the number of affected rows.",
+				``,
+				`    Args:`,
+				`        conn:`,
+				"            Connection object of type `asyncmy.Connection` used to execute the query.",
+				``,
+				`    Returns:`,
+				"        The number (`int`) of affected rows. This will be 0 for queries like `CREATE TABLE`.",
 				`    """`,
 			),
 		},

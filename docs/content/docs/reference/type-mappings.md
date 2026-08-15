@@ -1,7 +1,7 @@
 ---
 title: Type mappings
 description: >-
-  The built-in SQL-to-Python type mappings for PostgreSQL and SQLite, and what nullable columns and arrays map to.
+  The built-in SQL-to-Python type mappings for PostgreSQL, SQLite, and MySQL, and what nullable columns and arrays map to.
 weight: 20
 prev: /docs/reference/configuration-options
 next: /docs/reference/feature-support
@@ -74,3 +74,29 @@ prefix (so `varchar(255)` matches `varchar`, and `decimal(10,5)` matches
 For the two SQLite drivers, several of these types also need runtime adapters and
 converters (registered in the generated code) to round-trip correctly - see
 [SQLite type conversion](/docs/guide/sqlite-type-conversion).
+
+## MySQL
+
+MySQL type names are matched case-insensitively.
+
+| SQL type | Python type |
+|---|---|
+| `tinyint(1)`, `bool`, `boolean` | `bool` |
+| `tinyint`, `smallint`, `mediumint`, `int`, `integer`, `bigint`, `year`, `serial` (signed or `unsigned`) | `int` |
+| `float`, `double`, `double precision`, `real` | `float` |
+| `decimal`, `dec`, `fixed`, `numeric` | `decimal.Decimal` |
+| `char`, `varchar`, `tinytext`, `text`, `mediumtext`, `longtext` | `str` |
+| `binary`, `varbinary`, `tinyblob`, `blob`, `mediumblob`, `longblob`, `bit` | `memoryview` |
+| `date` | `datetime.date` |
+| `datetime`, `timestamp` | `datetime.datetime` |
+| `time` | `datetime.timedelta` |
+| `json` | `str` |
+| an inline `ENUM(...)` or `SET(...)` column | the generated [enum class](/docs/guide/enums#mysql) - only single-valued sets round-trip |
+| anything else | `typing.Any` |
+
+{{< callout type="info" >}}
+  Two mappings follow what the PyMySQL-family drivers actually return rather
+  than the SQL standard: `time` is a `datetime.timedelta` (MySQL `TIME` values
+  span more than 24 hours), and `tinyint(1)` is `bool` only when the display
+  width is literally 1 in the DDL - a plain `tinyint` stays `int`.
+{{< /callout >}}

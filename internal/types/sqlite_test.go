@@ -52,7 +52,7 @@ func TestSqliteTypeToPython(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := types.SqliteTypeToPython(nil, nil, tc.pluginType); got != tc.want {
+			if got := types.SqliteTypeToPython(nil, nil, &plugin.Column{Type: tc.pluginType}); got != tc.want {
 				t.Errorf("SqliteTypeToPython(%+v) = %q, want %q", tc.pluginType, got, tc.want)
 			}
 		})

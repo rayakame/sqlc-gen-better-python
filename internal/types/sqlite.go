@@ -9,8 +9,8 @@ import (
 	"github.com/sqlc-dev/plugin-sdk-go/sdk"
 )
 
-func SqliteTypeToPython(_ *plugin.GenerateRequest, _ *config.Config, pluginType *plugin.Identifier) string {
-	columnType := strings.ToLower(sdk.DataType(pluginType))
+func SqliteTypeToPython(_ *plugin.GenerateRequest, _ *config.Config, pluginColumn *plugin.Column) string {
+	columnType := strings.ToLower(sdk.DataType(pluginColumn.Type))
 
 	switch columnType {
 	case Int, "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "bigserial":

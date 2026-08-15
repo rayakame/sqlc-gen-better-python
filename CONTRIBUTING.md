@@ -14,7 +14,7 @@ that you should follow to ensure that your contribution is at its best.
   The easiest way to get exactly that version without a Go toolchain is
   [sqlc-bin](https://pypi.org/project/sqlc-bin/), whose package version tracks the
   sqlc version: `uv tool install "sqlc-bin==1.31.1"`.
-- **Docker** (or a local PostgreSQL) - only needed for the runtime tests.
+- **Docker** (or a local PostgreSQL plus a local MySQL) - only needed for the runtime tests.
 
 One-time setup for the Python tooling:
 
@@ -67,14 +67,15 @@ sessions run with `uv run nox -s name1 name2`:
 
 | Session                                             | What it does                                                                           |
 |-----------------------------------------------------|----------------------------------------------------------------------------------------|
-| `asyncpg`, `psycopg_async`, `psycopg_sync`, `sqlite3`, `aiosqlite`, `turso_sync`, `turso_async` | Regenerate the driver's test fixtures via sqlc, then pyright + ruff |
+| `asyncpg`, `psycopg_async`, `psycopg_sync`, `sqlite3`, `aiosqlite`, `pymysql`, `asyncmy`, `turso_sync`, `turso_async` | Regenerate the driver's test fixtures via sqlc, then pyright + ruff |
 | the `_check` variants of the driver sessions | `sqlc diff` variant: verify the committed generated code is up to date (CI uses these) |
 | `pyright`                                           | Type-check the repository                                                              |
 | `ruff_check`                                        | Non-mutating format + lint check (the CI gate)                                         |
 | `ruff`, `ruff_format`                               | Format and auto-fix the repository - these sessions rewrite files                      |
 | `pytest`                                            | Runtime tests against real databases                                                   |
 
-The `pytest` session needs a local PostgreSQL. The connection URI is read from the
+The `pytest` session needs BOTH a local PostgreSQL and a local MySQL - the
+session-end cleanup connects to each unconditionally. The connection URI is read from the
 `POSTGRES_URI` environment variable and defaults to
 `postgresql://root:187187@localhost:5432/root`; set the variable only if your instance
 differs from that. To start a matching instance with docker, run
@@ -88,11 +89,23 @@ docker run --rm --name sqlc-gen-better-python-postgres \
   -d postgres
 ```
 
-and stop it (after running the tests) with the command below; `--rm` removes the container
-on stop, so the `docker run` command above can be reused as is next time.
+It also needs a local MySQL for the `pymysql` and `asyncmy` suites, read from
+`MYSQL_URI` with the default `mysql://root:187187@localhost:3306/root`:
+
+```bash
+docker run --rm --name sqlc-gen-better-python-mysql \
+  -e MYSQL_ROOT_PASSWORD=187187 \
+  -e MYSQL_DATABASE=root \
+  -p 3306:3306 \
+  -d mysql:9
+```
+
+Stop the containers (after running the tests) with the commands below; `--rm` removes a
+container on stop, so the `docker run` commands above can be reused as is next time.
 
 ```bash
 docker stop sqlc-gen-better-python-postgres
+docker stop sqlc-gen-better-python-mysql
 ```
 
 Extra pytest arguments pass through after `--`, e.g.
@@ -103,7 +116,7 @@ Extra pytest arguments pass through after `--`, e.g.
 1. Change the Go code and run `make tests` / `make lint`.
 2. Rebuild the WASM plugin (see above).
 3. `uv run nox` - regenerates the fixtures and runs every check on them. The default
-   sessions include `pytest`, so have the PostgreSQL from the section above running.
+   sessions include `pytest`, so have the PostgreSQL and MySQL from the section above running.
    The `_check` sessions are not needed locally: they verify committed fixtures
    against a fresh regeneration, which is what CI does with the files you commit.
 4. If your change affects generated output, add coverage: a query/schema case in the test matrix

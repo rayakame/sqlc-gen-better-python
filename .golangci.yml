@@ -115,6 +115,7 @@ linters:
         - '.*/internal/model\.QueryValue$'
         - '.*/internal/model\.Column$'
         - '.*/internal/render\.importSpec$'
+        - '.*/internal/driver\.placeholderStyle$'
         - '.*/plugin\.Identifier$'
       allow-empty: true
     tagliatelle:

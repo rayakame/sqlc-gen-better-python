@@ -1,0 +1,320 @@
+version: "2"
+plugins:
+  - name: python
+    wasm:
+      url: file://sqlc-gen-better-python.wasm
+      sha256: 02ddf238b6c48ecfb79e5da90cbec179e420456c201e5977cca4ac34b697a993
+sql:
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: mysql
+    codegen:
+      - out: /attrs/classes
+        plugin: python
+        options:
+          package: test.driver_pymysql.attrs.classes
+          sql_driver: pymysql
+          model_type: attrs
+          emit_classes: true
+          omit_unused_models: false
+          emit_init_file: true
+          docstrings: numpy
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: mysql
+    codegen:
+      - out: /attrs/functions
+        plugin: python
+        options:
+          package: test.driver_pymysql.attrs.functions
+          sql_driver: pymysql
+          model_type: attrs
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: numpy
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: mysql
+    codegen:
+      - out: /dataclass/classes
+        plugin: python
+        options:
+          package: test.driver_pymysql.dataclass.classes
+          sql_driver: pymysql
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+      - queries_converters.sql
+      - queries_slice.sql
+    engine: mysql
+    codegen:
+      - out: /dataclass/functions
+        plugin: python
+        options:
+          package: test.driver_pymysql.dataclass.functions
+          sql_driver: pymysql
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+            - column: test_converters.prefs
+              converter: prefs
+            - column: test_converters.maybe_prefs
+              converter: prefs
+            - column: test_converters.tags
+              converter: tags
+          converters:
+            - name: prefs
+              py_type:
+                import: test.converters
+                package: Preferences
+                type: Preferences
+              to_db: test.converters.encode_preferences
+              from_db: test.converters.decode_preferences
+            - name: tags
+              py_type:
+                type: frozenset[str]
+              to_db: test.converters.encode_tags
+              from_db: test.converters.decode_tags
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: mysql
+    codegen:
+      - out: /msgspec/classes
+        plugin: python
+        options:
+          package: test.driver_pymysql.msgspec.classes
+          sql_driver: pymysql
+          model_type: msgspec
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: mysql
+    codegen:
+      - out: /msgspec/functions
+        plugin: python
+        options:
+          package: test.driver_pymysql.msgspec.functions
+          sql_driver: pymysql
+          model_type: msgspec
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: pep257
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: mysql
+    codegen:
+      - out: /pydantic/classes
+        plugin: python
+        options:
+          package: test.driver_pymysql.pydantic.classes
+          sql_driver: pymysql
+          model_type: pydantic
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries:
+      - queries.sql
+      - queries_case.sql
+      - queries_enum_override.sql
+      - queries_field_namings.sql
+      - queries_invalid_identifiers.sql
+    engine: mysql
+    codegen:
+      - out: /pydantic/functions
+        plugin: python
+        options:
+          package: test.driver_pymysql.pydantic.functions
+          sql_driver: pymysql
+          model_type: pydantic
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - column: test_type_override.text_test
+              py_type:
+                import: collections
+                package: UserString
+                type: UserString
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  # db_type override coverage: DATETIME (uppercase on purpose) must match
+  # the normalized type name case-insensitively, converting through the
+  # stamp converter pair. Isolated module so the matrix datetimes stay
+  # untouched.
+  - schema: schema.sql
+    queries: queries_dbtype_override.sql
+    engine: mysql
+    codegen:
+      - out: /dbtype/functions
+        plugin: python
+        options:
+          package: test.driver_pymysql.dbtype.functions
+          sql_driver: pymysql
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          docstrings: google
+          overrides:
+            - db_type: DATETIME
+              converter: stamp
+          converters:
+            - name: stamp
+              py_type:
+                type: str
+              to_db: test.converters.encode_stamp
+              from_db: test.converters.decode_stamp
+  # omit_typechecking_block coverage: the PEP 695 aliases and hoisted
+  # annotation imports must be runtime-safe at module level, pinned on the
+  # enum-override module.
+  - schema: schema.sql
+    queries: queries_enum_override.sql
+    engine: mysql
+    codegen:
+      - out: /omit_tc/classes
+        plugin: python
+        options:
+          package: test.driver_pymysql.omit_tc.classes
+          sql_driver: pymysql
+          model_type: dataclass
+          emit_classes: true
+          omit_unused_models: true
+          emit_init_file: true
+          omit_typechecking_block: true
+          docstrings: google
+          overrides:
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str
+  - schema: schema.sql
+    queries: queries_enum_override.sql
+    engine: mysql
+    codegen:
+      - out: /omit_tc/functions
+        plugin: python
+        options:
+          package: test.driver_pymysql.omit_tc.functions
+          sql_driver: pymysql
+          model_type: dataclass
+          emit_classes: false
+          omit_unused_models: true
+          emit_init_file: true
+          omit_typechecking_block: true
+          docstrings: google
+          overrides:
+            - column: test_enum_override.mood_test
+              py_type:
+                type: str

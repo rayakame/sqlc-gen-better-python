@@ -22,6 +22,8 @@ const (
 	SQLDriverPsycopgSync  SQLDriver = "psycopg_sync"
 	SQLDriverTursoSync    SQLDriver = "turso_sync"
 	SQLDriverTursoAsync   SQLDriver = "turso_async"
+	SQLDriverPymysql      SQLDriver = "pymysql"
+	SQLDriverAsyncmy      SQLDriver = "asyncmy"
 )
 
 // IsPsycopg reports whether the driver is one of the two psycopg flavors,
@@ -39,6 +41,13 @@ func (dr SQLDriver) IsTurso() bool {
 	return dr == SQLDriverTursoSync || dr == SQLDriverTursoAsync
 }
 
+// IsMysql reports whether the driver is one of the two PyMySQL-family
+// flavors, which share the pyformat placeholder rewrite (? -> %s), the
+// cursor-based call shape, and PyMySQL's type conversion defaults.
+func (dr SQLDriver) IsMysql() bool {
+	return dr == SQLDriverPymysql || dr == SQLDriverAsyncmy
+}
+
 const (
 	ModelTypeDataclass ModelType = "dataclass"
 	ModelTypeAttrs     ModelType = "attrs"
@@ -49,6 +58,7 @@ const (
 const (
 	engineSQLite     = "sqlite"
 	enginePostgreSQL = "postgresql"
+	engineMySQL      = "mysql"
 )
 
 var driversEngine = map[SQLDriver]string{
@@ -59,6 +69,8 @@ var driversEngine = map[SQLDriver]string{
 	SQLDriverPsycopgSync:  enginePostgreSQL,
 	SQLDriverTursoSync:    engineSQLite,
 	SQLDriverTursoAsync:   engineSQLite,
+	SQLDriverPymysql:      engineMySQL,
+	SQLDriverAsyncmy:      engineMySQL,
 }
 
 const (

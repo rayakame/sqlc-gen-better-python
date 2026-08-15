@@ -232,6 +232,51 @@ func TestBuildQueriesImplicitArgCollision(t *testing.T) {
 			column: "row",
 			want:   "row_2",
 		},
+		// MySQL bodies open a cursor named "cur" for every command except
+		// :many, :one also fetches into "row", and :many may define a nested
+		// "_decode_hook".
+		{
+			name:   "cur collides in a pymysql exec query",
+			driver: config.SQLDriverPymysql,
+			column: "cur",
+			want:   "cur_2",
+		},
+		{
+			name:   "cur collides in a pymysql one query",
+			driver: config.SQLDriverPymysql,
+			cmd:    ":one",
+			column: "cur",
+			want:   "cur_2",
+		},
+		{
+			name:   "row collides in a pymysql one query",
+			driver: config.SQLDriverPymysql,
+			cmd:    ":one",
+			column: "row",
+			want:   "row_2",
+		},
+		{
+			name:   "decode hook collides in a pymysql many query",
+			driver: config.SQLDriverPymysql,
+			cmd:    ":many",
+			column: "_decode_hook",
+			want:   "_decode_hook_2",
+		},
+		{name: "cur is free in a pymysql many query", driver: config.SQLDriverPymysql, cmd: ":many", column: "cur", want: "cur"},
+		// The async flavor shares every MySQL reservation.
+		{
+			name:   "cur collides in an asyncmy exec query",
+			driver: config.SQLDriverAsyncmy,
+			column: "cur",
+			want:   "cur_2",
+		},
+		{
+			name:   "row collides in an asyncmy one query",
+			driver: config.SQLDriverAsyncmy,
+			cmd:    ":one",
+			column: "row",
+			want:   "row_2",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -629,6 +674,19 @@ func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
 			wantSQL: "INSERT INTO test_authors (id) VALUES ($1)",
 		},
 		{
+			// QueryResults always passes its args tuple, so a parameterless
+			// :many still gets interpolated and needs its percents doubled.
+			name:   "parameterless many is rewritten",
+			driver: config.SQLDriverPymysql,
+			query: &plugin.Query{
+				Name:    "ListMonths",
+				Cmd:     ":many",
+				Text:    "SELECT DATE_FORMAT(created, '%Y-%m') FROM test_authors",
+				Columns: []*plugin.Column{queryCol("month", "text", nil)},
+			},
+			wantSQL: "SELECT DATE_FORMAT(created, '%%Y-%%m') FROM test_authors",
+		},
+		{
 			name:   "asyncpg keeps native placeholders",
 			driver: config.SQLDriverAsyncpg,
 			query: &plugin.Query{
@@ -641,6 +699,279 @@ func TestBuildQueriesPsycopgSQLRewrite(t *testing.T) {
 				Columns: []*plugin.Column{queryCol("name", "text", nil)},
 			},
 			wantSQL: "SELECT name FROM test_authors WHERE id = $1",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			query := buildSingleQuery(t, &config.Config{SqlDriver: tc.driver}, tc.query)
+			if query.SQL != tc.wantSQL {
+				t.Errorf("SQL = %q, want %q", query.SQL, tc.wantSQL)
+			}
+		})
+	}
+}
+
+func TestBuildQueriesMySQLReusedNamedArgMerge(t *testing.T) {
+	t.Parallel()
+	// sqlc's MySQL engine emits one parameter per occurrence of a reused
+	// named argument (IsNamedParam); the merged signature shows it once,
+	// repeats keep their positional binding slot, and a non-null use site
+	// tightens the merged nullability on every occurrence.
+	nullableCol := queryCol("n", "text", nil)
+	nullableCol.NotNull = false
+	nullableCol.IsNamedParam = true
+	namedCol := queryCol("n", "text", nil)
+	namedCol.IsNamedParam = true
+	for _, driver := range []config.SQLDriver{config.SQLDriverPymysql, config.SQLDriverAsyncmy} {
+		query := buildSingleQuery(t, &config.Config{SqlDriver: driver}, &plugin.Query{
+			Name: "ReusedNamedArg",
+			Cmd:  ":exec",
+			Text: "UPDATE test_authors SET name = sqlc.arg(n) WHERE name = sqlc.arg(n)",
+			Params: []*plugin.Parameter{
+				{Number: 1, Column: nullableCol},
+				{Number: 2, Column: namedCol},
+			},
+		})
+		want := []model.QueryValue{
+			{Name: "n", Type: model.PyType{SQLType: "text", Type: "str", DefaultType: "str"}, Number: 1},
+			{Name: "n", Type: model.PyType{SQLType: "text", Type: "str", DefaultType: "str"}, Number: 2, Repeated: true},
+		}
+		if !reflect.DeepEqual(query.Params, want) {
+			t.Errorf("BuildQueries(%s) params = %+v, want %+v", driver, query.Params, want)
+		}
+	}
+}
+
+func TestBuildQueriesMySQLBundledReusedNamedArgMerge(t *testing.T) {
+	t.Parallel()
+	// query_parameter_limit must merge a reused named argument exactly like
+	// the plain signature does: one field, bound once per use site. Without
+	// the merge the class gets "n" and "n_2" and the caller has to fill both
+	// with the same value.
+	named := func() *plugin.Column {
+		column := queryCol("n", "text", nil)
+		column.IsNamedParam = true
+
+		return column
+	}
+	conf := &config.Config{SqlDriver: config.SQLDriverPymysql, QueryParameterLimit: utils.ToPtr(1)}
+	query := buildSingleQuery(t, conf, &plugin.Query{
+		Name: "ReusedNamedArg",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ? WHERE name = ? AND id = ?",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: named()},
+			{Number: 2, Column: named()},
+			{Number: 3, Column: queryCol("id", "int4", nil)},
+		},
+	})
+	if len(query.Params) != 1 || query.Params[0].Table == nil {
+		t.Fatalf("params = %+v, want a single bundled Params class", query.Params)
+	}
+	columns := query.Params[0].Table.Columns
+	want := []struct {
+		name     string
+		repeated bool
+	}{{"n", false}, {"n", true}, {"id_", false}}
+	if len(columns) != len(want) {
+		t.Fatalf("columns = %+v, want %d entries", columns, len(want))
+	}
+	for i, tc := range want {
+		if columns[i].Name != tc.name || columns[i].Repeated != tc.repeated {
+			t.Errorf("column %d = (%q, repeated=%v), want (%q, repeated=%v)",
+				i, columns[i].Name, columns[i].Repeated, tc.name, tc.repeated)
+		}
+	}
+}
+
+func TestBuildQueriesMySQLBundledKeepsPositionalSameNamedParams(t *testing.T) {
+	t.Parallel()
+	// Bare "?" parameters stay distinct fields in the bundled class too.
+	conf := &config.Config{SqlDriver: config.SQLDriverPymysql, QueryParameterLimit: utils.ToPtr(1)}
+	query := buildSingleQuery(t, conf, &plugin.Query{
+		Name: "RenameAuthor",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ? WHERE name = ?",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+			{Number: 2, Column: queryCol("n", "text", nil)},
+		},
+	})
+	columns := query.Params[0].Table.Columns
+	if len(columns) != 2 || columns[0].Name != "n" || columns[1].Name != "n_2" {
+		t.Fatalf("columns = %+v, want distinct n and n_2", columns)
+	}
+	if columns[0].Repeated || columns[1].Repeated {
+		t.Fatal("positional params must not be marked Repeated")
+	}
+}
+
+func TestBuildQueriesMySQLKeepsPositionalSameNamedParams(t *testing.T) {
+	t.Parallel()
+	// Bare "?" parameters carry IsNamedParam false. Two of them on columns
+	// that share a name are distinct arguments (sqlc's own MySQL codegen
+	// generates Name and Name_2): merging would make a rename such as
+	// "SET name = ? WHERE name = ?" bind one value to both slots.
+	query := buildSingleQuery(t, &config.Config{SqlDriver: config.SQLDriverPymysql}, &plugin.Query{
+		Name: "RenameAuthor",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ? WHERE name = ?",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+			{Number: 2, Column: queryCol("n", "text", nil)},
+		},
+	})
+	if len(query.Params) != 2 || query.Params[0].Name != "n" || query.Params[1].Name != "n_2" {
+		t.Fatalf("params = %+v, want distinct n and n_2", query.Params)
+	}
+	if query.Params[0].Repeated || query.Params[1].Repeated {
+		t.Fatal("positional params must not be marked Repeated")
+	}
+}
+
+func TestBuildQueriesSqliteKeepsSameNamedParams(t *testing.T) {
+	t.Parallel()
+	// sqlite numbers its placeholders, so same-named parameters are
+	// distinct arguments and must stay separate.
+	query := buildSingleQuery(t, &config.Config{SqlDriver: config.SQLDriverSQLite}, &plugin.Query{
+		Name: "SameNames",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ?1 WHERE name != ?2",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+			{Number: 2, Column: queryCol("n", "text", nil)},
+		},
+	})
+	if len(query.Params) != 2 || query.Params[0].Name != "n" || query.Params[1].Name != "n_2" {
+		t.Fatalf("params = %+v, want distinct n and n_2", query.Params)
+	}
+	if query.Params[0].Repeated || query.Params[1].Repeated {
+		t.Fatal("sqlite params must not be marked Repeated")
+	}
+}
+
+func TestBuildQueriesMySQLSliceDedup(t *testing.T) {
+	t.Parallel()
+	sliceCol := func() *plugin.Column {
+		column := queryCol("ids", "int4", nil)
+		column.IsSqlcSlice = true
+
+		return column
+	}
+	pySlice := model.PyType{SQLType: "int4", Type: "int", DefaultType: "int", IsList: true, SqlcSliceName: "ids"}
+	// sqlc's MySQL engine emits one parameter per occurrence of a reused
+	// sqlc.slice, which the MySQL drivers collapse into a single argument;
+	// the sqlite drivers keep one parameter per occurrence.
+	cases := []struct {
+		name   string
+		driver config.SQLDriver
+		want   []model.QueryValue
+	}{
+		{
+			name:   "pymysql collapses repeated slice params",
+			driver: config.SQLDriverPymysql,
+			want:   []model.QueryValue{{Name: "ids", Type: pySlice, Number: 1}},
+		},
+		{
+			name:   "asyncmy collapses repeated slice params",
+			driver: config.SQLDriverAsyncmy,
+			want:   []model.QueryValue{{Name: "ids", Type: pySlice, Number: 1}},
+		},
+		{
+			name:   "sqlite3 keeps one param per occurrence",
+			driver: config.SQLDriverSQLite,
+			want: []model.QueryValue{
+				{Name: "ids", Type: pySlice, Number: 1},
+				{Name: "ids_2", Type: pySlice, Number: 2},
+			},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			query := buildSingleQuery(t, &config.Config{SqlDriver: tc.driver}, &plugin.Query{
+				Name: "DeleteAuthors",
+				Cmd:  ":exec",
+				Text: "DELETE FROM test_authors WHERE id IN (/*SLICE:ids*/?) OR id IN (/*SLICE:ids*/?)",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: sliceCol()},
+					{Number: 2, Column: sliceCol()},
+				},
+			})
+
+			if len(query.Params) != len(tc.want) {
+				t.Fatalf("Params = %+v, want %d params", query.Params, len(tc.want))
+			}
+			for i, want := range tc.want {
+				if query.Params[i] != want {
+					t.Errorf("Params[%d] = %+v, want %+v", i, query.Params[i], want)
+				}
+			}
+		})
+	}
+}
+
+func TestBuildQueriesMySQLSQLRewrite(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		driver  config.SQLDriver
+		query   *plugin.Query
+		wantSQL string
+	}{
+		{
+			name:   "parameterized query is rewritten for pymysql",
+			driver: config.SQLDriverPymysql,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = ? AND name LIKE 'a%'",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = %s AND name LIKE 'a%%'",
+		},
+		{
+			name:   "parameterized query is rewritten for asyncmy",
+			driver: config.SQLDriverAsyncmy,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = ?",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = %s",
+		},
+		{
+			name:   "parameterless query stays untouched",
+			driver: config.SQLDriverPymysql,
+			query: &plugin.Query{
+				Name:    "CountAuthors",
+				Cmd:     ":one",
+				Text:    "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+				Columns: []*plugin.Column{queryCol("count", "int8", nil)},
+			},
+			wantSQL: "SELECT count(*) FROM test_authors WHERE name LIKE 'a%'",
+		},
+		{
+			name:   "asyncpg keeps native placeholders",
+			driver: config.SQLDriverAsyncpg,
+			query: &plugin.Query{
+				Name: "GetAuthor",
+				Cmd:  ":one",
+				Text: "SELECT name FROM test_authors WHERE id = $1 AND name LIKE 'a%'",
+				Params: []*plugin.Parameter{
+					{Number: 1, Column: queryCol("id", "int4", nil)},
+				},
+				Columns: []*plugin.Column{queryCol("name", "text", nil)},
+			},
+			wantSQL: "SELECT name FROM test_authors WHERE id = $1 AND name LIKE 'a%'",
 		},
 	}
 	for _, tc := range cases {

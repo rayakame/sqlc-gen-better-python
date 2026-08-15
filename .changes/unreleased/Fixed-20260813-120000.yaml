@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'With `omit_unused_models: true`, an enum referenced only through an overridden column no longer breaks generation in either direction: an overridden enum parameter kept its `enums.X(...)` conversion while the class was filtered away (a `NameError` at import), and an enum used only by overridden return columns was retained as a dead `enums.py` nothing imports.'
+time: 2026-08-13T12:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "248"

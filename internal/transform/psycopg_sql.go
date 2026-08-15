@@ -137,21 +137,8 @@ func scanStringLiteral(sql string, i int, escapes bool) int {
 	if !escapes {
 		return scanQuoted(sql, i, '\'')
 	}
-	j := i + 1
-	for j < len(sql) {
-		switch {
-		case sql[j] == '\\':
-			j += 2
-		case sql[j] != '\'':
-			j++
-		case j+1 < len(sql) && sql[j+1] == '\'':
-			j += 2
-		default:
-			return j + 1
-		}
-	}
 
-	return len(sql)
+	return scanEscapedString(sql, i, '\'')
 }
 
 // scanQuoted returns the index after a quoted region starting at i, where a

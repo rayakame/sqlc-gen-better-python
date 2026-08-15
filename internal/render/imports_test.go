@@ -610,6 +610,78 @@ func TestQueryImports(t *testing.T) {
 			},
 		},
 		{
+			name: "pymysql one scalar stays typechecking",
+			conf: newImportsConfig(config.SQLDriverPymysql),
+			queries: []model.Query{
+				{Cmd: metadata.CmdOne, Returns: impScalar(model.PyType{SQLType: "int", Type: "int"})},
+			},
+			want: ImportResult{
+				Std:          []string{"import typing"},
+				TypeChecking: []string{"import collections.abc", "import pymysql"},
+			},
+		},
+		{
+			name: "pymysql execresult imports cursors without operator",
+			conf: newImportsConfig(config.SQLDriverPymysql),
+			queries: []model.Query{
+				{Cmd: metadata.CmdExecResult},
+			},
+			want: ImportResult{
+				Std:          []string{"import typing"},
+				TypeChecking: []string{"import collections.abc", "import pymysql", "import pymysql.cursors"},
+			},
+		},
+		{
+			name: "pymysql many simple return imports operator and adds the bytes member",
+			conf: newImportsConfig(config.SQLDriverPymysql),
+			queries: []model.Query{
+				{Cmd: metadata.CmdMany, Returns: impScalar(model.PyType{SQLType: "int", Type: "int"})},
+			},
+			want: ImportResult{
+				Std: []string{"import operator", "import typing"},
+				TypeChecking: []string{
+					"import collections.abc",
+					"import pymysql",
+					"import pymysql.cursors\n",
+					"type QueryResultsArgsType = int | float | str | memoryview | bytes | collections.abc.Sequence[QueryResultsArgsType] | None",
+				},
+			},
+		},
+		{
+			name: "pymysql many struct return skips operator",
+			conf: newImportsConfig(config.SQLDriverPymysql),
+			queries: []model.Query{
+				{Cmd: metadata.CmdMany, Returns: impStruct(true,
+					impCol("id", model.PyType{SQLType: "int", Type: "int"}),
+				)},
+			},
+			want: ImportResult{
+				Std: []string{"import dataclasses", "import typing"},
+				TypeChecking: []string{
+					"import collections.abc",
+					"import pymysql",
+					"import pymysql.cursors\n",
+					"type QueryResultsArgsType = int | float | str | memoryview | bytes | collections.abc.Sequence[QueryResultsArgsType] | None",
+				},
+			},
+		},
+		{
+			name: "asyncmy many simple return imports operator and adds the bytes member",
+			conf: newImportsConfig(config.SQLDriverAsyncmy),
+			queries: []model.Query{
+				{Cmd: metadata.CmdMany, Returns: impScalar(model.PyType{SQLType: "int", Type: "int"})},
+			},
+			want: ImportResult{
+				Std: []string{"import operator", "import typing"},
+				TypeChecking: []string{
+					"import asyncmy",
+					"import asyncmy.cursors",
+					"import collections.abc\n",
+					"type QueryResultsArgsType = int | float | str | memoryview | bytes | collections.abc.Sequence[QueryResultsArgsType] | None",
+				},
+			},
+		},
+		{
 			name: "psycopg without json returns keeps the module lazy",
 			conf: newImportsConfig(config.SQLDriverPsycopgAsync),
 			queries: []model.Query{
@@ -1532,10 +1604,43 @@ func TestQueryValueUses(t *testing.T) {
 		lookup   string
 		qv       model.QueryValue
 		isReturn bool
+		hasMany  bool
 		wantUsed bool
 		wantTC   bool
 	}{
 		{name: "empty value", lookup: "int", qv: model.QueryValue{}, isReturn: true, wantUsed: false, wantTC: false},
+		{
+			// Without :many there is no QueryResultsArgsType alias, and a
+			// models.py class's column types are spelled nowhere else.
+			name:     "non-emitted return struct annotation only without many",
+			lookup:   typeDate,
+			qv:       impStruct(false, impCol("a", model.PyType{SQLType: "date", Type: typeDate})),
+			isReturn: true,
+			wantUsed: false,
+			wantTC:   false,
+		},
+		{
+			name:     "non-emitted return struct annotation only with many",
+			lookup:   typeDate,
+			qv:       impStruct(false, impCol("a", model.PyType{SQLType: "date", Type: typeDate})),
+			isReturn: true,
+			hasMany:  true,
+			wantUsed: true,
+			wantTC:   true,
+		},
+		{
+			// A decode-hook conversion spells the type at runtime even in a
+			// module without :many.
+			name:   "non-emitted return struct overridden column without many",
+			lookup: typeDate,
+			qv: impStruct(
+				false,
+				impCol("a", model.PyType{SQLType: "date", Type: typeDate, IsOverride: true, DefaultType: "str"}),
+			),
+			isReturn: true,
+			wantUsed: true,
+			wantTC:   false,
+		},
 		{
 			name:     "scalar annotation only",
 			lookup:   typeDate,
@@ -1645,7 +1750,7 @@ func TestQueryValueUses(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			resolver := newImportsResolver(t, newImportsConfig(config.SQLDriverAsyncpg))
-			gotUsed, gotTC := resolver.queryValueUses(tc.lookup, tc.qv, tc.isReturn)
+			gotUsed, gotTC := resolver.queryValueUses(tc.lookup, tc.qv, tc.isReturn, tc.hasMany)
 			if gotUsed != tc.wantUsed || gotTC != tc.wantTC {
 				t.Errorf("queryValueUses() = (%v, %v), want (%v, %v)", gotUsed, gotTC, tc.wantUsed, tc.wantTC)
 			}

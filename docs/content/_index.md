@@ -1,7 +1,7 @@
 ---
 title: sqlc-gen-better-python
 description: >-
-  A sqlc plugin that generates type-safe Python from SQL: dataclass, attrs, msgspec, or pydantic models plus fully typed query functions for asyncpg, psycopg, sqlite3, aiosqlite, and turso.
+  A sqlc plugin that generates type-safe Python from SQL: dataclass, attrs, msgspec, or pydantic models plus fully typed query functions for asyncpg, psycopg, sqlite3, aiosqlite, asyncmy, pymysql, and turso.
 layout: hextra-home
 ---
 
@@ -36,9 +36,9 @@ layout: hextra-home
     subtitle="Generate dataclass, attrs, msgspec, or pydantic models - pick per codegen block."
   >}}
   {{< hextra/feature-card
-    title="Seven drivers"
+    title="Nine drivers"
     link="docs/guide/drivers"
-    subtitle="asyncpg and psycopg for PostgreSQL, aiosqlite and sqlite3 for SQLite, and experimental turso support."
+    subtitle="asyncpg and psycopg for PostgreSQL, aiosqlite and sqlite3 for SQLite, asyncmy and pymysql for MySQL, and experimental turso support."
   >}}
   {{< hextra/feature-card
     title="Strictly typed output"
