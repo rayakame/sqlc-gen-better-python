@@ -463,8 +463,13 @@ class TestPymysqlPydanticFunctions:
     def test_get_many_mood(self, pymysql_conn: pymysql.Connection) -> None:
         result = queries.get_many_mood(conn=pymysql_conn, mood=enums.TestMysqlTypesMood.VALUE_24H)
 
-        assert list(result()) == [enums.TestMysqlTypesMood.VALUE_24H]
-        assert list(queries.get_many_mood(conn=pymysql_conn, mood=enums.TestMysqlTypesMood.VALUE_24H)) == [enums.TestMysqlTypesMood.VALUE_24H]
+        # The query is not id-filtered; other rows may exist, so assert containment.
+        eager = list(result())
+        assert eager
+        assert all(mood is enums.TestMysqlTypesMood.VALUE_24H for mood in eager)
+        lazy = list(queries.get_many_mood(conn=pymysql_conn, mood=enums.TestMysqlTypesMood.VALUE_24H))
+        assert lazy
+        assert all(mood is enums.TestMysqlTypesMood.VALUE_24H for mood in lazy)
 
     @pytest.mark.dependency(name="PymysqlPydanticFunctions::list_months", depends=["PymysqlPydanticFunctions::get_many_mood"])
     def test_list_months(self, pymysql_conn: pymysql.Connection) -> None:

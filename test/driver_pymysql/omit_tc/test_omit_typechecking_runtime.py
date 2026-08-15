@@ -138,13 +138,13 @@ class TestOmitTcFunctions:
     def test_get_enum_override_mood_not_found(self, pymysql_conn: pymysql.Connection) -> None:
         assert functions_queries.get_enum_override_mood(conn=pymysql_conn, id_=MISSING_ID) is None
 
-    @pytest.mark.dependency(name="TestOmitTcFunctions::list_enum_override", depends=["TestOmitTcFunctions::insert_enum_override"])
     def test_count_enum_override_by_moods(self, pymysql_conn: pymysql.Connection) -> None:
         # An empty slice expands to IN (NULL); count(*) still returns a row.
         assert functions_queries.count_enum_override_by_moods(conn=pymysql_conn, moods=[]) == 0
         stub = typing.cast("pymysql.Connection", no_row_conn.NoRowConn())
         assert functions_queries.count_enum_override_by_moods(conn=stub, moods=[]) is None
 
+    @pytest.mark.dependency(name="TestOmitTcFunctions::list_enum_override", depends=["TestOmitTcFunctions::insert_enum_override"])
     def test_list_enum_override_by_ids(self, pymysql_conn: pymysql.Connection) -> None:
         # Calling the QueryResults object fetches all rows in one go.
         rows = functions_queries.list_enum_override_by_ids(conn=pymysql_conn, ids=list(FUNCTIONS_IDS))()

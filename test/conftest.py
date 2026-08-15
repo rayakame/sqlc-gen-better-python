@@ -128,7 +128,8 @@ def get_mysql_kwargs(config: pytest.Config) -> dict[str, typing.Any]:
         "port": parsed.port or 3306,
         "user": urllib.parse.unquote(parsed.username or "root"),
         "password": urllib.parse.unquote(parsed.password or ""),
-        "database": urllib.parse.unquote(parsed.path.lstrip("/")),
+        # An empty path falls back to the option default's database.
+        "database": urllib.parse.unquote(parsed.path.lstrip("/")) or "root",
     }
 
 

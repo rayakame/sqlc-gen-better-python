@@ -485,8 +485,13 @@ class TestPymysqlPydanticClasses:
     def test_get_many_mood(self, queries_obj: queries.Queries) -> None:
         result = queries_obj.get_many_mood(mood=enums.TestMysqlTypesMood.VALUE_24H)
 
-        assert list(result()) == [enums.TestMysqlTypesMood.VALUE_24H]
-        assert list(queries_obj.get_many_mood(mood=enums.TestMysqlTypesMood.VALUE_24H)) == [enums.TestMysqlTypesMood.VALUE_24H]
+        # The query is not id-filtered; other rows may exist, so assert containment.
+        eager = list(result())
+        assert eager
+        assert all(mood is enums.TestMysqlTypesMood.VALUE_24H for mood in eager)
+        lazy = list(queries_obj.get_many_mood(mood=enums.TestMysqlTypesMood.VALUE_24H))
+        assert lazy
+        assert all(mood is enums.TestMysqlTypesMood.VALUE_24H for mood in lazy)
 
     @pytest.mark.dependency(name="PymysqlPydanticClasses::list_months", depends=["PymysqlPydanticClasses::get_many_mood"])
     def test_list_months(self, queries_obj: queries.Queries) -> None:

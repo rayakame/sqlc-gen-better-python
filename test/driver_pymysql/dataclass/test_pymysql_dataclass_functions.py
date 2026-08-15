@@ -750,12 +750,13 @@ class TestPymysqlDataclassFunctions:
         assert result is not None
         assert isinstance(result, queries.QueryResults)
         results = list(result)
-        assert len(results) == 1
-        assert isinstance(results[0], enums.TestMysqlTypesMood)
-        assert results[0] is enums.TestMysqlTypesMood.VALUE_24H
+        # The query is not id-filtered; other rows may exist, so assert containment.
+        assert len(results) >= 1
+        assert all(isinstance(mood, enums.TestMysqlTypesMood) for mood in results)
+        assert all(mood is enums.TestMysqlTypesMood.VALUE_24H for mood in results)
 
         results = result()
-        assert results[0] is enums.TestMysqlTypesMood.VALUE_24H
+        assert all(mood is enums.TestMysqlTypesMood.VALUE_24H for mood in results)
 
     @pytest.mark.dependency(
         name="PymysqlTestDataclassFunctions::get_many_mood_iter",
