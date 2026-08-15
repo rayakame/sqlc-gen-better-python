@@ -187,7 +187,7 @@ func (mb *mysqlBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 	// line keeps the assignment from touching the nested def (ruff E306).
 	sqlRef := query.ConstantName
 	if query.Cmd != metadata.CmdMany {
-		sqlRef = writeSliceExpansion(body, indent, query, pyformatPlaceholders)
+		sqlRef = writeSliceExpansion(body, indent, query, pyformatStyle)
 	}
 
 	// Neither MySQL module has conn.execute: every body opens a cursor. The
@@ -242,7 +242,7 @@ func (mb *mysqlBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 
 	case metadata.CmdMany:
 		decodeHook := mb.rows.WriteDecodeHook(body, indent, query, mysqlResultType)
-		sqlRef = writeSliceExpansion(body, indent, query, pyformatPlaceholders)
+		sqlRef = writeSliceExpansion(body, indent, query, pyformatStyle)
 		manyArgs := append([]string{conn, sqlRef, decodeHook}, parts...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call

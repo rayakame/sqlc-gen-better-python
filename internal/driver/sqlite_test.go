@@ -550,6 +550,7 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdMany,
 				ConstantName: "GET_ROWS",
+				SQL:          "SELECT id, name FROM t WHERE id IN (/*SLICE:ids*/?)",
 				FuncName:     "get_rows",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},
@@ -572,6 +573,7 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdOne,
 				ConstantName: "GET_ROW",
+				SQL:          "SELECT id, name FROM t WHERE name = ? AND id IN (/*SLICE:ids*/?) AND note = ?",
 				FuncName:     "get_row",
 				Params: []model.QueryValue{
 					{Name: "name", Type: model.PyType{Type: "str", SQLType: "text"}},
@@ -596,6 +598,7 @@ func TestSqliteWriteQueryFunc(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdExec,
 				ConstantName: "DELETE_ROWS",
+				SQL:          "DELETE FROM t WHERE id IN (/*SLICE:ids*/?) AND name IN (/*SLICE:names*/?)",
 				FuncName:     "delete_rows",
 				Params: []model.QueryValue{
 					{Name: "ids", Type: model.PyType{Type: "int", SQLType: "integer", IsList: true, SqlcSliceName: "ids"}},

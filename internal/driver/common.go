@@ -2,10 +2,12 @@ package driver
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/sqllex"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
@@ -62,82 +64,57 @@ func writeFuncSignature(
 // type natively.
 type wireConvertFunc func(sqlType string) (string, bool)
 
-// placeholderStyle describes how bindable placeholders appear in a query's
-// final SQL text. The sqlite-family drivers keep sqlc's native "?"; the
-// MySQL drivers rewrite to pyformat "%s" at IR build time, which also
-// changes the lexing rules for the surrounding text.
+// placeholderStyle pairs the dialect a driver's SQL is written in with the
+// expression that expands a sqlc.slice at call time. The sqlite family
+// multiplies the single-character "?"; pyformat needs a tuple repeat because
+// join would otherwise walk "%s" character by character.
 type placeholderStyle struct {
-	// token is one bindable placeholder as it appears in the SQL.
-	token string
-	// joinExpr is the Sprintf template (one %s verb: the sequence
-	// expression) for the runtime slice expansion - one comma-joined
-	// placeholder per element, "NULL" for an empty sequence.
+	dialect  sqllex.Dialect
 	joinExpr string
-	// numbered marks placeholders that may carry a digit suffix ("?2",
-	// sqlite only); the digits belong to the token.
-	numbered bool
-	// backslashEscapes marks '...' and "..." literals as honoring
-	// backslash escapes in addition to doubled quotes (MySQL).
-	backslashEscapes bool
-	// hashComments marks "#" as a line-comment introducer (MySQL).
-	hashComments bool
-	// dashCommentNeedsGap requires whitespace (or end of input) after "--"
-	// for it to start a comment (MySQL; "a--1" is arithmetic).
-	dashCommentNeedsGap bool
-	// backtickIdents marks `...` as quoted identifiers (MySQL).
-	backtickIdents bool
-	// versionComments marks /*! comment bodies as live SQL that can hold
-	// placeholders (MySQL; sqlc's parser emits parameters for them).
-	versionComments bool
-	// doubledToken is a non-placeholder escape sequence to skip as a unit
-	// ("%%" in pyformat text); empty when not applicable.
-	doubledToken string
 }
 
 var (
-	questionPlaceholders = placeholderStyle{
-		token:    "?",
+	questionStyle = placeholderStyle{ //nolint:gochecknoglobals
+		dialect:  sqllex.SQLite,
 		joinExpr: `",".join("?" * len(%s)) or "NULL"`,
-		numbered: true,
 	}
-	pyformatPlaceholders = placeholderStyle{
-		token: "%s",
-		// A tuple repeat, not a string repeat: join iterates strings
-		// per-character, which only works for one-char placeholders.
-		joinExpr:            `",".join(("%%s",) * len(%s)) or "NULL"`,
-		backslashEscapes:    true,
-		hashComments:        true,
-		dashCommentNeedsGap: true,
-		backtickIdents:      true,
-		versionComments:     true,
-		doubledToken:        "%%",
+	pyformatStyle = placeholderStyle{ //nolint:gochecknoglobals
+		dialect:  sqllex.MySQLPyformat,
+		joinExpr: `",".join(("%%s",) * len(%s)) or "NULL"`,
 	}
 )
+
+// querySlots scans a query's final SQL for its bindable positions. Both the
+// argument ordering and the slice expansion read it, so a marker inside a
+// string or comment can never be counted by one and skipped by the other.
+func querySlots(query model.Query, ph placeholderStyle) []sqllex.Slot {
+	return sqllex.Slots(query.SQL, ph.dialect)
+}
 
 // expandParams returns the Python argument expressions for a query's parameters.
 // Bundled Params classes (query_parameter_limit) are expanded into their fields
 // ("params.a, params.b") so drivers receive positional values. :copyfrom params
 // are never passed through here - writeCopyFromBody builds its own records list.
 func expandParams(query model.Query) []string {
-	return expandParamsImpl(query, false, nil, questionPlaceholders)
+	return expandParamsImpl(query, false, nil, questionStyle)
 }
 
 // expandParamsFlattenSlices additionally star-unpacks sqlc.slice parameters
 // ("*ids"), so after runtime placeholder expansion every "?" binds one element.
 func expandParamsFlattenSlices(query model.Query) []string {
-	return expandParamsImpl(query, true, nil, questionPlaceholders)
+	return expandParamsImpl(query, true, nil, questionStyle)
 }
 
-// expandParamsFlattenSlicesWire is expandParamsFlattenSlices for drivers that
-// additionally convert parameters to their wire type inline.
+// expandParamsFlattenSlicesWire is expandParamsFlattenSlices for the turso
+// drivers, which additionally convert parameters to their wire type inline.
 func expandParamsFlattenSlicesWire(query model.Query, wire wireConvertFunc) []string {
-	return expandParamsImpl(query, true, wire, questionPlaceholders)
+	return expandParamsImpl(query, true, wire, questionStyle)
 }
 
-// expandParamsPyformat is the MySQL variant: wire conversion plus the
-// pyformat placeholder style of the rewritten SQL text.
+// expandParamsPyformat is the MySQL variant: wire conversion over text whose
+// placeholders were rewritten to pyformat.
 func expandParamsPyformat(query model.Query, wire wireConvertFunc) []string {
-	return expandParamsImpl(query, true, wire, pyformatPlaceholders)
+	return expandParamsImpl(query, true, wire, pyformatStyle)
 }
 
 func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFunc, ph placeholderStyle) []string {
@@ -170,9 +147,15 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 		appendPart(param.Name, param.Type)
 	}
 
+	// Only slice parameters consult the bind order, and the argument list of
+	// a query without one is already in text order.
+	var slots []sqllex.Slot
+	if slices.ContainsFunc(parts, func(p part) bool { return p.slice != "" }) {
+		slots = querySlots(query, ph)
+	}
 	reused := false
 	for _, p := range parts {
-		if p.slice != "" && sliceMarkerCount(query, p.slice, ph) > 1 {
+		if p.slice != "" && slotMarkerCount(slots, p.slice) > 1 {
 			reused = true
 
 			break
@@ -199,7 +182,7 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 			starred[p.slice] = p.expr
 		}
 	}
-	if ordered, ok := orderByPlaceholders(query.SQL, plain, starred, ph); ok {
+	if ordered, ok := orderByPlaceholders(slots, plain, starred); ok {
 		return ordered
 	}
 
@@ -208,7 +191,7 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 	out := make([]string, 0, len(parts))
 	for _, p := range parts {
 		if p.slice != "" {
-			for range sliceMarkerCount(query, p.slice, ph) {
+			for range slotMarkerCount(slots, p.slice) {
 				out = append(out, p.expr)
 			}
 
@@ -220,16 +203,17 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 	return out
 }
 
-// orderByPlaceholders lines the flattened arguments up with the SQL text's
-// placeholder sequence: plain expressions fill "?" slots in order, and every
-// marker occurrence gets its slice's starred copy. Reports false when the SQL
-// does not account for exactly the given arguments.
-func orderByPlaceholders(sql string, plain []string, starred map[string]string, ph placeholderStyle) ([]string, bool) {
-	seq := placeholderSequence(sql, ph)
-	out := make([]string, 0, len(seq))
+// orderByPlaceholders lines the flattened arguments up with the query's bind
+// order: plain expressions fill plain slots in order, and every marker
+// occurrence gets its slice's starred copy. Reports false when the bind order
+// does not account for exactly the given arguments - only reachable from
+// hand-built IR, since transform derives SQL and its bind order together.
+func orderByPlaceholders(slots []sqllex.Slot, plain []string, starred map[string]string) ([]string, bool) {
+	out := make([]string, 0, len(slots))
 	next := 0
 	used := make(map[string]struct{}, len(starred))
-	for _, name := range seq {
+	for _, slot := range slots {
+		name := slot.Name
 		if name == "" {
 			if next >= len(plain) {
 				return nil, false
@@ -255,100 +239,6 @@ func orderByPlaceholders(sql string, plain []string, starred map[string]string, 
 	return out, true
 }
 
-// placeholderSequence scans the SQL for bindable placeholders in text order:
-// the raw slice name for a /*SLICE:name*/<token> marker, "" for a plain
-// (possibly numbered) token. String literals, quoted identifiers, and
-// comments are skipped, so a token inside them never counts as a
-// placeholder. The lexing rules follow the style: MySQL text adds backslash
-// escapes, backtick identifiers, "#" comments, the "--"+whitespace rule,
-// and the "%%" literal escape.
-func placeholderSequence(sql string, ph placeholderStyle) []string {
-	var seq []string
-	for i := 0; i < len(sql); {
-		rest := sql[i:]
-		switch {
-		case strings.HasPrefix(rest, "/*SLICE:"):
-			end := strings.Index(rest, "*/"+ph.token)
-			if end == -1 {
-				return seq
-			}
-			seq = append(seq, rest[len("/*SLICE:"):end])
-			i += end + len("*/") + len(ph.token)
-		case ph.versionComments && strings.HasPrefix(rest, "/*!"):
-			// The body is live SQL: keep scanning it; the closing */ passes
-			// through the default case as ordinary text.
-			i += len("/*!")
-		case strings.HasPrefix(rest, "/*"):
-			end := strings.Index(rest[len("/*"):], "*/")
-			if end == -1 {
-				return seq
-			}
-			i += len("/*") + end + len("*/")
-		case strings.HasPrefix(rest, "--"):
-			if ph.dashCommentNeedsGap && len(rest) > 2 && rest[2] > ' ' {
-				// MySQL: "--x" is double unary minus, not a comment. Advance
-				// one byte, not two: in an odd-length dash run the comment
-				// starts mid-run, and the rewriter re-examines every
-				// position the same way.
-				i++
-
-				continue
-			}
-			end := strings.IndexByte(rest, '\n')
-			if end == -1 {
-				return seq
-			}
-			i += end + 1
-		case ph.hashComments && rest[0] == '#':
-			end := strings.IndexByte(rest, '\n')
-			if end == -1 {
-				return seq
-			}
-			i += end + 1
-		case rest[0] == '\'' || rest[0] == '"' || (ph.backtickIdents && rest[0] == '`'):
-			// Backslash escapes never apply inside backticks.
-			i = scanQuotedRegion(sql, i, ph.backslashEscapes && rest[0] != '`')
-		case ph.doubledToken != "" && strings.HasPrefix(rest, ph.doubledToken):
-			i += len(ph.doubledToken)
-		case strings.HasPrefix(rest, ph.token):
-			seq = append(seq, "")
-			i += len(ph.token)
-			if ph.numbered {
-				for i < len(sql) && sql[i] >= '0' && sql[i] <= '9' {
-					i++
-				}
-			}
-		default:
-			i++
-		}
-	}
-
-	return seq
-}
-
-// scanQuotedRegion returns the index just past the closing quote of the
-// quoted region starting at sql[i]. A doubled quote is an escape; with
-// escapes, a backslash escapes the following byte. An unterminated region
-// consumes the rest of the input.
-func scanQuotedRegion(sql string, i int, escapes bool) int {
-	quote := sql[i]
-	j := i + 1
-	for j < len(sql) {
-		switch {
-		case escapes && sql[j] == '\\' && j+1 < len(sql):
-			j += 2
-		case sql[j] != quote:
-			j++
-		case j+1 < len(sql) && sql[j+1] == quote:
-			j += 2
-		default:
-			return j + 1
-		}
-	}
-
-	return j
-}
-
 type sliceParam struct {
 	// marker is the raw sqlc.slice name inside the /*SLICE:name*/? placeholder.
 	marker string
@@ -356,22 +246,38 @@ type sliceParam struct {
 	expr string
 }
 
-// sliceMarker returns the placeholder left in the SQL for a slice name:
-// sqlc's raw marker for "?" styles, its rewritten form for pyformat.
-func sliceMarker(name string, ph placeholderStyle) string {
-	return "/*SLICE:" + name + "*/" + ph.token
-}
-
-// sliceMarkerCount reports how often a slice parameter's placeholder occurs in
-// the query. sqlc merges same-named sqlc.slice uses into ONE parameter but
+// slotMarkerCount reports how often a slice parameter's marker occurs in the
+// scanned text. sqlc merges same-named sqlc.slice uses into ONE parameter but
 // keeps a marker per use site, so each occurrence needs its own expansion and
-// its own copy of the arguments. Clamped to 1 for queries without the marker.
-func sliceMarkerCount(query model.Query, name string, ph placeholderStyle) int {
-	if count := strings.Count(query.SQL, sliceMarker(name, ph)); count > 1 {
+// its own copy of the arguments. Clamped to 1 for hand-built IR without SQL.
+func slotMarkerCount(slots []sqllex.Slot, name string) int {
+	count := 0
+	for _, slot := range slots {
+		if slot.Name == name {
+			count++
+		}
+	}
+	if count > 1 {
 		return count
 	}
 
 	return 1
+}
+
+// slotMarkerText returns a slice parameter's marker exactly as it appears in
+// the SQL. Taking the scanned text rather than rebuilding it from the raw
+// sqlc name is what keeps a name containing "%" - which the MySQL rewriter
+// doubles - replaceable at runtime. A marker the scan never saw falls back to
+// the reconstructed form: Python's str.replace("") PREPENDS its argument, so
+// an empty target would corrupt the statement rather than leave it alone.
+func slotMarkerText(slots []sqllex.Slot, name string, ph placeholderStyle) string {
+	for _, slot := range slots {
+		if slot.Name == name {
+			return slot.Marker
+		}
+	}
+
+	return ph.dialect.SliceMarker(name)
 }
 
 // sliceParams collects the sqlc.slice parameters of a query, including fields
@@ -515,15 +421,16 @@ func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query,
 	if len(params) == 0 {
 		return query.ConstantName
 	}
+	slots := querySlots(query, ph)
 	src := query.ConstantName
 	for _, param := range params {
 		args := []string{
-			writer.PyQuote(sliceMarker(param.marker, ph)),
+			writer.PyQuote(slotMarkerText(slots, param.marker, ph)),
 			fmt.Sprintf(ph.joinExpr, param.expr),
 		}
 		// A reused slice has one marker per use site: replace them all, with
 		// the flattening param expansion supplying a copy of the args for each.
-		if sliceMarkerCount(query, param.marker, ph) == 1 {
+		if slotMarkerCount(slots, param.marker) == 1 {
 			args = append(args, "1")
 		}
 		body.WriteWrappedCall(indent, "sql = "+src+".replace(", args, ")")

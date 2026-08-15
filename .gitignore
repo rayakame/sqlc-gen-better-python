@@ -45,3 +45,8 @@ test/enums.py
 /sqlc-gen-better-python.wasm
 cover*.tmp
 .claude/
+
+# JetBrains IDE state is machine-local (absolute paths, branch names, user
+# ids); only the shared run configurations are tracked.
+.idea/*
+!.idea/runConfigurations/

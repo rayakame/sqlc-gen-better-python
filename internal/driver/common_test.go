@@ -328,182 +328,6 @@ func TestExpandParamsFlattenSlices(t *testing.T) {
 	}
 }
 
-func TestPlaceholderSequence(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		name string
-		sql  string
-		want []string
-	}{
-		{
-			name: "markers and plain placeholders in text order",
-			sql:  "WHERE id IN (/*SLICE:ids*/?) AND name = ? AND ref_id IN (/*SLICE:ids*/?)",
-			want: []string{"ids", "", "ids"},
-		},
-		{
-			name: "question marks inside string literals do not count",
-			sql:  "WHERE note LIKE 'what?%' AND s = 'it''s?' AND id IN (/*SLICE:ids*/?)",
-			want: []string{"ids"},
-		},
-		{
-			name: "quoted identifiers and comments are skipped",
-			sql:  "SELECT \"weird?col\" FROM t /* really? */ WHERE a = ? -- trailing?\nAND b = ?2",
-			want: []string{"", ""},
-		},
-		{
-			name: "unterminated marker stops the scan",
-			sql:  "WHERE a = ? AND id IN (/*SLICE:ids",
-			want: []string{""},
-		},
-		{
-			name: "unterminated comment stops the scan",
-			sql:  "WHERE a = ? /* dangling",
-			want: []string{""},
-		},
-		{
-			name: "unterminated line comment stops the scan",
-			sql:  "WHERE a = ? -- dangling",
-			want: []string{""},
-		},
-		{
-			name: "unterminated string swallows the rest",
-			sql:  "WHERE a = ? AND s = 'open?",
-			want: []string{""},
-		},
-		// The question style must keep sqlite's lexing rules where they
-		// differ from the pyformat flags: -- comments need no gap, "#",
-		// backticks, and backslashes are ordinary text.
-		{
-			name: "dash dash glued to text is still a comment",
-			sql:  "SELECT a--1 dead ?\nFROM t WHERE b = ?",
-			want: []string{""},
-		},
-		{
-			name: "hash is not a comment",
-			sql:  "WHERE x = ? # not a comment ?",
-			want: []string{"", ""},
-		},
-		{
-			name: "backtick is ordinary text",
-			sql:  "SELECT `weird?col` FROM t WHERE a = ?",
-			want: []string{"", ""},
-		},
-		{
-			name: "backslash does not escape a quote",
-			sql:  `WHERE s = 'a\' AND b = ?`,
-			want: []string{""},
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			if got := placeholderSequence(tc.sql, questionPlaceholders); !slices.Equal(got, tc.want) {
-				t.Errorf("placeholderSequence() = %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestPlaceholderSequencePyformat(t *testing.T) {
-	t.Parallel()
-	cases := []struct {
-		name string
-		sql  string
-		want []string
-	}{
-		{
-			name: "percent-s slots in text order",
-			sql:  "WHERE a = %s AND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "doubled percent is a literal, not a slot",
-			sql:  "WHERE a %% 2 = 0 AND b = %s",
-			want: []string{""},
-		},
-		{
-			name: "lone percent is not a slot",
-			sql:  "WHERE a % 2 = 0 AND b = %s",
-			want: []string{""},
-		},
-		{
-			name: "slice marker yields the name",
-			sql:  "WHERE id IN (/*SLICE:ids*/%s)",
-			want: []string{"ids"},
-		},
-		{
-			name: "slots inside string literals do not count despite backslash escapes",
-			sql:  "WHERE s = 'It\\'s %s' AND t = \"quote \\\" %s\" AND a = %s",
-			want: []string{""},
-		},
-		{
-			name: "backticked identifier swallows its slot",
-			sql:  "SELECT `weird %s col` FROM t WHERE a = %s",
-			want: []string{""},
-		},
-		{
-			// If backslash escaped the closing backtick, the identifier would
-			// swallow the rest of the input and the slot with it.
-			name: "backslash is not an escape inside backticks",
-			sql:  "SELECT `dir\\` FROM t WHERE a = %s",
-			want: []string{""},
-		},
-		{
-			name: "hash comment is dead to the newline",
-			sql:  "WHERE a = %s # dead %s\nAND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "dash dash with whitespace starts a comment",
-			sql:  "WHERE a = %s -- x %s\nAND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "dash dash without whitespace is arithmetic, slot stays live",
-			sql:  "WHERE a = b--1 + %s",
-			want: []string{""},
-		},
-		{
-			name: "block comment hides its slot",
-			sql:  "WHERE a = %s /* %s */ AND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "unterminated string swallows the rest",
-			sql:  "WHERE a = %s AND s = 'open %s",
-			want: []string{""},
-		},
-		{
-			name: "unterminated hash comment swallows the rest",
-			sql:  "WHERE a = %s # tail %s",
-			want: []string{""},
-		},
-		{
-			name: "version comment body is live",
-			sql:  "SELECT id /*! WHERE a = %s */ AND b = %s",
-			want: []string{"", ""},
-		},
-		{
-			name: "odd dash run still starts a comment",
-			sql:  "WHERE a = %s --------- don't edit\nAND id IN (/*SLICE:ids*/%s)",
-			want: []string{"", "ids"},
-		},
-		{
-			name: "numbered question placeholder is not a slot",
-			sql:  "WHERE a = ?1 AND b = %s",
-			want: []string{""},
-		},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			if got := placeholderSequence(tc.sql, pyformatPlaceholders); !slices.Equal(got, tc.want) {
-				t.Errorf("placeholderSequence() = %q, want %q", got, tc.want)
-			}
-		})
-	}
-}
-
 func TestSliceParams(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -966,46 +790,80 @@ func TestExpandParamsFlattenSlicesWire(t *testing.T) {
 	}
 }
 
-func TestSliceMarkerStyles(t *testing.T) {
+func TestSlotMarkerHelpers(t *testing.T) {
 	t.Parallel()
-	markers := []struct {
-		name string
-		ph   placeholderStyle
-		want string
+	cases := []struct {
+		name      string
+		sliceName string
+		sql       string
+		style     placeholderStyle
+		wantCount int
+		wantText  string
 	}{
-		{name: "question marker keeps sqlc's raw form", ph: questionPlaceholders, want: "/*SLICE:ids*/?"},
-		{name: "pyformat marker uses the rewritten token", ph: pyformatPlaceholders, want: "/*SLICE:ids*/%s"},
+		{
+			name:      "question marker keeps sqlc's raw form",
+			sliceName: "ids",
+			sql:       "WHERE id IN (/*SLICE:ids*/?)",
+			style:     questionStyle,
+			wantCount: 1,
+			wantText:  "/*SLICE:ids*/?",
+		},
+		{
+			name:      "pyformat marker keeps the rewritten token",
+			sliceName: "ids",
+			sql:       "WHERE id IN (/*SLICE:ids*/%s)",
+			style:     pyformatStyle,
+			wantCount: 1,
+			wantText:  "/*SLICE:ids*/%s",
+		},
+		{
+			// The rewriter doubles a percent inside the marker, so the text
+			// scanned back out has to be doubled too or the generated
+			// replace misses.
+			name:      "percent in a slice name keeps its doubled marker",
+			sliceName: "a%b",
+			sql:       "WHERE id IN (/*SLICE:a%%b*/%s)",
+			style:     pyformatStyle,
+			wantCount: 1,
+			wantText:  "/*SLICE:a%%b*/%s",
+		},
+		{
+			name:      "two markers count both",
+			sliceName: "ids",
+			sql:       "WHERE id IN (/*SLICE:ids*/%s) OR r IN (/*SLICE:ids*/%s)",
+			style:     pyformatStyle,
+			wantCount: 2,
+			wantText:  "/*SLICE:ids*/%s",
+		},
+		{
+			// A marker inside a string literal is not a bind slot, so the
+			// text falls back to the reconstructed marker rather than the
+			// empty string, which str.replace would prepend.
+			name:      "marker inside a string literal is invisible",
+			sliceName: "ids",
+			sql:       "WHERE note = '/*SLICE:ids*/?'",
+			style:     questionStyle,
+			wantCount: 1,
+			wantText:  "/*SLICE:ids*/?",
+		},
+		{
+			name:      "missing marker clamps to one and rebuilds its text",
+			sliceName: "ids",
+			sql:       "WHERE id = ?",
+			style:     questionStyle,
+			wantCount: 1,
+			wantText:  "/*SLICE:ids*/?",
+		},
 	}
-	for _, tc := range markers {
+	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := sliceMarker("ids", tc.ph); got != tc.want {
-				t.Errorf("sliceMarker(%q) = %q, want %q", "ids", got, tc.want)
+			slots := querySlots(model.Query{SQL: tc.sql}, tc.style)
+			if got := slotMarkerCount(slots, tc.sliceName); got != tc.wantCount {
+				t.Errorf("slotMarkerCount(%q) = %d, want %d", tc.sliceName, got, tc.wantCount)
 			}
-		})
-	}
-	counts := []struct {
-		name string
-		sql  string
-		want int
-	}{
-		{
-			name: "two pyformat markers count both",
-			sql:  "WHERE id IN (/*SLICE:ids*/%s) OR ref_id IN (/*SLICE:ids*/%s)",
-			want: 2,
-		},
-		{
-			name: "missing marker clamps to one",
-			sql:  "WHERE id = %s",
-			want: 1,
-		},
-	}
-	for _, tc := range counts {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			query := model.Query{SQL: tc.sql}
-			if got := sliceMarkerCount(query, "ids", pyformatPlaceholders); got != tc.want {
-				t.Errorf("sliceMarkerCount(%q) = %d, want %d", tc.sql, got, tc.want)
+			if got := slotMarkerText(slots, tc.sliceName, tc.style); got != tc.wantText {
+				t.Errorf("slotMarkerText(%q) = %q, want %q", tc.sliceName, got, tc.wantText)
 			}
 		})
 	}
