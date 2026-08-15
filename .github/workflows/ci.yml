@@ -33,7 +33,7 @@ jobs:
           --health-timeout=5s
           --health-retries=5
       mysql:
-        image: mysql:9
+        image: mysql:26
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: testdb
