@@ -310,7 +310,7 @@ func (tb *tursoBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 	// line keeps the assignment from touching the nested def (ruff E306).
 	sqlRef := query.ConstantName
 	if query.Cmd != metadata.CmdMany {
-		sqlRef = writeSliceExpansion(body, indent, query, questionSliceJoin)
+		sqlRef = writeSliceExpansion(body, indent, query, questionStyle)
 	}
 
 	// stmt builds the execute-statement head/tail with the correct await
@@ -365,7 +365,7 @@ func (tb *tursoBase) WriteQueryFunc(body *writer.CodeWriter, config *config.Conf
 
 	case metadata.CmdMany:
 		decodeHook := tb.rows.WriteDecodeHook(body, indent, query, tursoResultType)
-		sqlRef = writeSliceExpansion(body, indent, query, questionSliceJoin)
+		sqlRef = writeSliceExpansion(body, indent, query, questionStyle)
 		manyArgs := append([]string{conn, sqlRef, decodeHook}, parts...)
 		// Deliberately unsubscripted: QueryResults[T](...) would go through
 		// typing's _GenericAlias.__call__ on every invocation (~10x call

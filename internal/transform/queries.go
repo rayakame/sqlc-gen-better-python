@@ -177,14 +177,6 @@ func (t *Transformer) logicalParamCount(params []*plugin.Parameter) int {
 	return count
 }
 
-// hasSlice reports whether any parameter is a sqlc.slice, i.e. whether the
-// query's bind order is ever consulted.
-func hasSlice(params []*plugin.Parameter) bool {
-	return slices.ContainsFunc(params, func(param *plugin.Parameter) bool {
-		return param.GetColumn().GetIsSqlcSlice()
-	})
-}
-
 // dedupSliceParams collapses the per-occurrence duplicates sqlc's MySQL
 // engine emits for a reused sqlc.slice (one parameter per marker use site;
 // the other engines merge them). Without the collapse both the plain
@@ -266,7 +258,6 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			FileName:     pluginQuery.Filename,
 			ModuleName:   moduleName,
 			Table:        pluginQuery.InsertIntoTable,
-			Placeholders: nil,
 		}
 		// psycopg rejects PostgreSQL-native $N placeholders and scans the
 		// whole text for pyformat ones as soon as parameters are passed, so
@@ -282,19 +273,9 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 		// QueryResults always passes its (possibly empty) args tuple, and the
 		// drivers interpolate whenever args is not None, so a :many query
 		// needs its "%" doubled even without parameters.
-		var slots []model.Placeholder
 		if t.config.SqlDriver.IsMysql() &&
 			(len(pluginQuery.Params) > 0 || query.Cmd == metadata.CmdMany) {
-			query.SQL, slots = rewriteMySQLSQL(pluginQuery.Text)
-		}
-		// Only the slice expansion reads the bind order, and only the
-		// sqlite-family and MySQL drivers expand slices; postgres passes
-		// sequences straight to = ANY($1).
-		if hasSlice(pluginQuery.Params) {
-			if !t.config.SqlDriver.IsMysql() {
-				slots = sqlitePlaceholders(query.SQL)
-			}
-			query.Placeholders = slots
+			query.SQL = rewriteMySQLSQL(pluginQuery.Text)
 		}
 
 		// Dedup before the limit check: a reused sqlc.slice or named

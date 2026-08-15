@@ -407,7 +407,6 @@ func TestTursoWriteQueryFuncSync(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdOne,
 				ConstantName: "GET_BY_IDS",
-				Placeholders: []model.Placeholder{{SliceName: "ids", Marker: "/*SLICE:ids*/?"}},
 				FuncName:     "get_by_ids",
 				SQL:          "SELECT count(*) FROM t WHERE id IN (/*SLICE:ids*/?)",
 				Params: []model.QueryValue{
@@ -430,7 +429,6 @@ func TestTursoWriteQueryFuncSync(t *testing.T) {
 			query: model.Query{
 				Cmd:          metadata.CmdOne,
 				ConstantName: "GET_BY_DAYS",
-				Placeholders: []model.Placeholder{{SliceName: "days", Marker: "/*SLICE:days*/?"}},
 				FuncName:     "get_by_days",
 				SQL:          "SELECT count(*) FROM t WHERE d IN (/*SLICE:days*/?)",
 				Params: []model.QueryValue{

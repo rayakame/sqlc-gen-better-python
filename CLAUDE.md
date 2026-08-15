@@ -127,11 +127,10 @@ generation pipeline lives in `internal/handler.go`:
    `FilterUnusedModels()`. `type.go` builds `PyType` and normalizes
    `SQLType` (lowercased once here; every downstream consumer relies on it).
    `psycopg_sql.go` and `mysql_sql.go` rewrite placeholders at IR build time
-   (psycopg: `$N` -> `%(pN)s`; MySQL: `?` -> `%s` with `%` doubled - small
-   SQL lexers matching each engine's rules). `mysql_sql.go` and
-   `sqlite_sql.go` also report the query's bind order, so a sqlc.slice
-   reused across use sites binds its arguments in SQL text order without any
-   driver re-scanning the text. `plainParams` pre-reserves
+   (psycopg: `$N` -> `%(pN)s`; MySQL: `?` -> `%s` with `%` doubled). MySQL
+   lexes through `internal/sqllex`; psycopg keeps its own lexer, since
+   PostgreSQL has no `sqlc.slice` and therefore no second consumer to stay
+   in step with. `plainParams` pre-reserves
    every local the driver bodies emit (`conn`/`self`, `sql` for slice
    queries, psycopg's and MySQL's `sql_params`/`cur`/`row`/`_decode_hook`);
    a new local in a driver body needs a matching seed or a param can shadow
@@ -192,9 +191,12 @@ buffer is emitted as an extra output file.
   returns -> converters). psycopg's loader registration follows the same
   policy (returned json/jsonb types only).
 - The MySQL drivers interpolate pyformat placeholders client-side: rewritten
-  SQL constants carry `%s`/`%%`. Only `internal/transform` lexes SQL: the
-  rewriters there also report each query's bind order (`Query.Placeholders`),
-  which the drivers consume instead of re-scanning the emitted text.
+  SQL constants carry `%s`/`%%`. `internal/sqllex` owns every rule for
+  telling a bindable placeholder from one inside a string, identifier or
+  comment; the MySQL rewriter and the drivers' slice ordering both scan
+  through it, so the rules cannot drift apart. Callers pick a named dialect
+  (`MySQLRaw`, `MySQLPyformat`, `SQLite`) - the fields are unexported, so no
+  call site can assemble rules the producer of the text never used.
 - `speedups: true` swaps date/datetime decoding to `ciso8601` (sqlite
   converter bodies, turso inline decodes); the import resolver tracks which
   variant is emitted.

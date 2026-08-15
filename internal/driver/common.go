@@ -6,6 +6,7 @@ import (
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/sqllex"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
@@ -62,35 +63,60 @@ func writeFuncSignature(
 // type natively.
 type wireConvertFunc func(sqlType string) (string, bool)
 
-// The runtime slice expansion builds one placeholder per element. The
-// sqlite family multiplies the single-character "?"; pyformat needs a tuple
-// repeat because join would otherwise walk "%s" character by character.
-const (
-	questionSliceJoin = `",".join("?" * len(%s)) or "NULL"`
-	pyformatSliceJoin = `",".join(("%%s",) * len(%s)) or "NULL"`
+// placeholderStyle pairs the dialect a driver's SQL is written in with the
+// expression that expands a sqlc.slice at call time. The sqlite family
+// multiplies the single-character "?"; pyformat needs a tuple repeat because
+// join would otherwise walk "%s" character by character.
+type placeholderStyle struct {
+	dialect  sqllex.Dialect
+	joinExpr string
+}
+
+var (
+	questionStyle = placeholderStyle{ //nolint:gochecknoglobals
+		dialect:  sqllex.SQLite,
+		joinExpr: `",".join("?" * len(%s)) or "NULL"`,
+	}
+	pyformatStyle = placeholderStyle{ //nolint:gochecknoglobals
+		dialect:  sqllex.MySQLPyformat,
+		joinExpr: `",".join(("%%s",) * len(%s)) or "NULL"`,
+	}
 )
+
+// querySlots scans a query's final SQL for its bindable positions. Both the
+// argument ordering and the slice expansion read it, so a marker inside a
+// string or comment can never be counted by one and skipped by the other.
+func querySlots(query model.Query, ph placeholderStyle) []sqllex.Slot {
+	return sqllex.Slots(query.SQL, ph.dialect)
+}
 
 // expandParams returns the Python argument expressions for a query's parameters.
 // Bundled Params classes (query_parameter_limit) are expanded into their fields
 // ("params.a, params.b") so drivers receive positional values. :copyfrom params
 // are never passed through here - writeCopyFromBody builds its own records list.
 func expandParams(query model.Query) []string {
-	return expandParamsImpl(query, false, nil)
+	return expandParamsImpl(query, false, nil, questionStyle)
 }
 
 // expandParamsFlattenSlices additionally star-unpacks sqlc.slice parameters
 // ("*ids"), so after runtime placeholder expansion every "?" binds one element.
 func expandParamsFlattenSlices(query model.Query) []string {
-	return expandParamsImpl(query, true, nil)
+	return expandParamsImpl(query, true, nil, questionStyle)
 }
 
-// expandParamsFlattenSlicesWire is expandParamsFlattenSlices for drivers that
-// additionally convert parameters to their wire type inline (turso, MySQL).
+// expandParamsFlattenSlicesWire is expandParamsFlattenSlices for the turso
+// drivers, which additionally convert parameters to their wire type inline.
 func expandParamsFlattenSlicesWire(query model.Query, wire wireConvertFunc) []string {
-	return expandParamsImpl(query, true, wire)
+	return expandParamsImpl(query, true, wire, questionStyle)
 }
 
-func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFunc) []string {
+// expandParamsPyformat is the MySQL variant: wire conversion over text whose
+// placeholders were rewritten to pyformat.
+func expandParamsPyformat(query model.Query, wire wireConvertFunc) []string {
+	return expandParamsImpl(query, true, wire, pyformatStyle)
+}
+
+func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFunc, ph placeholderStyle) []string {
 	type part struct {
 		expr string
 		// slice is the raw marker name for slice params, "" otherwise.
@@ -120,9 +146,10 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 		appendPart(param.Name, param.Type)
 	}
 
+	slots := querySlots(query, ph)
 	reused := false
 	for _, p := range parts {
-		if p.slice != "" && sliceMarkerCount(query, p.slice) > 1 {
+		if p.slice != "" && slotMarkerCount(slots, p.slice) > 1 {
 			reused = true
 
 			break
@@ -149,7 +176,7 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 			starred[p.slice] = p.expr
 		}
 	}
-	if ordered, ok := orderByPlaceholders(query.Placeholders, plain, starred); ok {
+	if ordered, ok := orderByPlaceholders(slots, plain, starred); ok {
 		return ordered
 	}
 
@@ -158,7 +185,7 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 	out := make([]string, 0, len(parts))
 	for _, p := range parts {
 		if p.slice != "" {
-			for range sliceMarkerCount(query, p.slice) {
+			for range slotMarkerCount(slots, p.slice) {
 				out = append(out, p.expr)
 			}
 
@@ -175,12 +202,12 @@ func expandParamsImpl(query model.Query, flattenSlices bool, wire wireConvertFun
 // occurrence gets its slice's starred copy. Reports false when the bind order
 // does not account for exactly the given arguments - only reachable from
 // hand-built IR, since transform derives SQL and its bind order together.
-func orderByPlaceholders(placeholders []model.Placeholder, plain []string, starred map[string]string) ([]string, bool) {
-	out := make([]string, 0, len(placeholders))
+func orderByPlaceholders(slots []sqllex.Slot, plain []string, starred map[string]string) ([]string, bool) {
+	out := make([]string, 0, len(slots))
 	next := 0
 	used := make(map[string]struct{}, len(starred))
-	for _, slot := range placeholders {
-		name := slot.SliceName
+	for _, slot := range slots {
+		name := slot.Name
 		if name == "" {
 			if next >= len(plain) {
 				return nil, false
@@ -213,14 +240,14 @@ type sliceParam struct {
 	expr string
 }
 
-// sliceMarkerCount reports how often a slice parameter's marker occurs in the
-// query. sqlc merges same-named sqlc.slice uses into ONE parameter but keeps a
-// marker per use site, so each occurrence needs its own expansion and its own
-// copy of the arguments. Clamped to 1 for hand-built IR carrying no bind order.
-func sliceMarkerCount(query model.Query, name string) int {
+// slotMarkerCount reports how often a slice parameter's marker occurs in the
+// scanned text. sqlc merges same-named sqlc.slice uses into ONE parameter but
+// keeps a marker per use site, so each occurrence needs its own expansion and
+// its own copy of the arguments. Clamped to 1 for hand-built IR without SQL.
+func slotMarkerCount(slots []sqllex.Slot, name string) int {
 	count := 0
-	for _, slot := range query.Placeholders {
-		if slot.SliceName == name {
+	for _, slot := range slots {
+		if slot.Name == name {
 			count++
 		}
 	}
@@ -231,13 +258,13 @@ func sliceMarkerCount(query model.Query, name string) int {
 	return 1
 }
 
-// sliceMarkerText returns a slice parameter's marker exactly as it appears in
-// query.SQL. Carrying the text rather than rebuilding it from the raw sqlc
-// name is what keeps a name containing "%" - which the MySQL rewriter doubles
-// - replaceable at runtime.
-func sliceMarkerText(query model.Query, name string) string {
-	for _, slot := range query.Placeholders {
-		if slot.SliceName == name {
+// slotMarkerText returns a slice parameter's marker exactly as it appears in
+// the SQL. Taking the scanned text rather than rebuilding it from the raw
+// sqlc name is what keeps a name containing "%" - which the MySQL rewriter
+// doubles - replaceable at runtime.
+func slotMarkerText(slots []sqllex.Slot, name string) string {
+	for _, slot := range slots {
+		if slot.Name == name {
 			return slot.Marker
 		}
 	}
@@ -381,20 +408,21 @@ func writeExecRowsReturn(body *writer.CodeWriter, config *config.Config, indent 
 // so that "IN (NULL)" matches no rows - and returns the expression holding
 // the final SQL: a local "sql" variable, or the untouched constant without
 // slices.
-func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query, joinExpr string) string {
+func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query, ph placeholderStyle) string {
 	params := sliceParams(query)
 	if len(params) == 0 {
 		return query.ConstantName
 	}
+	slots := querySlots(query, ph)
 	src := query.ConstantName
 	for _, param := range params {
 		args := []string{
-			writer.PyQuote(sliceMarkerText(query, param.marker)),
-			fmt.Sprintf(joinExpr, param.expr),
+			writer.PyQuote(slotMarkerText(slots, param.marker)),
+			fmt.Sprintf(ph.joinExpr, param.expr),
 		}
 		// A reused slice has one marker per use site: replace them all, with
 		// the flattening param expansion supplying a copy of the args for each.
-		if sliceMarkerCount(query, param.marker) == 1 {
+		if slotMarkerCount(slots, param.marker) == 1 {
 			args = append(args, "1")
 		}
 		body.WriteWrappedCall(indent, "sql = "+src+".replace(", args, ")")

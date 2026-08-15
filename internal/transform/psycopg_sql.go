@@ -133,12 +133,28 @@ func isEscapeString(sql string, i int) bool {
 
 // scanStringLiteral returns the index after a single-quoted literal starting
 // at i, honoring quote doubling and, for escape strings, backslash escapes.
+// PostgreSQL is the only dialect here that splits the two: it needs the E
+// prefix, while MySQL applies backslash escapes to every literal (see
+// internal/sqllex).
 func scanStringLiteral(sql string, i int, escapes bool) int {
 	if !escapes {
 		return scanQuoted(sql, i, '\'')
 	}
+	j := i + 1
+	for j < len(sql) {
+		switch {
+		case sql[j] == '\\':
+			j += 2
+		case sql[j] != '\'':
+			j++
+		case j+1 < len(sql) && sql[j+1] == '\'':
+			j += 2
+		default:
+			return j + 1
+		}
+	}
 
-	return scanEscapedString(sql, i, '\'')
+	return len(sql)
 }
 
 // scanQuoted returns the index after a quoted region starting at i, where a
