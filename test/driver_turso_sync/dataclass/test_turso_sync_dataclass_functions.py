@@ -32,6 +32,7 @@ import turso
 from test.driver_turso_sync.dataclass.functions import models
 from test.driver_turso_sync.dataclass.functions import queries
 from test.driver_turso_sync.dataclass.functions import queries_case
+from test.driver_turso_sync.dataclass.functions import queries_named_slice
 from test.driver_turso_sync.dataclass.functions import queries_override_adapter
 from test.driver_turso_sync.dataclass.functions import queries_override_converter
 from test.driver_turso_sync.dataclass.functions import queries_slice
@@ -1131,6 +1132,39 @@ class TestTursoSyncDataclassFunctions:
         assert queries_slice.get_first_slice_name(conn=turso_sync_conn, ids=[], names=[]) is None
 
     @pytest.mark.dependency(
+        name="TursoSyncTestDataclassFunctions::named_slice_rows",
+        depends=["TursoSyncTestDataclassFunctions::insert_slice_rows"],
+    )
+    def test_named_slice_rows(self, turso_sync_conn: turso.Connection) -> None:
+        # sqlc numbers the placeholders of a query using a named argument, and
+        # those indexes no longer line up once the marker expands. Every
+        # length matters: one element used to pass by accident.
+        # Rows BASE..BASE+3 are named a, b, c, b - so "b" discriminates and
+        # the id list is not simply echoed back.
+        for ids, want in (
+            ([], []),
+            ([SLICE_ID_BASE + 1], [SLICE_ID_BASE + 1]),
+            ([SLICE_ID_BASE + 1, SLICE_ID_BASE + 3], [SLICE_ID_BASE + 1, SLICE_ID_BASE + 3]),
+            ([SLICE_ID_BASE, SLICE_ID_BASE + 1, SLICE_ID_BASE + 3], [SLICE_ID_BASE + 1, SLICE_ID_BASE + 3]),
+        ):
+            rows = queries_named_slice.get_named_slice_rows(conn=turso_sync_conn, ids=ids, wanted="b")()
+            assert [row.id_ for row in rows] == want
+            reused = queries_named_slice.get_named_slice_rows_reused(conn=turso_sync_conn, ids=ids, wanted="b")()
+            assert [row.id_ for row in reused] == want
+            first = queries_named_slice.get_named_slice_rows_arg_first(conn=turso_sync_conn, wanted="b", ids=ids)()
+            assert [row.id_ for row in first] == want
+            assert queries_named_slice.count_named_slice_rows(conn=turso_sync_conn, ids=ids, wanted="b") == len(want)
+
+    @pytest.mark.dependency(
+        name="TursoSyncTestDataclassFunctions::named_slice_rows_iter",
+        depends=["TursoSyncTestDataclassFunctions::named_slice_rows"],
+    )
+    def test_named_slice_rows_iter(self, turso_sync_conn: turso.Connection) -> None:
+        ids = [SLICE_ID_BASE + 1, SLICE_ID_BASE + 3]
+        rows = list(queries_named_slice.get_named_slice_rows_reused(conn=turso_sync_conn, ids=ids, wanted="b"))
+        assert [row.id_ for row in rows] == ids
+
+    @pytest.mark.dependency(
         depends=[
             "TursoSyncTestDataclassFunctions::get_slice_rows",
             "TursoSyncTestDataclassFunctions::get_slice_rows_empty_slice",
@@ -1140,6 +1174,8 @@ class TestTursoSyncDataclassFunctions:
             "TursoSyncTestDataclassFunctions::get_slice_rows_by_name_or_note",
             "TursoSyncTestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
             "TursoSyncTestDataclassFunctions::get_first_slice_name_two_slices",
+            "TursoSyncTestDataclassFunctions::named_slice_rows",
+            "TursoSyncTestDataclassFunctions::named_slice_rows_iter",
         ]
     )
     def test_delete_slice_rows(self, turso_sync_conn: turso.Connection) -> None:

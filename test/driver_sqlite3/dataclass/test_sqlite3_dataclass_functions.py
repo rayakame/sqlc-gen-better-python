@@ -34,6 +34,7 @@ from test.driver_sqlite3.dataclass.functions import models
 from test.driver_sqlite3.dataclass.functions import queries
 from test.driver_sqlite3.dataclass.functions import queries_any_param
 from test.driver_sqlite3.dataclass.functions import queries_case
+from test.driver_sqlite3.dataclass.functions import queries_named_slice
 from test.driver_sqlite3.dataclass.functions import queries_override_adapter
 from test.driver_sqlite3.dataclass.functions import queries_override_converter
 from test.driver_sqlite3.dataclass.functions import queries_slice
@@ -1139,6 +1140,39 @@ class TestSqlite3DataclassFunctions:
         assert queries_slice.get_first_slice_name(conn=sqlite3_conn, ids=[], names=[]) is None
 
     @pytest.mark.dependency(
+        name="Sqlite3TestDataclassFunctions::named_slice_rows",
+        depends=["Sqlite3TestDataclassFunctions::insert_slice_rows"],
+    )
+    def test_named_slice_rows(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # sqlc numbers the placeholders of a query using a named argument, and
+        # those indexes no longer line up once the marker expands. Every
+        # length matters: one element used to pass by accident.
+        # Rows BASE..BASE+3 are named a, b, c, b - so "b" discriminates and
+        # the id list is not simply echoed back.
+        for ids, want in (
+            ([], []),
+            ([SLICE_ID_BASE + 1], [SLICE_ID_BASE + 1]),
+            ([SLICE_ID_BASE + 1, SLICE_ID_BASE + 3], [SLICE_ID_BASE + 1, SLICE_ID_BASE + 3]),
+            ([SLICE_ID_BASE, SLICE_ID_BASE + 1, SLICE_ID_BASE + 3], [SLICE_ID_BASE + 1, SLICE_ID_BASE + 3]),
+        ):
+            rows = queries_named_slice.get_named_slice_rows(conn=sqlite3_conn, ids=ids, wanted="b")()
+            assert [row.id_ for row in rows] == want
+            reused = queries_named_slice.get_named_slice_rows_reused(conn=sqlite3_conn, ids=ids, wanted="b")()
+            assert [row.id_ for row in reused] == want
+            first = queries_named_slice.get_named_slice_rows_arg_first(conn=sqlite3_conn, wanted="b", ids=ids)()
+            assert [row.id_ for row in first] == want
+            assert queries_named_slice.count_named_slice_rows(conn=sqlite3_conn, ids=ids, wanted="b") == len(want)
+
+    @pytest.mark.dependency(
+        name="Sqlite3TestDataclassFunctions::named_slice_rows_iter",
+        depends=["Sqlite3TestDataclassFunctions::named_slice_rows"],
+    )
+    def test_named_slice_rows_iter(self, sqlite3_conn: sqlite3.Connection) -> None:
+        ids = [SLICE_ID_BASE + 1, SLICE_ID_BASE + 3]
+        rows = list(queries_named_slice.get_named_slice_rows_reused(conn=sqlite3_conn, ids=ids, wanted="b"))
+        assert [row.id_ for row in rows] == ids
+
+    @pytest.mark.dependency(
         depends=[
             "Sqlite3TestDataclassFunctions::get_slice_rows",
             "Sqlite3TestDataclassFunctions::get_slice_rows_empty_slice",
@@ -1148,6 +1182,8 @@ class TestSqlite3DataclassFunctions:
             "Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note",
             "Sqlite3TestDataclassFunctions::get_slice_rows_by_name_or_note_filtered",
             "Sqlite3TestDataclassFunctions::get_first_slice_name_two_slices",
+            "Sqlite3TestDataclassFunctions::named_slice_rows",
+            "Sqlite3TestDataclassFunctions::named_slice_rows_iter",
         ]
     )
     def test_delete_slice_rows(self, sqlite3_conn: sqlite3.Connection) -> None:

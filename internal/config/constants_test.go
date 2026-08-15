@@ -183,6 +183,25 @@ func TestSQLDriverIsPsycopg(t *testing.T) {
 	}
 }
 
+func TestSQLDriverIsSqliteFamily(t *testing.T) {
+	t.Parallel()
+	for driver, want := range map[config.SQLDriver]bool{
+		config.SQLDriverSQLite:       true,
+		config.SQLDriverAioSQLite:    true,
+		config.SQLDriverTursoSync:    true,
+		config.SQLDriverTursoAsync:   true,
+		config.SQLDriverAsyncpg:      false,
+		config.SQLDriverPsycopgSync:  false,
+		config.SQLDriverPsycopgAsync: false,
+		config.SQLDriverPymysql:      false,
+		config.SQLDriverAsyncmy:      false,
+	} {
+		if got := driver.IsSqliteFamily(); got != want {
+			t.Errorf("IsSqliteFamily(%q) = %v, want %v", driver, got, want)
+		}
+	}
+}
+
 func TestSQLDriverIsTurso(t *testing.T) {
 	t.Parallel()
 	for driver, want := range map[config.SQLDriver]bool{
