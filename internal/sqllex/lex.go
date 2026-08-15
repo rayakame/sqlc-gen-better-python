@@ -68,8 +68,10 @@ func Scan(sql string, d Dialect) []Token {
 		case strings.HasPrefix(rest, sliceMarkerPrefix):
 			end := scanBlockComment(sql, i)
 			// Only an immediately following placeholder binds to the marker;
-			// anything else leaves an ordinary comment behind.
-			if token := end + len(d.placeholder); token <= len(sql) && sql[end:token] == d.placeholder {
+			// anything else leaves an ordinary comment behind. A dialect
+			// without a placeholder can bind nothing at all.
+			token := end + len(d.placeholder)
+			if d.placeholder != "" && token <= len(sql) && sql[end:token] == d.placeholder {
 				flush(i)
 				tokens = append(tokens, Token{
 					Kind:      KindSliceMarker,
@@ -112,7 +114,9 @@ func Scan(sql string, d Dialect) []Token {
 			i = end
 		case d.escaped != "" && strings.HasPrefix(rest, d.escaped):
 			i += len(d.escaped)
-		case strings.HasPrefix(rest, d.placeholder):
+		// The guard is what stops a zero-value Dialect: an empty prefix
+		// matches everywhere, and the scan would never advance.
+		case d.placeholder != "" && strings.HasPrefix(rest, d.placeholder):
 			flush(i)
 			end := i + len(d.placeholder)
 			if d.numbered {

@@ -299,3 +299,28 @@ func TestDialectEmitters(t *testing.T) {
 		})
 	}
 }
+
+// A Dialect can be constructed empty even though its fields are unexported.
+// It must degrade to "this text has no placeholders" rather than scanning
+// forever, and its spans must still tile the input so a rewriter driven by
+// them cannot drop bytes.
+func TestScanZeroDialectTerminates(t *testing.T) {
+	t.Parallel()
+	const sql = "SELECT a FROM t WHERE b = ? AND c IN (/*SLICE:ids*/?)"
+	at := 0
+	for _, token := range sqllex.Scan(sql, sqllex.Dialect{}) {
+		if token.Kind == sqllex.KindPlaceholder || token.Kind == sqllex.KindSliceMarker {
+			t.Errorf("Scan() reported a bindable token %+v", token)
+		}
+		if token.Start != at {
+			t.Fatalf("token starts at %d, want %d", token.Start, at)
+		}
+		at = token.End
+	}
+	if at != len(sql) {
+		t.Fatalf("tokens cover %d bytes, want %d", at, len(sql))
+	}
+	if got := sqllex.Slots(sql, sqllex.Dialect{}); got != nil {
+		t.Errorf("Slots() = %+v, want none", got)
+	}
+}

@@ -836,8 +836,6 @@ func TestSlotMarkerHelpers(t *testing.T) {
 			wantText:  "/*SLICE:ids*/%s",
 		},
 		{
-			// A marker inside a string literal is not a bind slot, so it
-			// neither counts nor supplies text.
 			// A marker inside a string literal is not a bind slot, so the
 			// text falls back to the reconstructed marker rather than the
 			// empty string, which str.replace would prepend.
