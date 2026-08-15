@@ -112,6 +112,45 @@ func (t *Transformer) plainParams(pluginQuery *plugin.Query, pluginParams []*plu
 	return params
 }
 
+// mergeRepeatedFields is plainParams' reused-NAMED-argument merge for a
+// bundled Params class: sqlc's MySQL engine emits one parameter per use site,
+// so without it one sqlc.arg(term) becomes two fields ("term" and "term_2")
+// the caller has to fill identically. Later occurrences take the first
+// field's name and type, keep their binding slot, and are skipped when the
+// class is emitted. Bare "?" parameters that merely share a column name stay
+// distinct, exactly as in plainParams.
+func (t *Transformer) mergeRepeatedFields(table *model.Table, pluginParams []*plugin.Parameter) {
+	if !t.config.SqlDriver.IsMysql() {
+		return
+	}
+	firstIdx := make(map[string]int, len(pluginParams))
+	repeats := make(map[int]int, len(pluginParams))
+	for i, param := range pluginParams {
+		if param.GetColumn().GetIsSqlcSlice() || !param.GetColumn().GetIsNamedParam() {
+			continue
+		}
+		name := model.ParamName(param)
+		idx, found := firstIdx[name]
+		if !found {
+			firstIdx[name] = i
+
+			continue
+		}
+		// A use site that rejects NULL makes the merged field non-optional.
+		if !table.Columns[i].Type.IsNullable {
+			table.Columns[idx].Type.IsNullable = false
+		}
+		repeats[i] = idx
+	}
+	// Second pass: a later occurrence can have tightened the first one's
+	// nullability, and conversions must use one type everywhere.
+	for i, idx := range repeats {
+		table.Columns[i].Name = table.Columns[idx].Name
+		table.Columns[i].Type = table.Columns[idx].Type
+		table.Columns[i].Repeated = true
+	}
+}
+
 // logicalParamCount counts parameters as the generated signature will show
 // them: MySQL's per-occurrence duplicates of one reused NAMED argument count
 // once; bare "?" parameters count per occurrence even when they share a name.
@@ -178,6 +217,7 @@ func (t *Transformer) bundledParams(pluginParams []*plugin.Parameter, queryName 
 	for i := range table.Columns {
 		table.Columns[i].Number = pluginParams[i].Number
 	}
+	t.mergeRepeatedFields(&table, pluginParams)
 
 	return []model.QueryValue{
 		{

@@ -81,6 +81,14 @@ func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
 	}
 	w.WriteIndentedLine(1, `"""`+fmt.Sprintf("Model representing %s.", table.Name))
 	w.NewLine()
+	// A repeated MySQL parameter binds again but is one field, so it never
+	// reaches the class body either.
+	columns := make([]model.Column, 0, len(table.Columns))
+	for _, col := range table.Columns {
+		if !col.Repeated {
+			columns = append(columns, col)
+		}
+	}
 	switch w.docstringConvention {
 	// None arms here and below are unreachable (DocstringsEnabled guards every
 	// path) but keep the switches exhaustive for future conventions.
@@ -88,18 +96,18 @@ func (w *CodeWriter) WriteModelClassDocstring(table *model.Table) {
 	case config.DocstringConventionNumpy:
 		w.WriteIndentedLine(1, "Attributes")
 		w.WriteIndentedLine(1, "----------")
-		for _, col := range table.Columns {
+		for _, col := range columns {
 			w.WriteIndentedLine(1, fmt.Sprintf("%s : %s", col.Name, col.Type.Print()))
 		}
 		w.NewLine()
 	case config.DocstringConventionGoogle:
 		w.WriteIndentedLine(1, "Attributes:")
-		for _, col := range table.Columns {
+		for _, col := range columns {
 			w.WriteIndentedLine(memberIndent, fmt.Sprintf("%s: %s", col.Name, col.Type.Print()))
 		}
 	case config.DocstringConventionPEP257:
 		w.WriteIndentedLine(1, "Attributes:")
-		for _, col := range table.Columns {
+		for _, col := range columns {
 			w.WriteIndentedLine(1, fmt.Sprintf("%s -- %s", col.Name, col.Type.Print()))
 		}
 	}

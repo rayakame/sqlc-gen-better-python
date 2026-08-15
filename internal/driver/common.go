@@ -534,10 +534,10 @@ func writeSliceExpansion(body *writer.CodeWriter, indent int, query model.Query,
 }
 
 // writeCursorCall writes stmtHead+argsSegment+stmtTail on one line, hoisting a
-// too-long parameter tuple into a local _args variable first so the statement
-// stays within the line limit. parts are the already-expanded (and, for wire-
-// converting drivers, already-converted) argument expressions. Shared by the
-// sqlite, turso, and MySQL drivers.
+// too-long parameter tuple into a local "sql_args" variable first so the
+// statement stays within the line limit. parts are the already-expanded (and,
+// for wire-converting drivers, already-converted) argument expressions. Shared
+// by the sqlite, turso, and MySQL drivers.
 func writeCursorCall(body *writer.CodeWriter, indent int, parts []string, stmtHead, stmtTail string) {
 	segment := ""
 	switch {

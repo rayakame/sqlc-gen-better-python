@@ -87,6 +87,12 @@ type Column struct {
 	// to a bundled Params class; 0 for table model columns.
 	Number int32
 
+	// Repeated marks a later occurrence of a reused MySQL parameter inside a
+	// bundled Params class: it keeps its positional binding slot (same Name
+	// as the first occurrence) but is not emitted as a class field. The
+	// QueryValue-level counterpart of this is QueryValue.Repeated.
+	Repeated bool
+
 	Embed *Embed
 }
 

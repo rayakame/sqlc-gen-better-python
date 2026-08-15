@@ -33,6 +33,10 @@ func (r *Renderer) renderTable(body *writer.CodeWriter, table model.Table) {
 		body.NewLine()
 	}
 	for _, column := range table.Columns {
+		// A repeated MySQL parameter binds again but is one field.
+		if column.Repeated {
+			continue
+		}
 		body.WriteIndentedLine(1, column.Name+": "+column.Type.Print())
 	}
 }

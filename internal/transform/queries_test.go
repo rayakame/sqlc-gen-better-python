@@ -730,6 +730,70 @@ func TestBuildQueriesMySQLReusedNamedArgMerge(t *testing.T) {
 	}
 }
 
+func TestBuildQueriesMySQLBundledReusedNamedArgMerge(t *testing.T) {
+	t.Parallel()
+	// query_parameter_limit must merge a reused named argument exactly like
+	// the plain signature does: one field, bound once per use site. Without
+	// the merge the class gets "n" and "n_2" and the caller has to fill both
+	// with the same value.
+	named := func() *plugin.Column {
+		column := queryCol("n", "text", nil)
+		column.IsNamedParam = true
+
+		return column
+	}
+	conf := &config.Config{SqlDriver: config.SQLDriverPymysql, QueryParameterLimit: utils.ToPtr(1)}
+	query := buildSingleQuery(t, conf, &plugin.Query{
+		Name: "ReusedNamedArg",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ? WHERE name = ? AND id = ?",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: named()},
+			{Number: 2, Column: named()},
+			{Number: 3, Column: queryCol("id", "int4", nil)},
+		},
+	})
+	if len(query.Params) != 1 || query.Params[0].Table == nil {
+		t.Fatalf("params = %+v, want a single bundled Params class", query.Params)
+	}
+	columns := query.Params[0].Table.Columns
+	want := []struct {
+		name     string
+		repeated bool
+	}{{"n", false}, {"n", true}, {"id_", false}}
+	if len(columns) != len(want) {
+		t.Fatalf("columns = %+v, want %d entries", columns, len(want))
+	}
+	for i, tc := range want {
+		if columns[i].Name != tc.name || columns[i].Repeated != tc.repeated {
+			t.Errorf("column %d = (%q, repeated=%v), want (%q, repeated=%v)",
+				i, columns[i].Name, columns[i].Repeated, tc.name, tc.repeated)
+		}
+	}
+}
+
+func TestBuildQueriesMySQLBundledKeepsPositionalSameNamedParams(t *testing.T) {
+	t.Parallel()
+	// Bare "?" parameters stay distinct fields in the bundled class too.
+	conf := &config.Config{SqlDriver: config.SQLDriverPymysql, QueryParameterLimit: utils.ToPtr(1)}
+	query := buildSingleQuery(t, conf, &plugin.Query{
+		Name: "RenameAuthor",
+		Cmd:  ":exec",
+		Text: "UPDATE test_authors SET name = ? WHERE name = ?",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+			{Number: 2, Column: queryCol("n", "text", nil)},
+		},
+	})
+	columns := query.Params[0].Table.Columns
+	if len(columns) != 2 || columns[0].Name != "n" || columns[1].Name != "n_2" {
+		t.Fatalf("columns = %+v, want distinct n and n_2", columns)
+	}
+	if columns[0].Repeated || columns[1].Repeated {
+		t.Fatal("positional params must not be marked Repeated")
+	}
+}
+
 func TestBuildQueriesMySQLKeepsPositionalSameNamedParams(t *testing.T) {
 	t.Parallel()
 	// Bare "?" parameters carry IsNamedParam false. Two of them on columns
