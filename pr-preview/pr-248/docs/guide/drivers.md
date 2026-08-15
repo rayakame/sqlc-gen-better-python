@@ -205,7 +205,9 @@ Behavior shared by both MySQL drivers:
   cannot encode a raw memoryview.
 - Inline `ENUM` (and `SET`) columns generate
   [enum classes](/docs/guide/enums#mysql).
-- `:execlastid` returns `cursor.lastrowid`; `:copyfrom` is not supported.
+- `:execlastid` returns `cursor.lastrowid`, or `None` when the statement
+  inserted no row (the drivers report `0` there); `:copyfrom` is not
+  supported.
 
 ## turso_sync / turso_async (Turso)
 
