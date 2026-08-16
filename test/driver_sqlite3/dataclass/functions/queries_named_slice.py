@@ -9,7 +9,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
-    "count_named_slice_rows",
+    "get_named_slice_row",
     "get_named_slice_rows",
     "get_named_slice_rows_arg_first",
     "get_named_slice_rows_reused",
@@ -32,15 +32,15 @@ SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ? 
 """
 
 GET_NAMED_SLICE_ROWS_REUSED: typing.Final[str] = """-- name: GetNamedSliceRowsReused :many
-SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ? AND (note IS NULL OR note != ?) AND id IN (/*SLICE:ids*/?) ORDER BY id
+SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ? AND (note IS NULL OR name = ?) AND id IN (/*SLICE:ids*/?) ORDER BY id
 """
 
 GET_NAMED_SLICE_ROWS_ARG_FIRST: typing.Final[str] = """-- name: GetNamedSliceRowsArgFirst :many
 SELECT id, name, note FROM test_slice WHERE name = ? AND id IN (/*SLICE:ids*/?) ORDER BY id
 """
 
-COUNT_NAMED_SLICE_ROWS: typing.Final[str] = """-- name: CountNamedSliceRows :one
-SELECT count(*) FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ?
+GET_NAMED_SLICE_ROW: typing.Final[str] = """-- name: GetNamedSliceRow :one
+SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ? ORDER BY id LIMIT 1
 """
 
 
@@ -144,7 +144,7 @@ def get_named_slice_rows_reused(conn: sqlite3.Connection, *, ids: collections.ab
     """Fetch many from the db using the SQL query with `name: GetNamedSliceRowsReused :many`.
 
     ```sql
-    SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ? AND (note IS NULL OR note != ?) AND id IN (/*SLICE:ids*/?) ORDER BY id
+    SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ? AND (note IS NULL OR name = ?) AND id IN (/*SLICE:ids*/?) ORDER BY id
     ```
 
     Args:
@@ -188,11 +188,11 @@ def get_named_slice_rows_arg_first(conn: sqlite3.Connection, *, wanted: str, ids
     return QueryResults(conn, sql, _decode_hook, wanted, *ids)
 
 
-def count_named_slice_rows(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int], wanted: str) -> int | None:
-    """Fetch one from the db using the SQL query with `name: CountNamedSliceRows :one`.
+def get_named_slice_row(conn: sqlite3.Connection, *, ids: collections.abc.Sequence[int], wanted: str) -> models.TestSlice | None:
+    """Fetch one from the db using the SQL query with `name: GetNamedSliceRow :one`.
 
     ```sql
-    SELECT count(*) FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ?
+    SELECT id, name, note FROM test_slice WHERE id IN (/*SLICE:ids*/?) AND name = ? ORDER BY id LIMIT 1
     ```
 
     Args:
@@ -202,10 +202,10 @@ def count_named_slice_rows(conn: sqlite3.Connection, *, ids: collections.abc.Seq
         wanted: str.
 
     Returns:
-        Result of type `int` fetched from the db. Will be `None` if not found.
+        Result of type `models.TestSlice` fetched from the db. Will be `None` if not found.
     """
-    sql = COUNT_NAMED_SLICE_ROWS.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)
+    sql = GET_NAMED_SLICE_ROW.replace("/*SLICE:ids*/?", ",".join("?" * len(ids)) or "NULL", 1)
     row = conn.execute(sql, (*ids, wanted)).fetchone()
     if row is None:
         return None
-    return row[0]
+    return models.TestSlice(id_=row[0], name=row[1], note=row[2])

@@ -1153,7 +1153,8 @@ class TestTursoSyncDataclassFunctions:
             assert [row.id_ for row in reused] == want
             first = queries_named_slice.get_named_slice_rows_arg_first(conn=turso_sync_conn, wanted="b", ids=ids)()
             assert [row.id_ for row in first] == want
-            assert queries_named_slice.count_named_slice_rows(conn=turso_sync_conn, ids=ids, wanted="b") == len(want)
+            one = queries_named_slice.get_named_slice_row(conn=turso_sync_conn, ids=ids, wanted="b")
+            assert (one.id_ if one is not None else None) == (want[0] if want else None)
 
     @pytest.mark.dependency(
         name="TursoSyncTestDataclassFunctions::named_slice_rows_iter",
