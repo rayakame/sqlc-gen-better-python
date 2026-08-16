@@ -736,6 +736,39 @@ func TestWriteQueryFunctionDocstring(t *testing.T) {
 			),
 		},
 		{
+			// The docstring cannot be delimited by a quote run the SQL holds.
+			name: "a triple double quote switches the delimiter",
+			conv: config.DocstringConventionGoogle,
+			write: func(w *writer.CodeWriter) {
+				query := &model.Query{Cmd: metadata.CmdExec, QueryName: "Tag", SQL: `UPDATE t SET tag = 'a"""b'`}
+				w.WriteQueryFunctionDocstring(1, query, "", nil, "")
+			},
+			want: lines(
+				"    '''Execute SQL query with `name: Tag :exec`.",
+				``,
+				"    ```sql",
+				`    UPDATE t SET tag = 'a"""b'`,
+				"    ```",
+				``,
+				`    '''`,
+			),
+		},
+		{
+			// Holding both quote runs leaves no docstring spelling at all, and
+			// escaping is not open to one. The constant still carries the SQL.
+			name: "both triple quotes drop the sql block",
+			conv: config.DocstringConventionGoogle,
+			write: func(w *writer.CodeWriter) {
+				query := &model.Query{Cmd: metadata.CmdExec, QueryName: "Tag", SQL: `UPDATE t SET tag = 'a"""b' || 'c''''''d'`}
+				w.WriteQueryFunctionDocstring(1, query, "", nil, "")
+			},
+			want: lines(
+				"    \"\"\"Execute SQL query with `name: Tag :exec`.",
+				``,
+				`    """`,
+			),
+		},
+		{
 			// Without the SQL block nothing in the docstring can hold one.
 			name:    "omitted sql needs no raw prefix",
 			conv:    config.DocstringConventionGoogle,

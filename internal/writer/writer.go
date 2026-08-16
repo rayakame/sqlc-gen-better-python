@@ -160,22 +160,47 @@ func (w *CodeWriter) indent(level int) string {
 	return strings.Repeat(w.indentChar, level*w.charsPerIndentLevel)
 }
 
-// PyRawPrefix returns the prefix a triple-quoted Python literal needs to carry
-// text through verbatim: "r" when the text holds a backslash, "" otherwise.
+// PyTripleQuoted is how to spell a triple-quoted Python literal that carries a
+// block of text verbatim: the prefix and the delimiter that opens and closes
+// it.
+type PyTripleQuoted struct {
+	// Prefix is "r" when the text holds a backslash, "" otherwise. A plain
+	// literal reads "\t" as a tab and "\n" as a newline, so SQL carrying
+	// either reaches the server changed, and an escape Python does not know
+	// ("\d") is a SyntaxWarning today and a SyntaxError in a later version.
+	// Escaping is not an option for docstrings - ruff D301 wants the raw
+	// prefix whatever the backslash spells - so both emitters use this rule.
+	Prefix string
+	// Delimiter is the triple quote the text does not contain itself.
+	Delimiter string
+}
+
+// pyTripleQuote is what a triple-quoted literal is delimited with unless its
+// own text contains it; pyTripleQuotes lists both spellings in preference
+// order.
+const pyTripleQuote = `"""`
+
+var pyTripleQuotes = []string{pyTripleQuote, `'''`} //nolint:gochecknoglobals
+
+// PyTripleQuotedFor returns how to spell a literal holding text, and false
+// when no triple-quoted literal can hold it - text containing both delimiters
+// can only be escaped, which a docstring cannot be.
 //
-// A plain literal reads "\t" as a tab and "\n" as a newline, so SQL carrying
-// either reaches the server changed, and an escape Python does not know ("\d")
-// is a SyntaxWarning today and a SyntaxError in a later version. Escaping is
-// not an option for docstrings - ruff D301 wants the raw prefix whatever the
-// backslash spells - so both emitters use this one rule. It is only safe
-// because they put the closing delimiter on its own line: a raw literal cannot
-// end in a backslash.
-func PyRawPrefix(text string) string {
+// The spelling is only safe because callers put the closing delimiter on its
+// own line: a raw literal cannot end in a backslash, and a quote right before
+// the delimiter would extend it.
+func PyTripleQuotedFor(text string) (PyTripleQuoted, bool) {
+	prefix := ""
 	if strings.ContainsRune(text, '\\') {
-		return "r"
+		prefix = "r"
+	}
+	for _, delimiter := range pyTripleQuotes {
+		if !strings.Contains(text, delimiter) {
+			return PyTripleQuoted{Prefix: prefix, Delimiter: delimiter}, true
+		}
 	}
 
-	return ""
+	return PyTripleQuoted{Prefix: "", Delimiter: ""}, false
 }
 
 // PyQuote returns a complete Python string literal. Go's Quote escaping is a

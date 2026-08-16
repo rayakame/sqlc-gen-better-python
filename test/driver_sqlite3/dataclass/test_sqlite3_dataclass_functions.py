@@ -39,6 +39,7 @@ from test.driver_sqlite3.dataclass.functions import queries_named_slice
 from test.driver_sqlite3.dataclass.functions import queries_override_adapter
 from test.driver_sqlite3.dataclass.functions import queries_override_converter
 from test.driver_sqlite3.dataclass.functions import queries_slice
+from test.driver_sqlite3.dataclass.functions import queries_triple_quote
 from test.driver_sqlite3.dataclass.functions import queries_unknown_override
 
 OVERRIDE_PRICE = 12.5
@@ -50,6 +51,7 @@ UNKNOWN_OVERRIDE_ID = 545454
 ANY_PARAM_ID = 565656
 SLICE_ID_BASE = 585858
 BACKSLASH_ID = 606060
+TRIPLE_QUOTE_ID = 616161
 SLICE_ROW_COUNT = 4
 
 
@@ -1204,3 +1206,14 @@ class TestSqlite3DataclassFunctions:
         assert queries_backslash.get_backslash_note(conn=sqlite3_conn, id_=BACKSLASH_ID) == "C:\\dir\\name"
         assert queries_backslash.get_backslash_pattern(conn=sqlite3_conn, id_=-1) is None
         assert queries_backslash.get_backslash_note(conn=sqlite3_conn, id_=-1) is None
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::triple_quote_sql")
+    def test_triple_quote_sql(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # A Python literal cannot be delimited by a quote run its own text
+        # holds. The first query forces the other delimiter; the second holds
+        # both runs and can only be spelled escaped.
+        queries_backslash.insert_backslash_row(conn=sqlite3_conn, id_=TRIPLE_QUOTE_ID, name="quotes", note=None)
+        assert queries_triple_quote.get_triple_quote_pattern(conn=sqlite3_conn, id_=TRIPLE_QUOTE_ID) == 'a"""b'
+        assert queries_triple_quote.get_both_quotes_pattern(conn=sqlite3_conn, id_=TRIPLE_QUOTE_ID) == "a\"\"\"b'''c"
+        assert queries_triple_quote.get_triple_quote_pattern(conn=sqlite3_conn, id_=-1) is None
+        assert queries_triple_quote.get_both_quotes_pattern(conn=sqlite3_conn, id_=-1) is None

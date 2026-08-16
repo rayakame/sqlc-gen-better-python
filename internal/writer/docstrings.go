@@ -461,14 +461,17 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		return
 	}
 
-	// Only the embedded SQL can carry a backslash - the rest of the docstring
-	// is generated prose - and the prefix has to be written before it.
-	writeSQL := emitSQL && !w.docstringOmitSQL
-	rawPrefix := ""
-	if writeSQL {
-		rawPrefix = PyRawPrefix(query.SQL)
+	// Only the embedded SQL can carry a backslash or a triple quote - the rest
+	// of the docstring is generated prose - and how the docstring opens
+	// depends on both, so it is settled before the summary is written. SQL
+	// that no docstring can spell is left out of it; the constant still
+	// carries the query.
+	literal, canEmbed := PyTripleQuotedFor(query.SQL)
+	writeSQL := emitSQL && !w.docstringOmitSQL && canEmbed
+	if !writeSQL {
+		literal = PyTripleQuoted{Prefix: "", Delimiter: pyTripleQuote}
 	}
-	w.WriteIndentedLine(lvl, rawPrefix+`"""`+fmt.Sprintf(summaryFmt, query.QueryName, query.Cmd))
+	w.WriteIndentedLine(lvl, literal.Prefix+literal.Delimiter+fmt.Sprintf(summaryFmt, query.QueryName, query.Cmd))
 	w.NewLine()
 	if writeSQL {
 		w.WriteIndentedLine(lvl, "```sql")
@@ -491,7 +494,7 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		if wroteArgs && w.docstringConvention == config.DocstringConventionNumpy {
 			w.NewLine()
 		}
-		w.WriteIndentedLine(lvl, `"""`)
+		w.WriteIndentedLine(lvl, literal.Delimiter)
 
 		return
 	}
@@ -500,7 +503,7 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		w.NewLine()
 	}
 	w.writeDocReturnsSection(lvl, ret)
-	w.WriteIndentedLine(lvl, `"""`)
+	w.WriteIndentedLine(lvl, literal.Delimiter)
 }
 
 // writeDocArgsSection writes the Parameters/Args/Arguments section and reports
