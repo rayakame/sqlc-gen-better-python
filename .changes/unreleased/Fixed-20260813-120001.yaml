@@ -1,6 +1,0 @@
-kind: Fixed
-body: 'Query modules whose only queries return whole model rows (no `:many`) no longer import the row''s column-type modules (`datetime`, `decimal`, ...) into their `TYPE_CHECKING` block: nothing in such a module spells those types, and ruff flagged the imports as unused on generated output.'
-time: 2026-08-13T12:00:01.0000000Z
-custom:
-    Author: Rayakame
-    PR: "248"

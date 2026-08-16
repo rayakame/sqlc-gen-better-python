@@ -1,6 +1,0 @@
-kind: Fixed
-body: 'Arguments of a reused `sqlc.slice` are no longer misordered when the query also contains a backtick- or bracket-quoted identifier holding a `?` (SQLite family), and a slice whose name contains `%` now expands correctly on the MySQL drivers - its marker was doubled in the SQL constant but not in the replacement the generated code performs, so the expansion silently matched nothing.'
-time: 2026-08-15T12:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "257"
