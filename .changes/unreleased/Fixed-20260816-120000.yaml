@@ -1,6 +1,0 @@
-kind: Fixed
-body: 'SQLite-family queries that combine a `sqlc.slice` with a named argument (`sqlc.arg`, `@name`, `:name`) now bind their arguments to the right columns. sqlc numbers every placeholder of such a query (`?1`, `?2`, ...) and assumes the slice marker occupies one slot, but the marker expands to one slot per element, so every index after it named the wrong slot: the query returned wrong rows, or the driver rejected it. The generated SQL constant now carries bare `?` placeholders and the arguments are passed in text order, which is correct for any slice length including an empty one.'
-time: 2026-08-16T12:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "260"

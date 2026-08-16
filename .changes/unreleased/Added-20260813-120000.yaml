@@ -1,6 +1,0 @@
-kind: Added
-body: 'MySQL support: the new `sql_driver` values `asyncmy` and `pymysql` generate code for [asyncmy](https://pypi.org/project/asyncmy/) (asyncio) and [PyMySQL](https://pypi.org/project/PyMySQL/) (synchronous), using `engine: "mysql"` and the same `?` placeholders as the SQLite drivers - the plugin rewrites them to the drivers'' pyformat `%s` at generation time. Inline `ENUM` (and `SET`) columns generate `enums.py` classes, `tinyint(1)` maps to `bool`, `time` to `datetime.timedelta`, and returned `json` columns stay `str` like on every other driver. `:execlastid` returns `cursor.lastrowid` (`None` when nothing was inserted); `:copyfrom` stays PostgreSQL-only. Reused parameters (`sqlc.arg` or `sqlc.slice` used at several sites) merge into one function argument even though MySQL binds every occurrence separately.'
-time: 2026-08-13T12:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "248"

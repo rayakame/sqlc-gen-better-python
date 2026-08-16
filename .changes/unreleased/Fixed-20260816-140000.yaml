@@ -1,6 +1,0 @@
-kind: Fixed
-body: 'A query containing `"""` no longer produces a module that does not parse. The SQL went into a `"""` literal, so three consecutive double quotes in the query - from a string literal, or from a quoted identifier ending in a quote - closed the constant early and left the rest of the file as stray syntax. The constant and the docstring now pick a delimiter the query does not contain. A query holding both `"""` and `''''''` has no block spelling left: the constant falls back to an escaped one-liner, and the docstring, which cannot be escaped without tripping ruff D301, leaves the SQL out.'
-time: 2026-08-16T14:00:00.0000000Z
-custom:
-    Author: Rayakame
-    PR: "263"
