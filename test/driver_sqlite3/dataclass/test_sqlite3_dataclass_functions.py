@@ -1196,9 +1196,9 @@ class TestSqlite3DataclassFunctions:
 
     @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::backslash_sql")
     def test_backslash_sql(self, sqlite3_conn: sqlite3.Connection) -> None:
-        # A plain Python literal would read the "\t" as a tab and drop the
-        # "\d", so the constant has to be a raw string for the backslashes to
-        # reach the database at all.
+        # A plain Python literal turns the "\t" into a tab; the "\d" stays two
+        # characters, but only with an invalid-escape warning that a later
+        # Python turns into an error. The constant has to be raw.
         queries_backslash.insert_backslash_row(conn=sqlite3_conn, id_=BACKSLASH_ID, name="path", note="C:\\dir\\name")
         assert queries_backslash.get_backslash_pattern(conn=sqlite3_conn, id_=BACKSLASH_ID) == "a\\tb\\d+"
         assert queries_backslash.get_backslash_note(conn=sqlite3_conn, id_=BACKSLASH_ID) == "C:\\dir\\name"
