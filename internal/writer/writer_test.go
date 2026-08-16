@@ -243,24 +243,74 @@ func TestWriteWrappedCall(t *testing.T) {
 	}
 }
 
-func TestPyRawPrefix(t *testing.T) {
+func TestPyTripleQuotedFor(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		name string
-		in   string
-		want string
+		name   string
+		in     string
+		wantOK bool
+		want   writer.PyTripleQuoted
 	}{
-		{name: "empty text", in: "", want: ""},
-		{name: "no backslash", in: "SELECT 1", want: ""},
-		{name: "escape python knows", in: `LIKE 'a\tb'`, want: "r"},
-		{name: "escape python does not know", in: `REGEXP '\d+'`, want: "r"},
-		{name: "doubled backslash", in: `LIKE 'C:\\n%'`, want: "r"},
+		{name: "empty text", in: "", wantOK: true, want: writer.PyTripleQuoted{Prefix: "", Delimiter: `"""`}},
+		{name: "plain text", in: "SELECT 1", wantOK: true, want: writer.PyTripleQuoted{Prefix: "", Delimiter: `"""`}},
+		{
+			name:   "escape python knows",
+			in:     `LIKE 'a\tb'`,
+			wantOK: true,
+			want:   writer.PyTripleQuoted{Prefix: "r", Delimiter: `"""`},
+		},
+		{
+			name:   "escape python does not know",
+			in:     `REGEXP '\d+'`,
+			wantOK: true,
+			want:   writer.PyTripleQuoted{Prefix: "r", Delimiter: `"""`},
+		},
+		{
+			name:   "doubled backslash",
+			in:     `LIKE 'C:\\n%'`,
+			wantOK: true,
+			want:   writer.PyTripleQuoted{Prefix: "r", Delimiter: `"""`},
+		},
+		{
+			name:   "two double quotes still fit",
+			in:     `= 'a""b'`,
+			wantOK: true,
+			want:   writer.PyTripleQuoted{Prefix: "", Delimiter: `"""`},
+		},
+		{
+			name:   "triple double quote falls back",
+			in:     `= 'a"""b'`,
+			wantOK: true,
+			want:   writer.PyTripleQuoted{Prefix: "", Delimiter: "'''"},
+		},
+		{
+			name:   "triple single quote keeps double",
+			in:     `= "a'''b"`,
+			wantOK: true,
+			want:   writer.PyTripleQuoted{Prefix: "", Delimiter: `"""`},
+		},
+		{
+			name:   "backslash with a triple double quote",
+			in:     `= 'a"""b\d'`,
+			wantOK: true,
+			want:   writer.PyTripleQuoted{Prefix: "r", Delimiter: "'''"},
+		},
+		{
+			name:   "both delimiters have no spelling",
+			in:     `= 'a"""b' || 'c''''''d'`,
+			wantOK: false,
+			want:   writer.PyTripleQuoted{Prefix: "", Delimiter: ""},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			if got := writer.PyRawPrefix(tc.in); got != tc.want {
-				t.Errorf("PyRawPrefix(%q) = %q, want %q", tc.in, got, tc.want)
+			got, ok := writer.PyTripleQuotedFor(tc.in)
+			if ok != tc.wantOK {
+				t.Fatalf("PyTripleQuotedFor(%q) ok = %v, want %v", tc.in, ok, tc.wantOK)
+			}
+			if got != tc.want {
+				t.Errorf("PyTripleQuotedFor(%q) = %+v, want %+v", tc.in, got, tc.want)
 			}
 		})
 	}

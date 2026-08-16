@@ -72,18 +72,18 @@ func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query)
 		constType = "typing.LiteralString"
 	}
 	for _, query := range queries {
-		constantsBody.WriteLine(
-			fmt.Sprintf(
-				`%s: typing.Final[%s] = %s"""-- name: %s %s`,
-				query.ConstantName,
-				constType,
-				writer.PyRawPrefix(query.SQL),
-				query.QueryName,
-				query.Cmd,
-			),
-		)
-		constantsBody.WriteLine(query.SQL)
-		constantsBody.WriteLine(`"""`)
+		assignment := fmt.Sprintf(`%s: typing.Final[%s] = `, query.ConstantName, constType)
+		header := fmt.Sprintf("-- name: %s %s", query.QueryName, query.Cmd)
+		if literal, ok := writer.PyTripleQuotedFor(query.SQL); ok {
+			constantsBody.WriteLine(assignment + literal.Prefix + literal.Delimiter + header)
+			constantsBody.WriteLine(query.SQL)
+			constantsBody.WriteLine(literal.Delimiter)
+		} else {
+			// SQL holding both triple quotes has no block spelling left. An
+			// escaped one-liner still carries it exactly; only the constant's
+			// resemblance to the query is lost.
+			constantsBody.WriteLine(assignment + writer.PyQuote(header+"\n"+query.SQL+"\n"))
+		}
 		constantsBody.NewLine()
 
 		if query.Returns.EmitTable {

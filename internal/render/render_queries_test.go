@@ -85,6 +85,73 @@ async def tag_item(conn: ConnectionLike, *, id_: int) -> None:
 `,
 		},
 		{
+			// The literal cannot be delimited by a quote run it contains.
+			name:    "a triple double quote switches the delimiter",
+			engine:  "postgresql",
+			options: `{"package":"testpkg","sql_driver":"asyncpg","emit_init_file":false}`,
+			queries: []*plugin.Query{{
+				Name:     "TagItem",
+				Cmd:      metadata.CmdExec,
+				Text:     `UPDATE test_items SET tag = 'a"""b' WHERE id = $1`,
+				Filename: "queries.sql",
+				Params:   []*plugin.Parameter{pgParam(pgColumn("id", "int4", true))},
+			}},
+			want: sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("tag_item",)
+
+import typing
+
+if typing.TYPE_CHECKING:
+    import asyncpg
+    import collections.abc
+
+    type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+
+
+TAG_ITEM: typing.Final[str] = '''-- name: TagItem :exec
+UPDATE test_items SET tag = 'a"""b' WHERE id = $1
+'''
+
+
+async def tag_item(conn: ConnectionLike, *, id_: int) -> None:
+    await conn.execute(TAG_ITEM, id_)
+`,
+		},
+		{
+			// Holding both quote runs leaves no block spelling, so the
+			// constant falls back to an escaped one-liner.
+			name:    "both triple quotes fall back to an escaped literal",
+			engine:  "postgresql",
+			options: `{"package":"testpkg","sql_driver":"asyncpg","emit_init_file":false}`,
+			queries: []*plugin.Query{{
+				Name:     "TagItem",
+				Cmd:      metadata.CmdExec,
+				Text:     `UPDATE test_items SET tag = 'a"""b' || 'c''''''d' WHERE id = $1`,
+				Filename: "queries.sql",
+				Params:   []*plugin.Parameter{pgParam(pgColumn("id", "int4", true))},
+			}},
+			want: sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("tag_item",)
+
+import typing
+
+if typing.TYPE_CHECKING:
+    import asyncpg
+    import collections.abc
+
+    type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+
+
+TAG_ITEM: typing.Final[str] = "-- name: TagItem :exec\nUPDATE test_items SET tag = 'a\"\"\"b' || 'c''''''d' WHERE id = $1\n"
+
+
+async def tag_item(conn: ConnectionLike, *, id_: int) -> None:
+    await conn.execute(TAG_ITEM, id_)
+`,
+		},
+		{
 			name:    "psycopg rewrites placeholders and binds by name",
 			engine:  "postgresql",
 			options: `{"package":"testpkg","sql_driver":"psycopg_async","emit_init_file":false}`,
