@@ -26,7 +26,7 @@ INSERT INTO test_slice (id, name, note) VALUES (%s, %s, %s)
 """
 
 GET_BACKSLASH_PATTERN: typing.Final[str] = r"""-- name: GetBackslashPattern :one
-SELECT 'a\\tb\\d+' AS pattern
+SELECT 'a\\tb\\d+' AS pattern FROM test_slice WHERE id = %s
 """
 
 GET_BACKSLASH_NOTE: typing.Final[str] = r"""-- name: GetBackslashNote :one
@@ -53,22 +53,23 @@ def insert_backslash_row(conn: pymysql.Connection, *, id_: int, name: str, note:
         cur.execute(INSERT_BACKSLASH_ROW, (id_, name, note))
 
 
-def get_backslash_pattern(conn: pymysql.Connection) -> str | None:
+def get_backslash_pattern(conn: pymysql.Connection, *, id_: int) -> str | None:
     r"""Fetch one from the db using the SQL query with `name: GetBackslashPattern :one`.
 
     ```sql
-    SELECT 'a\\tb\\d+' AS pattern
+    SELECT 'a\\tb\\d+' AS pattern FROM test_slice WHERE id = %s
     ```
 
     Args:
         conn:
             Connection object of type `pymysql.Connection` used to execute the query.
+        id_: int.
 
     Returns:
         Result of type `str` fetched from the db. Will be `None` if not found.
     """
     with conn.cursor() as cur:
-        cur.execute(GET_BACKSLASH_PATTERN)
+        cur.execute(GET_BACKSLASH_PATTERN, (id_,))
         row = cur.fetchone()
     if row is None:
         return None

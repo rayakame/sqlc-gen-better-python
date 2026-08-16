@@ -968,3 +968,9 @@ class TestDataclassFunctions:
         # backslashes to reach the server.
         assert queries_backslash.get_backslash_pattern(conn=psycopg_sync_conn) == "a\\tb\\d+"
         assert queries_backslash.match_backslash_path(conn=psycopg_sync_conn, probe="C:\\dir\\name") is True
+        assert queries_backslash.match_backslash_path(conn=psycopg_sync_conn, probe="C:/dir/name") is False
+
+    def test_backslash_sql_no_row(self) -> None:
+        conn = typing.cast("psycopg.Connection[psycopg.rows.TupleRow]", NoRowConn())
+        assert queries_backslash.get_backslash_pattern(conn=conn) is None
+        assert queries_backslash.match_backslash_path(conn=conn, probe="C:\\dir\\name") is None

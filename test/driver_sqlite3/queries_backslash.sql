@@ -6,7 +6,7 @@
 INSERT INTO test_slice (id, name, note) VALUES (?, ?, ?);
 
 -- name: GetBackslashPattern :one
-SELECT 'a\tb\d+' AS pattern;
+SELECT 'a\tb\d+' AS pattern FROM test_slice WHERE id = ?;
 
 -- name: GetBackslashNote :one
 SELECT note FROM test_slice WHERE note = 'C:\dir\name' AND id = ?;

@@ -1309,6 +1309,8 @@ class TestPymysqlDataclassFunctions:
         # A plain Python literal would read the "\t" as a tab and drop the
         # "\d", so the constant has to be a raw string for the doubled
         # backslashes to reach MySQL, which unescapes them back to one each.
-        assert queries_backslash.get_backslash_pattern(conn=pymysql_conn) == "a\\tb\\d+"
         queries_backslash.insert_backslash_row(conn=pymysql_conn, id_=BACKSLASH_ID, name="path", note="C:\\dir\\name")
+        assert queries_backslash.get_backslash_pattern(conn=pymysql_conn, id_=BACKSLASH_ID) == "a\\tb\\d+"
         assert queries_backslash.get_backslash_note(conn=pymysql_conn, id_=BACKSLASH_ID) == "C:\\dir\\name"
+        assert queries_backslash.get_backslash_pattern(conn=pymysql_conn, id_=-1) is None
+        assert queries_backslash.get_backslash_note(conn=pymysql_conn, id_=-1) is None
