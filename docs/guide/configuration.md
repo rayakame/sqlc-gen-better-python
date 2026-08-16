@@ -49,7 +49,7 @@ sql:
 | Option | What it does |
 |---|---|
 | `package` | The name of the generated package. |
-| `sql_driver` | `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`, `turso_async`, or `turso_sync` - must match the `engine`. See [Drivers](/docs/guide/drivers). |
+| `sql_driver` | `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`, `asyncmy`, `pymysql`, `turso_async`, or `turso_sync` - must match the `engine`. See [Drivers](/docs/guide/drivers). |
 | `emit_init_file` | Whether to emit `__init__.py`. Must be set explicitly. |
 
 Everything else is optional and has a sensible default. The most common ones to
@@ -85,8 +85,8 @@ queries - for example a `msgspec` package and a `dataclass` package:
 
 - **Driver/engine mismatch.** `sql_driver: asyncpg`, `psycopg_async`, and
   `psycopg_sync` require `engine: "postgresql"`; `aiosqlite`/`sqlite3` and the
-  turso drivers require
-  `engine: "sqlite"`. A mismatch is an error.
+  turso drivers require `engine: "sqlite"`; `asyncmy`/`pymysql` require
+  `engine: "mysql"`. A mismatch is an error.
 - **Forgetting `emit_init_file`.** It has no default and generation fails if it
   is omitted. Set it to `true` unless the package already has an `__init__.py`.
 - **A stale `sha256`.** When you bump the plugin version, update the hash too.
