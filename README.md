@@ -76,8 +76,8 @@ version: "2"
 plugins:
   - name: python
     wasm:
-      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.8.0/sqlc-gen-better-python.wasm
-      sha256: c98cffe9024c3c8e802426a4babec460c2d17adc440181324e3d707b1e723c48
+      url: https://github.com/rayakame/sqlc-gen-better-python/releases/download/v0.9.0/sqlc-gen-better-python.wasm
+      sha256: d1787aa32e61f2e73c81a4f93b3e5a9beeec918952cff3183fb96313057f58a8
 sql:
   - engine: "postgresql"
     queries: "query.sql"
