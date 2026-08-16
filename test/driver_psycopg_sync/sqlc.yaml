@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: f9e26e327ba75ccd648dea1a55b9cbecbf6586686b5f7329dc15871b0b3fdc77
+      sha256: 2bad9ba936a60fc014eb4503a300a3ebfcd79483bd215002a8d4d03f1b290201
 sql:
   - schema: schema.sql
     queries:
@@ -108,6 +108,7 @@ sql:
       - queries_field_namings.sql
       - queries_invalid_identifiers.sql
       - queries_converters.sql
+      - queries_backslash.sql
     engine: postgresql
     codegen:
       - out: /dataclass/functions

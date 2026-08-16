@@ -243,6 +243,29 @@ func TestWriteWrappedCall(t *testing.T) {
 	}
 }
 
+func TestPyRawPrefix(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "empty text", in: "", want: ""},
+		{name: "no backslash", in: "SELECT 1", want: ""},
+		{name: "escape python knows", in: `LIKE 'a\tb'`, want: "r"},
+		{name: "escape python does not know", in: `REGEXP '\d+'`, want: "r"},
+		{name: "doubled backslash", in: `LIKE 'C:\\n%'`, want: "r"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			if got := writer.PyRawPrefix(tc.in); got != tc.want {
+				t.Errorf("PyRawPrefix(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestPyQuote(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

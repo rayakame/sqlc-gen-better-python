@@ -160,6 +160,24 @@ func (w *CodeWriter) indent(level int) string {
 	return strings.Repeat(w.indentChar, level*w.charsPerIndentLevel)
 }
 
+// PyRawPrefix returns the prefix a triple-quoted Python literal needs to carry
+// text through verbatim: "r" when the text holds a backslash, "" otherwise.
+//
+// A plain literal reads "\t" as a tab and "\n" as a newline, so SQL carrying
+// either reaches the server changed, and an escape Python does not know ("\d")
+// is a SyntaxWarning today and a SyntaxError in a later version. Escaping is
+// not an option for docstrings - ruff D301 wants the raw prefix whatever the
+// backslash spells - so both emitters use this one rule. It is only safe
+// because they put the closing delimiter on its own line: a raw literal cannot
+// end in a backslash.
+func PyRawPrefix(text string) string {
+	if strings.ContainsRune(text, '\\') {
+		return "r"
+	}
+
+	return ""
+}
+
 // PyQuote returns a complete Python string literal. Go's Quote escaping is a
 // compatible subset of Python's; outer quotes flip to single when that
 // avoids escaping inner double quotes (ruff Q003).

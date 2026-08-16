@@ -36,6 +36,7 @@ from test.driver_pymysql import no_row_conn
 from test.driver_pymysql.dataclass.functions import enums
 from test.driver_pymysql.dataclass.functions import models
 from test.driver_pymysql.dataclass.functions import queries
+from test.driver_pymysql.dataclass.functions import queries_backslash
 from test.driver_pymysql.dataclass.functions import queries_case
 from test.driver_pymysql.dataclass.functions import queries_converters
 from test.driver_pymysql.dataclass.functions import queries_enum_override
@@ -57,6 +58,7 @@ INVALID_IDENTIFIER_ID = 1850
 THIRD_PARTY_ID = 1860
 THIRD_PARTY_TOTAL = 9001
 SLICE_ID_BASE = 1900
+BACKSLASH_ID = 1950
 SLICE_ROW_COUNT = 4
 CONVERTER_ID = 1950
 CONVERTER_ID_2 = 1951
@@ -1301,3 +1303,15 @@ class TestPymysqlDataclassFunctions:
         with pymysql_conn.cursor() as cur:
             cur.execute("DELETE FROM test_enum_override WHERE id IN (%s, %s)", (ENUM_OVERRIDE_ID, ENUM_OVERRIDE_ID_2))
         assert queries_enum_override.get_enum_override_mood(conn=pymysql_conn, id_=ENUM_OVERRIDE_ID) is None
+
+    @pytest.mark.dependency(name="PymysqlTestDataclassFunctions::backslash_sql")
+    def test_backslash_sql(self, pymysql_conn: pymysql.Connection) -> None:
+        # A plain Python literal turns the "\t" into a tab; the "\d" stays two
+        # characters, but only with an invalid-escape warning that a later
+        # Python turns into an error. The constant has to be raw for the
+        # doubled backslashes to reach MySQL, which unescapes them to one each.
+        queries_backslash.insert_backslash_row(conn=pymysql_conn, id_=BACKSLASH_ID, name="path", note="C:\\dir\\name")
+        assert queries_backslash.get_backslash_pattern(conn=pymysql_conn, id_=BACKSLASH_ID) == "a\\tb\\d+"
+        assert queries_backslash.get_backslash_note(conn=pymysql_conn, id_=BACKSLASH_ID) == "C:\\dir\\name"
+        assert queries_backslash.get_backslash_pattern(conn=pymysql_conn, id_=-1) is None
+        assert queries_backslash.get_backslash_note(conn=pymysql_conn, id_=-1) is None

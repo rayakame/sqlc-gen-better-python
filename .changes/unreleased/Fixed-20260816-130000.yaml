@@ -1,0 +1,6 @@
+kind: Fixed
+body: 'A backslash in a query now survives into the generated SQL constant. The SQL was written into a plain Python string literal, so Python read every escape it recognised: `LIKE ''a\tb''` reached the server with a tab, `''C:\name''` with a newline, and an escape Python does not know (`REGEXP ''\d+''`) raised a SyntaxWarning that is slated to become a SyntaxError. Query text holding a backslash - and the docstring that repeats it - is now emitted as a raw literal. Affects every driver.'
+time: 2026-08-16T13:00:00.0000000Z
+custom:
+    Author: Rayakame
+    PR: "262"

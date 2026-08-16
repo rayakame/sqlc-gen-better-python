@@ -50,6 +50,41 @@ async def insert_item(conn: ConnectionLike, *, id_: int) -> None:
 `,
 		},
 		{
+			// A plain literal would read "\d" as an unknown escape and "\t" as
+			// a tab, so SQL holding a backslash is emitted raw.
+			name:    "backslashes make the constant a raw literal",
+			engine:  "postgresql",
+			options: `{"package":"testpkg","sql_driver":"asyncpg","emit_init_file":false}`,
+			queries: []*plugin.Query{{
+				Name:     "TagItem",
+				Cmd:      metadata.CmdExec,
+				Text:     `UPDATE test_items SET path = 'C:\dir', tag = 'a\tb' WHERE path ~ '\d+' AND id = $1`,
+				Filename: "queries.sql",
+				Params:   []*plugin.Parameter{pgParam(pgColumn("id", "int4", true))},
+			}},
+			want: sqlcFileHeader("queries.sql") + `from __future__ import annotations
+
+__all__: collections.abc.Sequence[str] = ("tag_item",)
+
+import typing
+
+if typing.TYPE_CHECKING:
+    import asyncpg
+    import collections.abc
+
+    type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
+
+
+TAG_ITEM: typing.Final[str] = r"""-- name: TagItem :exec
+UPDATE test_items SET path = 'C:\dir', tag = 'a\tb' WHERE path ~ '\d+' AND id = $1
+"""
+
+
+async def tag_item(conn: ConnectionLike, *, id_: int) -> None:
+    await conn.execute(TAG_ITEM, id_)
+`,
+		},
+		{
 			name:    "psycopg rewrites placeholders and binds by name",
 			engine:  "postgresql",
 			options: `{"package":"testpkg","sql_driver":"psycopg_async","emit_init_file":false}`,
