@@ -461,9 +461,16 @@ func (w *CodeWriter) WriteQueryFunctionDocstring(lvl int, query *model.Query, co
 		return
 	}
 
-	w.WriteIndentedLine(lvl, `"""`+fmt.Sprintf(summaryFmt, query.QueryName, query.Cmd))
+	// Only the embedded SQL can carry a backslash - the rest of the docstring
+	// is generated prose - and the prefix has to be written before it.
+	writeSQL := emitSQL && !w.docstringOmitSQL
+	rawPrefix := ""
+	if writeSQL {
+		rawPrefix = PyRawPrefix(query.SQL)
+	}
+	w.WriteIndentedLine(lvl, rawPrefix+`"""`+fmt.Sprintf(summaryFmt, query.QueryName, query.Cmd))
 	w.NewLine()
-	if emitSQL && !w.docstringOmitSQL {
+	if writeSQL {
 		w.WriteIndentedLine(lvl, "```sql")
 		for _, line := range strings.Split(strings.ReplaceAll(query.SQL, "\r\n", "\n"), "\n") {
 			// Never write indentation-only lines (ruff W293).

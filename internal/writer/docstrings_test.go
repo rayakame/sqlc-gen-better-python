@@ -717,6 +717,40 @@ func TestWriteQueryFunctionDocstring(t *testing.T) {
 			),
 		},
 		{
+			// ruff D301 wants the raw prefix on any docstring holding a
+			// backslash, escaped or not.
+			name: "backslash in the sql makes the docstring raw",
+			conv: config.DocstringConventionGoogle,
+			write: func(w *writer.CodeWriter) {
+				query := &model.Query{Cmd: metadata.CmdExec, QueryName: "Tag", SQL: `UPDATE t SET tag = 'a\tb' WHERE p ~ '\d+'`}
+				w.WriteQueryFunctionDocstring(1, query, "", nil, "")
+			},
+			want: lines(
+				"    r\"\"\"Execute SQL query with `name: Tag :exec`.",
+				``,
+				"    ```sql",
+				`    UPDATE t SET tag = 'a\tb' WHERE p ~ '\d+'`,
+				"    ```",
+				``,
+				`    """`,
+			),
+		},
+		{
+			// Without the SQL block nothing in the docstring can hold one.
+			name:    "omitted sql needs no raw prefix",
+			conv:    config.DocstringConventionGoogle,
+			omitSQL: true,
+			write: func(w *writer.CodeWriter) {
+				query := &model.Query{Cmd: metadata.CmdExec, QueryName: "Tag", SQL: `UPDATE t SET tag = 'a\tb'`}
+				w.WriteQueryFunctionDocstring(1, query, "", nil, "")
+			},
+			want: lines(
+				"    \"\"\"Execute SQL query with `name: Tag :exec`.",
+				``,
+				`    """`,
+			),
+		},
+		{
 			name: "exec google without conn and args",
 			conv: config.DocstringConventionGoogle,
 			write: func(w *writer.CodeWriter) {

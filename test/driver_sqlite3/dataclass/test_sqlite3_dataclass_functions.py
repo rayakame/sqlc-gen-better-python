@@ -33,6 +33,7 @@ import pytest
 from test.driver_sqlite3.dataclass.functions import models
 from test.driver_sqlite3.dataclass.functions import queries
 from test.driver_sqlite3.dataclass.functions import queries_any_param
+from test.driver_sqlite3.dataclass.functions import queries_backslash
 from test.driver_sqlite3.dataclass.functions import queries_case
 from test.driver_sqlite3.dataclass.functions import queries_named_slice
 from test.driver_sqlite3.dataclass.functions import queries_override_adapter
@@ -48,6 +49,7 @@ RESERVED_ARG_ID = 525252
 UNKNOWN_OVERRIDE_ID = 545454
 ANY_PARAM_ID = 565656
 SLICE_ID_BASE = 585858
+BACKSLASH_ID = 606060
 SLICE_ROW_COUNT = 4
 
 
@@ -1191,3 +1193,12 @@ class TestSqlite3DataclassFunctions:
         assert queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[]) == 0
         deleted = queries_slice.delete_slice_rows(conn=sqlite3_conn, ids=[SLICE_ID_BASE + offset for offset in range(SLICE_ROW_COUNT)])
         assert deleted == SLICE_ROW_COUNT
+
+    @pytest.mark.dependency(name="Sqlite3TestDataclassFunctions::backslash_sql")
+    def test_backslash_sql(self, sqlite3_conn: sqlite3.Connection) -> None:
+        # A plain Python literal would read the "\t" as a tab and drop the
+        # "\d", so the constant has to be a raw string for the backslashes to
+        # reach the database at all.
+        assert queries_backslash.get_backslash_pattern(conn=sqlite3_conn) == "a\\tb\\d+"
+        queries_backslash.insert_backslash_row(conn=sqlite3_conn, id_=BACKSLASH_ID, name="path", note="C:\\dir\\name")
+        assert queries_backslash.get_backslash_note(conn=sqlite3_conn, id_=BACKSLASH_ID) == "C:\\dir\\name"

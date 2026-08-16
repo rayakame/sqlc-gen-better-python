@@ -40,6 +40,7 @@ from test import converters
 from test.driver_psycopg_sync.dataclass.functions import enums
 from test.driver_psycopg_sync.dataclass.functions import models
 from test.driver_psycopg_sync.dataclass.functions import queries
+from test.driver_psycopg_sync.dataclass.functions import queries_backslash
 from test.driver_psycopg_sync.dataclass.functions import queries_converters
 from test.driver_psycopg_sync.dataclass.functions import queries_enum_override
 from test.driver_psycopg_sync.dataclass.functions import queries_invalid_identifiers
@@ -959,3 +960,11 @@ class TestDataclassFunctions:
             dollar_1=[pathlib.PurePosixPath("a/b"), pathlib.PurePosixPath("c/d")],
         )()
         assert rows == [CONVERTER_ARRAY_ID]
+
+    @pytest.mark.dependency(name="TestDataclassFunctions::backslash_sql")
+    def test_backslash_sql(self, psycopg_sync_conn: psycopg.Connection[psycopg.rows.TupleRow]) -> None:
+        # A plain Python literal would read the "\t" as a tab and the "\n" of
+        # the path as a newline, so the constant has to be a raw string for the
+        # backslashes to reach the server.
+        assert queries_backslash.get_backslash_pattern(conn=psycopg_sync_conn) == "a\\tb\\d+"
+        assert queries_backslash.match_backslash_path(conn=psycopg_sync_conn, probe="C:\\dir\\name") is True

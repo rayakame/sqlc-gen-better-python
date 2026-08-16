@@ -8,6 +8,7 @@ import (
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
 	"github.com/rayakame/sqlc-gen-better-python/internal/types"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
+	"github.com/rayakame/sqlc-gen-better-python/internal/writer"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
 )
@@ -72,7 +73,14 @@ func (r *Renderer) renderQueriesModule(moduleName string, queries []model.Query)
 	}
 	for _, query := range queries {
 		constantsBody.WriteLine(
-			fmt.Sprintf(`%s: typing.Final[%s] = """-- name: %s %s`, query.ConstantName, constType, query.QueryName, query.Cmd),
+			fmt.Sprintf(
+				`%s: typing.Final[%s] = %s"""-- name: %s %s`,
+				query.ConstantName,
+				constType,
+				writer.PyRawPrefix(query.SQL),
+				query.QueryName,
+				query.Cmd,
+			),
 		)
 		constantsBody.WriteLine(query.SQL)
 		constantsBody.WriteLine(`"""`)
