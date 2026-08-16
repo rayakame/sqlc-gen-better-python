@@ -2,6 +2,7 @@ package transform_test
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/config"
@@ -848,6 +849,97 @@ func TestBuildQueriesSqliteKeepsSameNamedParams(t *testing.T) {
 	}
 	if query.Params[0].Repeated || query.Params[1].Repeated {
 		t.Fatal("sqlite params must not be marked Repeated")
+	}
+}
+
+func TestBuildQueriesSqliteSliceWithNamedArg(t *testing.T) {
+	t.Parallel()
+	// sqlc numbers the placeholders of a query that uses a named argument and
+	// assumes the marker takes one slot; it takes one per element. The indexes
+	// go, and the arguments follow the text instead - the reused one twice.
+	sliceCol := func() *plugin.Column {
+		column := queryCol("ids", "int4", nil)
+		column.IsSqlcSlice = true
+
+		return column
+	}
+	query := buildSingleQuery(t, &config.Config{SqlDriver: config.SQLDriverSQLite}, &plugin.Query{
+		Name: "ListAuthors",
+		Cmd:  ":many",
+		Text: "SELECT id FROM test_authors WHERE id IN (/*SLICE:ids*/?) AND name = ?2 AND name != ?2",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: sliceCol()},
+			{Number: 2, Column: queryCol("n", "text", nil)},
+		},
+	})
+	want := []struct {
+		name     string
+		repeated bool
+	}{{"ids", false}, {"n", false}, {"n", true}}
+	if len(query.Params) != len(want) {
+		t.Fatalf("params = %+v, want %d entries", query.Params, len(want))
+	}
+	for i, tc := range want {
+		if query.Params[i].Name != tc.name || query.Params[i].Repeated != tc.repeated {
+			t.Errorf("param %d = (%q, repeated=%v), want (%q, repeated=%v)",
+				i, query.Params[i].Name, query.Params[i].Repeated, tc.name, tc.repeated)
+		}
+	}
+	if strings.Contains(query.SQL, "?2") {
+		t.Errorf("SQL = %q, want the numbered placeholders stripped", query.SQL)
+	}
+}
+
+func TestBuildQueriesSqliteKeepsNumberingWithoutSlice(t *testing.T) {
+	t.Parallel()
+	// Without a marker every index holds, and sqlc's own numbering is left
+	// alone: the reused argument stays one bound value.
+	query := buildSingleQuery(t, &config.Config{SqlDriver: config.SQLDriverSQLite}, &plugin.Query{
+		Name: "ListAuthors",
+		Cmd:  ":many",
+		Text: "SELECT id FROM test_authors WHERE name = ?1 AND name != ?1",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+		},
+	})
+	if len(query.Params) != 1 || query.Params[0].Name != "n" {
+		t.Fatalf("params = %+v, want a single n", query.Params)
+	}
+	if !strings.Contains(query.SQL, "?1") {
+		t.Errorf("SQL = %q, want sqlc's numbering kept", query.SQL)
+	}
+}
+
+func TestBuildQueriesSqliteBundledFieldsFollowBindOrder(t *testing.T) {
+	t.Parallel()
+	// A bundled Params class is expanded field by field, so its field order is
+	// the bind order: the marker binds first even though sqlc numbered its
+	// parameter second.
+	sliceCol := func() *plugin.Column {
+		column := queryCol("ids", "int4", nil)
+		column.IsSqlcSlice = true
+
+		return column
+	}
+	conf := &config.Config{SqlDriver: config.SQLDriverSQLite, QueryParameterLimit: utils.ToPtr(1)}
+	query := buildSingleQuery(t, conf, &plugin.Query{
+		Name: "ListAuthors",
+		Cmd:  ":many",
+		Text: "SELECT id, name FROM test_authors WHERE id IN (/*SLICE:ids*/?) AND name = ?1",
+		Params: []*plugin.Parameter{
+			{Number: 1, Column: queryCol("n", "text", nil)},
+			{Number: 2, Column: sliceCol()},
+		},
+	})
+	if len(query.Params) != 1 || query.Params[0].Table == nil {
+		t.Fatalf("params = %+v, want a single bundled Params class", query.Params)
+	}
+	columns := query.Params[0].Table.Columns
+	if len(columns) != 2 || columns[0].Name != "ids" || columns[1].Name != "n" {
+		t.Fatalf("columns = %+v, want ids before n", columns)
+	}
+	if strings.Contains(query.SQL, "?1") {
+		t.Errorf("SQL = %q, want the numbered placeholder stripped", query.SQL)
 	}
 }
 

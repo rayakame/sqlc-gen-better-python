@@ -25,6 +25,9 @@ const sliceMarkerPrefix = "/*SLICE:"
 // dashComment is the line-comment introducer both engines share.
 const dashComment = "--"
 
+// decimalBase is the radix of a numbered placeholder's index.
+const decimalBase = 10
+
 // Token is one scanned span of the input, [Start, End).
 type Token struct {
 	Kind  Kind
@@ -32,6 +35,9 @@ type Token struct {
 	End   int
 	// Name is the sqlc.slice name of a KindSliceMarker token.
 	Name string
+	// Number is the explicit index of a numbered placeholder (sqlite's ?N),
+	// or 0 when the placeholder carries none.
+	Number int
 	// MarkerEnd splits a KindSliceMarker: [Start, MarkerEnd) is the comment,
 	// [MarkerEnd, End) the placeholder it binds. Zero for other kinds.
 	MarkerEnd int
@@ -43,6 +49,11 @@ type Token struct {
 type Slot struct {
 	Name   string
 	Marker string
+	// Number is the explicit index of a numbered placeholder (sqlite's ?N),
+	// or 0 when the placeholder carries none. SQLite binds ?N to slot N and
+	// a bare ? to one past the highest slot seen so far, so the two spell
+	// different bindings for the same text position.
+	Number int
 }
 
 // Scan splits sql into tokens under the given dialect. Unterminated strings,
@@ -53,12 +64,12 @@ func Scan(sql string, d Dialect) []Token {
 	text := 0
 	flush := func(end int) {
 		if end > text {
-			tokens = append(tokens, Token{Kind: KindText, Start: text, End: end, Name: "", MarkerEnd: 0})
+			tokens = append(tokens, Token{Kind: KindText, Start: text, End: end, Name: "", Number: 0, MarkerEnd: 0})
 		}
 	}
 	skip := func(start, end int) {
 		flush(start)
-		tokens = append(tokens, Token{Kind: KindSkipped, Start: start, End: end, Name: "", MarkerEnd: 0})
+		tokens = append(tokens, Token{Kind: KindSkipped, Start: start, End: end, Name: "", Number: 0, MarkerEnd: 0})
 		text = end
 	}
 
@@ -78,6 +89,7 @@ func Scan(sql string, d Dialect) []Token {
 					Start:     i,
 					End:       token,
 					Name:      d.sliceName(sql[i+len(sliceMarkerPrefix) : end]),
+					Number:    0,
 					MarkerEnd: end,
 				})
 				i, text = token, token
@@ -119,12 +131,19 @@ func Scan(sql string, d Dialect) []Token {
 		case d.placeholder != "" && strings.HasPrefix(rest, d.placeholder):
 			flush(i)
 			end := i + len(d.placeholder)
+			number := 0
 			if d.numbered {
+				digits := end
 				for end < len(sql) && sql[end] >= '0' && sql[end] <= '9' {
 					end++
 				}
+				// Overflow cannot happen in practice: sqlc rejects gaps, so
+				// the highest index it emits is the parameter count.
+				for _, b := range []byte(sql[digits:end]) {
+					number = number*decimalBase + int(b-'0')
+				}
 			}
-			tokens = append(tokens, Token{Kind: KindPlaceholder, Start: i, End: end, Name: "", MarkerEnd: 0})
+			tokens = append(tokens, Token{Kind: KindPlaceholder, Start: i, End: end, Name: "", Number: number, MarkerEnd: 0})
 			i, text = end, end
 		default:
 			i++
@@ -156,9 +175,9 @@ func Slots(sql string, d Dialect) []Slot {
 	for _, token := range Scan(sql, d) {
 		switch token.Kind {
 		case KindPlaceholder:
-			slots = append(slots, Slot{Name: "", Marker: ""})
+			slots = append(slots, Slot{Name: "", Marker: "", Number: token.Number})
 		case KindSliceMarker:
-			slots = append(slots, Slot{Name: token.Name, Marker: sql[token.Start:token.End]})
+			slots = append(slots, Slot{Name: token.Name, Marker: sql[token.Start:token.End], Number: 0})
 		case KindText, KindSkipped:
 		}
 	}

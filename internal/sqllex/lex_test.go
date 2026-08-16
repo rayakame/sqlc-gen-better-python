@@ -8,7 +8,7 @@ import (
 )
 
 // plain is a bind slot that is not a sqlc.slice marker.
-var plain = sqllex.Slot{Name: "", Marker: ""} //nolint:gochecknoglobals
+var plain = sqllex.Slot{Name: "", Marker: "", Number: 0} //nolint:gochecknoglobals
 
 func TestSlotsMySQLRaw(t *testing.T) {
 	t.Parallel()
@@ -26,16 +26,16 @@ func TestSlotsMySQLRaw(t *testing.T) {
 		{
 			name: "slice marker carries its text",
 			sql:  "SELECT a FROM t WHERE id IN (/*SLICE:ids*/?)",
-			want: []sqllex.Slot{{Name: "ids", Marker: "/*SLICE:ids*/?"}},
+			want: []sqllex.Slot{{Name: "ids", Marker: "/*SLICE:ids*/?", Number: 0}},
 		},
 		{
 			// The ordering case the drivers depend on.
 			name: "reused marker interleaved with a plain slot",
 			sql:  "SELECT a FROM t WHERE x IN (/*SLICE:ids*/?) AND y = ? OR z IN (/*SLICE:ids*/?)",
 			want: []sqllex.Slot{
-				{Name: "ids", Marker: "/*SLICE:ids*/?"},
+				{Name: "ids", Marker: "/*SLICE:ids*/?", Number: 0},
 				plain,
-				{Name: "ids", Marker: "/*SLICE:ids*/?"},
+				{Name: "ids", Marker: "/*SLICE:ids*/?", Number: 0},
 			},
 		},
 		{
@@ -133,7 +133,7 @@ func TestSlotsMySQLPyformat(t *testing.T) {
 		{
 			name: "rewritten marker carries its text",
 			sql:  "SELECT a FROM t WHERE id IN (/*SLICE:ids*/%s)",
-			want: []sqllex.Slot{{Name: "ids", Marker: "/*SLICE:ids*/%s"}},
+			want: []sqllex.Slot{{Name: "ids", Marker: "/*SLICE:ids*/%s", Number: 0}},
 		},
 		{
 			// The rewriter doubles a percent inside the marker; the name has
@@ -146,9 +146,9 @@ func TestSlotsMySQLPyformat(t *testing.T) {
 			name: "reused marker interleaved with a plain slot",
 			sql:  "SELECT a FROM t WHERE x IN (/*SLICE:ids*/%s) AND y = %s OR z IN (/*SLICE:ids*/%s)",
 			want: []sqllex.Slot{
-				{Name: "ids", Marker: "/*SLICE:ids*/%s"},
+				{Name: "ids", Marker: "/*SLICE:ids*/%s", Number: 0},
 				plain,
-				{Name: "ids", Marker: "/*SLICE:ids*/%s"},
+				{Name: "ids", Marker: "/*SLICE:ids*/%s", Number: 0},
 			},
 		},
 	}
@@ -163,23 +163,27 @@ func TestSlotsSQLite(t *testing.T) {
 		want []sqllex.Slot
 	}{
 		{
-			// sqlc numbers SQLite parameters; the digits belong to the slot.
-			name: "numbered placeholders count once each",
+			// sqlc numbers SQLite parameters; the digits belong to the slot
+			// and name the index SQLite will bind it to.
+			name: "numbered placeholders report their index",
 			sql:  "SELECT a FROM t WHERE b = ?1 AND c = ?12",
-			want: []sqllex.Slot{plain, plain},
+			want: []sqllex.Slot{
+				{Name: "", Marker: "", Number: 1},
+				{Name: "", Marker: "", Number: 12},
+			},
 		},
 		{
 			name: "slice marker carries its text",
 			sql:  "SELECT a FROM t WHERE id IN (/*SLICE:ids*/?)",
-			want: []sqllex.Slot{{Name: "ids", Marker: "/*SLICE:ids*/?"}},
+			want: []sqllex.Slot{{Name: "ids", Marker: "/*SLICE:ids*/?", Number: 0}},
 		},
 		{
 			name: "reused marker interleaved with a numbered slot",
 			sql:  "SELECT a FROM t WHERE x IN (/*SLICE:ids*/?) AND y = ?2 OR z IN (/*SLICE:ids*/?)",
 			want: []sqllex.Slot{
-				{Name: "ids", Marker: "/*SLICE:ids*/?"},
-				plain,
-				{Name: "ids", Marker: "/*SLICE:ids*/?"},
+				{Name: "ids", Marker: "/*SLICE:ids*/?", Number: 0},
+				{Name: "", Marker: "", Number: 2},
+				{Name: "ids", Marker: "/*SLICE:ids*/?", Number: 0},
 			},
 		},
 		{

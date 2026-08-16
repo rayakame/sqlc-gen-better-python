@@ -3,7 +3,7 @@ plugins:
   - name: python
     wasm:
       url: file://sqlc-gen-better-python.wasm
-      sha256: 6b9df77e00051cc9128c70cd35dc645120c5b2eff1c56e6dc5ac99e34485c4ef
+      sha256: f9e26e327ba75ccd648dea1a55b9cbecbf6586686b5f7329dc15871b0b3fdc77
 sql:
   - schema: schema.sql
     queries:
@@ -107,6 +107,7 @@ sql:
       - queries_case.sql
       - queries_unknown_override.sql
       - queries_slice.sql
+      - queries_named_slice.sql
     engine: sqlite
     codegen:
       - out: /dataclass/functions

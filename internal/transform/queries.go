@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/rayakame/sqlc-gen-better-python/internal/model"
+	"github.com/rayakame/sqlc-gen-better-python/internal/sqllex"
 	"github.com/rayakame/sqlc-gen-better-python/internal/utils"
 	"github.com/sqlc-dev/plugin-sdk-go/metadata"
 	"github.com/sqlc-dev/plugin-sdk-go/plugin"
@@ -286,6 +287,15 @@ func (t *Transformer) BuildQueries(tables []model.Table) []model.Query {
 			query.Params = t.bundledParams(pluginParams, query.QueryName, query.Cmd == metadata.CmdCopyFrom)
 		} else {
 			query.Params = t.plainParams(pluginQuery, pluginParams)
+		}
+		// sqlc numbers SQLite placeholders as soon as a query uses a named
+		// argument, and those indexes stop matching once a sqlc.slice marker
+		// expands. Strip them and bind by position instead - for the fields of
+		// a bundled Params class too, which the drivers expand positionally.
+		if t.config.SqlDriver.IsSqliteFamily() {
+			if slots := sqllex.Slots(query.SQL, sqllex.SQLite); needsSlotRewrite(slots) && reorderBindOrder(&query, slots) {
+				query.SQL = rewriteSQLiteSQL(query.SQL)
+			}
 		}
 
 		if query.Cmd == metadata.CmdExecLastId {

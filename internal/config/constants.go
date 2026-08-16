@@ -33,6 +33,13 @@ func (dr SQLDriver) IsPsycopg() bool {
 	return dr == SQLDriverPsycopgAsync || dr == SQLDriverPsycopgSync
 }
 
+// IsSqliteFamily reports whether the driver executes SQLite SQL: the two
+// sqlite modules and both pyturso flavors share sqlc's sqlite engine and its
+// placeholder numbering.
+func (dr SQLDriver) IsSqliteFamily() bool {
+	return driversEngine[dr] == engineSQLite
+}
+
 // IsTurso reports whether the driver is one of the two pyturso flavors,
 // which share inline type conversion in both directions - pyturso has no
 // adapter/converter registry and binds only None, numbers, strings, and
