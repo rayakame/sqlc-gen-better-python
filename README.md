@@ -53,7 +53,7 @@ Questions or feedback? Join the [Discord](https://discord.gg/hikari).
   ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/drivers/)).
 - **Typed query functions** - one module per query file, one function per query
   ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/writing-queries/)).
-- **PostgreSQL enums** as `enum.StrEnum` classes
+- **PostgreSQL enum types and MySQL enum columns** as `enum.StrEnum` classes
   ([docs](https://sqlc-gen-better-python.rayakame.dev/docs/guide/enums/)).
 - **Type overrides and converters** - swap a column's Python type, or plug in your
   own encode/decode functions
