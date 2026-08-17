@@ -14,10 +14,10 @@ it.
 ## Explore by feature
 
 {{< cards >}}
-  {{< card link="guide/drivers" title="Drivers" icon="database" subtitle="asyncpg, psycopg, aiosqlite, sqlite3, and turso." >}}
+  {{< card link="guide/drivers" title="Drivers" icon="database" subtitle="asyncpg, psycopg, aiosqlite, sqlite3, asyncmy, pymysql, and turso." >}}
   {{< card link="guide/model-types" title="Model types" icon="cube" subtitle="dataclass, attrs, msgspec, or pydantic." >}}
   {{< card link="guide/writing-queries" title="Writing queries" icon="code" subtitle="How query annotations become typed functions." >}}
-  {{< card link="guide/enums" title="Enums" icon="collection" subtitle="PostgreSQL enums as enum.StrEnum classes." >}}
+  {{< card link="guide/enums" title="Enums" icon="collection" subtitle="PostgreSQL enum types and MySQL enum columns as enum.StrEnum classes." >}}
   {{< card link="guide/type-overrides" title="Type overrides" icon="adjustments" subtitle="Swap the Python type of a column." >}}
   {{< card link="guide/converters" title="Converters" icon="puzzle" subtitle="Your own encode/decode functions for a column." >}}
   {{< card link="guide/working-with-json" title="Working with JSON" icon="document-text" subtitle="Typed JSON columns with msgspec structs." >}}
@@ -29,8 +29,8 @@ it.
 | | |
 |---|---|
 | **Python** | 3.12 or newer |
-| **Engines** | PostgreSQL, SQLite |
-| **Drivers** | `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`, and experimental `turso_async`/`turso_sync` |
+| **Engines** | PostgreSQL, SQLite, MySQL |
+| **Drivers** | `asyncpg`, `psycopg_async`, `psycopg_sync`, `aiosqlite`, `sqlite3`, `asyncmy`, `pymysql`, and experimental `turso_async`/`turso_sync` |
 | **Model types** | `dataclass`, `attrs`, `msgspec`, `pydantic` |
 | **Docstrings** | `google`, `numpy`, `pep257`, or none |
 | **Checked with** | pyright (strict) and ruff |
