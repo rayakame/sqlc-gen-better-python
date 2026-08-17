@@ -48,7 +48,7 @@ layout: hextra-home
   {{< hextra/feature-card
     title="Enums"
     link="docs/guide/enums"
-    subtitle="PostgreSQL enums become enum.StrEnum classes, wired through models and queries."
+    subtitle="PostgreSQL enum types and MySQL enum columns become enum.StrEnum classes, wired through models and queries."
   >}}
   {{< hextra/feature-card
     title="Type overrides & converters"
@@ -175,7 +175,7 @@ Generated code is held to the same standard as hand-written code:
 
 - **Type-checked.** Every generated file passes pyright in strict mode and ruff.
 - **Tested against real databases.** The suite runs the generated code against
-  live PostgreSQL and SQLite, across every driver and model type.
+  live PostgreSQL, SQLite, and MySQL, across every driver and model type.
 - **Deterministic.** Output is byte-identical between runs, and CI fails if a
   change would silently alter what you get.
 

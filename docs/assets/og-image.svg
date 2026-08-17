@@ -16,5 +16,5 @@
 
   <text x="90" y="510" font-family="Noto Sans Mono" font-size="34" fill="#38bdf8">sqlc-gen-better-python</text>
 
-  <text x="90" y="572" font-family="Noto Sans" font-size="27" fill="#94a3b8">A sqlc plugin - typed models and query functions for PostgreSQL and SQLite</text>
+  <text x="90" y="572" font-family="Noto Sans" font-size="27" fill="#94a3b8">Typed models and query functions for PostgreSQL, SQLite and MySQL</text>
 </svg>
