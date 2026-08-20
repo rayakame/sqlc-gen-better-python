@@ -418,7 +418,7 @@ jobs:
         with:
           # Dependabot does not update this pin; keep it in sync with the
           # golangci-lint version used locally for make lint.
-          version: v2.12.2
+          version: v2.13.0
 
   test-build:
     runs-on: ubuntu-latest

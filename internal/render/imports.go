@@ -270,7 +270,7 @@ func (r *ImportResolver) QueryImports(queries []model.Query) ImportResult {
 
 	// Model import if any query emits a struct or uses copyfrom.
 	for _, query := range queries {
-		if (query.EmitsTable()) || query.Cmd == metadata.CmdCopyFrom {
+		if query.EmitsTable() || query.Cmd == metadata.CmdCopyFrom {
 			r.addModelImport(std)
 
 			break
