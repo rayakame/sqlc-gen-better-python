@@ -8,5 +8,11 @@
   "lockFileMaintenance": {
     "enabled": true
   },
+  "packageRules": [
+    {
+      "matchDepTypes": ["requires-python"],
+      "rangeStrategy": "widen"
+    }
+  ],
   "prHourlyLimit": 5
 }
