@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.9.1 - 2026-11-03
+### Added
+* [#313](https://github.com/rayakame/sqlc-gen-better-python/pull/313) Python 3.15 support: the test tooling accepts and CI now tests Python 3.15. ([Rayakame](https://github.com/Rayakame))
+
 ## v0.9.0 - 2026-08-16
 ### Added
 * [#248](https://github.com/rayakame/sqlc-gen-better-python/pull/248) MySQL support: the new `sql_driver` values `asyncmy` and `pymysql` generate code for [asyncmy](https://pypi.org/project/asyncmy/) (asyncio) and [PyMySQL](https://pypi.org/project/PyMySQL/) (synchronous), using `engine: "mysql"` and the same `?` placeholders as the SQLite drivers - the plugin rewrites them to the drivers' pyformat `%s` at generation time. Inline `ENUM` (and `SET`) columns generate `enums.py` classes, `tinyint(1)` maps to `bool`, `time` to `datetime.timedelta`, and returned `json` columns stay `str` like on every other driver. `:execlastid` returns `cursor.lastrowid` (`None` when nothing was inserted); `:copyfrom` stays PostgreSQL-only. Reused parameters (`sqlc.arg` or `sqlc.slice` used at several sites) merge into one function argument even though MySQL binds every occurrence separately. ([Rayakame](https://github.com/Rayakame))
